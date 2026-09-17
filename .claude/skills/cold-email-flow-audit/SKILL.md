@@ -49,7 +49,7 @@ Read `profiles/<client>/activity-log.md` (its CURRENT STATE block) before auditi
 
 ## Canonical paths
 
-Resolve every `profiles/<client>/...`, `scripts/...`, `memory/...`, `client-activity-log.md`, `cold-email-copy-best-practices.md`, `verified-list-gate.md`, and `output-style-guide.md` reference under `<coldoutbound-skills>/` (the data home: `02-skills/coldoutbound-skills/`), per the repo path-resolution rule — not the current working directory. A reference of the form `/<name>` means that skill in `.claude/skills/`. Client profiles are gitignored, so enumerate and read them with the **Bash/Read tools, not Glob/Grep** (Glob is `.gitignore`-filtered and won't see them). The persistent operator memory lives at the user's `~/.claude/projects/.../memory/` directory (`MEMORY.md` index + topic files), outside this repo — read it there.
+Resolve every `profiles/<client>/...`, `scripts/...`, `memory/...`, `client-activity-log.md`, `cold-email-copy-best-practices.md`, `verified-list-gate.md`, and `output-style-guide.md` reference under `<outbound>/` (the data home: `outbound/`), per the repo path-resolution rule — not the current working directory. A reference of the form `/<name>` means that skill in `.claude/skills/`. Client profiles are gitignored, so enumerate and read them with the **Bash/Read tools, not Glob/Grep** (Glob is `.gitignore`-filtered and won't see them). The persistent operator memory lives at the user's `~/.claude/projects/.../memory/` directory (`MEMORY.md` index + topic files), outside this repo — read it there.
 
 ## When to use
 
@@ -117,7 +117,7 @@ Walk the stages in order. Each row names the **governing source(s) to re-read** 
 
 | Stage | Artifact | Re-read to derive the check |
 |---|---|---|
-| A. Intake / run_state lock | `client-profile.yaml` → `run_state` | `/cold-email-kickoff` (run_state schema: current capability slots + status flags), `/client-intake-form`, and `<coldoutbound-skills>/stack-contract.yaml` (each locked provider value must match the contract; a value with no contract slot behind it, or a slot still empty, is a finding, never something to fill in) |
+| A. Intake / run_state lock | `client-profile.yaml` → `run_state` | `/cold-email-kickoff` (run_state schema: current capability slots + status flags), `/client-intake-form`, and `<outbound>/stack-contract.yaml` (each locked provider value must match the contract; a value with no contract slot behind it, or a slot still empty, is a finding, never something to fill in) |
 | B. ICP | `client-profile.yaml` → `icp.*` | `/icp-onboarding` |
 | C. Source-signal | `source-signal-intelligence.md` | `/lead-source-strategy` (Source-Signal Discovery Mode) |
 | D. Offer + lead magnet | `offer-intelligence.md`, `lead-magnets.md`, `offer.*` lock | `/offer-intelligence`, `/lead-magnet-brainstorm`, offer-architecture rules |

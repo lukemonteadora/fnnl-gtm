@@ -7,9 +7,9 @@ settings.local.json
 
 # ── Client data (never commit) ──────────────────────────────────────────────
 **/profiles/
-05-client-assets/*
-!05-client-assets/.gitkeep
-!05-client-assets/.gitignore
+client-assets/*
+!client-assets/.gitkeep
+!client-assets/.gitignore
 
 # ── Lead lists and exports with personal data ───────────────────────────────
 *.csv

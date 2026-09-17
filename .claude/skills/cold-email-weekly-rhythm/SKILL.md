@@ -9,10 +9,10 @@ description: Operational playbook AND the automatable weekly engine for running 
 All profiles/<business-slug> paths in this skill resolve under:
 
 ```text
-<coldoutbound-skills>/profiles
+<outbound>/profiles
 ```
 
-Here `<coldoutbound-skills>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
+Here `<outbound>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
 
 Having 29 cold email skills doesn't help if you don't run them on a schedule. This is that schedule — and now also the automatable engine that can run the read-and-decide half of it for you.
 
@@ -63,7 +63,7 @@ It does **not** replace the manual cadence below — that stays the system of re
 2. **Fail loud.** A missed run, an errored run, or an empty proposal must alert (Slack/email). A dead routine must never masquerade as "all clear."
 3. **Spend-gated.** Any TAM refresh or list enrichment it triggers routes through `/api-cost-governance` and respects `run_state.spend_ceiling_usd`. Within the ceiling it proceeds; over it, it stops and flags.
 4. **Never re-asks recorded decisions.** It reads `run_state`, the activity-log, and memory before proposing, so it doesn't re-surface a settled choice (per `/autonomous-execution-policy`).
-5. **Never picks a tool.** Every provider it routes to comes from the locked `run_state` and `<coldoutbound-skills>/stack-contract.yaml`. If a capability slot the run needs is empty, it fails loud and routes to `/stack-setup` instead of choosing a vendor. A scheduled run has no operator watching, so an invented provider is exactly the silent failure these rules exist to prevent.
+5. **Never picks a tool.** Every provider it routes to comes from the locked `run_state` and `<outbound>/stack-contract.yaml`. If a capability slot the run needs is empty, it fails loud and routes to `/stack-setup` instead of choosing a vendor. A scheduled run has no operator watching, so an invented provider is exactly the silent failure these rules exist to prevent.
 
 ### How it runs
 

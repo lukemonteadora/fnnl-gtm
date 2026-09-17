@@ -9,10 +9,10 @@ description: Provider-agnostic strategy gate for choosing the Google Workspace v
 All profiles/<business-slug> paths in this skill resolve under:
 
 ```text
-<coldoutbound-skills>/profiles
+<outbound>/profiles
 ```
 
-Here `<coldoutbound-skills>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
+Here `<outbound>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
 
 Use this skill before any domain or inbox purchase. It first sizes the total warmed mailbox count from the client's daily send target (the high-volume default), then decides how many of those are Google Workspace and how many Microsoft 365 based on ICP company size and segment.
 
@@ -115,7 +115,7 @@ total warmed mailboxes  =  daily target D  /  safe-per-mailbox-rate (~15-20)  / 
 
 Worked examples (at ~15-20 sends/mailbox/day, ~0.5 active, and an example rate of ~$3/mailbox/mo). The
 per-mailbox rate is an **illustration, not FNNL's price**: read the real rate from whichever provider fills
-the `mailbox_provider` slot in `02-skills/coldoutbound-skills/stack-contract.yaml`, and if that slot is
+the `mailbox_provider` slot in `outbound/stack-contract.yaml`, and if that slot is
 empty, run `/stack-setup` before quoting any spend figure.
 
 | Daily send target | Total warmed mailboxes | Recurring mailbox spend | Plus |
@@ -190,7 +190,7 @@ Then continue to the locked inbox infrastructure setup skill.
 
 Continue to the infrastructure setup skill named by `run_state.infrastructure_stack` for this client. If that
 field is unset, resolve it from the `registrar` and `mailbox_provider` slots in
-`02-skills/coldoutbound-skills/stack-contract.yaml` and record it. **If either slot is empty, stop and route
+`outbound/stack-contract.yaml` and record it. **If either slot is empty, stop and route
 the operator to `/stack-setup`**, and do not guess a registrar or a mailbox provider from a worked example.
 
 Do not let any setup skill silently choose a Google/Microsoft split, and do not let it silently choose a

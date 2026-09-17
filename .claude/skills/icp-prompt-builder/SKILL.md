@@ -9,10 +9,10 @@ description: Interactive approval loop for building and tuning an AI prompt that
 All profiles/<business-slug> paths in this skill resolve under:
 
 ```text
-<coldoutbound-skills>/profiles
+<outbound>/profiles
 ```
 
-Here `<coldoutbound-skills>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
+Here `<outbound>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
 
 Before paying to enrich thousands of companies, tune the qualification prompt on a small sample.
 

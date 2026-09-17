@@ -56,8 +56,8 @@ Normally you do not do this by hand. Run **`/stack-setup`**, which activates the
 To do it manually:
 
 1. Move the skills: `_vendor-library/skills/<pack>/<skill>` into `.claude/skills/<skill>`.
-2. Move the scripts: contents of `_vendor-library/scripts/<pack>/` into `02-skills/coldoutbound-skills/scripts/`.
-3. Record the tool in the matching slot of `02-skills/coldoutbound-skills/stack-contract.yaml`, and set that slot's `vendor_pack` to the pack name.
+2. Move the scripts: contents of `_vendor-library/scripts/<pack>/` into `outbound/scripts/`.
+3. Record the tool in the matching slot of `outbound/stack-contract.yaml`, and set that slot's `vendor_pack` to the pack name.
 4. Add the credential **names** to `scripts/.env.example` and `scripts/credential-registry.json`. Put real values only in `scripts/.env`, which is gitignored.
 5. Search the activated files for `<PLACEHOLDER>` markers and fill them in.
 6. Run `/preflight-credentials`, then make one real call before marking the slot `live`.

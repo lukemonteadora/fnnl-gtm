@@ -9,10 +9,10 @@ description: Creates a compact client-facing DOCX presentation from one or more 
 All profiles/<business-slug> paths in this skill resolve under:
 
 ```text
-<coldoutbound-skills>/profiles
+<outbound>/profiles
 ```
 
-Here `<coldoutbound-skills>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
+Here `<outbound>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
 
 Create a simple DOCX launch sheet after approved campaign copy exists.
 
@@ -137,7 +137,7 @@ powershell -ExecutionPolicy Bypass -File scripts\campaign_docx_presentation.ps1 
   -OutputName "First 3 Campaign Launch Overview - Client Name.docx"
 ```
 
-**Google Doc (when configured).** After the DOCX renders, also create/update a native Google Doc so the client never has to upload it — gated on the one-time setup in `docs/gdoc-export-setup.md`; the script exits `2` and is safely skipped if creds are not set:
+**Google Doc (when configured).** After the DOCX renders, also create/update a native Google Doc so the client never has to upload it — gated on the one-time setup in `reference/gdoc-export-setup.md`; the script exits `2` and is safely skipped if creds are not set:
 
 ```powershell
 node scripts\docx_to_gdoc.mjs --in "profiles\<business-slug>\First 3 Campaign Launch Overview - Client Name.docx" --title "First 3 Campaign Launch Overview - Client Name"

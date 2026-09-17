@@ -14,17 +14,17 @@ The cost trick is two splits, not one. **(1) Company-level vs per-contact:** eve
 All profiles/<business-slug> paths in this skill resolve under:
 
 ```text
-<coldoutbound-skills>/profiles
+<outbound>/profiles
 ```
 
-Here `<coldoutbound-skills>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
+Here `<outbound>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
 
 ## Stack Resolution (read before any tool step)
 
 This skill names **capability roles**, never specific vendors. Resolve every role to the tool this workspace has actually chosen by reading:
 
 ```text
-02-skills/coldoutbound-skills/stack-contract.yaml
+outbound/stack-contract.yaml
 ```
 
 Roles this skill uses: company-discovery source, company-data provider, contact-discovery source, web-search API, web-scraping tool, paid scraper, bulk-classification model, web-research engine, external enrichment platform, email finder, email verifier, waterfall enricher.

@@ -1,68 +1,84 @@
 # FNNL Agency GTM System
 
-A cold outbound system for FNNL Agency: skills, playbooks, scripts, and client workflow, built to run inside Claude Code.
+A cold outbound system for FNNL Agency: skills, scripts, doctrine, and client workflow, built to run inside Claude Code. It handles the whole flow, from onboarding a client through targeting, list building, copy, sending infrastructure, launch, and reporting.
 
-**This workspace ships with no tech stack.** Every skill is written against a capability role ("the sending platform", "the contact enrichment tool"), never a brand name. Which tool fills which role is declared in one place, and that file starts empty.
+## The one thing to understand first
 
-## Start here
+**The system has no tech stack, and it will not pick one for you.**
 
-Run these in order. Each one refuses to guess what the previous step should have established.
+Every skill is written against a *job to be done* ("the sending platform", "the tool that finds contact emails"), never a brand name. Which actual tool does each job is recorded in exactly one file:
+
+```
+outbound/stack-contract.yaml
+```
+
+That file ships empty. When a skill needs a tool and the slot is blank, the skill stops and sends you to `/stack-setup` rather than guessing.
+
+This is deliberate. A system that quietly assumes a vendor will happily build a campaign on a tool nobody bought.
+
+## First run, in order
+
+Each step refuses to guess what the previous one should have established.
 
 | Step | Command | What it does |
 |---|---|---|
 | 1 | `/stack-setup` | Define FNNL's tools and process. **Everything depends on this.** |
-| 2 | `/preflight-credentials` | Confirm the keys for the chosen stack actually resolve. |
-| 3 | `/cold-email-kickoff` | Onboard the first client. |
+| 2 | `/preflight-credentials` | Confirm the keys for the chosen stack actually resolve. Real keys go in `outbound/scripts/.env`, which is gitignored. |
+| 3 | `/cold-email-kickoff` | Onboard the first client, end to end. |
 | 4 | `/continue-client` | Resume a client mid-flight. |
 
-Not sure where to begin? `/cold-email-starter-kit` is the orientation router.
+Recurring cadence is `/cold-email-weekly-rhythm`. If you would rather browse than follow a checklist, `/cold-email-starter-kit` is the orientation router.
 
-## How the no-default-stack design works
+## How a client flows through the system
 
-`02-skills/coldoutbound-skills/stack-contract.yaml` is the single source of truth for FNNL's tools. It has a slot per capability (registrar, mailbox provider, sending platform, company discovery, contact discovery, contact enrichment, email verification, intent signals, AI research, bulk classification, copywriting, web search, web crawl, CRM, reporting, document generation, spreadsheets) plus a section for FNNL's own process overrides.
+1. **Intake** (`/client-intake-form`, `/icp-onboarding`, `/client-onboarding-call-summarizer`) captures who they sell to and what they sell.
+2. **Strategy** (`/lead-source-strategy`, `/offer-intelligence`, `/lead-magnet-brainstorm`, `/campaign-strategy`) decides where the list comes from, what the offer is, and which campaigns to run.
+3. **List** (`/data-point-discovery`, `/tam-build`, `/lead-scoring`, `/email-waterfall`, `/list-quality-scorecard`) builds the target universe cheaply, scores it, reveals contact details only for leads worth paying for, and gates on quality before anything sends.
+4. **Copy** (`/campaign-copywriting`, `/outreach-copywriting`, `/spam-word-checker`, `/social-proof-bank`) writes and QAs the sequences.
+5. **Infrastructure** (`/mailbox-mix-strategy`, `/mailbox-pool-staging`, `/mailbox-profile-generator`) stands up domains and mailboxes.
+6. **Launch and run** (`/campaign-approval-brief`, the presentation builders, `/cold-email-weekly-rhythm`, `/email-deliverability-audit`) gets client sign-off, ships, and keeps it healthy.
 
-Every slot ships empty. When a skill needs a tool and the slot is empty, the skill **stops and routes you to `/stack-setup`** instead of assuming a vendor.
+## Folder map
 
-Per client, the locked tools live in that client's own `run_state` block, inheriting from the contract.
+Five directories. The split is by *what reads the file*, not by topic.
 
-## Structure
+| Path | Contents | Who reads it |
+|---|---|---|
+| `.claude/skills/` | The 53 active skills. Edit here; Claude Code loads them live. | Claude, automatically |
+| `outbound/` | Everything the skills operate on. | Skills, at runtime |
+| `_vendor-library/` | Parked integrations for specific tools. **Nothing loads until `/stack-setup` activates it.** | Nothing, until activated |
+| `library/` | Third-party PDFs and DOCX: copywriting courses, prompt packs, spintax samples. | Humans, by hand |
+| `client-assets/` | Client deliverables. Local only, gitignored. | You |
+
+Inside `outbound/`:
 
 | Path | Contents |
 |---|---|
-| `.claude/skills/` | The 53 active skills. Single source of truth, loaded live by Claude Code. |
-| `_vendor-library/` | **Inactive** integrations for specific tools. Nothing here loads until `/stack-setup` activates it. |
-| `02-skills/coldoutbound-skills/` | Skill data: the stack contract, client profiles, scripts, reference docs |
-| `00-start-here/` | Orientation docs |
-| `03-prompts/` | Prompt packs |
-| `04-playbooks/` | Cold email copywriting guides, spintax examples |
-| `05-client-assets/` | Client work. Local only, gitignored. |
+| `stack-contract.yaml` | **FNNL's tool and process contract. The stack source of truth.** |
+| `profiles/<client-slug>/` | Per-client profiles, campaigns, artifacts, activity logs. Gitignored. |
+| `scripts/` | Automation scripts, `.env` (gitignored), `credential-registry.json` |
+| `memory/` | Skill state files |
+| `reference/` | Every doc a skill *reads*: copy doctrine, scoring rubrics, client-facing templates, setup guides |
 
-## What the skills cover
+The line between `library/` and `outbound/reference/` is the useful one. If a skill needs a document at runtime, it belongs in `outbound/reference/`. `library/` is background reading that nothing depends on.
 
-**Setup and strategy:** stack setup, client intake, ICP onboarding, offer intelligence, lead source strategy, lead magnet brainstorm, campaign strategy, experiment design
+## Ground rules baked into the system
 
-**List building:** data point discovery, TAM build, lead scoring, email waterfall, list quality scorecard, personalization fan-out
-
-**Copy:** campaign copywriting, outreach copywriting, lifecycle copy, spam word checker, social proof bank, proof asset request
-
-**Infrastructure:** mailbox mix strategy, mailbox pool staging, mailbox profile generator, credential preflight
-
-**Deliverability:** deliverability audit, incident response
-
-**Running campaigns:** weekly rhythm, flow audit, continue client, approval briefs, four client-facing presentation builders
-
-**Working practice:** verify execution, autonomous execution policy, API cost governance, clarification first, roast, consultant, curator, session handoff, session distiller
+- **Nothing spends money without asking.** The workspace default is a zero spend ceiling, so every paid call gets confirmed. Raise it deliberately, per client, never silently.
+- **Done means proven.** Skills verify a result against the system that actually holds the truth before reporting success. A tool returning "OK" is not proof the work landed.
+- **Cheap filtering before expensive enrichment.** Qualify the company list on free data first. Never pay per record for companies that were never a fit.
+- **Recommendations come with the case against them.** Material decisions name the options, recommend one, and say why the alternatives are weaker.
 
 ## What is deliberately not here
 
 - **No default tech stack.** No vendor is assumed, configured, or credentialed.
 - **No clients.** No profiles, lead lists, campaigns, or activity logs.
-- **No secrets.** `.env` is gitignored and was never committed. Only `.env.example` ships, and it has no tool keys.
+- **No secrets.** `.env` is gitignored and was never committed. Only `.env.example` ships, and it carries no tool keys.
 - **No personal tooling.** Content publishing, personal briefings, and operator-specific trackers from the upstream workspace were removed rather than carried over.
 
 ## Provenance
 
-Forked from an upstream cold outbound workspace that ran a different company's stack and clients. Client data, secrets, and lead lists were excluded by the git boundary (never committed). The committed remainder was stripped: vendor integrations moved to `_vendor-library/`, personal skills removed, worked examples genericized, and every hardcoded live resource ID replaced with a placeholder.
+Forked from an upstream cold outbound workspace that ran a different company's stack and clients. Client data, secrets, and lead lists were excluded by the git boundary and never committed. The committed remainder was stripped: vendor integrations moved to `_vendor-library/`, personal skills removed, worked examples genericized, and every hardcoded live resource ID replaced with a placeholder.
 
 The workflow logic, copy doctrine, QA gates, and cost discipline carried over intact. That is the reusable part.
 
@@ -70,4 +86,4 @@ The workflow logic, copy doctrine, QA gates, and cost discipline carried over in
 
 ## Conventions
 
-`CLAUDE.md` holds the repo conventions: the no-default-stack rule, path resolution, the workspace override of machine-level global doctrine, communication style, and the standing rules on decisions, verification, and spend. Read it before working in here.
+`CLAUDE.md` at the repo root is the conventions file every session reads. It covers the no-default-stack rule, how paths resolve, the workspace override of machine-level global settings, the writing style, and the standing rules on decisions, verification, parallel work, and spend. Read it before working in here.

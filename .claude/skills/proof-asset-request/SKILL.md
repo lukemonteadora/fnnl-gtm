@@ -7,7 +7,7 @@ description: Generate an easy-to-fill form that collects the real proof a campai
 
 Thin generator for the client proof-collection form. When a campaign angle needs a named client, a real case study, or an exact number that is not on file, this produces a short, pre-filled, gap-targeted form to send the client so we get real evidence back, instead of writing hollow or invented copy.
 
-This is the operator-invokable front door to the **Proof-Asset Gate**. The full gate procedure (block vs flag) and the form template live in `proof-asset-request.md` (the reference doc, resolved under `02-skills/coldoutbound-skills/`). The doctrine is memory `proof-asset-gate-doctrine`.
+This is the operator-invokable front door to the **Proof-Asset Gate**. The full gate procedure (block vs flag) and the form template live in `proof-asset-request.md` (the reference doc, resolved under `outbound/`). The doctrine is memory `proof-asset-gate-doctrine`.
 
 ## The rule in one line
 

@@ -64,10 +64,10 @@ Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURR
 All `profiles/<business-slug>/...` paths in this skill resolve under:
 
 ```text
-<coldoutbound-skills>/profiles
+<outbound>/profiles
 ```
 
-Here `<coldoutbound-skills>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
+Here `<outbound>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
 
 ## When it runs (placement)
 
@@ -129,8 +129,8 @@ The example workbooks encode this exactly: the client supplies raw proof facts (
    - **FLAG** - the proof would only strengthen copy that already stands on a real signal. Mark `proof_status = gap_flag`.
    Everything we found ourselves is `proof_status = on_file`.
 
-6. **Emit ONE client-ask for the real gaps (the client-fill Google Sheet + ready message).** If any `gap_block` or `gap_flag` rows exist, or a campaign needs a case study we don't have, build the client the **fill sheet** and send it with a ready message. Facts only, never copy. The canonical structure, the industry-mixed example rows (the fill-guide), and the outreach copy all live in `social-proof-bank-client-fill-template.md` (resolved under `02-skills/coldoutbound-skills/`). Do this:
-   - **Build the Google Sheet.** Preferred: create a live Google Sheet via the **google-docs MCP** (`createSpreadsheet` → `writeSpreadsheet`/`appendRows` → `setFilePermission` to share) with the three tabs from the template: "Start here" (what / why / how + the worked example rows so the client has a guide), "Your results" (the grid to fill, pre-filled with everything already on file marked "confirm", blank rows grouped by the ICP segments we still need proof for), and the optional "Timing + competitors" tab. If the google-docs MCP or its credentials are unavailable, fall back to the tested builder `python "<coldoutbound-skills>/scripts/social_proof_bank_to_xlsx.py" --client <business-slug> --template` → writes `social-proof-bank-client-fill.xlsx` (same three tabs + examples) for the operator to upload to Drive.
+6. **Emit ONE client-ask for the real gaps (the client-fill Google Sheet + ready message).** If any `gap_block` or `gap_flag` rows exist, or a campaign needs a case study we don't have, build the client the **fill sheet** and send it with a ready message. Facts only, never copy. The canonical structure, the industry-mixed example rows (the fill-guide), and the outreach copy all live in `social-proof-bank-client-fill-template.md` (resolved under `outbound/`). Do this:
+   - **Build the Google Sheet.** Preferred: create a live Google Sheet via the **google-docs MCP** (`createSpreadsheet` → `writeSpreadsheet`/`appendRows` → `setFilePermission` to share) with the three tabs from the template: "Start here" (what / why / how + the worked example rows so the client has a guide), "Your results" (the grid to fill, pre-filled with everything already on file marked "confirm", blank rows grouped by the ICP segments we still need proof for), and the optional "Timing + competitors" tab. If the google-docs MCP or its credentials are unavailable, fall back to the tested builder `python "<outbound>/scripts/social_proof_bank_to_xlsx.py" --client <business-slug> --template` → writes `social-proof-bank-client-fill.xlsx` (same three tabs + examples) for the operator to upload to Drive.
    - **Ask ONLY for raw facts** (result, timeframe, client name, permission to name, territory, which service/product line), grouped by segment. The client never writes a one-liner or a poke-the-bear question.
    - **Send the ready message.** Use the draft email OR Slack message in the template (each covers **what** it is, **why** it matters, **how** to fill it), with the sheet link dropped in. Log it PENDING in the activity log.
    - `/proof-asset-request` bank mode is the same gate for a lighter, paste-back markdown ask when a full sheet is overkill (one or two blanks). Same rule: raw facts only.
@@ -142,7 +142,7 @@ The example workbooks encode this exactly: the client supplies raw proof facts (
 9. **Optional client-facing export.** The source of truth is always the markdown. When the operator wants to send the bank to the client (to confirm facts or as a shared asset), generate the xlsx mirror - two sheets (Case Studies, Trigger Bank), matching the example layout - with the tested builder:
 
    ```
-   python "<coldoutbound-skills>/scripts/social_proof_bank_to_xlsx.py" --client <business-slug>
+   python "<outbound>/scripts/social_proof_bank_to_xlsx.py" --client <business-slug>
    ```
 
    It reads `profiles/<slug>/social-proof-bank.md` and writes `profiles/<slug>/social-proof-bank.xlsx` (needs `openpyxl`; `pip install openpyxl` if absent). Regenerate it from the markdown after any update - never hand-edit the xlsx as a second source of truth. For a Google Sheet instead, convert the xlsx via the google-docs MCP after export.

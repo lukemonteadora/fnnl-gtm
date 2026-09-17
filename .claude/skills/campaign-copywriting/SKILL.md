@@ -9,10 +9,10 @@ description: Creates cold email copy through a stepwise confirmation process. Us
 All profiles/<business-slug> paths in this skill resolve under:
 
 ```text
-<coldoutbound-skills>/profiles
+<outbound>/profiles
 ```
 
-Here `<coldoutbound-skills>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
+Here `<outbound>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
 
 You are a cold email copywriter. Your job is to create cold email campaigns through a stepwise confirmation process that locks strategy before final copy is produced.
 
@@ -24,7 +24,7 @@ This skill names **capability roles**, never specific vendors. Resolve every rol
 tool this workspace has actually chosen by reading:
 
 ```text
-02-skills/coldoutbound-skills/stack-contract.yaml
+outbound/stack-contract.yaml
 ```
 
 Roles this skill uses: sending platform, email verifier, waterfall enricher.
@@ -92,7 +92,7 @@ If the offer cannot carry the message without setup, stop and repair the offer o
 
 ## Offer-First Copy Standard (Aaron method) — the default for cold copy
 
-This is the controlling standard for offer-first / offer-validation copy (`copy_mode = offer_validation` / `offer_market_proven = false`), and it is the DEFAULT for a new client and any first wave. Encoded from the Aaron Shepherd method. Where any older rule in this skill (a mandated question / diagnostic opener, per-contact copy personalization, minimize-we, a mode split) conflicts with this section, **this section wins, and the older rule is retired.** As of 2026-07-05 there is only ONE copy mode: offer-first. The proven-mode 1-to-1 diagnostic register, the question-first / diagnostic-mirror openers, per-contact copy personalization (former Hard Rule 34), the Question-First Opener Framework, and the personalization-density length band are **RETIRED** (archived under `02-skills/coldoutbound-skills/_archive/proven-mode-1to1-retired-2026-07-05/`). Any residual `proven-mode`, `copy_mode`, `offer_market_proven`, `diagnostic-mirror`, or `question-first` language elsewhere in this skill or the peripheral skills is superseded and reads as retired. Signals remain in play for **targeting only** (which companies and contacts to email, campaign slicing, and which offer a segment gets), never for per-contact copy.
+This is the controlling standard for offer-first / offer-validation copy (`copy_mode = offer_validation` / `offer_market_proven = false`), and it is the DEFAULT for a new client and any first wave. Encoded from the Aaron Shepherd method. Where any older rule in this skill (a mandated question / diagnostic opener, per-contact copy personalization, minimize-we, a mode split) conflicts with this section, **this section wins, and the older rule is retired.** As of 2026-07-05 there is only ONE copy mode: offer-first. The proven-mode 1-to-1 diagnostic register, the question-first / diagnostic-mirror openers, per-contact copy personalization (former Hard Rule 34), the Question-First Opener Framework, and the personalization-density length band are **RETIRED** (archived under `outbound/_archive/proven-mode-1to1-retired-2026-07-05/`). Any residual `proven-mode`, `copy_mode`, `offer_market_proven`, `diagnostic-mirror`, or `question-first` language elsewhere in this skill or the peripheral skills is superseded and reads as retired. Signals remain in play for **targeting only** (which companies and contacts to email, campaign slicing, and which offer a segment gets), never for per-contact copy.
 
 **Write FOR the real list and a real contact, never in a vacuum (HARD RULE, 2026-07-12).** Before writing a single line, pin down exactly who this copy is for and pull REAL examples from the verified send list: the concrete job titles + company type/industry + company size + geography (e.g. "CFOs / finance leaders at MSP & cloud managed-service providers, Nordics + near-Europe, 100-3000 employees"), and 2-3 real contacts from `leads.verified.csv` by name, title, company, domain (e.g. "Mark Grafton, CFO, Node4"). Write the email TO that person, and pressure-test every line with "would [real contact] find this specific and true, and is it about what they actually bill for?". This kills the failure mode of writing generic copy in a vacuum and re-adjusting it blind over and over: the words get concrete because you know exactly who reads them. **Record the audience definition + the sample contacts at the top of `copy.md`.**
 

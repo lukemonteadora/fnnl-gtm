@@ -28,7 +28,7 @@ Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURR
 All profile paths resolve under:
 
 ```text
-<coldoutbound-skills>/profiles
+<outbound>/profiles
 ```
 
 ## Step 1: Pre-Fill Discovery Pass
@@ -51,7 +51,7 @@ Before presenting any questions, run the following discovery pass and build a pr
 
 2. **Existing profile:** Check `profiles/*/client-profile.yaml` for prior run_state, ICP data, and infrastructure values. Use any found values as pre-fill suggestions.
 
-3. **Stack contract:** Read `<coldoutbound-skills>/stack-contract.yaml`. It declares the agency's chosen tool for each capability slot (registrar, mailbox provider, sending platform, email verification, lead sources), and it is the only place a vendor name for this form may come from. Pre-fill `infrastructure_stack`, `sending_platform`, and any platform-specific field from it, labelled `source: stack contract`. No slot has a default tool, so a slot the contract leaves empty stays blank here and is flagged for `/stack-setup`, never guessed.
+3. **Stack contract:** Read `<outbound>/stack-contract.yaml`. It declares the agency's chosen tool for each capability slot (registrar, mailbox provider, sending platform, email verification, lead sources), and it is the only place a vendor name for this form may come from. Pre-fill `infrastructure_stack`, `sending_platform`, and any platform-specific field from it, labelled `source: stack contract`. No slot has a default tool, so a slot the contract leaves empty stays blank here and is flagged for `/stack-setup`, never guessed.
 
 4. **Environment file:** Read `.env` and `.env.local` from the workspace root. A key found there is evidence that a credential exists, not a stack decision. Map each key to the capability slot it would serve (sending platform, registrar, mailbox provider, self-hosted instance URL, email verification, lead source) and check it against the stack contract. A key matching a provider the contract declares supports `credentials_ready` for that slot; a key for a provider the contract does not declare is a mismatch to surface, never a vendor to pre-fill.
 
@@ -371,7 +371,7 @@ It will read this intake form and skip the interview phase.
 
 ## Related skills
 
-- `/stack-setup`: declares FNNL Agency's tool for each capability slot in `<coldoutbound-skills>/stack-contract.yaml`. Run it before this form when any infrastructure or platform slot is still empty.
+- `/stack-setup`: declares FNNL Agency's tool for each capability slot in `<outbound>/stack-contract.yaml`. Run it before this form when any infrastructure or platform slot is still empty.
 - `/cold-email-kickoff` — single entry-point orchestrator, reads this form
 - `/icp-onboarding` — skipped when `icp.source: intake_form` is set
 - `/mailbox-mix-strategy` — still runs during setup if `mailbox_mix: auto_recommend`

@@ -43,4 +43,4 @@ Run `node getsales.mjs me` first to confirm the key works.
 - Do not author LinkedIn or email copy ad hoc inside this sending skill. Run `/outreach-copywriting` for every initial cold message. For full cold-email campaigns, also run `/campaign-copywriting`. Upload only approved copy that passed `outreach-copy-framework.md` plus `/spam-word-checker`.
 - Adding leads to a live flow can start outreach. Treat any send-triggering call as a spend/live action: confirm with the operator and respect the locked stack, the same as the Smartlead/EmailBison upload skills. Build drafts/paused where the platform supports it.
 - Route key presence through `/preflight-credentials` (registered warn-level, triggers only when `sending_platform = GetSales.io`).
-- Path resolution: `scripts/...` resolves under `02-skills/coldoutbound-skills/` per the repo CLAUDE.md rule.
+- Path resolution: `scripts/...` resolves under `outbound/` per the repo CLAUDE.md rule.

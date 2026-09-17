@@ -1,6 +1,6 @@
 ---
 name: stack-setup
-description: Define FNNL Agency's cold outbound tech stack and process, then wire the whole system to it. Interviews the operator capability by capability (registrar, mailbox provider, sending platform, company discovery, contact enrichment, email verification, AI routing, CRM, reporting, deliverables), writes the answers into 02-skills/coldoutbound-skills/stack-contract.yaml, activates any matching integration pack from _vendor-library/ into .claude/skills/, regenerates scripts/.env.example with only the credentials the chosen stack actually needs, and reports what is still missing. Also captures FNNL's own process overrides (onboarding steps, approval gates, reporting cadence, deliverable format). Run this FIRST, before onboarding any client. Triggers - "stack setup", "set up our stack", "what tools do we use", "wire up the stack", "configure the system", "/stack-setup". NOT for onboarding a client (that is /cold-email-kickoff), and NOT for resuming a client (/continue-client).
+description: Define FNNL Agency's cold outbound tech stack and process, then wire the whole system to it. Interviews the operator capability by capability (registrar, mailbox provider, sending platform, company discovery, contact enrichment, email verification, AI routing, CRM, reporting, deliverables), writes the answers into outbound/stack-contract.yaml, activates any matching integration pack from _vendor-library/ into .claude/skills/, regenerates scripts/.env.example with only the credentials the chosen stack actually needs, and reports what is still missing. Also captures FNNL's own process overrides (onboarding steps, approval gates, reporting cadence, deliverable format). Run this FIRST, before onboarding any client. Triggers - "stack setup", "set up our stack", "what tools do we use", "wire up the stack", "configure the system", "/stack-setup". NOT for onboarding a client (that is /cold-email-kickoff), and NOT for resuming a client (/continue-client).
 ---
 
 # Stack Setup (define FNNL Agency's tools and process, then wire the system to them)
@@ -17,7 +17,7 @@ Run it once when you learn FNNL's stack, and again whenever a tool changes.
 
 ## Path resolution
 
-`stack-contract.yaml`, `scripts/...`, `profiles/...` resolve under `02-skills/coldoutbound-skills/`, per the repo `CLAUDE.md` path rule. `_vendor-library/` resolves from the repo root.
+`stack-contract.yaml`, `scripts/...`, `profiles/...` resolve under `outbound/`, per the repo `CLAUDE.md` path rule. `_vendor-library/` resolves from the repo root.
 
 ## Material Decision Rule
 
@@ -140,7 +140,7 @@ Read `_vendor-library/README.md` for the current inventory. For each chosen tool
 
 1. Confirm with the operator that they want it activated.
 2. Move the pack's skills from `_vendor-library/skills/<vendor>/<skill>` to `.claude/skills/<skill>`.
-3. Move the pack's scripts from `_vendor-library/scripts/<vendor>/` into `02-skills/coldoutbound-skills/scripts/`.
+3. Move the pack's scripts from `_vendor-library/scripts/<vendor>/` into `outbound/scripts/`.
 4. Record the pack name in that slot's `vendor_pack` field.
 5. **Review the activated pack before trusting it.** These packs came from a different company's workspace. Search the activated files for placeholder IDs (`<...>` style) and for any account-specific assumption, and fix what you find. An activated pack is a working scaffold, not a verified integration.
 

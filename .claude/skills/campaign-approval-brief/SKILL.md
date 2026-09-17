@@ -10,10 +10,10 @@ description: Creates a client-facing approval brief for selected campaign paths,
 All profiles/<business-slug> paths in this skill resolve under:
 
 ```text
-<coldoutbound-skills>/profiles
+<outbound>/profiles
 ```
 
-Here `<coldoutbound-skills>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory. `scripts/...` likewise resolves under `<coldoutbound-skills>/scripts`.
+Here `<outbound>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory. `scripts/...` likewise resolves under `<outbound>/scripts`.
 
 Create a client-facing approval brief before list build whenever possible.
 
@@ -128,7 +128,7 @@ Hard-stop examples include em dashes, double hyphens, mid-sentence dash separato
 
 This skill is author-then-render. The visual template is LOCKED in a reusable pptxgenjs library so every client's deck is visually identical.
 
-### Files (under `<coldoutbound-skills>/scripts/approval-brief-pptx/`)
+### Files (under `<outbound>/scripts/approval-brief-pptx/`)
 
 - `lib.mjs`: **the locked design system.** `createBrief({ theme })` returns slide-factory methods: `cover`, `threeCards`, `campaignGrid`, `stepFlow`, `decisions`, `copyPreview`, `sequenceGrid`, `twoColumn`, `changeList`, `save`. Each method owns its layout; you never restyle inside it. **Do not fork per client**: extend the library if a new slide shape is genuinely needed.
 - `<client>.mjs`: **per-client content only.** Exports `meta` (`{ client, docTitle, theme:{accent,accent2}, defaultOut }`) and `buildSlides(b)` (an array of thunks, one per slide, that call the `b.*` methods with content authored from the Markdown brief). If a previous client's `.mjs` is already in that folder, copy its shape; otherwise read `lib.mjs` and follow each method's signature. Never invent a new slide shape here.
@@ -141,17 +141,17 @@ This skill is author-then-render. The visual template is LOCKED in a reusable pp
 
 ```bash
 # one-time: install the renderer local to scripts/ (NOT -g, because it must travel with the repo)
-npm --prefix "<coldoutbound-skills>/scripts" install pptxgenjs jszip
+npm --prefix "<outbound>/scripts" install pptxgenjs jszip
 
 # 1. author profiles/<client>/campaign-approval-brief.md  (unchanged authoring step)
 # 2. write/refresh scripts/approval-brief-pptx/<client>.mjs  (content + slide order only)
 # 3. build into a TEMP (non-OneDrive) path: COM render can fail against the synced repo path
-node "<coldoutbound-skills>/scripts/approval-brief-pptx/build.mjs" <client> "%TEMP%/<client>-brief.pptx"
+node "<outbound>/scripts/approval-brief-pptx/build.mjs" <client> "%TEMP%/<client>-brief.pptx"
 ```
 
 ```powershell
 # 4. QA render every slide to PNG via PowerPoint COM (from the TEMP path)
-powershell -File "<coldoutbound-skills>\scripts\approval-brief-pptx\export_png.ps1" `
+powershell -File "<outbound>\scripts\approval-brief-pptx\export_png.ps1" `
   -Pptx "$env:TEMP\<client>-brief.pptx" -OutDir "$env:TEMP\brief-png" -Width 1600 -Height 900
 ```
 
@@ -181,7 +181,7 @@ Author the Markdown in the 11-part section order (below), then map it onto these
 | 9 | **Appendix B: If you want to change something** (REQUIRED slide) | Light | `changeList` | Appendix B |
 | 10 | **Next steps**: a 3–4 step process flow + a one-line guarantee/summary | Dark | `stepFlow` (onDark) | Section 7 (+ Section 8 reputation line) |
 
-Markdown section order to author against (voice + skeleton in `docs/campaign-approval-brief-template.md`): 1. Read This First · 2. The Campaigns At A Glance · 3. Campaign Details · 4. How We Write & Personalize The Emails · 5. Copy Preview · 6. What We Need From You · 7. What Happens Next · 8. How We Protect Your Reputation · Appendix A: Other Options We Considered · Appendix B: If You Want To Change Something. The deck **condenses** Section 3 into the Slide 3 cards (full per-campaign detail stays in the Markdown); calibrate the "all key content present" QA check to decisions/claims, not a 1:1 text match.
+Markdown section order to author against (voice + skeleton in `reference/campaign-approval-brief-template.md`): 1. Read This First · 2. The Campaigns At A Glance · 3. Campaign Details · 4. How We Write & Personalize The Emails · 5. Copy Preview · 6. What We Need From You · 7. What Happens Next · 8. How We Protect Your Reputation · Appendix A: Other Options We Considered · Appendix B: If You Want To Change Something. The deck **condenses** Section 3 into the Slide 3 cards (full per-campaign detail stays in the Markdown); calibrate the "all key content present" QA check to decisions/claims, not a 1:1 text match.
 
 ## PPTX Design Rules (locked)
 
@@ -209,7 +209,7 @@ These are encoded in `lib.mjs`. They exist here as the contract and the QA check
 2. **Every slide opens.** Open the built `.pptx` via PowerPoint COM (or `_probe.mjs` per slide). Zero "could not open / corrupt" errors.
 3. **View every slide image.** Export PNGs and look at each: no text overflowing its card, no overlapping elements, no low-contrast text, no cramped-vs-empty imbalance. Fix and re-render until clean. Copy bodies on the sequence slide must be **complete** (shrink font before truncating; never truncate copy).
 4. **Content text scan.** Unzip the `.pptx`, extract the `<a:t>` runs, and confirm **zero** banned-in-client-prose strings:
-   - **Internal vendor and tool names.** Build the scan list at run time from every tool named in `02-skills/coldoutbound-skills/stack-contract.yaml` (any slot: company discovery, contact enrichment, email verifier, registrar, mailbox provider, sending platform, CRM, research). Add the name of any other tool that actually appears in this client's artifacts, and any pack name under `_vendor-library/`. If the contract is still empty, the list is short or empty, which is fine and honest. Describe what the tool *does* in plain words instead of naming it.
+   - **Internal vendor and tool names.** Build the scan list at run time from every tool named in `outbound/stack-contract.yaml` (any slot: company discovery, contact enrichment, email verifier, registrar, mailbox provider, sending platform, CRM, research). Add the name of any other tool that actually appears in this client's artifacts, and any pack name under `_vendor-library/`. If the contract is still empty, the list is short or empty, which is fine and honest. Describe what the tool *does* in plain words instead of naming it.
    - Raw syntax (`segment_subtype`, `{{`, query/column fragments), skill slugs (`/campaign-`, `/tam-build`), the literal word "TAM", credit/quota counts, and **any spaced em/en dash** (`\s[—–]\s`). Fix every hit and re-render.
 5. **Key content present.** Confirm the client name, every selected campaign, the offer, the decisions/asks, the copy preview (when applicable), and both appendices appear.
 6. **Placeholder scan.** No leftover `lorem`, `ipsum`, `TODO`, or `[insert…]`.

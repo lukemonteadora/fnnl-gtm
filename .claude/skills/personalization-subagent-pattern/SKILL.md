@@ -9,16 +9,16 @@ description: Reusable approval-loop pattern for fanning out lead personalization
 All profiles/<business-slug> paths in this skill resolve under:
 
 ```text
-<coldoutbound-skills>/profiles
+<outbound>/profiles
 ```
 
-Here `<coldoutbound-skills>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
+Here `<outbound>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
 
 Cold email personalization at scale requires per-lead generation. Claude Code's Task tool lets you fan out to many sub-agents in parallel, each personalizing a slice of the lead list. This skill defines the reusable approval-loop pattern.
 
 ## GrowthFlare Framework A hard gate
 
-Before a sub-agent generates any complete initial cold email or other first written cold touch, read `<coldoutbound-skills>/outreach-copy-framework.md`. That rule controls the finished message even when personalization is generated per lead. It overrides older word-count, layout, opener, subject, proof, and CTA examples anywhere in this file.
+Before a sub-agent generates any complete initial cold email or other first written cold touch, read `<outbound>/reference/outreach-copy-framework.md`. That rule controls the finished message even when personalization is generated per lead. It overrides older word-count, layout, opener, subject, proof, and CTA examples anywhere in this file.
 
 For Email 1, every personalized and fallback body must:
 

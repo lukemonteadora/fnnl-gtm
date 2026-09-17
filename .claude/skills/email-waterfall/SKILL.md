@@ -9,17 +9,17 @@ description: Reveal missing work emails and verify deliverability only after /le
 All profiles/<business-slug> paths in this skill resolve under:
 
 ```text
-<coldoutbound-skills>/profiles
+<outbound>/profiles
 ```
 
-Here `<coldoutbound-skills>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
+Here `<outbound>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
 
 ## Stack Resolution (read before any tool step)
 
 This skill names **capability roles**, never specific vendors. Resolve every role to the tool this workspace has actually chosen by reading:
 
 ```text
-02-skills/coldoutbound-skills/stack-contract.yaml
+outbound/stack-contract.yaml
 ```
 
 Roles this skill uses: contact-discovery source, email finder, email verifier, waterfall enricher, sending platform, web-search API.

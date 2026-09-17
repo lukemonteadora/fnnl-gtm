@@ -26,7 +26,7 @@ rules rather than re-stating them.
 ## Stack dependency: this skill does not choose tools
 
 Every provisioning, warmup, import, and tagging step below runs against tools declared in
-`02-skills/coldoutbound-skills/stack-contract.yaml` (the `registrar`, `mailbox_provider` and
+`outbound/stack-contract.yaml` (the `registrar`, `mailbox_provider` and
 `sending_platform` slots). **If a slot you need is empty, stop and route the operator to `/stack-setup`.** Do
 not pick a tool because a note below names one, and do not infer FNNL's stack from an inert pack in
 `_vendor-library/`. A tool recorded as `chosen` is not proven; only `live` means a real call against FNNL's
@@ -79,10 +79,10 @@ Before doing pool work, **read** the pool log `profiles/_mailbox-pool/activity-l
 
 - **The pool sheet**: title **"Cold Email Mailbox Pool"**, id `<FNNL_MAILBOX_POOL_SHEET_ID>`. **This sheet does not exist yet.** The operator must create it once, build the three tabs to the column contract in "The Google Sheet" below, and replace the `<FNNL_MAILBOX_POOL_SHEET_ID>` placeholder here with the real spreadsheet id. Until that is done, every pool operation is blocked, so say so plainly rather than improvising a different store. Read/write it with the `google-docs` MCP (`readSpreadsheet` / `writeSpreadsheet`; see **Writing rows (HARD RULE)** below, and do NOT use `appendRows` on the data tabs).
 - **The per-client tracker**: the separate "Cold Email Mailbox Tracker" sheet, id `<FNNL_MAILBOX_TRACKER_SHEET_ID>`. **This one also has to be created by the operator** and its id filled in here. It is deliberately SEPARATE from the pool sheet: pool inventory is speculative and cross-client, while the tracker is per-active-client cost and ROI. They meet at deploy time (below).
-- **Pool home**: `profiles/_mailbox-pool/` (resolves under `02-skills/coldoutbound-skills/`). The underscore sorts it apart from real clients.
-- **Scripts**: `scripts/pool_lib.mjs` + `scripts/pool_allocate.mjs` + `scripts/pool_warmth.mjs` + `scripts/pool_alerts.mjs` + `scripts/pool_cutover.mjs` (resolve under `02-skills/coldoutbound-skills/`). These are already on disk and are pure logic.
+- **Pool home**: `profiles/_mailbox-pool/` (resolves under `outbound/`). The underscore sorts it apart from real clients.
+- **Scripts**: `scripts/pool_lib.mjs` + `scripts/pool_allocate.mjs` + `scripts/pool_warmth.mjs` + `scripts/pool_alerts.mjs` + `scripts/pool_cutover.mjs` (resolve under `outbound/`). These are already on disk and are pure logic.
 
-All `profiles/...`, `scripts/...`, `client-activity-log.md` references resolve under `02-skills/coldoutbound-skills/` per the repo path rule. A `/<name>` reference means that skill in `.claude/skills/`.
+All `profiles/...`, `scripts/...`, `client-activity-log.md` references resolve under `outbound/` per the repo path rule. A `/<name>` reference means that skill in `.claude/skills/`.
 
 ## The three-stage domain lifecycle (TLDs are fixed)
 

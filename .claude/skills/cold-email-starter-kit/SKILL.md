@@ -9,7 +9,7 @@ This is the orientation layer, not the operating checklist.
 
 ## Before anything else: is the stack set up?
 
-This workspace ships with **no tech stack**. Skills are written against capability roles ("the sending platform"), not brand names, and the actual tools live in `<coldoutbound-skills>/stack-contract.yaml`.
+This workspace ships with **no tech stack**. Skills are written against capability roles ("the sending platform"), not brand names, and the actual tools live in `<outbound>/stack-contract.yaml`.
 
 **Check that file first.** If the infrastructure and lead-data slots are still `not_chosen`, stop and run **`/stack-setup`**. Client work cannot proceed on an empty contract, and no skill should guess a vendor to get around it.
 
@@ -22,10 +22,10 @@ For real client work after that, start with `/cold-email-kickoff`. It is the sin
 All profile paths in this skill resolve under:
 
 ```text
-<coldoutbound-skills>/profiles
+<outbound>/profiles
 ```
 
-When this skill says `profiles/<business-slug>/...`, read or write `<coldoutbound-skills>/profiles/<business-slug>/...`. Here `<coldoutbound-skills>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
+When this skill says `profiles/<business-slug>/...`, read or write `<outbound>/profiles/<business-slug>/...`. Here `<outbound>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
 
 Do not route users to old numbered legacy docs from earlier versions of this repo. The reusable source of truth is the root skill set in this folder.
 

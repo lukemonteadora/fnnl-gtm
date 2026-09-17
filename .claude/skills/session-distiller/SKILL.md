@@ -125,7 +125,7 @@ Read the matched skill end to end before proposing any edit to it. You can't slo
 - **NOT PRESENT and fits this skill** → propose an edit slotted into the **correct existing section**, integrated with the surrounding flow, not appended at the end as an orphan. If the knowledge changes a step inside an existing sequence, read the steps around it and patch only that step without breaking the chain.
 - **NOT PRESENT and does NOT fit this skill** → don't force it in. Point the operator to a better-fitting skill, or park it in `LEARNINGS.md`. Forcing unrelated knowledge into the nearest skill is how skills rot.
 
-**One extra check before any edit lands: does the knowledge name a specific vendor?** If it is only true for one tool, it must be written as a clearly labelled vendor-specific note, not as a general rule, and it must never imply that tool is part of the stack. The stack lives in `02-skills/coldoutbound-skills/stack-contract.yaml`. A session using a tool is not a decision to adopt it.
+**One extra check before any edit lands: does the knowledge name a specific vendor?** If it is only true for one tool, it must be written as a clearly labelled vendor-specific note, not as a general rule, and it must never imply that tool is part of the stack. The stack lives in `outbound/stack-contract.yaml`. A session using a tool is not a decision to adopt it.
 
 ## 9. Confidence routing
 

@@ -52,4 +52,4 @@ Run `node close.mjs me` first to confirm the key works.
 
 - Writes create real CRM records. Treat create/update/delete as live actions: confirm with the operator, prefer the read scope (`mcp.read`) until a sync is designed, and never bulk-write from a half-built mapping.
 - Route key presence through `/preflight-credentials` (registered warn-level under the new `crm` tier; triggers only when a CRM is configured).
-- Path resolution: `scripts/...` resolves under `02-skills/coldoutbound-skills/` per the repo CLAUDE.md rule.
+- Path resolution: `scripts/...` resolves under `outbound/` per the repo CLAUDE.md rule.

@@ -15,7 +15,7 @@ Claude Code stays the execution cockpit: it inspects files, routes the workflow,
 
 FNNL Agency has not chosen its tools. This file describes **capability slots** and the reasoning for routing work between them. It never declares which vendor FNNL uses.
 
-**The chosen tool for each slot comes from the workspace stack contract at `02-skills/coldoutbound-skills/stack-contract.yaml`.** It ships empty. The AI and web slots this file routes against are:
+**The chosen tool for each slot comes from the workspace stack contract at `outbound/stack-contract.yaml`.** It ships empty. The AI and web slots this file routes against are:
 
 | Slot | Capability role |
 |---|---|

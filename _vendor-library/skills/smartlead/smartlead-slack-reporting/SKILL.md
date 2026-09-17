@@ -98,7 +98,7 @@ reference for maintaining it.
 
 ## Runbook
 
-All file paths below resolve under `02-skills/coldoutbound-skills/scripts/smartlead-slack-reporting/`.
+All file paths below resolve under `outbound/scripts/smartlead-slack-reporting/`.
 
 ### 1 — Slack app + bot token  (operator clicks Allow)
 - https://api.slack.com/apps → **Create New App** → From scratch → name `Smartlead Reports` →
@@ -251,4 +251,4 @@ cards, no ping/state), `health-sim` (seed proof over live data), `health-selftes
 - `DEPLOY.md` — the live the upstream workspace deployment record (ids, status, gotchas hit). Per-deployment log.
 - `_sl_inbox_probe.mjs`, `_sl_report_probe.mjs` — endpoint shape probers (dev only).
 
-Full spec / background: `02-skills/coldoutbound-skills/smartlead-slack-reporting.md`.
+Full spec / background: `outbound/smartlead-slack-reporting.md`.

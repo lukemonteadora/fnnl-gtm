@@ -9,10 +9,10 @@ description: Conversational intake for cold email campaigns. Checks for icp.sour
 All profiles/<business-slug> paths in this skill resolve under:
 
 ```text
-<coldoutbound-skills>/profiles
+<outbound>/profiles
 ```
 
-Here `<coldoutbound-skills>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
+Here `<outbound>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
 
 This skill creates `client-profile.yaml`. Every downstream skill reads it. If this file is vague, the whole campaign gets vague.
 
@@ -46,7 +46,7 @@ Use `/offer-intelligence` validation mode only when the client has a real existi
 
 ## Intake Form Fast Path (check before anything else)
 
-Check `<coldoutbound-skills>/profiles/<business-slug>/client-profile.yaml`:
+Check `<outbound>/profiles/<business-slug>/client-profile.yaml`:
 
 - If it exists and `icp.source = intake_form`: the profile was already written by `/client-intake-form`. Report the pre-loaded fields in one summary line and return to the caller immediately. Do not re-interview.
 - If it exists without `icp.source = intake_form`: compare `run_state` to any values provided by the caller and proceed with the pre-fill pass below.
@@ -57,7 +57,7 @@ Check `<coldoutbound-skills>/profiles/<business-slug>/client-profile.yaml`:
 Before asking any question, build a pre-fill map silently:
 
 1. If a business website URL is available from context or the caller, scrape it and infer: offer summary, likely buyer titles, apparent headcount range from pricing, industries from homepage imagery and case studies, geography from footer/currency/case study locations, client-suggested offer from services pages, tone from copy voice.
-2. Read `<coldoutbound-skills>/stack-contract.yaml` for the tool declared in each capability slot (registrar, mailbox provider, sending platform, email verification, lead sources), then check `.env` and `.env.local` for the matching credentials. A key is evidence that a credential exists, never a stack decision: no `run_state` provider field is filled from a key, from habit, or from another client's profile. If a slot this run needs is empty, leave the field `null` and route the operator to `/stack-setup`. That stop holds under `auto_execute`, because provider routing is a hard stop rather than a rubric choice.
+2. Read `<outbound>/stack-contract.yaml` for the tool declared in each capability slot (registrar, mailbox provider, sending platform, email verification, lead sources), then check `.env` and `.env.local` for the matching credentials. A key is evidence that a credential exists, never a stack decision: no `run_state` provider field is filled from a key, from habit, or from another client's profile. If a slot this run needs is empty, leave the field `null` and route the operator to `/stack-setup`. That stop holds under `auto_execute`, because provider routing is a hard stop rather than a rubric choice.
 3. Check any existing `client-profile.yaml` for prior values.
 
 Use this pre-fill map to suggest answers for every interview question. Present each question as a confirm-or-correct native choice prompt with the suggested value as the recommended option. The user clicks to accept or types a correction - they do not answer from blank.
@@ -84,10 +84,10 @@ Do not treat geography as a minor ICP note. Store the target countries, states, 
 Save one file:
 
 ```text
-<coldoutbound-skills>/profiles\<business-slug>\client-profile.yaml
+<outbound>/profiles\<business-slug>\client-profile.yaml
 ```
 
-Here `<coldoutbound-skills>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory. When this or a downstream skill says `profiles/<business-slug>/...`, resolve it under `<coldoutbound-skills>/profiles`.
+Here `<outbound>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory. When this or a downstream skill says `profiles/<business-slug>/...`, resolve it under `<outbound>/profiles`.
 
 ## Step 1: Anchor The Business
 

@@ -1,5 +1,5 @@
 {
-  "_README": "CATALOGUE of MCP server definitions carried over from the upstream workspace. These are NOT active. The live file is .mcp.json at the repo root, which ships with an empty mcpServers object because FNNL Agency has not chosen a tech stack. /stack-setup copies the entry for a chosen tool from here into .mcp.json, after the matching slot is filled in 02-skills/coldoutbound-skills/stack-contract.yaml. Env var names are placeholders; real values belong in 02-skills/coldoutbound-skills/scripts/.env, which is gitignored.",
+  "_README": "CATALOGUE of MCP server definitions carried over from the upstream workspace. These are NOT active. The live file is .mcp.json at the repo root, which ships with an empty mcpServers object because FNNL Agency has not chosen a tech stack. /stack-setup copies the entry for a chosen tool from here into .mcp.json, after the matching slot is filled in outbound/stack-contract.yaml. Env var names are placeholders; real values belong in outbound/scripts/.env, which is gitignored.",
   "_capability_hint": {
     "spaceship-mcp": "infrastructure.registrar",
     "smartlead": "infrastructure.sending_platform",

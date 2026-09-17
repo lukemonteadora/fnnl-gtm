@@ -56,7 +56,7 @@ An outside read is independent, which is the point — but it's **confidently wr
 
 ### The calls (tested, working)
 
-Run the router via Bash from the scripts home. `scripts/research/ai_router.mjs` resolves under `02-skills/coldoutbound-skills/` per the repo path rule; keys read from `scripts/.env` (`OPENAI_API_KEY`, `PERPLEXITY_API_KEY` — both set).
+Run the router via Bash from the scripts home. `scripts/research/ai_router.mjs` resolves under `outbound/` per the repo path rule; keys read from `scripts/.env` (`OPENAI_API_KEY`, `PERPLEXITY_API_KEY` — both set).
 
 **Top reasoner (default critic):**
 

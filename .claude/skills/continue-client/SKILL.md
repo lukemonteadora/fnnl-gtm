@@ -36,7 +36,7 @@ This is the backbone of the skill. The client's `profiles/<client>/activity-log.
 
 ## Canonical paths
 
-Resolve every `profiles/<client>/...`, `scripts/...`, `memory/...`, `client-activity-log.md`, and `cold-email-copy-best-practices.md` reference under `<coldoutbound-skills>/` (the data home: `02-skills/coldoutbound-skills/`), per the repo path-resolution rule — not the current working directory. A reference of the form `/<name>` means that skill in `.claude/skills/`. Client profiles are gitignored, so enumerate and read them with the **Bash/Read tools, not Glob/Grep** (Glob is `.gitignore`-filtered and won't see them).
+Resolve every `profiles/<client>/...`, `scripts/...`, `memory/...`, `client-activity-log.md`, and `cold-email-copy-best-practices.md` reference under `<outbound>/` (the data home: `outbound/`), per the repo path-resolution rule — not the current working directory. A reference of the form `/<name>` means that skill in `.claude/skills/`. Client profiles are gitignored, so enumerate and read them with the **Bash/Read tools, not Glob/Grep** (Glob is `.gitignore`-filtered and won't see them).
 
 ## When to use
 
@@ -65,7 +65,7 @@ Resolve every `profiles/<client>/...`, `scripts/...`, `memory/...`, `client-acti
 
 Resolve the client in this order (the headline case is a fresh session with empty context, so don't lean on session inference):
 
-1. **From the invocation.** If the operator named a client ("continue ExampleCo", "launch Northwind's drafts"), use it. Normalize the spoken name to the profile slug by listing `<coldoutbound-skills>/profiles/` and matching (e.g. "ExampleCo" / "Example Co" → `exampleco`; "North Wind" / "Northwind" → `northwind`).
+1. **From the invocation.** If the operator named a client ("continue ExampleCo", "launch Northwind's drafts"), use it. Normalize the spoken name to the profile slug by listing `<outbound>/profiles/` and matching (e.g. "ExampleCo" / "Example Co" → `exampleco`; "North Wind" / "Northwind" → `northwind`).
 2. **From the live session.** If no client was named but this session has clearly been working one client (files read, client discussed), use that — but confirm it in one line ("Continuing **<client>** — that's the client in play, right? Correcting now if not.") and proceed under `auto_execute` rather than blocking.
 3. **Ask once.** If still ambiguous (multiple in-flight clients, nothing in context), enumerate the in-flight clients — those whose `activity-log.md` CURRENT STATE is not fully launched/complete — and ask with a native choice prompt, showing each client's one-line "Next action" so the choice is obvious. Put the most-recently-touched client first and mark it `[Recommended]`.
 

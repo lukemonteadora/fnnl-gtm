@@ -9,7 +9,7 @@ Turn the built company and contact TAM into an auditable outreach queue. The sco
 
 ## Canonical paths
 
-Resolve every `profiles/<business-slug>/...` and `scripts/...` path under `02-skills/coldoutbound-skills/`.
+Resolve every `profiles/<business-slug>/...` and `scripts/...` path under `outbound/`.
 
 Read:
 
@@ -120,7 +120,7 @@ Do not start from a generic title list. Read the real inputs first.
 5. Add `evidence_columns` for all seven components. Each entry lists only real headers from its normalized scoring input. The script rejects a missing or invented header.
 6. Validate that the component maxima sum to exactly 10.0 and that every named input column exists or is explicitly marked derived.
 
-Start from `<coldoutbound-skills>/lead-scoring-rubric-template.yaml`, then replace every sample mapping and evidence column with client-specific values. A sample value left in place merely to satisfy validation is a failed rubric.
+Start from `<outbound>/reference/lead-scoring-rubric-template.yaml`, then replace every sample mapping and evidence column with client-specific values. A sample value left in place merely to satisfy validation is a failed rubric.
 
 The rubric scope is the client plus locked offer, with per-segment mappings. Do not rebuild it per campaign or per scrape. Rebuild only when the ICP or offer changes.
 

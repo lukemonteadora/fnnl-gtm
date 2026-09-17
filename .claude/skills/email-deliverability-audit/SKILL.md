@@ -9,10 +9,10 @@ description: Diagnostic audit for a running cold email program. Checks DNS authe
 All profiles/<business-slug> paths in this skill resolve under:
 
 ```text
-<coldoutbound-skills>/profiles
+<outbound>/profiles
 ```
 
-Here `<coldoutbound-skills>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
+Here `<outbound>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
 
 If positive replies drop, do not blame the offer first. Check whether emails are reaching inboxes.
 
@@ -30,7 +30,7 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 
 ## Provider Lock
 
-Read `run_state.sending_platform` before choosing any check. It is locked per client and inherited from `<coldoutbound-skills>/stack-contract.yaml`.
+Read `run_state.sending_platform` before choosing any check. It is locked per client and inherited from `<outbound>/stack-contract.yaml`.
 
 **If `run_state.sending_platform` is empty, stop.** The contract has no sending platform recorded, so there is nothing to audit against. Route the operator to `/stack-setup`. Do not guess a platform, and do not fall back to a vendor named in an example.
 

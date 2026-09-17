@@ -13,7 +13,7 @@ This skill names **capability roles**, never specific vendors. Resolve every rol
 tool this workspace has actually chosen by reading:
 
 ```text
-02-skills/coldoutbound-skills/stack-contract.yaml
+outbound/stack-contract.yaml
 ```
 
 Roles this skill uses: sending platform, mailbox provider, email verifier, waterfall enricher, web-research engine.

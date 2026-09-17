@@ -1,6 +1,6 @@
 ---
 name: cold-email-kickoff
-description: Single "start here" orchestrator for new cold email operators. Runs a pre-fill discovery pass first (.env, existing profiles, website scrape), then checks for profiles/<business-slug>/intake-form.md - if found, skips all intake questions and reads execution_mode and spend_ceiling_usd from the form. If no form, it fills the infrastructure and sending-platform capability slots from the stack contract at <coldoutbound-skills>/stack-contract.yaml, never from a default vendor, and stops for /stack-setup when a slot the run needs is empty. Runs /icp-onboarding -> /lead-source-strategy Source-Signal Discovery Mode -> /offer-intelligence (discovery) -> /lead-magnet-brainstorm -> /data-point-discovery -> /tam-build -> /lead-scoring -> /campaign-strategy -> /lead-source-strategy Lead Source Plan Mode for new offers, or /offer-intelligence (validation) for existing offers. With execution_mode=auto_execute, picks top-ranked offer and campaign without pausing. Runs /mailbox-mix-strategy before any mailbox infrastructure spend. Spend gate auto-approves purchases only when a non-zero spend_ceiling_usd is explicitly set; the default ceiling is 0, meaning always confirm before any spend.
+description: Single "start here" orchestrator for new cold email operators. Runs a pre-fill discovery pass first (.env, existing profiles, website scrape), then checks for profiles/<business-slug>/intake-form.md - if found, skips all intake questions and reads execution_mode and spend_ceiling_usd from the form. If no form, it fills the infrastructure and sending-platform capability slots from the stack contract at <outbound>/stack-contract.yaml, never from a default vendor, and stops for /stack-setup when a slot the run needs is empty. Runs /icp-onboarding -> /lead-source-strategy Source-Signal Discovery Mode -> /offer-intelligence (discovery) -> /lead-magnet-brainstorm -> /data-point-discovery -> /tam-build -> /lead-scoring -> /campaign-strategy -> /lead-source-strategy Lead Source Plan Mode for new offers, or /offer-intelligence (validation) for existing offers. With execution_mode=auto_execute, picks top-ranked offer and campaign without pausing. Runs /mailbox-mix-strategy before any mailbox infrastructure spend. Spend gate auto-approves purchases only when a non-zero spend_ceiling_usd is explicitly set; the default ceiling is 0, meaning always confirm before any spend.
 ---
 
 # Cold Email Kickoff
@@ -49,10 +49,10 @@ Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURR
 All profile paths in this skill resolve under:
 
 ```text
-<coldoutbound-skills>/profiles
+<outbound>/profiles
 ```
 
-When this skill says `profiles/<business-slug>/...`, read or write `<coldoutbound-skills>/profiles/<business-slug>/...`. Here `<coldoutbound-skills>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
+When this skill says `profiles/<business-slug>/...`, read or write `<outbound>/profiles/<business-slug>/...`. Here `<outbound>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
 
 ## Provider Lock Rule
 
@@ -96,7 +96,7 @@ run_state:
 
 This state is binding. Do not suggest the other registrar, mailbox provider, or sending platform unless the selected path is impossible or the user explicitly asks to change providers.
 
-**The stack contract is the only source of these values.** Read `<coldoutbound-skills>/stack-contract.yaml` and fill each capability slot from it. No slot has a default vendor, and none may be inferred from an API key, from habit, or from another client's profile. If a slot this run needs is empty or missing, **STOP and route the operator to `/stack-setup`**. That stop holds under `auto_execute`, exactly like the credential hard-stop in Step 2.6: choosing a provider is a provider-routing decision, not a rubric choice the execution mode can settle.
+**The stack contract is the only source of these values.** Read `<outbound>/stack-contract.yaml` and fill each capability slot from it. No slot has a default vendor, and none may be inferred from an API key, from habit, or from another client's profile. If a slot this run needs is empty or missing, **STOP and route the operator to `/stack-setup`**. That stop holds under `auto_execute`, exactly like the credential hard-stop in Step 2.6: choosing a provider is a provider-routing decision, not a rubric choice the execution mode can settle.
 
 Some mailbox providers bundle their own domain registration, so the contract also declares which registrar and mailbox-provider pairings are valid. Route only a pairing it declares valid, and reject any other combination with the contract's stated reason instead of substituting a provider yourself.
 
@@ -128,13 +128,13 @@ This discovery file is evidence, not a decision. It must not write to `offer.lea
 
 **Pre-fill discovery pass (run first, silently, before asking anything):**
 
-1. Check `<coldoutbound-skills>/profiles/*/intake-form.md` and `<coldoutbound-skills>/profiles/*/client-profile.yaml` for prior `run_state` values.
-2. Read `.env` and `.env.local` from the workspace root. Treat every key found as evidence that a credential exists, never as a stack decision. Map each key to the capability slot it would serve (sending platform, registrar, mailbox provider, self-hosted instance URL, email verification, lead source) and check it against `<coldoutbound-skills>/stack-contract.yaml`. A key for a provider the contract does not declare is a mismatch to surface to the operator, not a vendor to adopt.
+1. Check `<outbound>/profiles/*/intake-form.md` and `<outbound>/profiles/*/client-profile.yaml` for prior `run_state` values.
+2. Read `.env` and `.env.local` from the workspace root. Treat every key found as evidence that a credential exists, never as a stack decision. Map each key to the capability slot it would serve (sending platform, registrar, mailbox provider, self-hosted instance URL, email verification, lead source) and check it against `<outbound>/stack-contract.yaml`. A key for a provider the contract does not declare is a mismatch to surface to the operator, not a vendor to adopt.
 3. If a business website URL is available from context, scrape it to build ICP pre-fills for Step 2.
 
 **Intake form fast path:**
 
-Check `<coldoutbound-skills>/profiles/<business-slug>/intake-form.md`:
+Check `<outbound>/profiles/<business-slug>/intake-form.md`:
 
 - If it exists and is valid: read it, populate `run_state` (including `execution_mode` and `spend_ceiling_usd`), and **skip all Step 1 stack-routing questions**. Confirm in one line: "Loaded intake form for [business]. Stack: [stack]. Platform: [platform]. Mode: [execution_mode]." Then proceed to Step 2.
 - If it does not exist: continue with the stack resolution below. Fill each capability slot from the stack contract, show the value with its source label, and let the user confirm or correct it.
@@ -143,7 +143,7 @@ Set safe defaults when no intake form is present: `run_state.execution_mode: rev
 
 Before touching business context, resolve the stack from the contract rather than from a vendor menu.
 
-Read `<coldoutbound-skills>/stack-contract.yaml` and fill, in this order:
+Read `<outbound>/stack-contract.yaml` and fill, in this order:
 
 1. `run_state.registrar` and `run_state.mailbox_provider` from the contract's declared infrastructure pairing, then derive `run_state.infrastructure_stack` as the composite of the two.
 2. `run_state.sending_platform` from the contract's sending-platform slot, plus `run_state.emailbison_instance_url` only when that platform is self-hosted and the contract carries an instance URL.
@@ -162,7 +162,7 @@ Reject any pairing the contract does not declare, and name the rule it broke (mo
 
 ### Step 2: Load or create the business profile
 
-Check for `<coldoutbound-skills>/profiles/<business-slug>/client-profile.yaml`:
+Check for `<outbound>/profiles/<business-slug>/client-profile.yaml`:
 
 - If it exists and `icp.source = intake_form`: load it silently. Skip `/icp-onboarding` entirely. Proceed to Step 2.5.
 - If it exists but was not sourced from an intake form, load it and ask:
@@ -240,12 +240,12 @@ Placed here (not literally after Step 1) because the check reads `run_state` fro
 
 It checks **presence + shape only** — never balance, never secret values. Balance/spend stays owned by `/api-cost-governance`. The gate stays inside the `coldoutbound-gotchas` hard boundaries: read-only, no passwords, no account creation, no cards.
 
-**1. Persist run_state first.** Write the locked fields to `<coldoutbound-skills>/profiles/<business-slug>/client-profile.yaml` so the script can read them: `run_state.infrastructure_stack`, `run_state.registrar`, `run_state.mailbox_provider`, `run_state.sending_platform`, and `run_state.emailbison_instance_url` (only when the locked sending platform is self-hosted).
+**1. Persist run_state first.** Write the locked fields to `<outbound>/profiles/<business-slug>/client-profile.yaml` so the script can read them: `run_state.infrastructure_stack`, `run_state.registrar`, `run_state.mailbox_provider`, `run_state.sending_platform`, and `run_state.emailbison_instance_url` (only when the locked sending platform is self-hosted).
 
 **2. Run the preflight:**
 
 ```
-node "<coldoutbound-skills>/scripts/preflight-credentials.mjs" --profile <business-slug>
+node "<outbound>/scripts/preflight-credentials.mjs" --profile <business-slug>
 ```
 
 It resolves required vs optional keys from `scripts/credential-registry.json` × the locked `run_state`, prints a Required/Optional summary with masked tails (last 4 chars), writes `profiles/<business-slug>/preflight-credentials.json` for resumability, and sets an exit code.
@@ -601,7 +601,7 @@ Follow the Step 6 branch that matches `run_state`. This skill hands off cleanly 
 - `/campaign-approval-brief` - creates the client-facing approval brief after campaign selection and Lead Source Plan Mode, before list build when review is needed
 - `/mailbox-mix-strategy` - required before mailbox infrastructure setup decides the Google Workspace / Microsoft 365 purchase mix
 - `/mailbox-pool-staging` - check the pre-warmed pool for a ready group BEFORE provisioning fresh; owns the Stage 1→2→3 domain lifecycle + cross-client isolation
-- `/stack-setup` - declares FNNL Agency's tool for each capability slot in `<coldoutbound-skills>/stack-contract.yaml`; run it before kickoff, and whenever a slot this run needs is still empty
+- `/stack-setup` - declares FNNL Agency's tool for each capability slot in `<outbound>/stack-contract.yaml`; run it before kickoff, and whenever a slot this run needs is still empty
 - The domain + inbox setup skill named by the stack contract for the locked registrar + mailbox-provider pairing
 - The inbox manager named by the stack contract for the locked sending platform
 - The spintax and campaign-upload skills named by the stack contract for the locked sending platform

@@ -8,7 +8,7 @@ This workspace runs cold outbound for **FNNL Agency** and its clients. It is a f
 
 Every skill in this repo is written against a **capability role** ("the sending platform", "the contact enrichment tool", "the email verifier"), never against a brand name.
 
-**The single source of truth for which tool fills which role is `02-skills/coldoutbound-skills/stack-contract.yaml`.** It ships empty.
+**The single source of truth for which tool fills which role is `outbound/stack-contract.yaml`.** It ships empty.
 
 The rules that follow from that:
 
@@ -29,7 +29,7 @@ Name a specific `/vendor-skill` only as a parenthetical example, never as the in
 
 ### Per-client tools: `run_state`
 
-The workspace contract is the default. Each client's own profile at `02-skills/coldoutbound-skills/profiles/<slug>/client-profile.yaml` carries a `run_state` block that **locks** the tools for that client's campaigns, inheriting from the contract.
+The workspace contract is the default. Each client's own profile at `outbound/profiles/<slug>/client-profile.yaml` carries a `run_state` block that **locks** the tools for that client's campaigns, inheriting from the contract.
 
 `run_state` field names (`run_state.sending_platform`, `run_state.registrar`, `run_state.mailbox_provider`, `run_state.infrastructure_stack`, `run_state.research_routing`, `run_state.execution_mode`, `run_state.spend_ceiling_usd`, and the rest) are **load-bearing across 50+ skills**. Never rename them. Change what fills them, never what they are called.
 
@@ -53,6 +53,18 @@ What does **not** apply here: any rule naming a specific vendor as required, any
 
 If a global rule and this file conflict, **this file wins for work inside this workspace**. Resetting the machine-level config is a separate decision that affects other workspaces, so do not edit it as a side effect of work here.
 
+### The global file also names paths that do not exist here
+
+`~/.claude/CLAUDE.md` was written against the upstream folder layout and hardcodes three paths. In this workspace they resolve as:
+
+| Path in the global file | Here |
+|---|---|
+| `02-skills/coldoutbound-skills/profiles/<client>/activity-log.md` | `outbound/profiles/<client>/activity-log.md` |
+| `02-skills/coldoutbound-skills/client-activity-log.md` | `outbound/reference/client-activity-log.md` |
+| `02-skills/coldoutbound-skills/_intent-data-evaluation.md` | **Does not exist.** Upstream internal doc, deliberately not forked. Ignore the reference. |
+
+The read-first / write-after activity-log protocol itself still applies in full. Only the paths differ.
+
 ---
 
 ## 3. Where things live, and how paths resolve
@@ -61,7 +73,19 @@ If a global rule and this file conflict, **this file wins for work inside this w
 
 **When creating a new skill:** create `.claude/skills/<slug>/SKILL.md`, where the folder name is the command (`/<slug>`), with YAML frontmatter containing `name:` (matching the folder) and `description:`.
 
-**Skill data and reference docs live under `02-skills/coldoutbound-skills/`:**
+### The whole repo, in one table
+
+| Path | Contents |
+|---|---|
+| `.claude/skills/` | The 53 active skills. Claude Code loads these live. |
+| `outbound/` | Everything the skills read and write. Detailed below. |
+| `_vendor-library/` | Parked tool integrations. **Nothing here loads**, by construction. |
+| `library/` | Third-party PDFs and DOCX for human reading. No skill reads this. |
+| `client-assets/` | Client deliverables. Gitignored, local only. |
+
+Two rules keep that honest. Anything a skill needs at runtime lives under `outbound/`. Anything under `library/` is inert: if a skill ever needs it, move it into `outbound/reference/` rather than referencing it in place.
+
+**Skill data and reference docs live under `outbound/`:**
 
 | Path | Contents |
 |---|---|
@@ -69,14 +93,17 @@ If a global rule and this file conflict, **this file wins for work inside this w
 | `profiles/<client-slug>/` | Per-client profiles, campaigns, artifacts, activity logs. Gitignored. |
 | `scripts/` | Automation scripts, `.env` (gitignored), `credential-registry.json` |
 | `memory/` | Skill state files |
-| `docs/` | Setup guides and templates |
-| root `*.md` | Reference docs read *by* skills, such as `cold-email-copy-best-practices.md` |
+| `reference/` | Every doc a skill *reads*: copy doctrine, rubrics, client-facing templates, setup guides |
 
 ### Path-resolution rule
 
-When a skill references `profiles/<slug>/...`, `scripts/...`, `memory/...`, `stack-contract.yaml`, `<coldoutbound-skills>/...`, or a bare reference doc filename, **resolve it under `02-skills/coldoutbound-skills/`**, not the current working directory and not `.claude/skills/`. A reference of the form `/<name>` means the `/<name>` skill in `.claude/skills/`. `_vendor-library/` resolves from the repo root.
+When a skill references `profiles/<slug>/...`, `scripts/...`, `memory/...`, or `stack-contract.yaml`, **resolve it under `outbound/`**, not the current working directory and not `.claude/skills/`.
 
-This one rule means skills never need their internal references rewritten when files move.
+When a skill references a **bare reference-doc filename** (`cold-email-copy-best-practices.md`, `output-style-guide.md`, `campaign-approval-brief-template.md`, `client-activity-log.md`) or a `reference/...` path, **resolve it under `outbound/reference/`**.
+
+`<outbound>` written in a skill means the same thing explicitly: the root of this data library, wherever the repo happens to be checked out. Never hardcode an absolute path. A reference of the form `/<name>` means the `/<name>` skill in `.claude/skills/`. `_vendor-library/` and `library/` resolve from the repo root.
+
+This indirection means skills never need their internal references rewritten when files move.
 
 ---
 
@@ -84,7 +111,7 @@ This one rule means skills never need their internal references rewritten when f
 
 For any client work in this workspace:
 
-1. **Read first.** At the start of work on a client, open `02-skills/coldoutbound-skills/profiles/<client>/activity-log.md` and read its **CURRENT STATE** block before doing anything. It says what was last done, what is pending, what is blocked, and what is complete, so a fresh session never loses the thread or redoes work. If the file does not exist, create it from the template in `client-activity-log.md`.
+1. **Read first.** At the start of work on a client, open `outbound/profiles/<client>/activity-log.md` and read its **CURRENT STATE** block before doing anything. It says what was last done, what is pending, what is blocked, and what is complete, so a fresh session never loses the thread or redoes work. If the file does not exist, create it from the template in `client-activity-log.md`.
 2. **Write after.** After any material step, append a one-line entry (newest first) to the `LOG` and refresh `CURRENT STATE`. Keep entries short and status-oriented (CREATED / UPDATED / EXISTS / PENDING / BLOCKED / DONE / CANCELLED / NOTE). Record status, not raw dumps, and point to the detailed artifact.
 
 ---
@@ -126,7 +153,7 @@ This governs *how* things are explained and formatted. It does not change any sk
 
 When offering options, say three things for each: what it is, what happens if it is picked, and for the recommended one, why. For reports, approval briefs, and presentations: open with a line or two on what the document is and what the reader is meant to do with it, define key terms on first use, and keep a clear spine of what we did, what we found, what it means, and what we need from you.
 
-Fuller guidance and a plain-English glossary live in `02-skills/coldoutbound-skills/output-style-guide.md`.
+Fuller guidance and a plain-English glossary live in `outbound/reference/output-style-guide.md`.
 
 ---
 
@@ -156,4 +183,4 @@ Anything that costs money routes through `/api-cost-governance` and respects `ru
 
 ### Secrets
 
-Real API keys live only in `02-skills/coldoutbound-skills/scripts/.env`, which is gitignored. Never write a real key into any tracked file, never ask the operator to paste one into chat, and never authenticate or purchase on their behalf.
+Real API keys live only in `outbound/scripts/.env`, which is gitignored. Never write a real key into any tracked file, never ask the operator to paste one into chat, and never authenticate or purchase on their behalf.

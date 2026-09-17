@@ -2,7 +2,7 @@
 
 > **Two copies of this file exist and must stay identical.**
 > `.claude/skills/campaign-approval-brief/docs/` (beside the skill) and
-> `02-skills/coldoutbound-skills/docs/` (the data home the path rule resolves to).
+> `outbound/reference/` (the data home the path rule resolves to).
 > They were already duplicated upstream and had silently diverged. Edit one, copy it
 > to the other in the same change, or the skill and the DOCX converter will disagree
 > about what the locked template says.
@@ -100,7 +100,7 @@ The prose is **graded, not just the structure**. Write everything so a smart per
 
 **Banned in client prose. Scan and confirm ZERO hits before rendering:**
 
-- **Internal vendor / tool names.** Build the list at scan time from every tool named in `02-skills/coldoutbound-skills/stack-contract.yaml` (company discovery, contact enrichment, email verifier, registrar, mailbox provider, sending platform, CRM, research), plus any pack name under `_vendor-library/`, plus any other data, scraping or enrichment tool that appears in this client's artifacts. Describe what the tool *does* in plain words instead ("we look up and verify the right contact"). If the contract is still empty there may be nothing to scan for, which is fine.
+- **Internal vendor / tool names.** Build the list at scan time from every tool named in `outbound/stack-contract.yaml` (company discovery, contact enrichment, email verifier, registrar, mailbox provider, sending platform, CRM, research), plus any pack name under `_vendor-library/`, plus any other data, scraping or enrichment tool that appears in this client's artifacts. Describe what the tool *does* in plain words instead ("we look up and verify the right contact"). If the contract is still empty there may be nothing to scan for, which is fine.
 - **Raw syntax / fragments:** `segment_subtype`, `{{` (any merge-field braces), and any query, column, or filter fragment.
 - **Skill slugs:** `/campaign-` (e.g. `/campaign-strategy`, `/campaign-copywriting`), `/tam-build`, or any `/skill-name`.
 - **Credit / quota counts** (API credits, token counts, per-tool quotas).

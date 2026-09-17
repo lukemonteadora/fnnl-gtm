@@ -19,7 +19,7 @@ This file has two halves, and they carry very different weight:
   expensive to rediscover, but they are **not** a statement about FNNL's tools and **not** permission to use
   those tools. Verify any of it before you trust it here.
 
-FNNL's actual tool per capability is declared in `02-skills/coldoutbound-skills/stack-contract.yaml` (the
+FNNL's actual tool per capability is declared in `outbound/stack-contract.yaml` (the
 `registrar`, `mailbox_provider`, `sending_platform` and other slots). **If the slot you need is empty, stop
 and route the operator to `/stack-setup`.** Do not pick a tool because a note below mentions it.
 
@@ -33,7 +33,7 @@ and route the operator to `/stack-setup`.** Do not pick a tool because a note be
 - **OneDrive path trap:** loose folders under `C:\Users\admin\Documents\` (e.g. a stray
   `Documents\Mailbox Profiles\...`) are OneDrive-redirected and **dehydrate/lose files mid-session** (a
   generated headshot vanished this way). Save ALL generated assets INSIDE the repo:
-  `02-skills/coldoutbound-skills/profiles/<client>/assets/`. The repo root itself is local and safe.
+  `outbound/profiles/<client>/assets/`. The repo root itself is local and safe.
 - **Heavy web apps freeze the browser renderer** (sending platforms, mailbox providers, registrar dashboards):
   `screenshot`/`zoom`/`javascript_tool` time out ("renderer may be frozen"). Recover by reloading the tab.
   `find`/`read_page` (DOM) keep working while screenshots are frozen, so use them, and use **ref-based clicks**
@@ -145,7 +145,7 @@ rule and hand to the operator.
 
 Everything below was proven against a different company's accounts, plans, and API tiers. It is reference
 material, not FNNL's configuration. **Naming a tool here does not put it in FNNL's stack.** The stack lives in
-`02-skills/coldoutbound-skills/stack-contract.yaml`, and an empty slot means run `/stack-setup`. The matching
+`outbound/stack-contract.yaml`, and an empty slot means run `/stack-setup`. The matching
 integration packs sit inert in `_vendor-library/` until `/stack-setup` activates them.
 
 ### Image generation (OpenAI)

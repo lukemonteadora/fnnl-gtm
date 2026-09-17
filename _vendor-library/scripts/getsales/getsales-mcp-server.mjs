@@ -7,7 +7,7 @@
  * This local server is the offline / no-OAuth option; it wraps the verified REST client (getsales.mjs)
  * and exposes a handful of core tools. Auth via GETSALES_API_KEY (Bearer JWT). Live-untested (no account yet).
  *
- * Run (MCP client config):  node 02-skills/coldoutbound-skills/scripts/mcp/getsales-mcp-server.mjs
+ * Run (MCP client config):  node outbound/scripts/mcp/getsales-mcp-server.mjs
  */
 import { runStdioServer } from './_mcp_stdio_lib.mjs';
 import { gsReq } from '../getsales.mjs';

@@ -190,7 +190,7 @@ Run `/api-cost-governance` before any A-Leads enrichment at scale. Search (`comp
 The direct REST API at `https://api.a-leads.co/gateway/v1` (`company-search`, `search/*`, `reverse-email-lookup/*`) is **superseded by the MCP** and kept only as a documented fallback. Its state when last probed (2026-06-12): auth passed (wrong key → 401, real key → through), the bulk **file-management** reads worked via `api_key`-in-body, but **every search/enrichment EXECUTION endpoint returned `500`** after auth, and two returned `403`. The MCP connector now does what those endpoints couldn't, so there is no need to chase the REST 500 anymore.
 
 - Key (if ever needed): `ALEADS_API_KEY` in `scripts/.env` (32-char). `/preflight-credentials` checks presence.
-- Self-test: `node "$(git rev-parse --show-toplevel)/02-skills/coldoutbound-skills/scripts/aleads-selftest.mjs"` — probes the REST families. **Legacy** — prefer the MCP; only run this if you are deliberately testing the old REST path.
+- Self-test: `node "$(git rev-parse --show-toplevel)/outbound/scripts/aleads-selftest.mjs"` — probes the REST families. **Legacy** — prefer the MCP; only run this if you are deliberately testing the old REST path.
 - The full REST schema/handoff history was removed from this skill on the MCP migration (2026-06-16); it lives in git history if needed.
 
 ---

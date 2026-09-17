@@ -16,7 +16,7 @@ This skill is **provider-agnostic**. The asset generation is identical for every
 
 This skill needs two things from FNNL's stack, and it does not assume either one:
 
-- **The mailbox provider** (the `mailbox_provider` slot in `02-skills/coldoutbound-skills/stack-contract.yaml`),
+- **The mailbox provider** (the `mailbox_provider` slot in `outbound/stack-contract.yaml`),
   because that is where the avatar gets applied.
 - **The AI image model** used for the headshot. That routing is owned by `/ai-model-routing`, so read the
   model from there (and from the contract's AI routing entry, if one has been recorded).
@@ -189,11 +189,11 @@ which tools FNNL chose:
 
 1. **The AI image key**, for generating the headshot. The model is routed by `/ai-model-routing`.
 2. **The mailbox provider key**, for applying the avatar. This is whichever tool fills the
-   `mailbox_provider` slot in `02-skills/coldoutbound-skills/stack-contract.yaml`. A split fleet across two
+   `mailbox_provider` slot in `outbound/stack-contract.yaml`. A split fleet across two
    providers needs both providers' keys.
 
 Resolve the actual variable names this way: look up the chosen tool in `stack-contract.yaml`, then read that
-provider's declared env var name(s) from `02-skills/coldoutbound-skills/scripts/credential-registry.json`
+provider's declared env var name(s) from `outbound/scripts/credential-registry.json`
 (a catalogue of "if you chose tool X, these are its variables", not a declaration of FNNL's stack). Copy
 `scripts/.env.example` to a local ignored `scripts/.env` and fill in those names. Confirm they resolve by
 running `/preflight-credentials`, which scopes the check to the locked `run_state` path.
@@ -285,7 +285,7 @@ assets are co-located with that client's profile so everything about their outbo
 one place. **Always** set `PROFILE_OUTPUT_ROOT` per client before running:
 
 ```bash
-PROFILE_OUTPUT_ROOT=...\02-skills\coldoutbound-skills\profiles\{client-slug}\sender-identity
+PROFILE_OUTPUT_ROOT=...\outbound\profiles\{client-slug}\sender-identity
 ```
 
 The `profiles/` tree is gitignored, so persona images (PII) stay local and are never committed.

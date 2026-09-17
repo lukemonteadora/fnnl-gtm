@@ -17,7 +17,7 @@ If the request is "onboard/resume `<name>`" inside this workspace, stop and rout
 
 ## Path resolution
 
-`scripts/...`, `profiles/...`, `stack-contract.yaml` resolve under `02-skills/coldoutbound-skills/` of the **source** workspace, per the repo `CLAUDE.md` rule. `_vendor-library/` resolves from the repo root. The deterministic scan helper is `scripts/new_gtm_workspace.mjs`.
+`scripts/...`, `profiles/...`, `stack-contract.yaml` resolve under `outbound/` of the **source** workspace, per the repo `CLAUDE.md` rule. `_vendor-library/` resolves from the repo root. The deterministic scan helper is `scripts/new_gtm_workspace.mjs`.
 
 ## Material Decision Rule
 
@@ -110,7 +110,7 @@ Rewrite `CLAUDE.md` for the new company. Beyond the name, it must carry:
 - **The no-default-stack rule**, pointing at the empty contract, and the instruction to stop and route to `/stack-setup` when a slot is empty rather than assuming a vendor.
 - **An explicit override of machine-level global doctrine.** This is the boundary most easily missed. `~/.claude/CLAUDE.md` lives at the **machine** level, not in the repo, so a folder fork cannot change it. If it mandates specific vendors as hard rules, those rules will follow every session into the new workspace and quietly re-impose the stack you just removed. Write a workspace override that keeps the *stack-independent* principles (qualify cheaply before paying to enrich, exhaust the cheapest capable tool before the expensive one, separate discovery from reveal) and explicitly voids the vendor-specific mandates. Then **tell the operator** the global file still says otherwise, and that changing it is a separate machine-level decision affecting their other workspaces. Never edit their global config as a side effect.
 
-Also reset `README.md`, `00-start-here/README.md`, and `LEARNINGS.md`.
+Also reset `README.md` and `LEARNINGS.md`.
 
 ### Step 7 — Create the repo (GATED outward step)
 

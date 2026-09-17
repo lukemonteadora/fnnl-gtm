@@ -9,7 +9,7 @@
  * This local server is the offline option; it wraps the verified REST client (close.mjs) and exposes
  * core tools. Auth via CLOSE_API_KEY (HTTP Basic, key as username). Live-untested (no account yet).
  *
- * Run (MCP client config):  node 02-skills/coldoutbound-skills/scripts/mcp/close-mcp-server.mjs
+ * Run (MCP client config):  node outbound/scripts/mcp/close-mcp-server.mjs
  */
 import { runStdioServer } from './_mcp_stdio_lib.mjs';
 import { closeReq } from '../close.mjs';
