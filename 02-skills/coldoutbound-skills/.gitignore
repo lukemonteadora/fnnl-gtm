@@ -1,0 +1,16 @@
+# Local credentials and run-state artifacts. Keep reusable skills free of secrets.
+.env
+*.env
+!*.env.example
+scripts/.env
+scripts/*.env
+!scripts/.env.example
+
+# Client-specific domain setup outputs.
+scripts/*_purchased_domains.json
+scripts/*_domain_uuids.json
+scripts/*_mailboxes.csv
+scripts/*_export_to_*.sh
+
+# Generated client work is fixture/reference material, not reusable skill source.
+profiles/

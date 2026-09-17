@@ -1,0 +1,4 @@
+# Ignore all client work by default — keep local only
+*
+!.gitignore
+!.gitkeep

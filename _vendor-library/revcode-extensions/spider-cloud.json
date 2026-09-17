@@ -1,0 +1,95 @@
+{
+  "id": "spider-cloud",
+  "name": "Spider Cloud",
+  "version": "1.0.0",
+  "description": "Spider Cloud web extraction: crawl a site to markdown, scrape a single page, list a page's links, or run a web search. Renders JS and uses premium proxies to get past bot walls. Useful for company-website extraction and enrichment as a RevCode column function.",
+  "author": "the upstream workspace (custom)",
+  "category": "scraping",
+  "baseUrl": "https://api.spider.cloud",
+  "auth": {
+    "type": "bearer",
+    "setup": {
+      "fields": [{ "key": "apiKey", "label": "Spider Cloud API Key", "type": "secret" }],
+      "helpUrl": "https://spider.cloud/docs/api"
+    },
+    "inject": {
+      "headers": {
+        "Authorization": "Bearer {{apiKey}}",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "execution": {
+    "maxConcurrentRequests": 2,
+    "minDelayMs": 200,
+    "retry": { "maxAttempts": 3, "backoff": "exponential", "baseDelayMs": 1000, "maxDelayMs": 30000 },
+    "rateLimitSignals": ["429", "rate limit", "rate limit exceeded", "too many requests"]
+  },
+  "methods": {
+    "scrape": {
+      "name": "Scrape Page",
+      "description": "Extract a single page as markdown (or other format). Returns an array with one page object: content, url, status.",
+      "instructions": "url is the page to extract. request controls rendering: smart (auto-pick, default) and chrome render JavaScript; http is fastest but returns empty on JS-heavy or protected pages. proxy_enabled (default true) uses premium proxies to get past bot walls. The response is an array; raw holds the whole array, content holds the first page's text.",
+      "endpoint": { "method": "POST", "path": "/scrape" },
+      "params": {
+        "url": { "type": "string", "required": true, "description": "URL of the page to extract." },
+        "return_format": { "type": "string", "default": "markdown", "description": "markdown | raw | text | html." },
+        "request": { "type": "string", "default": "smart", "description": "http | chrome | smart. smart/chrome render JS; http is fastest." },
+        "proxy_enabled": { "type": "boolean", "default": true, "description": "Use premium proxies to bypass bot walls." }
+      },
+      "response": {
+        "content": { "path": "0.content", "type": "string" },
+        "url": { "path": "0.url", "type": "string" },
+        "status": { "path": "0.status", "type": "number" },
+        "raw": { "path": "", "type": "json" }
+      },
+      "category": "scraping"
+    },
+    "crawl": {
+      "name": "Crawl Site",
+      "description": "Crawl multiple pages of a site to markdown. Returns an array of page objects (content, url, status), one per crawled page.",
+      "instructions": "url is the starting URL. limit caps how many pages to crawl (default 10). request and proxy_enabled behave as in Scrape Page. raw holds the full array of crawled pages; content holds the first page's text.",
+      "endpoint": { "method": "POST", "path": "/crawl" },
+      "params": {
+        "url": { "type": "string", "required": true, "description": "Starting URL to crawl." },
+        "limit": { "type": "number", "default": 10, "description": "Maximum number of pages to crawl." },
+        "return_format": { "type": "string", "default": "markdown", "description": "markdown | raw | text | html." },
+        "request": { "type": "string", "default": "smart", "description": "http | chrome | smart." },
+        "proxy_enabled": { "type": "boolean", "default": true, "description": "Use premium proxies to bypass bot walls." }
+      },
+      "response": {
+        "content": { "path": "0.content", "type": "string" },
+        "url": { "path": "0.url", "type": "string" },
+        "status": { "path": "0.status", "type": "number" },
+        "raw": { "path": "", "type": "json" }
+      },
+      "category": "scraping"
+    },
+    "links": {
+      "name": "List Links",
+      "description": "Return the links found on a page or site.",
+      "instructions": "url is the page to read links from. limit caps how many to return.",
+      "endpoint": { "method": "POST", "path": "/links" },
+      "params": {
+        "url": { "type": "string", "required": true, "description": "URL to extract links from." },
+        "limit": { "type": "number", "default": 50, "description": "Maximum number of links to return." },
+        "request": { "type": "string", "default": "smart", "description": "http | chrome | smart." },
+        "proxy_enabled": { "type": "boolean", "default": true, "description": "Use premium proxies to bypass bot walls." }
+      },
+      "response": { "raw": { "path": "", "type": "json" } },
+      "category": "scraping"
+    },
+    "search": {
+      "name": "Web Search",
+      "description": "Run a web search through Spider Cloud and return result entries.",
+      "instructions": "search is the query string. limit caps the number of results.",
+      "endpoint": { "method": "POST", "path": "/search" },
+      "params": {
+        "search": { "type": "string", "required": true, "description": "Search query." },
+        "limit": { "type": "number", "default": 10, "description": "Maximum number of results." }
+      },
+      "response": { "raw": { "path": "", "type": "json" } },
+      "category": "search"
+    }
+  }
+}

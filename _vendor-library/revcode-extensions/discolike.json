@@ -1,0 +1,46 @@
+{
+  "id": "discolike",
+  "name": "DiscoLike",
+  "version": "1.0.0",
+  "description": "DiscoLike company discovery off a proprietary crawl of 70M+ company websites. Find lookalike companies from seed domains or a natural-language ICP. (DiscoLike's richer surface - DiscoGen research, contact search, ICP-fit validation, firmographic enrichment, segmentation - is on its MCP server, which is the feature-complete path; this REST extension covers company discovery so it can run as a RevCode column function.)",
+  "author": "the upstream workspace (custom)",
+  "category": "enrichment",
+  "baseUrl": "https://api.discolike.com/v1",
+  "auth": {
+    "type": "api-key",
+    "setup": {
+      "fields": [{ "key": "apiKey", "label": "DiscoLike API Key", "type": "secret" }],
+      "helpUrl": "https://docs.discolike.com/"
+    },
+    "inject": {
+      "headers": {
+        "x-discolike-key": "{{apiKey}}",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "execution": {
+    "maxConcurrentRequests": 1,
+    "minDelayMs": 1000,
+    "retry": { "maxAttempts": 4, "backoff": "exponential", "baseDelayMs": 2000, "maxDelayMs": 60000 },
+    "rateLimitSignals": ["429", "RATE_LIMITED", "rate limit", "rate limit exceeded", "too many requests"]
+  },
+  "methods": {
+    "discover": {
+      "name": "Discover Similar Companies",
+      "description": "Find companies similar to a seed domain, or matching a natural-language ICP. Bills per company record returned.",
+      "instructions": "Provide at least one of: domain (a seed company to find lookalikes for), icp_prompt (one-shot natural-language ICP that auto-extracts filters), or icp_text (raw semantic ICP text). country is an ISO-2 code (e.g. US). max_records must be at least 5 (default 100). Page deeper with offset instead of re-running the same query (dedupe by domain across pages). Auth header is x-discolike-key - not Authorization: Bearer, not x-api-key.",
+      "endpoint": { "method": "GET", "path": "/discover" },
+      "params": {
+        "domain": { "type": "string", "location": "query", "description": "Seed company domain to find lookalikes for." },
+        "icp_prompt": { "type": "string", "location": "query", "description": "One-shot natural-language ICP (auto-extracts structured filters and seed suggestions)." },
+        "icp_text": { "type": "string", "location": "query", "description": "Raw semantic ICP text (vector search; no auto-extraction)." },
+        "country": { "type": "string", "location": "query", "description": "ISO-2 country code, e.g. US, GB, AU." },
+        "max_records": { "type": "number", "location": "query", "default": 100, "minimum": 5, "description": "Number of companies to return (minimum 5)." },
+        "offset": { "type": "number", "location": "query", "description": "Paging offset for net-new rows; dedupe by domain across pages." }
+      },
+      "response": { "raw": { "path": "", "type": "json" } },
+      "category": "company_enrichment"
+    }
+  }
+}

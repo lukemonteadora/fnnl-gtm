@@ -1,0 +1,155 @@
+{
+  "id": "aleads",
+  "name": "A-Leads",
+  "version": "1.0.0",
+  "description": "A-Leads B2B data: company-level filter search (firmographics, funding, web traffic, tech, hiring, and sales-motion signals), lookalike companies, people/contact discovery, work-email finding, phone finding, and email verification.",
+  "author": "the upstream workspace (custom)",
+  "category": "enrichment",
+  "baseUrl": "https://api.a-leads.co/gateway/v1",
+  "auth": {
+    "type": "api-key",
+    "setup": {
+      "fields": [{ "key": "apiKey", "label": "A-Leads API Key", "type": "secret" }],
+      "helpUrl": "https://docs.a-leads.co/reference"
+    },
+    "inject": {
+      "headers": {
+        "x-api-key": "{{apiKey}}",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "execution": {
+    "maxConcurrentRequests": 2,
+    "minDelayMs": 300,
+    "retry": { "maxAttempts": 3, "backoff": "exponential", "baseDelayMs": 1000, "maxDelayMs": 30000 },
+    "rateLimitSignals": ["429", "RATE_LIMITED", "rate limit", "rate limit exceeded", "too many requests"]
+  },
+  "methods": {
+    "companySearch": {
+      "name": "Company Search",
+      "description": "Company-level filter search (Layer 1). Returns company records matching firmographic, funding, web-traffic, sales-motion, tech, and hiring filters. Bills per record returned.",
+      "instructions": "Build an ICP company universe. Every filter is optional - combine them for precision. Headcount uses integer buckets: 1=1, 2=2-10, 3=11-50, 4=51-200, 5=201-500, 6=501-1000, 7=1001-5000, 8=5001-10000, 9=10001+. Page with current_page (0-indexed); increment until results come back empty. Auth is the x-api-key header - never send Authorization: Bearer (A-Leads returns 400). A 500 with no message usually means the endpoint is plan-gated on this key; contact support@a-leads.co to activate.",
+      "endpoint": { "method": "POST", "path": "/company-search" },
+      "params": {
+        "organizations": { "type": "array", "description": "Company names to include." },
+        "excluded_organizations": { "type": "array", "description": "Company names to exclude." },
+        "bulk_domains": { "type": "string", "description": "Domains to include, one per line or comma-separated (e.g. acme.com,salesforce.com)." },
+        "company_type": { "type": "array", "description": "Privately Held | Public Company | Self-Owned | Partnership | Self-Employed | Nonprofit | Educational | Government Agency." },
+        "ownership_status": { "type": "array", "description": "Private | Public | Investment Company | NGO/NPO/NFP/Organization/Association | Government | Product/Brand/Service | SPAC." },
+        "mapped_company_size": { "type": "array", "description": "Headcount buckets as integers (1..9; see instructions for the mapping)." },
+        "hq_location": { "type": "array", "description": "Country or city, e.g. United States, Seattle." },
+        "experimental_industries": { "type": "array", "description": "Industry sector text (experimental; can reduce result count)." },
+        "categories_and_keywords": { "type": "array", "description": "Keywords from the company description/specialties." },
+        "sic_codes": { "type": "array", "description": "SIC classification codes." },
+        "naics_codes": { "type": "array", "description": "NAICS codes." },
+        "last_funding_round_name": { "type": "array", "description": "e.g. Seed Round, Series A, Series B, Series C, Angel Round, Venture Round." },
+        "min_revenue_annual": { "type": "number", "description": "Minimum annual revenue in USD." },
+        "max_revenue_annual": { "type": "number", "description": "Maximum annual revenue in USD." },
+        "min_total_website_visits_monthly": { "type": "number", "description": "Minimum monthly website visits." },
+        "technologies_used": { "type": "array", "description": "Tech-stack keywords (e.g. Salesforce, HubSpot)." },
+        "job_posting_title": { "type": "array", "description": "Job titles currently being recruited (a hiring-velocity proxy)." },
+        "pricing_available": { "type": "boolean", "description": "Company has a clear pricing page." },
+        "demo_available": { "type": "boolean", "description": "Company has a demo CTA." },
+        "free_trial_available": { "type": "boolean", "description": "Company offers a free trial." },
+        "request_uuid": { "type": "string", "description": "Optional tracking ID for this run." },
+        "current_page": { "type": "number", "default": 0, "description": "0-indexed page number." }
+      },
+      "response": { "raw": { "path": "", "type": "json" } },
+      "bodyMapping": { "wrapper": "company_filters", "topLevel": ["current_page"] },
+      "category": "company_enrichment"
+    },
+    "similarCompanies": {
+      "name": "Similar Companies",
+      "description": "Find companies similar to known companies, given A-Leads company IDs (integers returned in company-search results).",
+      "instructions": "Pass company_ids you got from a prior Company Search result. Paginate with page and page_size.",
+      "endpoint": { "method": "POST", "path": "/company-search/similar" },
+      "params": {
+        "company_ids": { "type": "array", "required": true, "description": "A-Leads company IDs as strings, e.g. [\"6068905\",\"6068904\"]." },
+        "page": { "type": "number", "default": 0, "description": "0-indexed page number." },
+        "page_size": { "type": "number", "default": 25, "description": "Results per page." }
+      },
+      "response": { "raw": { "path": "", "type": "json" } },
+      "category": "company_enrichment"
+    },
+    "advancedSearch": {
+      "name": "Advanced People Search",
+      "description": "People search with both person-level and company-level filters. Returns person records (LinkedIn profiles) with company context attached.",
+      "instructions": "Use for ICP contact discovery - combine title/seniority/department with company firmographics. is_job_title_strict=true means exact-title match, false (default) is fuzzy. search_type is new | saved | total. Pass the returned document_id into Find Work Email for the best match accuracy.",
+      "endpoint": { "method": "POST", "path": "/search/advanced-search" },
+      "params": {
+        "job_title": { "type": "array", "description": "Job titles to include (see is_job_title_strict)." },
+        "excluded_job_title": { "type": "array", "description": "Job titles to exclude." },
+        "is_job_title_strict": { "type": "boolean", "description": "true = exact title match only; false = fuzzy/related titles." },
+        "member_management_level": { "type": "array", "description": "Specialist | Manager | Owner | Founder | President/Vice President | Director | Senior | Head | C-Level | Partner | Intern." },
+        "experimental_member_department": { "type": "array", "description": "e.g. Sales, Marketing, Engineering." },
+        "member_location_raw_address": { "type": "array", "description": "Person's listed location." },
+        "member_skills": { "type": "array", "description": "Professional skills on the profile." },
+        "organizations": { "type": "array", "description": "Company names to target." },
+        "bulk_domains": { "type": "string", "description": "Company domains, one per line or comma-separated." },
+        "mapped_company_size": { "type": "array", "description": "Headcount buckets as integers (1..9)." },
+        "hq_location": { "type": "array", "description": "Company HQ country or city." },
+        "experimental_industries": { "type": "array", "description": "Company industry sector text." },
+        "technologies_used": { "type": "array", "description": "Company tech-stack keywords." },
+        "bombora_topic": { "type": "array", "description": "Bombora intent topic (e.g. Sales Automation)." },
+        "bombora_composite_score": { "type": "array", "description": "High | Medium | Low." },
+        "request_uuid": { "type": "string", "description": "Optional tracking ID." },
+        "current_page": { "type": "number", "default": 0, "description": "0-indexed page number." },
+        "search_type": { "type": "string", "default": "new", "description": "new (unseen) | saved (previously searched) | total (all)." }
+      },
+      "response": { "raw": { "path": "", "type": "json" } },
+      "bodyMapping": { "wrapper": "advanced_filters", "topLevel": ["current_page", "search_type"] },
+      "category": "people_enrichment"
+    },
+    "findEmail": {
+      "name": "Find Work Email",
+      "description": "Find a person's work email from their name and company domain (Layer 2).",
+      "instructions": "Provide first_name, last_name, and website (the company domain). If the person came from an Advanced People Search result, pass its document_id to improve match accuracy.",
+      "endpoint": { "method": "POST", "path": "/search/find-email" },
+      "params": {
+        "first_name": { "type": "string", "required": true, "description": "Person's first name." },
+        "last_name": { "type": "string", "required": true, "description": "Person's last name." },
+        "website": { "type": "string", "description": "Company domain, e.g. acme.com." },
+        "document_id": { "type": "string", "description": "Person record ID from an Advanced People Search result (improves accuracy)." },
+        "request_uuid": { "type": "string", "description": "Optional tracking ID." }
+      },
+      "response": { "raw": { "path": "", "type": "json" } },
+      "bodyMapping": { "wrapper": "data" },
+      "category": "email_finding"
+    },
+    "findPhone": {
+      "name": "Find Phone",
+      "description": "Find a phone number from a LinkedIn profile (Layer 2).",
+      "instructions": "Input is a LinkedIn profile URL or its slug (e.g. john-doe-15).",
+      "endpoint": { "method": "POST", "path": "/search/find-phone" },
+      "params": {
+        "linkedin_username": { "type": "string", "required": true, "description": "LinkedIn profile URL or slug." },
+        "request_uuid": { "type": "string", "description": "Optional tracking ID." }
+      },
+      "response": { "raw": { "path": "", "type": "json" } },
+      "bodyMapping": { "wrapper": "data" },
+      "category": "phone_finding"
+    },
+    "verifyEmail": {
+      "name": "Verify Email",
+      "description": "Verify whether an email address is deliverable (Layer 2).",
+      "endpoint": { "method": "POST", "path": "/search/verify-email" },
+      "params": {
+        "email": { "type": "string", "required": true, "description": "Email address to verify." }
+      },
+      "response": { "raw": { "path": "", "type": "json" } },
+      "bodyMapping": { "wrapper": "data" },
+      "category": "email_verification"
+    },
+    "reverseEmailVerify": {
+      "name": "Reverse Email Lookup + Verify",
+      "description": "Reverse-lookup and verify an email address. Body sends email at the top level (no data wrapper).",
+      "endpoint": { "method": "POST", "path": "/reverse-email-lookup/verify" },
+      "params": {
+        "email": { "type": "string", "required": true, "description": "Email address to reverse-lookup and verify." }
+      },
+      "response": { "raw": { "path": "", "type": "json" } },
+      "category": "email_verification"
+    }
+  }
+}

@@ -1,0 +1,3 @@
+{
+  "_README": "Maps a sending-platform client label to the display name used in reports. Empty by design: it held the upstream workspace's real client names. Add one entry per FNNL client, e.g. \"acme-outbound\": \"Acme Ltd\"."
+}

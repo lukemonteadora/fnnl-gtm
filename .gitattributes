@@ -1,0 +1,14 @@
+# Keep line endings exactly as they are on disk.
+# Skills and scripts here are a mix of LF and CRLF, and several were carefully
+# preserved that way during the fork. Letting Git renormalize them would produce
+# whole-file diffs that bury real changes.
+* -text
+
+# Binary files, never diff or convert.
+*.png binary
+*.jpg binary
+*.gif binary
+*.pdf binary
+*.docx binary
+*.xlsx binary
+*.pptx binary

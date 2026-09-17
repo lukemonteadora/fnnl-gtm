@@ -1,0 +1,29 @@
+{
+  "_README": "Per-deployment, NON-SECRET config for the Node path (post.mjs / preview.mjs). Copy this file to config.local.json (auto-gitignored) and fill it in for your company. SECRETS — SMARTLEAD_API_KEY and SLACK_BOT_TOKEN — go in .env in the parent scripts/ folder, NOT here. The Apps Script (Code.gs) reads the SAME values from its own Script Properties (CHANNELS_JSON, CLIENT_ALIASES_JSON) — this file is only for the optional Node/VPS path.",
+  "channels": {
+    "daily-sends-report": "C0XXXXXXXXX",
+    "daily-leads-report": "C0XXXXXXXXX",
+    "weekly-digest": "C0XXXXXXXXX",
+    "monthly-digest": "C0XXXXXXXXX",
+    "bounce-alerts": "C0XXXXXXXXX",
+    "interested-replies": "C0XXXXXXXXX",
+    "reply-followups": "C0XXXXXXXXX",
+    "stale-inbox": "C0XXXXXXXXX",
+    "reply-alerts": "C0XXXXXXXXX",
+    "health-alerts": "C0XXXXXXXXX"
+  },
+  "aliases": {
+    "_README": "Optional. Merge campaign-name-prefix variants into one canonical client label. The 'client' for every report is the campaign name's prefix before '|'. Add an entry only when the same client appears under more than one spelling.",
+    "Acme Variant Spelling": "Acme",
+    "ACME B2B — lookalike": "Acme"
+  },
+  "client_by_id": {
+    "_README": "Optional but recommended. Maps Smartlead client_id -> client label, used by the bounce alert (and any client_id-aware report) so a campaign whose client name is the SUFFIX (e.g. '<Segment> | <Client Label>') is labeled correctly instead of by its segment prefix. Find ids in /analytics/campaign/list (client_id field).",
+    "000000": "<Client Label>"
+  },
+  "_README_bounce": "Optional bounce-alert tuning (Node path reads these from env; the live engine Code.gs reads the same keys from Script Properties). Defaults: BOUNCE_THRESHOLD=0.03 (alert at the ~3% auto-protect level), BOUNCE_MIN_SENT=15 (low so small/low-volume clients are still evaluated), BOUNCE_WINDOW_DAYS=3, BOUNCE_MENTION=<!channel> (@channel ping; set empty to silence), BOUNCE_INCLUDE_PAUSED=true (also surface campaigns auto-paused for bounce). Lower threshold / min-sent = more complete but noisier.",
+  "_README_report9": "Optional. For the Node-path PREVIEW of the report-9 reply-alert card only (the live engine is Code.gs, which reads these from Script Properties). log_sheet_url adds the contacts-log link; webapp_url + enrich_token render the one-click phone button. Leave blank to preview the card without them.",
+  "log_sheet_url": "",
+  "webapp_url": "",
+  "enrich_token": ""
+}

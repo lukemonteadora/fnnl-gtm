@@ -1,0 +1,116 @@
+schema_version: 1
+score_version: client-offer-v1
+client: replace-with-client-slug
+offer: replace-with-locked-offer
+
+# Copy this file into profiles/<business-slug>/lead-scoring-rubric.yaml.
+# Replace every example mapping and evidence column after inspecting the real
+# client files. Do not leave a sample value merely to make validation pass.
+segments:
+  - name: default
+    market_mappings:
+      exact: []
+      adjacent: []
+      broad: []
+      weak: []
+      excluded: []
+    offer_mappings:
+      clear: []
+      strong: []
+      plausible: []
+      none: []
+    size_mappings:
+      ideal: []
+      adjacent: []
+      serviceable: []
+      fringe: []
+    geography_mappings:
+      core: []
+      expansion: []
+      unsupported: []
+    persona_mappings:
+      exact: []
+      strong: []
+      influencer: []
+      adjacent: []
+      weak: []
+      unrelated: []
+    authority_mappings:
+      ideal: []
+      decision_capable: []
+      influencer: []
+      none: []
+    timing_signal_mappings:
+      strong: []
+      useful: []
+      moderate: []
+      weak: []
+      none: []
+
+components:
+  market:
+    max_points: 2.0
+    points: {exact: 2.0, adjacent: 1.5, broad: 1.0, weak: 0.5, none: 0.0}
+  offer:
+    max_points: 1.5
+    points: {clear: 1.5, strong: 1.0, plausible: 0.5, none: 0.0}
+  size:
+    max_points: 1.0
+    points: {ideal: 1.0, adjacent: 0.75, serviceable: 0.5, fringe: 0.25, none: 0.0}
+  geo:
+    max_points: 0.5
+    points: {core: 0.5, expansion: 0.25, unsupported: 0.0}
+  role:
+    max_points: 2.5
+    points: {exact: 2.5, strong: 2.0, influencer: 1.5, adjacent: 1.0, weak: 0.5, unrelated: 0.0}
+  authority:
+    max_points: 1.5
+    points: {ideal: 1.5, decision_capable: 1.0, influencer: 0.5, none: 0.0}
+  timing:
+    max_points: 1.0
+    points: {strong: 1.0, useful: 0.75, moderate: 0.5, weak: 0.25, none: 0.0}
+
+tier_columns:
+  market: score_market_tier
+  offer: score_offer_tier
+  size: score_size_tier
+  geo: score_geo_tier
+  role: score_role_tier
+  authority: score_authority_tier
+  timing: score_timing_tier
+
+reason_columns:
+  market: score_market_reason
+  offer: score_offer_reason
+  size: score_size_reason
+  geo: score_geo_reason
+  role: score_role_reason
+  authority: score_authority_reason
+  timing: score_timing_reason
+
+# Use only real headers from the normalized scoring input files. These examples
+# are deliberately minimal and must be replaced for each client and offer.
+evidence_columns:
+  market: [industry]
+  offer: [description]
+  size: [headcount_range]
+  geo: [country]
+  role: [job_title]
+  authority: [job_title]
+  timing: [timing_signal]
+
+eligibility:
+  explicit_exclusion_columns:
+    - hard_no
+    - wrong_entity
+    - compliance_block
+    - do_not_contact
+    - suppressed
+  fit_status_bad_is_ineligible: true
+  marketable_min_score: 2.0
+
+confidence:
+  high_min: 0.85
+  medium_min: 0.65
+
+same_wave_contact_cap: 2

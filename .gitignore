@@ -1,0 +1,54 @@
+# ── Secrets ─────────────────────────────────────────────────────────────────
+*.env
+.env*
+!*.env.example
+*.local.json
+settings.local.json
+
+# ── Client data (never commit) ──────────────────────────────────────────────
+**/profiles/
+05-client-assets/*
+!05-client-assets/.gitkeep
+!05-client-assets/.gitignore
+
+# ── Lead lists and exports with personal data ───────────────────────────────
+*.csv
+
+# ── Operational run-state and scratch ───────────────────────────────────────
+# These hold real registered domains, account dumps, and operation results.
+# A client browsing the repo must never be able to read them.
+**/memory/*-state.json
+**/distilled-ledger.md
+_warmup_off_ids.json
+**/scripts/_*.json
+**/scripts/_*.txt
+**/scripts/_*.mjs
+**/scripts/_pool_*
+**/scripts/_prelaunch_*
+**/scripts/_catchall_*
+**/scripts/_inboxing_*
+**/scripts/_delivaudit_*
+**/scripts/research/
+outputs/
+tmp/
+
+# ── Binaries and installers ─────────────────────────────────────────────────
+*.exe
+90 - Installers and App Files/
+
+# ── Review staging ──────────────────────────────────────────────────────────
+99 - Review Inbox/
+
+# ── Dependencies ────────────────────────────────────────────────────────────
+node_modules/
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+
+# ── OS noise ────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini

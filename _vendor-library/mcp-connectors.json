@@ -1,0 +1,82 @@
+{
+  "_README": "CATALOGUE of MCP server definitions carried over from the upstream workspace. These are NOT active. The live file is .mcp.json at the repo root, which ships with an empty mcpServers object because FNNL Agency has not chosen a tech stack. /stack-setup copies the entry for a chosen tool from here into .mcp.json, after the matching slot is filled in 02-skills/coldoutbound-skills/stack-contract.yaml. Env var names are placeholders; real values belong in 02-skills/coldoutbound-skills/scripts/.env, which is gitignored.",
+  "_capability_hint": {
+    "spaceship-mcp": "infrastructure.registrar",
+    "smartlead": "infrastructure.sending_platform",
+    "zapmail": "infrastructure.mailbox_provider",
+    "salesforge": "infrastructure.mailbox_provider (Primeforge)",
+    "apify": "lead_data.company_discovery (scraping actors)",
+    "spider": "web.crawl",
+    "google-docs": "operations.document_generation / operations.spreadsheet"
+  },
+  "mcpServers": {
+    "spaceship-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "spaceship-mcp"
+      ],
+      "env": {
+        "SPACESHIP_API_KEY": "${SPACESHIP_API_KEY}",
+        "SPACESHIP_API_SECRET": "${SPACESHIP_API_SECRET}"
+      }
+    },
+    "smartlead": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "smartlead-mcp-by-leadmagic"
+      ],
+      "env": {
+        "SMARTLEAD_API_KEY": "${SMARTLEAD_API_KEY}",
+        "SMARTLEAD_ADVANCED_TOOLS": "true"
+      }
+    },
+    "zapmail": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "zapmail-mcp"
+      ],
+      "env": {
+        "ZAPMAIL_API_KEY": "${ZAPMAIL_API_KEY}"
+      }
+    },
+    "salesforge": {
+      "type": "http",
+      "url": "https://mcp.salesforge.ai/mcp",
+      "headers": {
+        "X-Primeforge-Key": "${PRIMEFORGE_API_KEY}"
+      }
+    },
+    "apify": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@apify/actors-mcp-server"
+      ],
+      "env": {
+        "APIFY_TOKEN": "${APIFY_TOKEN}"
+      }
+    },
+    "spider": {
+      "type": "http",
+      "url": "https://mcp.spider.cloud/mcp",
+      "headers": {
+        "Authorization": "Bearer ${SPIDER_API_KEY}"
+      }
+    },
+    "google-docs": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@a-bonus/google-docs-mcp"
+      ],
+      "env": {
+        "GOOGLE_CLIENT_ID": "${GOOGLE_CLIENT_ID}",
+        "GOOGLE_CLIENT_SECRET": "${GOOGLE_CLIENT_SECRET}",
+        "MCP_TOOL_GROUPS": "docs,drive,sheets,utils"
+      }
+    }
+  }
+}

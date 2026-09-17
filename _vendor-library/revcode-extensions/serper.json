@@ -1,0 +1,104 @@
+{
+  "id": "serper",
+  "name": "Serper",
+  "version": "1.0.0",
+  "description": "Serper.dev Google Search API: web search (SERP), news, local/places, and maps results as structured JSON. Useful for company research, news/why-now signals, and local-business discovery as a RevCode column function.",
+  "author": "the upstream workspace (custom)",
+  "category": "data",
+  "baseUrl": "https://google.serper.dev",
+  "auth": {
+    "type": "api-key",
+    "setup": {
+      "fields": [{ "key": "apiKey", "label": "Serper API Key", "type": "secret" }],
+      "helpUrl": "https://serper.dev/dashboard"
+    },
+    "inject": {
+      "headers": {
+        "X-API-KEY": "{{apiKey}}",
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "execution": {
+    "maxConcurrentRequests": 5,
+    "minDelayMs": 0,
+    "retry": { "maxAttempts": 3, "backoff": "exponential", "baseDelayMs": 500, "maxDelayMs": 15000 },
+    "rateLimitSignals": ["429", "rate limit", "too many requests"]
+  },
+  "methods": {
+    "search": {
+      "name": "Web Search",
+      "description": "Google web search. Returns organic results plus answer box, knowledge graph, people-also-ask, and related searches when present. Billed ~$0.001 per query.",
+      "instructions": "q is the search query. gl is the country (default us), hl the language (default en), num the result count (default 10). Use location for a geo-specific SERP (e.g. 'United States', 'London, England').",
+      "endpoint": { "method": "POST", "path": "/search" },
+      "params": {
+        "q": { "type": "string", "required": true, "description": "Search query." },
+        "gl": { "type": "string", "default": "us", "description": "Country code for results, e.g. us, gb, au." },
+        "hl": { "type": "string", "default": "en", "description": "Interface/language code, e.g. en." },
+        "num": { "type": "number", "default": 10, "description": "Number of results to return." },
+        "page": { "type": "number", "description": "Results page number (1-indexed)." },
+        "location": { "type": "string", "description": "Geo-specific location string, e.g. 'United States'." }
+      },
+      "response": {
+        "organic": { "path": "organic", "type": "array" },
+        "answerBox": { "path": "answerBox", "type": "json" },
+        "knowledgeGraph": { "path": "knowledgeGraph", "type": "json" },
+        "peopleAlsoAsk": { "path": "peopleAlsoAsk", "type": "array" },
+        "relatedSearches": { "path": "relatedSearches", "type": "array" },
+        "raw": { "path": "", "type": "json" }
+      },
+      "category": "search"
+    },
+    "news": {
+      "name": "News Search",
+      "description": "Google News search. Returns recent news articles for the query (good for why-now / trigger signals).",
+      "instructions": "q is the query. gl/hl/num as in Web Search.",
+      "endpoint": { "method": "POST", "path": "/news" },
+      "params": {
+        "q": { "type": "string", "required": true, "description": "News search query." },
+        "gl": { "type": "string", "default": "us", "description": "Country code." },
+        "hl": { "type": "string", "default": "en", "description": "Language code." },
+        "num": { "type": "number", "default": 10, "description": "Number of results." }
+      },
+      "response": {
+        "news": { "path": "news", "type": "array" },
+        "raw": { "path": "", "type": "json" }
+      },
+      "category": "signals"
+    },
+    "places": {
+      "name": "Places Search",
+      "description": "Google local/places search. Returns local business listings for the query and location (good for SMB / local discovery).",
+      "instructions": "q is the query (e.g. 'dentists'). Use location to scope the area (e.g. 'Austin, Texas').",
+      "endpoint": { "method": "POST", "path": "/places" },
+      "params": {
+        "q": { "type": "string", "required": true, "description": "Places search query." },
+        "location": { "type": "string", "description": "Geographic area, e.g. 'Austin, Texas'." },
+        "gl": { "type": "string", "default": "us", "description": "Country code." },
+        "hl": { "type": "string", "default": "en", "description": "Language code." }
+      },
+      "response": {
+        "places": { "path": "places", "type": "array" },
+        "raw": { "path": "", "type": "json" }
+      },
+      "category": "search"
+    },
+    "maps": {
+      "name": "Maps Search",
+      "description": "Google Maps search. Returns map place results for the query and location.",
+      "instructions": "q is the query. Use location to scope the area.",
+      "endpoint": { "method": "POST", "path": "/maps" },
+      "params": {
+        "q": { "type": "string", "required": true, "description": "Maps search query." },
+        "location": { "type": "string", "description": "Geographic area." },
+        "gl": { "type": "string", "default": "us", "description": "Country code." },
+        "hl": { "type": "string", "default": "en", "description": "Language code." }
+      },
+      "response": {
+        "places": { "path": "places", "type": "array" },
+        "raw": { "path": "", "type": "json" }
+      },
+      "category": "search"
+    }
+  }
+}
