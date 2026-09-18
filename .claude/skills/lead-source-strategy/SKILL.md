@@ -455,6 +455,8 @@ Only then proceed to the upload path matching locked `run_state.sending_platform
 
 ## Related Skills
 
+- `/ask-eric` - the live home of the Eric list-building doctrine this skill cites inline, including the five list-building methods and the sponsor-list quality rule. `eric-deliverability-doctrine.md` Part 2 carries his benchmark-before-you-pay method for choosing between source providers. Advisory only.
+
 - `/lead-list-tech-stack-research` - tool-fit map that separates workflow layer, source signal, collection, contact enrichment, and QA
 - `/icp-onboarding` - produces the profile and capability boundary this skill reads in discovery mode
 - `/offer-intelligence` - consumes `source-signal-intelligence.md` before lead magnet selection

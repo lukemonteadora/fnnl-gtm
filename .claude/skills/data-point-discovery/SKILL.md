@@ -348,6 +348,8 @@ Run `/tam-build`. It collects the catalog across the broad marketable universe, 
 
 ## Related Skills
 
+- `/ask-eric` - the live home of the Eric doctrine this skill cites inline ("the list is the message" / the sold-to axis, and the custom trigger as his only S-tier signal). Full tier list in `eric-doctrine.md` section 8. Advisory only.
+
 - `/cold-email-kickoff` - invokes this skill at Step 3.4 (after offer lock, before TAM build)
 - `/lead-source-strategy` - Source-Signal Discovery Mode produces the `source-signal-intelligence.md` input (and owns per-slice provenance fields)
 - `/lead-list-tech-stack-research` - obtainability backbone (tool-fit map, Layer-1/Layer-2 cost split)

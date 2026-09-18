@@ -350,6 +350,8 @@ Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURR
 
 ## Related Skills
 
+- `/ask-eric` - the live home of the Eric doctrine behind pull-the-whole-TAM-up-front, the growth filter as the first cut, lookalike seeding, and the 50 to 70% email-yield forecast. Advisory only. His corpus sets no list-size floor, so the 500-company launch floor here is an operator directive (2026-07-12) and is not his.
+
 - `/stack-setup` - fills `stack-contract.yaml`; run it first if any capability role this skill needs is empty
 - `/data-point-discovery` - produces `data-point-catalog.md`, the ranked catalog this skill collects against (kickoff Step 3.4, immediately before this skill)
 - `/lead-source-strategy` - Source-Signal Discovery Mode (Market Source Landscape) must exist before building; Lead Source Plan Mode runs per slice afterward

@@ -121,7 +121,7 @@ The whole reason the TAM is built first is so the launch set is decided from **t
 >
 > All on the locked offer. This wave answers "does this offer get replies, and which broad message resonates?" before any capacity is fragmented into signal slices. **The gate:** if the Offer-Validation Wave clears the reply / positive-reply bar, set `run_state.offer_market_proven = true` and proceed to the coverage wave (Wave 1 below). If it flops, iterate the **offer** first (`/offer-intelligence` validation mode: Go / Iterate / Swap); do NOT fan out signal slices on a dead offer. For a client whose offer is **already market-proven** (a returning client, or after this wave passes), skip straight to the coverage wave. This is the four-lever order made concrete: validate the offer (lever 1) before optimizing the list (lever 2). It does **not** change the ≥500-company floor or the volume-first shape below; it sequences them behind a cheap offer read.
 
-> **Framework A copy + the flip criterion (Offer-Validation Wave defaults, `offer_market_proven = false`).** Because this wave proves the offer, keep the broad-value-prop posture and minimal per-contact personalization, but use the same GrowthFlare Framework A initial-copy rule as every other wave: Email 1 is 25 to 35 body words, opens with the specific free deliverable, keeps the workload split in parentheses, and ends with its only question, a soft permission CTA. Use a 2-to-3-step sequence sized by TAM, recognizable proof only, no observational opener, and Tue-to-Thu sending. The phase flag controls strategy and the flip criterion, not a separate copy register. Full ruleset: `first-wave-eric-defaults.md` and `outreach-copy-framework.md`.
+> **Framework A copy + the flip criterion (Offer-Validation Wave defaults, `offer_market_proven = false`).** Because this wave proves the offer, keep the broad-value-prop posture and minimal per-contact personalization, but use the same Framework A initial-copy rule as every other wave: Email 1 is 25 to 35 body words, opens with the specific free deliverable, keeps the workload split in parentheses, and ends with its only question, a soft permission CTA. Use a 2-to-3-step sequence sized by TAM, recognizable proof only, no observational opener, and Tue-to-Thu sending. The phase flag controls strategy and the flip criterion, not a separate copy register. Full ruleset: `first-wave-eric-defaults.md` and `outreach-copy-framework.md`.
 >
 > **The flip criterion (pooled across the wave, with an explicit hold state). HARD RULE, re-derived 2026-07-17; replaces the old per-campaign ~300-send version.** The old rule held each campaign to ~300 first-touch sends, then flipped `offer_market_proven` true at roughly 1 positive per 400 contacted or dead at worse than 1 per 1,200. It could not actually decide. A positive reply at the 1-per-400 band is a rare event (Poisson mean 0.75 across 300 sends), so a genuinely good offer shows **zero** positives about 47% of the time and a dead offer shows at least one about 22% of the time: a coin toss dressed as a gate. That is the real reason `offer_market_proven` has never flipped for any client (that, plus most validation waves simply have not sent yet). Two corrections, both encoded here.
 >
@@ -585,8 +585,7 @@ Create a markdown table with these columns, ordered from **broadest to most nich
 - What personalized elements are included
 - The call-to-action approach, not final CTA wording
 - How the locked offer or lead magnet is preserved
-- For 4-step campaigns, how Email 1 and Email 3 can test different purposes without inventing a new offer
-- What Email 2 and Email 4 would support if a two-thread sequence is used
+- How Email 1 and its one or two same-thread follow-ups can test different purposes without inventing a new offer
 - Any proof points or case studies to reference
 - A `proof_gap:` note when the angle leans on a named client, case study, or exact number that is NOT on file (per the Proof-Asset Gap Check above): record the missing proof, the tier (BLOCK or FLAG-AND-PROCEED), and that the `proof-asset-request.md` form was emitted, so `/campaign-copywriting` inherits the gap. Omit the line when the angle has no proof gap.
 - Specific variables or research points to include
@@ -714,8 +713,7 @@ Before finalizing output, verify:
 - [ ] At least one no-AI campaign included
 - [ ] Locked front-end offer included, or strategy stopped and routed to `/lead-source-strategy` Source-Signal Discovery Mode + `/offer-intelligence` + `/lead-magnet-brainstorm`
 - [ ] Campaign overviews preserve the locked offer or lead magnet instead of inventing new offers
-- [ ] 4-step campaign overviews define different purposes for Email 1 and Email 3
-- [ ] 4-step campaign overviews define Email 2 and Email 4 as support emails for their own thread
+- [ ] Campaign overviews define the sequence as ONE thread with 2 to 3 steps (`/campaign-copywriting` Hard Rule 18: 2 by default, 3 only for a small TAM). No second new thread and no Email 4; the 4-email / two-thread structure was retired 2026-07-05
 - [ ] Value propositions tied to: make money, save time, save money, or mitigate risk
 - [ ] At least one "Golden ICP" style campaign (what a rep would send after 10 min of manual research)
 - [ ] Customer discovery analysis completed, with targeting challenged if research suggests broader ICP
@@ -746,6 +744,8 @@ Not every brainstormed idea is a viable campaign: a slice becomes one only once 
 If you do not have inboxes and a list yet, pause here. Come back after the setup skill selected by locked `run_state.infrastructure_stack`, the 2-week warmup, and `/lead-source-strategy` for the selected campaign. Do not jump straight to a list builder.
 
 ## Related skills
+
+- `/ask-eric` - the live home of the Eric Nowoslawski doctrine this skill cites inline throughout ("the list is the message", the sold-to axis, the growth filter, the signal tier list in `eric-doctrine.md` section 8). Advisory only: it never sends, spends, or edits live systems. Where his teaching and this skill's governed rules diverge, the governed rule wins and the divergence gets surfaced, never silently swapped.
 
 - `/tam-build` - produces the company and contact TAMs
 - `/lead-scoring` - produces the scored TAM files and governed queue this skill must read

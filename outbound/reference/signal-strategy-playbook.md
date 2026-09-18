@@ -652,7 +652,7 @@ Filter `sells_to_department = finance` vs `sells_to_department = marketing`. A c
 **Slice D — By motion**
 Filter `sells_to_motion = b2c` vs `sells_to_motion = b2b`. The coarsest and cheapest first cut. A B2C-motion company and a B2B-motion company have almost nothing in common operationally, so this split alone often changes the message.
 
-The ≥100-company floor applies to whichever grouping you slice on: a sold-to bucket is launch-viable only when ≥100 companies carry it (the same floor every other signal answers to). Group the free-text `sells_to_vertical` into ≥100-company buckets before treating a vertical as its own campaign.
+The ≥500-company floor applies to whichever grouping you slice on: a sold-to bucket is launch-viable only when ≥500 companies carry it (the same floor every other signal answers to; HARD RULE, operator directive 2026-07-12, which retired the old ≥100-company and ≥100-contact floors). Group the free-text `sells_to_vertical` into ≥100-company buckets before treating a vertical as its own campaign.
 
 ### Email Copy Angles
 

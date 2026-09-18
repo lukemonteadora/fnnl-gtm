@@ -1,5 +1,23 @@
 # Conversational, One-to-One Cold Email Examples (the "diagnostic mirror" register)
 
+> ## RETIRED. Do not copy from this file.
+>
+> **The register this file teaches was retired 2026-07-05, and several of its mechanics were
+> retired with it.** It is kept as a historical record of what the one-to-one diagnostic-mirror
+> style looked like, not as a source of copy. No skill reads it. Every example below breaks at
+> least one current hard rule:
+>
+> | What this file shows | The current rule |
+> |---|---|
+> | Email 1 around 180 words, pain-led or observation-led | Framework A: 25 to 35 body words, offer first, no observation or pain before the offer (`outreach-copy-framework.md`) |
+> | A 4-step, two-thread sequence with an Email 4 | ONE thread, 2 to 3 steps, no second new thread, no Email 4 (`/campaign-copywriting` Hard Rule 18) |
+> | `Just reply "Yes"` as the Email 1 CTA | Email 1 closes with one soft permission question; the statement-only opt-in is reserved for later steps (Hard Rule 32) |
+> | Per-contact one-to-one personalization as the default | Per-contact copy personalization retired 2026-07-05; copy is shared at slice level (Hard Rule 34) |
+>
+> Its own "Register checklist" below still reads as current. **It is not.** For live copy use
+> `outreach-copy-framework.md`, `cold-email-copy-best-practices.md` and `/campaign-copywriting`.
+> For worked examples that match today's contract, see `/ask-aaron` (`aaron-examples.md`).
+
 **What this file is.** A bank of worked cold-email examples in the conversational, personalized, one-to-one register the client asked for (the style in the "Non-generic AI sequences" reference slide: WEAK generic personalisation on the left, STRONG real personalisation on the right). It is the concrete companion to the doctrine in `cold-email-copy-best-practices.md` (Conversational One-to-One Register, Length Follows Personalization Density, CTA: make "yes" the easy answer, Write 1-to-1) and `/campaign-copywriting`. Read those for the rules; read this for what the rules look like in finished copy.
 
 **What it is NOT.** Not a client's approved campaign copy. The scenario below is a stand-in (a performance marketing agency reaching DTC / subscription ecommerce brands) chosen because it matches the reference slide and the client's own "the performance side of the business." Retarget the vertical, the persona, and the proof before any real send. Every proof point here (named brand type, metric, timeframe) is a PLACEHOLDER: swap in the client's real, on-file proof per the Proof-Asset Gate, or drop it. Translate before use if the campaign language is not English (for example, a Dutch-market client is language-locked).

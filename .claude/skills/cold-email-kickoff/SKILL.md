@@ -23,7 +23,7 @@ This skill defers to `/autonomous-execution-policy`. Under `run_state.execution_
 
 ## First-Wave Default: validate the offer before scaling
 
-For a new client, the first campaigns exist to prove the offer, not to scale or personalize. While `run_state.offer_market_proven` is `false`, use the Offer-Validation Wave posture in `first-wave-eric-defaults.md`: broad offer tests, minimal per-contact personalization, a TAM-sized 2-to-3-step sequence, and Tue-to-Thu sending. GrowthFlare Framework A in `outreach-copy-framework.md` controls Email 1 in every wave: 25 to 35 body words, offer first, mandatory workload parenthetical, and exactly one soft permission question. The phase flag changes strategy and measurement, not the initial-copy framework.
+For a new client, the first campaigns exist to prove the offer, not to scale or personalize. While `run_state.offer_market_proven` is `false`, use the Offer-Validation Wave posture in `first-wave-eric-defaults.md`: broad offer tests, minimal per-contact personalization, a TAM-sized 2-to-3-step sequence, and Tue-to-Thu sending. Framework A in `outreach-copy-framework.md` controls Email 1 in every wave: 25 to 35 body words, offer first, mandatory workload parenthetical, and exactly one soft permission question. The phase flag changes strategy and measurement, not the initial-copy framework.
 
 ## Activity Log Protocol
 
