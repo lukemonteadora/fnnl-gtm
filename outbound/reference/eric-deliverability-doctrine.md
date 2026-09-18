@@ -188,4 +188,6 @@ wrong data to enter, not more coverage.
 - `/cold-email-weekly-rhythm` reads the health-check rhythm.
 - `/lead-list-tech-stack-research` and `/stack-setup` read Part 2 before any vendor is added,
   swapped, or paid for.
+- `/email-waterfall` reads Part 2 for the verifier false-negative test behind revalidating a
+  stale cached address rather than trusting it.
 - `/ask-eric` holds the full corpus and is the place to go for anything not in this file.

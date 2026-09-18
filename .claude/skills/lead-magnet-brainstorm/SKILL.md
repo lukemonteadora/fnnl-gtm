@@ -355,7 +355,7 @@ Offer score: X/7
 
 Show the ranked options before locking anything. Do not include final CTA lines, subject lines, openers, or send-ready phrasing.
 
-For any candidate likely to be used in a 4-step campaign, include how the offer can support two different new-thread purposes without repeating the same generic deliverable. Keep this at direction level only.
+For any candidate, include how the offer can carry Email 1 and its one or two same-thread follow-ups without repeating the same generic deliverable. The sequence is ONE thread with 2 to 3 steps (`/campaign-copywriting` Hard Rule 18); the 4-email / two-thread structure was retired 2026-07-05, so there is no second new-thread purpose to support. Keep this at direction level only.
 
 ## Execution Mode Gate
 
