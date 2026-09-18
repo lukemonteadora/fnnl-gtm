@@ -71,28 +71,19 @@ If any draft fails any required guide, rewrite internally until it passes. Do no
 
 ---
 
-## GrowthFlare Framework A Initial-Offer Rule (HARD RULE, 2026-08-12)
+## Framework A: the Email 1 hard structure (HARD RULE, 2026-08-12)
 
-Every Email 1 must follow `outreach-copy-framework.md` Framework A. This is the controlling first-touch rule:
+Every Email 1 must follow `outreach-copy-framework.md` (Framework A). That file is Framework A's single home: the mechanical checklist, the precedence rule, and the sourced breakdown of which piece is Aaron Shepherd's own finding versus this workspace's own hardening (`/ask-aaron` holds the full doctrine and dated conflict ledger behind it). This section used to restate the whole rule a second time; it is stated once, there, to avoid exactly the kind of drift that produces two sections both claiming to be "the controlling rule."
 
-- open with a specific free deliverable, never setup, pain, signal, observation, proof, or sender context
-- keep the body to 25 to 35 words, excluding subject and signature
-- use 2 to 3 main-body sentences and exactly 1 question; an optional declarative P.S. is separate but still counts toward the word cap
-- keep the workload split in parentheses, naming 3 to 4 sender tasks and exactly 1 small prospect action
-- end with the soft permission question
-- use a 2-to-4-word lowercase subject with exactly 1 merge token
+The shape, for quick reference: open with a specific free deliverable (never setup, pain, signal, observation, proof, or sender context); 25 to 35 body words, excluding subject and signature; 2 to 3 main-body sentences and exactly 1 question (an optional declarative P.S. is separate but still counts toward the word cap); the workload split in parentheses (3 to 4 sender tasks, exactly 1 small prospect action, using a semicolon, comma, or period, never a dash); end with the soft permission question; a 2-to-4-word lowercase subject with exactly 1 merge token.
 
-Use a semicolon, comma, or period inside the parenthetical. The source framework uses a dash in its example, but this repo's no-em-dash rule still wins on punctuation.
-
-This rule overrides every older live or retired instruction in this skill that calls for a 50-to-90-word or 70-to-90-word Email 1, a setup line before the offer, an initial easy-yes statement with no question, more than one question, or omission of the workload parenthetical. Proof is optional in a compact P.S. and must not be crammed into Email 1 when doing so would break the 35-word cap. Truth, capability, deliverability, and fulfilment gates remain mandatory.
-
-If the offer cannot carry the message without setup, stop and repair the offer or audience. Do not switch Email 1 to a pain-led or observation-led framework.
+This rule overrides every older live or retired instruction in this skill that calls for a 50-to-90-word or 70-to-90-word Email 1, a setup line before the offer, an initial easy-yes statement with no question, more than one question, or omission of the workload parenthetical. Truth, capability, deliverability, and fulfilment gates remain mandatory. If the offer cannot carry the message without setup, stop and repair the offer or audience rather than switching Email 1 to a pain-led or observation-led framework.
 
 ---
 
 ## Offer-First Copy Standard (Aaron method) — the default for cold copy
 
-This is the controlling standard for offer-first / offer-validation copy (`copy_mode = offer_validation` / `offer_market_proven = false`), and it is the DEFAULT for a new client and any first wave. Encoded from the Aaron Shepherd method. Where any older rule in this skill (a mandated question / diagnostic opener, per-contact copy personalization, minimize-we, a mode split) conflicts with this section, **this section wins, and the older rule is retired.** As of 2026-07-05 there is only ONE copy mode: offer-first. The proven-mode 1-to-1 diagnostic register, the question-first / diagnostic-mirror openers, per-contact copy personalization (former Hard Rule 34), the Question-First Opener Framework, and the personalization-density length band are **RETIRED** (archived under `outbound/_archive/proven-mode-1to1-retired-2026-07-05/`). Any residual `proven-mode`, `copy_mode`, `offer_market_proven`, `diagnostic-mirror`, or `question-first` language elsewhere in this skill or the peripheral skills is superseded and reads as retired. Signals remain in play for **targeting only** (which companies and contacts to email, campaign slicing, and which offer a segment gets), never for per-contact copy.
+This is the controlling standard for offer-first / offer-validation copy (`copy_mode = offer_validation` / `offer_market_proven = false`), and it is the DEFAULT for a new client and any first wave. Sourced from Aaron Shepherd's real doctrine, not a paraphrase invented here: the full corpus, his verbatim examples and rejections, and the dated conflict ledger resolving where he's changed his own position over time all live in `/ask-aaron` (advisory; consult it for teardowns or offer pressure-testing, never to relax this skill's governed contract). Where any older rule in this skill (a mandated question / diagnostic opener, per-contact copy personalization, minimize-we, a mode split) conflicts with this section, **this section wins, and the older rule is retired.** As of 2026-07-05 there is only ONE copy mode: offer-first. The proven-mode 1-to-1 diagnostic register, the question-first / diagnostic-mirror openers, per-contact copy personalization (former Hard Rule 34), the Question-First Opener Framework, and the personalization-density length band are **RETIRED** (archived under `outbound/_archive/proven-mode-1to1-retired-2026-07-05/`). Any residual `proven-mode`, `copy_mode`, `offer_market_proven`, `diagnostic-mirror`, or `question-first` language elsewhere in this skill or the peripheral skills is superseded and reads as retired. Signals remain in play for **targeting only** (which companies and contacts to email, campaign slicing, and which offer a segment gets), never for per-contact copy.
 
 **Write FOR the real list and a real contact, never in a vacuum (HARD RULE, 2026-07-12).** Before writing a single line, pin down exactly who this copy is for and pull REAL examples from the verified send list: the concrete job titles + company type/industry + company size + geography (e.g. "CFOs / finance leaders at MSP & cloud managed-service providers, Nordics + near-Europe, 100-3000 employees"), and 2-3 real contacts from `leads.verified.csv` by name, title, company, domain (e.g. "Mark Grafton, CFO, Node4"). Write the email TO that person, and pressure-test every line with "would [real contact] find this specific and true, and is it about what they actually bill for?". This kills the failure mode of writing generic copy in a vacuum and re-adjusting it blind over and over: the words get concrete because you know exactly who reads them. **Record the audience definition + the sample contacts at the top of `copy.md`.**
 
@@ -125,10 +116,6 @@ Anchor on what the asset genuinely cost to acquire or would cost to buy:
 - **(a) Wire the number INTO the offer sentence, value-first, NEVER a story-telling preamble.** The offer leads with the value; the number is part of that value, not a lead-in essay. **WRONG** (marketing narration): "Usage-based billing loses 4 to 9% of revenue, and for MSPs the true-up is where most of it hides. If we could..." **RIGHT** (value-first, boom): "if we could save {{company_name}} the 4 to 9% MSPs lose to manual billing, just like we did for Atea, all you'd have to do is [tiny effort]." Same number, but it now hits inside the offer instead of after a two-sentence setup.
 - **(b) No source citations in the email body.** A prospect does not need "(MGI Research)", "(Gartner)", or "(2024 study)" to be persuaded; it adds length and reads like a report, not a peer. Keep the provenance in our records (`copy.md` / `offer-intelligence.md`), never in the sent email.
 - **(c) Plain, direct vocabulary, Hormozi tone, no buzzwords or jargon-metaphors.** Write the way a plain-spoken operator talks to a peer. BANNED as buzzy/vague: `leak` / `leakage`, `unlock`, `leverage`, `streamline`, `optimize`, `supercharge`, `seamless`, `synergy`, `empower`, `robust`, `game-changer`, `frictionless`, `turnkey`. Say the plain thing instead: not "where your billing leaks" but "where you're losing revenue most" / "lose to manual billing" / "get paid for everything you deliver". A real industry term the buyer actually uses (`true-up`, `usage-based billing`) is fine; a buzz-metaphor dressed up as insight is not. (An internal offer or campaign NAME may keep a term like "Billing Leakage Teardown"; prospect-facing copy stays plain.)
-
-**Number goes IN the offer, plain and direct (HARD RULE, 2026-07-12).** Where the number lands and how it reads both matter:
-1. **Wire the number INTO the offer sentence, never a story-telling preamble.** The value + number belong in the conditional's value slot, not a separate framing/setup sentence before the offer. WRONG (storytelling, reads like marketing): `Usage-based billing leaks 4-9% of revenue (MGI Research), and for MSPs the true-up is where most of it hides. If we could get you rating automatically...`. RIGHT (value-first, direct): `if we could save {{company_name}} the 4-9% MSPs lose to manual billing (MGI Research), just like we did for [client], all you'd have to do is [tiny effort].` Lead with the value, wired straight into the offer. Boom, direct.
-2. **Plain, direct vocabulary. No buzzwords, jargon-metaphors, or filler (Hormozi / Aaron tone).** Write the way a sharp person speaks plainly to a peer, not marketing-speak. BANNED buzz-vocabulary in copy (use the plain version): `leak` / `leakage` (→ "where you're losing revenue", "lose to manual billing"), `unlock`, `leverage`, `streamline`, `optimize`, `supercharge`, `seamless`, `synergy`, `empower`, `robust`, `cutting-edge`, `revolutionize`, `game-changer`, `best-in-class`, `frictionless`, `turnkey`. Cut filler and setup words; every word earns its place, and if a plainer word carries the meaning, use the plainer word. A real industry TERM the buyer actually uses (e.g. `true-up` in MSP finance, `rating` in telecom billing) is fine; a buzz-metaphor dressed up as insight is not. (An internal offer/campaign NAME may keep a term like "Billing Leakage Teardown"; the prospect-facing COPY must be plain.)
 
 **The four steps, in order:**
 
@@ -258,9 +245,9 @@ Run this gate before Step 2 output, Step 3 output, Step 4 output, and before wri
 
 ### Gate Requirements
 
-- Pass `spam-word-checker.md`.
+- Pass `spam-word-checker.md`. It enforces formatting, CTA, opener, and voice discipline, not a banned-word keyword list (that list was removed 2026-09-18; see that file for why).
 - Pass `cold-email-copy-best-practices.md`.
-- Remove banned single words, banned phrases, pressure language, promotional wording, fake urgency, phishing-like wording, and unsafe unsubscribe logic.
+- Remove pressure language, promotional wording, fake urgency, and unsafe unsubscribe logic.
 - Remove weak follow-up framing, follow-up-reference openers, generic openers, weak CTAs, and ego-triggering CTAs.
 - Remove em dashes, double hyphens, and mid-sentence dash separators from sendable copy.
 - Remove colon-as-runway sentences where `:` is used to stretch one sentence into a long list or multi-clause paragraph. Split the thought into short sentences instead.
@@ -297,7 +284,7 @@ Run this gate before Step 2 output, Step 3 output, Step 4 output, and before wri
 - Keep wording plain, specific, and recipient-centered.
 - Confirm variables use `{{double_braces}}`.
 - Confirm the markdown copy and YAML copy match exactly.
-- Run a literal scan on final `variants.yaml` after serialization for banned tokens, em dashes, unsafe phrases, and variable names that contain banned roots. If a sendable variable name fails, rename the variable and update the list/enrichment schema before upload.
+- Run a literal scan on final `variants.yaml` after serialization for em dashes, banned formatting/CTA/opener phrases, and unsafe phrases. If a sendable variable name reads as awkward or scraped-looking, rename the variable and update the list/enrichment schema before upload.
 
 Provider note (copy-QA tiering per `ai-model-routing.md`): **default QA is rule-based and cheap** - `spam-word-checker.md` + `cold-email-copy-best-practices.md` + the rule checklist above (plus an optional cheap-model pass). **Do NOT default to a paid frontier-model API pass for copy QA.** Escalate to a stronger model audit (Claude Code, or whatever third-party model this workspace has configured) ONLY when the stakes justify it: high-ticket campaign, risky/unsupported claim, unclear evidence, strategic campaign, or client-facing deliverable. The audit checks: spammy wording, unsupported claims, weak CTA, too much hype, bad personalization, proof/claim mismatch, unclear pain, too long, too salesy, and copy that does not match the buyer's own language. Whatever model runs, `spam-word-checker.md` and `cold-email-copy-best-practices.md` remain the source of truth and the final gate - no AI substitution removes these two guardrail passes.
 
@@ -1004,7 +991,7 @@ Never export a row where any required output column is blank. Filter to rows whe
     We mapped where providers most often lose revenue and turned it into a reusable finding you can check against. Can I send it over?
     ```
 26. Grammar must be clean and phrasing natural. No awkward constructions, run-ons, comma splices, garden-path sentences, or dropped connective words. A missing "where", "that", or article reads as broken English. Read every sentence aloud and fix it before it is shown.
-27. **Framework A controls Email 1 length: 25 to 35 body words; follow-ups stay under 50.** Count the greeting and optional P.S., but not the subject or signature. Email 1 uses 2 to 3 main-body sentences and exactly 1 question. An optional P.S. is declarative and excluded from the main-body sentence count, but included in the word count. Never pad, and never delete a required word until the offer, workload split, or CTA stops reading naturally.
+27. **Framework A controls Email 1 length: 25 to 35 body words; follow-ups stay under 50.** Count the greeting and optional P.S., but not the subject or signature. Email 1 uses 2 to 3 main-body sentences and exactly 1 question. An optional P.S. is declarative and excluded from the main-body sentence count, but included in the word count. Never pad, and never delete a required word until the offer, workload split, or CTA stops reading naturally. Full structure (offer-first opening, the 3-to-4-task workload parenthetical, the subject rule, and the sourced Aaron-vs-house-hardening breakdown): `outreach-copy-framework.md`.
 28. Capability truth. Never claim a product capability, feature, integration, result, or outcome the client cannot actually deliver. Every claim about what the client does or offers must map to a real, documented capability (from `client-profile.yaml`, `offer-intelligence.md`, or the locked offer). This is separate from "never fabricate facts about the prospect": the risk here is the email promising something the client's sales team cannot fulfill. When the supporting capability is not documented, leave the claim out rather than invent it. This is the single biggest failure mode of AI-generated copy at scale, so when generation is automated, the generator must be given the client's real capability list and held strictly inside it.
 29. Greeting casing. When the body continues on the same line right after the `{first_name},` greeting, the first word is lowercase unless it is a proper noun (company name, product, brand, or acronym). The greeting and the opener are one sentence, so a mid-sentence capital reads as broken. Client-agnostic example — WRONG: `Katrin, Each month the mix of work shifts and someone reconciles it by hand.` RIGHT: `Katrin, each month the mix of work shifts and someone reconciles it by hand.` When the opener legitimately starts with a proper noun, keep its capital: `Katrin, Acme just migrated its ERP, so the team is reconciling two systems.` In the pre-write column model the greeting and first name are baked into each `email_*` body, so the generator must emit the opener already cased correctly (lowercase common word, or proper-noun capital) in the column — there is no separate step that can fix it later.
 30. Human voice, not fake warmth (see Human Voice, Not Fake Warmth). NEVER write fake-familiarity or warmup phrasing in any cold email or follow-up — no "hope you're well"/"hope this finds you well," "just checking in"/"following up"/"following up on my last"/"circling back"/"touching base"/"bumping this," "I wanted to reach out"/"I wanted to connect," unearned flattery ("big fan of what you're building," "saw you're crushing it"), any phrase implying shared history, or any warmup sentence before the first relevant line. Personality lives INSIDE the first relevant line (a point of view plus spoken rhythm), never in a preamble. Every cold email and follow-up must pass the said-out-loud test: read the first two lines aloud; if they sound like a brochure or a textbook, rewrite until they sound like a real person. Follow-ups imply the prior touch without asking the reader to remember it. Framing tokens ("quick one," "this'll sound random but") are optional, testable hypotheses — never assumed to win; A/B them against the clean version.
@@ -1016,7 +1003,7 @@ Never export a row where any required output column is blank. Filter to rows whe
 36. **The delivery message after a yes: no pitch on the delivery email when the asset leaves a real motive, and a REQUIRED follow-up that carries the ask (operator decision 2026-07-17, reshaped same day after review).** Conditional on `offer.lead_magnet_gap` in `client-profile.yaml`. **Gap present:** delivery (day 0) is PURE VALUE, zero call ask (`Great {{first_name}}, here's the link. Curious to get your take on it.`) — attaching a sales ask to the free thing announces it had a price and springs the trapdoor. **But the ask is deferred, never deleted:** a follow-up (day 2-3) aimed at the unresolved motive carries it, and a guilt-free close (day 7) ends it. A gap-present sequence with no follow-up defined FAILS QA — "they'll hit the gap and book on their own" is a hope, not a mechanism. Name the kill number before it ships (replies that reach the follow-up and still never take the next step), because K4 tests whether the gap is *real* and nothing tests whether it is *motivating*. **No gap, or `lead_magnet: direct_offer`:** keep the soft time-proposal at delivery. **Never strip the delivery ask without a real motive AND a defined follow-up.** Full rule: the Offer-First Copy Standard → The CTA Hierarchy → The Delivery Message.
 37. **The inherent-value anchor prices the asset, never the outcome.** Keep the separate outcome number in the locked offer record. Include an asset anchor in Email 1 only when it is true and the whole message still passes Framework A. Otherwise move it to the optional P.S., follow-up, or reply path.
 38. **A slice-SHARED signal fact may ride inside the offer; per-contact reference stays banned (operator ruling, 2026-07-17).** A competitor name or a public customer complaint may appear in the body ONLY when the ENTIRE slice shares that fact (one campaign targeting "customers of Competitor X", one shared body naming X). That is slice-level shared copy, not personalization. Three binding bounds: it is NEVER the opener (Hard Rule 19 stands, so the fact rides inside the offer sentence); per-contact reference stays banned ("I saw *your* review from Mary") along with every observational opener; and the fact must be true of every contact in the slice, or the slice is wrong rather than the copy. Same targeting-filter-vs-copy-variable line `sells_to_vertical` already walks, extended to two more signals. Does NOT reopen per-contact copy personalization (Hard Rule 34), which stays retired. Full rule: the Offer-First Copy Standard → Slice-shared signal facts in the body.
-39. **GrowthFlare Framework A controls the initial cold touch (operator rule, 2026-08-12).** Email 1 is 25 to 35 body words, with 2 to 3 main-body sentences and exactly 1 question. An optional P.S. is declarative, outside the main-body sentence count, and inside the word cap. It opens with the specific free deliverable, keeps the 3-to-4-task sender workload and single small prospect action in parentheses, and ends the main body with the soft permission question. Its subject is 2 to 4 lowercase words with exactly 1 merge token. If the offer needs setup, repair the offer or audience instead of switching frameworks. Full rule: `outreach-copy-framework.md`.
+39. **Framework A controls the initial cold touch.** Stated once, at Hard Rule 27 and in `outreach-copy-framework.md`. This entry exists only so this rule number is not silently reused for something else; it does not restate the rule a third time.
 
 ---
 
@@ -1112,7 +1099,7 @@ Never quote, bold, italicize, or decorate variables.
 
 ### Target Length
 
-- Email 1: 25 to 35 body words, 2 to 3 main-body sentences, exactly 1 question (Hard Rules 27 and 39). Any optional P.S. is declarative and included in the word cap.
+- Email 1: 25 to 35 body words, 2 to 3 main-body sentences, exactly 1 question (Hard Rule 27). Any optional P.S. is declarative and included in the word cap.
 - Follow-ups should be short, usually under 50 words.
 
 ### Structure
@@ -1201,42 +1188,13 @@ If the offer could be sent by any competitor to any list, rewrite it. Note the l
 
 ## Signal-First Opener Rule (RETIRED 2026-07-17)
 
-**The Signal-First Opener Rule and its four Execution Patterns are RETIRED (2026-07-17), superseded by the Offer-First Copy Standard's offer-led opener (Hard Rule 19).** They mandated that the first line reference the trigger that put the prospect on the list. Hard Rule 19 requires the first line to lead with the OFFER. Both cannot hold, and the Offer-First Standard wins by its own precedence clause ("where any older rule in this skill conflicts with this section, this section wins, and the older rule is retired", 2026-07-05), which retired this rule by catch-all. This marker makes that explicit, because the rule carried no marker and three live QA rows were still enforcing it.
+**The Signal-First Opener Rule and its four Execution Patterns are RETIRED (2026-07-17), superseded by the Offer-First Copy Standard's offer-led opener (Hard Rule 19).** They mandated that the first line reference the trigger that put the prospect on the list. Hard Rule 19 requires the first line to lead with the OFFER. No signal opens a cold email. The full retired rule and its four patterns are archived at `outbound/_archive/signal-first-opener-retired-2026-07-17/signal-first-opener-rule-and-execution-patterns.md` rather than quoted here, since a fully-quoted retired rule with no marker on its own subsections is exactly what let three live QA rows keep enforcing it after retirement.
 
-**What survives.** Signals remain fully in play for **targeting**: which slice gets its own campaign, and which offer that slice gets. A slice-SHARED signal fact may also ride INSIDE the offer sentence (Hard Rule 38). What is retired is the signal as the OPENER, and per-contact signal copy (Hard Rule 34). No signal opens a cold email.
+**What survives.** Signals remain fully in play for **targeting**: which slice gets its own campaign, and which offer that slice gets. A slice-SHARED signal fact may also ride INSIDE the offer sentence (Hard Rule 38). What is retired is the signal as the OPENER, and per-contact signal copy (Hard Rule 34).
 
-**Scope of this retirement (read carefully, it does not run to the end of the section).** It covers THIS rule and the Signal-First Execution Patterns immediately below, both retained below as retired reference and no longer applied. The two subsections after them are **LIVE and unaffected**, each under its own header:
+**The two subsections below are LIVE and unaffected by this retirement**, each under its own header:
 - **Signal-First Anti-Patterns:** the observational-opener ban and the implication test. Still the canonical bank, still pointed to by `spam-word-checker.md`, `/personalization-subagent-pattern`, and `/campaign-strategy`. That ban is unrelated to the opener question and survives intact.
-- **Signal Angle Library:** retrofitted (2026-07-17) to slice-level angle guidance. Its opener templates are retired; the rest is live.
-
-### Retired reference: the rule as it stood
-
-This was the enforcement home for the signal-first rule. `cold-email-copy-best-practices.md` carries the principle-level version, which is stale in the same way and reads as retired.
-
-The first line of every cold email must reference the specific trigger or signal that put the prospect on the list before any insight, pain angle, or pitch. This applies to all email types in a sequence.
-
-Structure: [Signal observed] then [What it means for their situation] then [What you can do about it].
-
-Wrong: "Most companies at your stage struggle with X. Noticed [Company] has had [Role] open for [Days] days."
-Right: "[Days] days is a long time for a [Role] to sit open. Every week it stays empty, X compounds."
-
-Signal types that qualify: job posting duration, funding event, hiring pattern, tech stack adoption, competitor review activity, leadership change, expansion signal, or any observable data point specific to this prospect or a tightly-defined segment. A generic industry trend does NOT qualify. It must be observable and specific to them.
-
-No em dashes in any email copy or examples. Replace with a period or comma. This is absolute and already enforced by the Copy QA Gate and `spam-word-checker.md`.
-
-### Signal-First Execution Patterns (RETIRED 2026-07-17, retired reference)
-
-**Retired with the Signal-First Opener Rule above: all four patterns put the signal in the first line, which Hard Rule 19 no longer permits.** Retained as reference for their angle logic. Do not use one as an opener. The text below reads as it stood.
-
-When writing signal-first openers, use one of these four patterns. They replace all observational phrases ("I noticed", "I saw that", "I stumbled upon", "Congrats on", "I came across"), which are banned in `spam-word-checker.md`. Pick exactly one per email.
-
-**Pattern 1: The Executive Assumption.** Frame the signal as a reasonable assumption about their role and its pressures. Structure: "Given your role managing [Department] at [Company], I'm assuming [specific operational implication of the signal]..." Use when the signal is a role or org-structure indicator, not a specific event.
-
-**Pattern 2: The Subject Line Shift.** Trap the signal in the subject line entirely. Start line one directly with the operational problem the signal implies, with no reference to the signal at all. Subject: [verifiable data point, e.g. "Open Node.js role at [Company]"]. Line 1 jumps straight to the cost or friction caused by that situation. Use when the signal is a hiring or tech data point that works as a subject line on its own.
-
-**Pattern 3: The Expert Diagnostic.** Transform the raw signal into a symptom-to-problem diagnosis. Structure: "[Data point] usually means your team is losing hours manually doing [specific task]. Is that happening at [Company]?" Use when the signal implies a hidden operational cost the prospect may not have quantified.
-
-**Pattern 4: The Pure Fact Memo.** State the verifiable fact plainly, then ask a binary routing question. Structure: "[Company] currently has [verifiable fact]. Are you handling [implication] internally, or..." Use when the signal is a clean, undeniable data point (headcount, tool usage, open role count, funding amount).
+- **Signal Angle Library:** retrofitted (2026-07-17) to slice-level angle guidance. Its opener templates are retired (also archived, see that section below); the rest is live.
 
 ### Signal-First Anti-Patterns: the six ways a line leaks the signal (LIVE, survives the 2026-07-17 retirement above)
 
@@ -1308,145 +1266,17 @@ Right: "[Company] scaled to [headcount] in [timeframe]. Teams that grow that fas
 
 **How to use it now.** It informs WHICH shared message a SLICE gets, never a per-contact opener. The signal picks the slice, the offer opens the email (Hard Rule 19), and the Library tells you which pain and which proof that slice's shared body should carry. Where a slice-SHARED signal fact belongs in the body at all, Hard Rule 38 governs: it rides inside the offer sentence, never Line 1, and never as this reader's own. Per-contact copy personalization stays retired (Hard Rule 34), so the `[bracketed]` placeholders below are slice-level fills, not per-contact ones.
 
-#### Retired reference: the opener templates (retained for their angle logic, not to be sent as openers)
+#### Retired opener templates (archived, not to be sent)
 
-Per-signal applications of the four Signal-First Execution Patterns above, with the exact opener templates to adapt. This is not a new framework: each line is one of the four patterns (Executive Assumption / Subject Line Shift / Expert Diagnostic / Pure Fact Memo) applied to a specific signal, and every one still leads with the implication, passes the Signal-First Anti-Patterns test, and clears the Copy QA Gate before use. The matching TAM slices are in `/campaign-strategy` (Signal-Driven Slice Library); full slices, combos, and acquisition paths are in `signal-strategy-playbook.md`. `[bracketed]` placeholders are filled per contact by `/personalization-subagent-pattern`. (Em-dashes from the source templates are normalized to the absolute no-em-dash rule.)
-
-**1. Job change — new exec / promotion / came-from-relevant-tool** (Expert Diagnostic).
-> "[New title] at [new company] after [X] years at [previous company]. That kind of move usually means the first 60 days are spent auditing what carries over and what gets rebuilt from scratch. [Offer in one sentence]. Worth a quick look?"
-> "[New title] at [company] usually means ownership of [pain they now own] just shifted your way. We help [similar title]s at [company type] with [specific problem]. Is [pain] on your radar right now?"
-> "[Previous company] ran [competitor or adjacent tool]. Moving to [new company] without that infrastructure usually means rebuilding the same capability from scratch. We help with [specific part]. Is that on your list?"
->
-> **Caveat:** reference the previous company only if it is publicly visible on LinkedIn and directly relevant to the offer. Keep the first line to one sentence.
-
-**2. Department headcount** (Pure Fact Memo, used as a TARGETING filter).
-> "[Company] has [X] AEs and no dedicated RevOps owner based on what is public. That ratio usually means everything runs on spreadsheets and good intentions until it breaks. We help teams at that stage [specific result]. Is that where things are right now?"
-> "[Company]'s engineering team is [3x] the size of the current sales org. Product-led companies at that ratio usually hit the first real GTM wall around now: distribution without a dedicated motion. We work with teams in exactly that position. Worth a 20-minute conversation?"
->
-> **Caveat (HARD — anti-surveillance):** department headcount is a targeting filter, not a copy line. Reciting a raw count directly ("I see you have 14 people in Sales") reads as surveillance. Use it to choose who to reach and which problem to lead with, never as the literal first sentence.
-
-**3. Headcount growth** (Expert Diagnostic).
-> "[Company]'s sales team is [X%] larger than it was [timeframe] ago. Teams that grow that fast usually hit [specific pain: bad data, onboarding drag, territory conflicts] before the process catches up. We help teams at this stage [specific result]. Is that where you are right now?"
-> "[Company]'s sales team is [X%] smaller than it was [timeframe] ago. Most teams in that position are being asked to hit the same number with fewer people. We help with [efficiency angle]. Open to hearing more?"
-> "[X] SDR roles open and the team already [Y%] larger than last quarter. That is usually when the incoming reps inherit a list that was never cleaned. [Offer]. Worth a quick look before the next cohort starts?"
-
-**4. Founded year** (Expert Diagnostic / Executive Assumption).
-> "[Company] is [X] years old. [Industry] companies at that stage typically hit [specific pain] before the process catches up. The teams that address it early [outcome]. Is that on your radar?"
-> "[X] years on [tool or process] usually means it was right for the size you were, not the size you are. We help [title] teams past the startup phase and not yet enterprise. Is [pain] something you are actively solving or tolerating?"
-> "[Company] has been running [process or approach] since [founding decade]. That generation of [category] usually handles [pain] the same way: manually, until it stops working. We work with [similar mature companies] on the modern version of that problem. Worth a 20-minute conversation?"
-
-**5. Ads intelligence** (Pure Fact Memo / Expert Diagnostic).
-> "[Company] is running [Google/LinkedIn] ads. Paid top-of-funnel without a matching outbound motion usually means [specific problem: inconsistent pipeline, wrong ICP in the funnel, no handoff between channels]. We help with [offer]. Worth a look?"
-> "[Company]'s current ads are targeting [audience or message]. Teams running that positioning usually hit [specific operational consequence] before they figure out the right handoff between paid and outbound. We help [title] teams at that stage with [problem]. Is [pain] something you are solving or just managing?"
-> "[Company] is not running paid acquisition at [size] and [stage]. That usually means outbound is carrying most of the pipeline weight without dedicated support. [Offer]. Are you open to a quick conversation?"
-
-**6. Champion re-engagement (Job Change Detector — a known warm list, not a TAM slice)** (Executive Assumption).
-> "[First name], [New company] is a different machine than [previous company]. We worked with [previous company]'s team on [specific thing]. If [same pain] is starting to surface at [new company], it is worth a quick call. Same problem, different context."
-> "[First name], [Previous company] was not the right fit when we last spoke. [New company]'s at a different stage now. We help [title] teams at [type of company] with [problem]. Is the timing better? 15 minutes?"
-> "[First name], [New company] is a different environment than [previous company]. The [pain] you were dealing with there usually shows up in a different form at a company this size. Happy to pick up where we left off. Worth a quick call?"
->
-> **Caveat (HARD — relationship truth):** send only if the previous relationship or touchpoint was real. Pretending you have a relationship you do not have will be called out immediately. (The first-name-plus-comma opener here is the baked greeting, not a banned greeting prefix.)
-
-**7. Jobs data / JD content** (Subject Line Shift / Expert Diagnostic).
-> "[Company] has [N] SDR roles open right now. That volume usually means the list-building process cannot keep up with demand. We help outbound teams [specific result]. Before the new reps start, is it worth making sure the infrastructure is ready?"
-> "The RevOps role at [company] lists [specific requirement from the JD, e.g. 'cleaning up the CRM and building attribution'] as a primary project. [Comparable client type] described the same scope before they started working with us. Is that the active problem right now?"
-> "[Role] role open for [X] days at [company]. Teams that take this long to fill this position usually run the function without a clear owner for months. [Offer] might be worth a look before you are fully into the new motion. Open to a quick call?"
->
-> **Caveat (HARD — source truth):** quote or reference only JD content that is currently live and publicly accessible. Do not fabricate specifics. This is the capability/source-truth gate applied to the prospect's own posting.
-
-**8. Profile / work history (Layer 2)** (Executive Assumption).
-> "[X] years at [previous company] before [current company] means you have seen [pain] at scale. We help [current company type] get ahead of it before it gets to that point. Worth a quick conversation?"
-> "[Certification] means you already know where [technical problem] breaks down in practice. [Offer with technical specificity], no oversimplification needed. Does that match what you are dealing with at [company]?"
-> "[X] years in [previous industry] before [current industry] means [specific operational context they uniquely carry]. That combination changes how [pain] shows up. [Offer]. Worth a conversation?"
-> "[Previous company] for [X] years, then [current company]. That is a builder's pattern. Most [title]s who make that move are specifically trying to build what they could not at the previous scale. [Offer for builders]. Is that what is happening here?"
->
-> **Caveat:** never reference early-career or education detail unless directly relevant to the offer. Work history is a context signal for framing, not a pickup line. One background reference per email.
-
-**9. Who they sell to, the sold-to axis** (Expert Diagnostic). The company's OWN world drives the message. WHO they sell to (their customers' vertical), the SIZE of those customers, and the DEPARTMENT they sell into change the buyer, the pain, and the proof you lead with. A company selling into legal teams gets a different email than one selling to restaurant owners: smaller buying committee, higher compliance bar, longer cycle. Use `sells_to_vertical` as the concrete copy variable, and use `sells_to_customer_size` / `sells_to_department` / `sells_to_motion` to pick WHICH pain and WHICH proof to lead with (not as words in the copy). The proof you show must match the sold-to vertical (recognizable proof: a peer who also sells into that world), so this axis usually swaps the proof line, not just the opener.
-> "Selling into [the vertical they sell into] is a different game than selling into [a contrasting vertical]. The buying committee is smaller but the compliance bar is higher, which usually means [implication for their GTM: longer cycles, security review before pilot, proof that has to clear procurement]. [Offer]. Worth a quick look?"
-> "[Company] sells to [enterprise-size / SMB-size] buyers, and that alone changes where the deal stalls. [Size-specific implication: enterprise = procurement and multi-stakeholder sign-off; SMB = volume and speed over depth]. We helped [peer who sells into the same size band] with [size-matched result]. Is [that specific friction] the part slowing you down?"
-> "Your buyers sit in [the department they sell into], so your pitch has to survive [that department's] way of evaluating: [department-specific bar, e.g. legal wants defensibility, ops wants time saved, finance wants a number]. Most [client type]s selling into [that department] hit [specific wall] before they adjust the motion. Is that where you are right now?"
->
-> **Caveat (HARD, anti-surveillance and recognizable-proof):** twin of the department-headcount caveat above. Do NOT recite the prospect's customer list or logos back at them ("I saw you sell to Acme, Globex, and Initech") and do NOT open with "I saw you sell to [vertical]". Reciting their customers reads as surveillance, the same failure mode as reciting a raw headcount. State the sold-to reality as a fact and extract what it MEANS for their pain, buyer, or proof. `sells_to_customer_size` / `sells_to_department` / `sells_to_motion` are targeting selectors that pick the pain and proof to lead with, never copy lines. The proof you lead with must be real and on file (Proof-Asset Gate) AND match the sold-to vertical or customer size, so it is recognizable to the reader. Never invent a vertical-matched client or case study to fill the slot: if no on-file proof matches that vertical, drop to a broader angle the real proof supports or route the fill-in form.
-
-**Signal combos** layer two signals in one row for the strongest copy, e.g. job change + work history: "[First name], [Previous company] was a [characterization]. [New company]'s a different machine, but [shared pain] usually shows up at the same stage regardless. We worked with [previous company]'s team on exactly that. 15 minutes?" Full combo copy is in `signal-strategy-playbook.md` (Combined Signal Strategies).
+The nine per-signal opener templates that used to live here are retired with the Signal-First Opener Rule above (each puts the signal in Line 1). They're archived at `outbound/_archive/signal-first-opener-retired-2026-07-17/signal-angle-library-opener-templates.md`, preserved for their angle logic (which pain a signal implies, which proof fits it), not as sendable copy. The matching TAM slices are in `/campaign-strategy` (Signal-Driven Slice Library); full slices, combos, and acquisition paths are in `signal-strategy-playbook.md`. The nine signals covered: job change, department headcount, headcount growth, founded year, ads intelligence, champion re-engagement, jobs data/JD content, profile/work history, and who-they-sell-to. Every caveat attached to each signal (anti-surveillance on department headcount and the sold-to customer list, relationship truth on champion re-engagement, source truth on JD content, one work-history reference per email) is still LIVE and still enforced by the QA checklist below, even though the opener line itself is retired.
 
 ---
 
 ## Opener Framework (Email 1 and Email 3)
 
-**The Question-First / diagnostic-mirror opener framework is RETIRED (2026-07-05, proven-mode retirement; archived under `_archive/proven-mode-1to1-retired-2026-07-05/`).** Every new-thread email now opens with an OFFER-LED opener that leads with the offer itself (the dream outcome made specific plus the risk reversal), per the Offer-First Copy Standard and Hard Rule 19. The opener is shared, filled only with `{{first_name}}` / `{{company}}`; there is no per-contact opener generation and no personalization-source priority order anymore. The sub-rules below are retained only as retired reference and no longer apply.
+The current rule is short: every new-thread email opens with an OFFER-LED opener that leads with the offer itself (the dream outcome made specific plus the risk reversal), per the Offer-First Copy Standard and Hard Rule 19, never a warmup or self-introduction. The opener is shared across the whole slice, filled only with `{{first_name}}` / `{{company}}`. There is no per-contact opener generation and no personalization-source priority order.
 
-### Revised structure for Email 1 and Email 3
-
-Line 1: Opener — an OFFER-LED opener that leads with the offer itself (the dream outcome made specific plus the risk reversal). Never a warmup or a self-introduction. (The question-first / diagnostic-mirror alternatives here are retired.)
-Line 2: Signal or Operational Context (the diagnostic, per the Signal-First Opener Rule). In the conversational register this can extend across a couple of short blocks, as long as every line is genuine, prospect-specific substance (see Length Follows Personalization Density in `cold-email-copy-best-practices.md`).
-Line 3: Outcome-Based Proof (one peer company result; respect the proof-relevance hierarchy in Step 1).
-Line 4: CTA, one soft permission question, and the only question in Email 1. The statement-only `Just reply "Yes"...` opt-in is not permitted in the initial cold touch.
-
-### Personalization relevance rule
-
-Before selecting a personalization source for Line 1, apply this test: does this data point connect directly to the email's core pain angle? If the email is about billing reconciliation, a LinkedIn post about company culture is not a valid source, even if it is the freshest data available. The personalization must give the prospect a reason to keep reading Line 2, which means it must logically lead into Line 2. If the data point has no bridge to the email's operational context, skip it and move to the next source. If no relevant data point exists across all sources, the generation step writes the fallback general copy for that contact into the same column (no separate fallback column). A random hook that does not connect to the email goal is worse than the fallback.
-
-### Personalization priority order for the opener question
-
-When generating Line 1 in your enrichment and copy generation layer (in this repo that is `/personalization-subagent-pattern`'s parallel Task sub-agents; equivalently an external enrichment platform's AI columns, a Claude Code CSV script, or any other tool), check these sources in order. Use the first one that holds a usable, specific value AND passes the relevance test.
-
-1. LinkedIn post hook (most recent post within 30 days, only if the topic connects to the email's operational pain angle)
-2. Campaign reason slice (why this specific contact was pulled into this campaign: the qualifying signal or segment logic)
-3. Enrichment signal (job posting, funding round, tech stack change, headcount shift from your enrichment tool, scraper, or manual research column)
-4. Company description (what the company does and who they serve; use for an industry or role-based angle)
-5. Fallback branch (if none yield a relevant, specific value, write the fallback general copy into the same column)
-
-### Opener question templates by source
-
-Each template notes which angles it supports. Do not use a template on an email whose core angle it does not support. None of these use a banned opener ("quick question", "I noticed", "I saw that", "checking in" are all banned by `spam-word-checker.md`).
-
-From LinkedIn post (only if the post topic connects to the email's pain angle): "{{first_name}}, your post on [topic that connects to the email's operational angle] got me thinking. Is [related operational challenge from the email] something your team is actively working on right now?"
-
-From campaign reason slice: "{{first_name}}, is [specific operational pain tied to why they were targeted, the same pain the email addresses] still something your team handles manually?"
-
-From funding signal (when the email angle is about scaling, capacity, or system strain post-growth): "{{first_name}}, with the [round] closed, has [the specific function the email is about] been a priority in the scale plan, or is that still on the backlog?"
-
-From tech stack signal (when the email angle connects to that tool or its workflow): "{{first_name}}, are you still running [Tool] for [process the email is about], or have you moved off it?"
-
-From company description (no specific signal): "{{first_name}}, for [company type] at your stage, is [core operational friction the email is about] still something your team owns internally?"
-
-Fallback (no usable relevant personalization data; output into the same column as personalized rows): "{{first_name}}, one thing I keep seeing with [segment]: [general operational pain question that is true for the whole ICP segment, matches the email's core angle, and needs nothing specific about this contact]?"
-
-### What a complete Email 1 looks like after this change
-
-**Retired reference:** the examples below predate GrowthFlare Framework A and must not be used as sendable Email 1 copy. The live Email 1 is 25 to 35 words, with 2 to 3 main-body sentences and exactly 1 question, the offer first, and the workload split in parentheses.
-
-Wrong (one dense block, over-compressed grammar, hard to scan):
-
-```text
-{{first_name}}, smart meters and dynamic tariffs mean consumption changes fast, but the path from meter read to the charge still leans on manual steps built for flat rates. Small rating errors there are easy to miss and add up across a full year. Most finance leaders only see them once a customer disputes the charge. We mapped the one or two spots energy retailers most often lose revenue in that meter-to-charge handoff. Can I send it over?
-```
-
-Right (short blocks separated by blank lines, clean grammar, about 85 words):
-
-```text
-{{first_name}}, smart meters and dynamic tariffs make consumption move fast, but the path from meter read to final charge still runs on manual steps built for flat rates.
-
-Small rating errors there are easy to miss, and they add up over a full year. Most finance leaders only catch them once a customer disputes a charge.
-
-We mapped the one or two places where energy retailers most often lose revenue in that meter-to-charge handoff. Can I send it over?
-```
-
-What changed in the "right" version: three blocks with a blank line between each, the missing "where" restored ("the places where energy retailers lose revenue"), smoother verbs, and about 80 words instead of being squeezed under 75. The opener can also be a question-first opener (see Revised structure above); the block layout, clean grammar, and length range apply either way.
-
-Question-first variants, same block layout (each lands in `email_1_a`, body only, no signature):
-
-```text
-{{first_name}}, is the gap between service start and the first accurate charge still a manual step for your team?
-
-At a lot of Nordic energy retailers that window runs into weeks, because consumption, the customer record, and the rating step are all reconciled by hand.
-
-[Company] cut it to same-day by [mechanism]. Worth seeing how they did it, or are you focused on other parts of the stack right now?
-```
-
-The fallback example is retired with the old length model. Any live fallback must use the same 25-to-35-word Framework A structure and append the signature only in the sending tool.
+The pre-2026-07-05 question-first / diagnostic-mirror opener framework, its per-contact personalization-source priority order, and its worked examples (including one that ran ~85 words, over the current cap) are archived at `outbound/_archive/proven-mode-1to1-retired-2026-07-05/opener-framework-and-personalization-priority.md`. They were left fully quoted in this file for a long time despite being retired, which is exactly the kind of drift that makes a live-looking instruction dangerous; do not resurrect them into live copy.
 
 ---
 
@@ -1621,9 +1451,8 @@ Run before finalizing any campaign.
 
 | Criteria | Pass/Fail |
 |---|---|
-| Spam-word checker passed | |
+| Spam-word checker passed (formatting, CTA, opener, voice) | |
 | Best-practices review passed | |
-| No banned words or phrases | |
 | No em dashes, double hyphens, or mid-sentence dash separators | |
 | No fake urgency or pressure | |
 | No unsafe unsubscribe or closeout logic | |
@@ -1685,7 +1514,7 @@ Scoring:
 1. Work stepwise.
 2. Present strategy options before final copy.
 3. Run the Copy QA Gate before showing any copy.
-4. Use `spam-word-checker.md` as the banned-word source of truth.
+4. Use `spam-word-checker.md` as the formatting, CTA, opener, and voice source of truth.
 5. Use `cold-email-copy-best-practices.md` as the writing quality source of truth.
 6. Research beats cleverness.
 7. Specificity beats hype.
@@ -1750,7 +1579,8 @@ If copy fails QA, rewrite through this skill before moving forward.
 - `/interested-replies-docx-presentation`: packages the positive-reply handling DOCX from `interested-reply.md` (produced by `/lifecycle-copy`)
 - `/pre-call-nurture-docx-presentation`: packages the booked-call nurture DOCX from `pre-call.md` (produced by `/lifecycle-copy`)
 - `/campaign-approval-brief`: creates the client-facing decision brief explaining why this campaign path was chosen
-- `/spam-word-checker`: mandatory deliverability and banned-word guardrail
+- `/spam-word-checker`: mandatory formatting, CTA, opener, and voice guardrail
+- `/ask-aaron`: advisory persona consult on offers and copy (offer pressure-testing, line-by-line teardowns, follow-up sequencing); never relaxes this skill's governed contract
 - `/email-waterfall`, `/list-quality-scorecard`: produce and grade the verified slice the List Gate requires before any copy
 - `/stack-setup`: resolves the capability roles this skill needs (sending platform, email verifier, waterfall enricher) when the stack contract leaves one empty
 

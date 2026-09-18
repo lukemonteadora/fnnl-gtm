@@ -41,7 +41,7 @@ meta:
   slug: fnnl
   contract_version: 1
   created: 2026-09-18
-  last_reviewed: null
+  last_reviewed: 2026-09-18
   # Set to true only once every required slot is `live`. Skills may check this
   # before an expensive or outward-facing run.
   stack_locked: false
@@ -54,52 +54,100 @@ meta:
 infrastructure:
 
   registrar:
-    tool: null
-    status: not_chosen
+    tool: Dynadot
+    status: chosen
     capability: >
       Buys and holds the cold outbound domains, and manages their DNS records
       (SPF, DKIM, DMARC, MX, tracking CNAME).
     run_state_field: run_state.registrar
-    credentials: []          # e.g. [REGISTRAR_API_KEY, REGISTRAR_API_SECRET]
+    credentials: [DYNADOT_API_KEY, DYNADOT_API_SECRET]
     vendor_pack: null        # set by /stack-setup if a pack in _vendor-library/ matches
     notes: >
-      Whoever you pick must expose DNS record writes via API, or every domain
-      setup becomes a manual click-through. Confirm that before committing.
+      DNS record writes ARE available via API, so domain setup is automatable.
+      Current surface is REST v2, base https://api.dynadot.com/restful/v2/ .
+      Register is POST /domains/{domain}/register, DNS is POST|GET|DELETE
+      /domains/{domain}/records, balance is GET /accounts/info. An official MCP
+      server also exists at https://mcp.dynadot.com/mcp .
+      CONSTRAINTS from vendor docs, none yet proven against FNNL's own account:
+      registration requires PREPAID ACCOUNT BALANCE (it fails rather than charging a
+      card), an IP allowlist is available but optional, and rate limits are
+      tier-gated by spend (Regular tier is 1 thread, 60 req/min). A free sandbox
+      exists.
+      OPEN: Dynadot's docs spell the auth signature header both X-Signature and
+      Signature. Settle that in the sandbox before writing any client.
+      STALE SCAFFOLD WARNING: _vendor-library/skills/domain-infra/ holds
+      dynadot-zapmail and dynadot-primeforge skills built against Dynadot's OLDER
+      api3.json surface, which REST v2 supersedes. Harvest the logic, do not trust
+      the endpoints. Neither pairs with ScaledMail.
 
   mailbox_provider:
-    tool: null
-    status: not_chosen
+    tool: ScaledMail
+    status: chosen
     capability: >
       Provisions the sending mailboxes on those domains, handles the Google
       Workspace / Microsoft 365 purchase, and exports them into the sending
       platform.
     run_state_field: run_state.mailbox_provider
-    credentials: []
+    credentials: [SCALEDMAIL_API_KEY]
     vendor_pack: null
     notes: >
-      Ask whether they resell pre-warmed mailboxes. That single answer decides
-      whether a new client launches in days or in roughly six weeks, and it
-      drives whether /mailbox-pool-staging is worth standing up.
+      Yes, they resell PRE-WARMED inboxes (POST /buy-pre-warm-inboxes), so a new
+      client can launch in days rather than waiting roughly six weeks on warmup.
+      That makes /mailbox-pool-staging worth standing up.
+      API base https://server.scaledmail.com/api/v1, Bearer auth, key generated at
+      app.scaledmail.com/settings, 5 req/sec.
+      CRITICAL TIMING CONSTRAINT: ordering is self-serve via API, but FULFILLMENT IS
+      MANAGED AND ASYNCHRONOUS. Their pricing page states infrastructure is built
+      within 24 to 72 hours. An agent CANNOT create a mailbox synchronously. It must
+      place the order, then POLL GET /domains and GET /mailboxes/{domain_id} for
+      credentials. Any skill assuming same-session provisioning breaks here.
+      Pull credentials via GET /mailboxes/{domain_id}, which returns email plus
+      mailbox_password, and import them into the sending platform. Do NOT use their
+      sequencer auto-connect block: it requires the sequencer password in plaintext
+      in the request body.
+      Plusvibe IS on their named compatible-platform list. Pricing read 2026-09-18:
+      Google 3.50 USD per mailbox per month, Outlook 50 USD per domain per month for
+      25 mailboxes, SMTP 3.75 USD per domain per month, SPF/DKIM/DMARC included.
+      Minimums are not published.
 
   sending_platform:
-    tool: null
-    status: not_chosen
+    tool: Plusvibe.ai
+    status: chosen
     capability: >
       Holds the campaigns, sequences, and lead lists. Sends the email, rotates
       the inboxes, runs warmup, and receives the replies. This is the most
       depended-on slot in the system.
     run_state_field: run_state.sending_platform
-    credentials: []
+    credentials: [PLUSVIBE_API_KEY, PLUSVIBE_WORKSPACE_ID]
     vendor_pack: null
     notes: >
-      Check three things before locking this: does it have a REST API for
-      campaign create plus lead upload, does it support spintax, and can it
-      expose replies programmatically. Without the first, campaign upload stays
-      manual. Without the third, reply scoring cannot be automated.
+      All three gates PASS on documentation review. None is yet proven on a live call.
+      1. REST API for campaign create plus lead upload: YES, two-step. POST
+         /campaign/add/campaign creates an empty shell taking only workspace_id and
+         camp_name. PATCH /campaign/update/campaign carries the real payload:
+         sequences, then steps, then variations, each variation holding its own
+         subject, preheader and body, plus schedules and email_accounts. Leads go in
+         via POST /lead/add.
+      2. Spintax: YES. {{random|a|b|c}} and {{fallback|{{var}}|default}}, case
+         insensitive. UNCONFIRMED whether spintax evaluates in SUBJECT lines. Native
+         per-step subject variations with var_sel_type R_ROBIN cover that need.
+      3. Programmatic reply access: YES, both directions. Webhooks fire on
+         FIRST_EMAIL_REPLIES, ALL_EMAIL_REPLIES and ALL_POSITIVE_REPLIES carrying the
+         reply text, HMAC-SHA256 signed when a secret is set. GET /unibox/emails
+         pulls full bodies. Triage write-back via POST /lead/data/update.
+         TRAP: POST /lead/update/status is sending-state control (COMPLETED, PAUSED,
+         UNPAUSED), NOT triage. Triage labels go through /lead/data/update.
+      Base https://api.plusvibe.ai/api/v1, header x-api-key, workspace_id required on
+      every endpoint, 5 req/sec. Docs at developer.plusvibe.ai, with a
+      machine-readable endpoint index at developer.plusvibe.ai/llms.txt .
+      COMMERCIAL GATE: API, webhooks and MCP all require the BUSINESS plan, 77 USD
+      per month minimum. The 37 USD Personal tier is not programmable at all.
+      An official MCP server exists at https://mcp.plusvibe.ai/mcp but passes the API
+      key as a URL QUERY PARAMETER. The REST API is the real automation surface.
 
   infrastructure_stack:
-    tool: null
-    status: not_chosen
+    tool: dynadot_scaledmail
+    status: chosen
     capability: >
       The named combination of registrar plus mailbox provider that a given
       client's domains run on, recorded as one value so later steps can branch
@@ -107,7 +155,27 @@ infrastructure:
     run_state_field: run_state.infrastructure_stack
     credentials: []
     vendor_pack: null
-    notes: Derived from registrar + mailbox_provider once both are chosen.
+    notes: >
+      Derived from Dynadot plus ScaledMail. This pairing is NEW to this workspace.
+      The credential registry's stack_map ships only dynadot_zapmail,
+      spaceship_zapmail, dynadot_primeforge, spaceship_primeforge and
+      primeforge_native, so dynadot_scaledmail has been added there.
+      DEFERRED BY OPERATOR 2026-09-18. Email infrastructure will NOT be set up
+      through this system for now; the operator will confirm the path later.
+      Until then, treat both infrastructure slots as named-but-dormant, and do
+      not route a client to any domain or mailbox setup skill. The reminder is
+      enforced at /cold-email-kickoff Step 6.0, which asks the operator whether
+      infra is already handled before any client setup branch runs.
+      THE OPEN FORK, for when this is picked back up: WHO BUYS THE DOMAINS.
+      ScaledMail's bring-your-own-domain path (provider "other") conditionally
+      requires a hosting object holding the REGISTRAR USERNAME AND PASSWORD IN
+      PLAINTEXT, which is full account control rather than scoped DNS access. Worse,
+      Dynadot is NOT on ScaledMail's named list of supported external registrars
+      (Porkbun, Namecheap, DNSimple), so that path may not even function.
+      The clean alternative is provider "buy", letting ScaledMail register the
+      domains, so no FNNL registrar credential ever leaves the building. That also
+      means Dynadot would not be used for cold-email infrastructure.
+      Do not resolve this by defaulting. It is one support question to ScaledMail.
 
   mailbox_mix_strategy:
     tool: null
@@ -122,7 +190,52 @@ infrastructure:
     notes: See /mailbox-mix-strategy. This is a decision, so leave `tool` null.
 
 # =============================================================================
-# 2. LEAD DATA
+# 2. OUTREACH CHANNELS (non-email)
+#    Email lives in section 1, because the whole sending stack hangs off it.
+#    This section holds the OTHER channels FNNL runs outbound on, so a campaign
+#    can be multi-channel without a skill having to guess where LinkedIn lives.
+#    Added 2026-09-18 on operator instruction; the contract shipped email-only.
+# =============================================================================
+
+channels:
+
+  linkedin_outreach:
+    tool: HeyReach
+    status: chosen
+    capability: >
+      Runs LinkedIn connection requests and message sequences across multiple
+      sender accounts, as a second outbound channel alongside email.
+    run_state_field: run_state.linkedin_outreach
+    credentials: [HEYREACH_API_KEY]
+    vendor_pack: null
+    notes: >
+      Built for agencies and multi-account sending: connection requests,
+      message sequences with conditional branching, and sender rotation across
+      accounts are all confirmed.
+      API base https://api.heyreach.io/api/public , header X-API-KEY, rate
+      limit 300 requests per minute SHARED ORG-WIDE (not per key, so parallel
+      fan-out has to budget against one pool). Create campaign, add leads and
+      read replies are all confirmed. Replies come two ways and the vendor's own
+      pattern is to use BOTH: a webhook push, which carries only the latest
+      message, plus a REST "get chat room" pull for full history.
+      Docs are a Postman collection at
+      documenter.getpostman.com/view/23808049/2sA2xb5F75 . Note that
+      documentation.heyreach.io does NOT resolve.
+      An official remote MCP server exists, per-workspace URL and key, included
+      on every paid tier including the 79 USD entry plan.
+      INTEGRATION GAP THAT MATTERS: HeyReach natively integrates with Instantly,
+      Smartlead and EmailBison, where email is a STEP TYPE inside the LinkedIn
+      sequence rather than a data sync. PLUSVIBE IS NOT ON THAT LIST. So genuine
+      interleaved email-plus-LinkedIn sequencing is NOT available out of the box
+      on FNNL's chosen pairing. Running both channels means orchestrating them
+      separately, or writing custom glue against both REST APIs.
+      PRICING, read 2026-09-18, and widely mis-stated: the page tagline implies
+      unlimited senders on a flat fee, but Growth is 79 USD PER SENDER (the card
+      carries a quantity stepper). Agency 999 USD covers 25 senders, Unlimited
+      2,999 USD is genuinely unlimited. Budget per sender, not per account.
+
+# =============================================================================
+# 3. LEAD DATA
 #    Finding the companies, finding the people, and getting their real contact
 #    details. This is where most of the money gets spent, so the ordering
 #    between these slots matters as much as the tools themselves.
@@ -131,46 +244,87 @@ infrastructure:
 lead_data:
 
   company_discovery:
-    tool: null
-    status: not_chosen
+    tool: AI Ark
+    status: chosen
     capability: >
       Produces the universe of target companies from an ICP definition. Could
       be a lookalike engine, a database with firmographic filters, a maps or
       directory scrape, or a public registry pull.
     run_state_field: null
-    credentials: []
+    credentials: [AI_ARK_API_KEY]
     vendor_pack: null
     notes: >
-      This is the source-of-truth signal layer. Do not let a contact-enrichment
-      tool stand in for it; finding a person at a company is a different job
-      from deciding the company belongs on the list at all.
+      AI Ark is the source-of-truth company universe: 70M+ companies with
+      firmographic, technographic, funding, headcount-growth and geo filters.
+      company_search is the primary call.
+      MANDATORY PRE-STEP: the search enums must be resolved before filtering. Call
+      industry_search, technology_search and location_search (or read the
+      ark://reference/* resources) to get exact enum values. Guessed values silently
+      return wrong results. When a user describes an intent like "retail", select ALL
+      matching industry values, typically 5 to 20+, not one.
+      Pagination: the response carries totalElements and totalPages, default size 25,
+      max 100, page is 0-based. Always surface totalElements so the real match count
+      is visible.
+      GetLeads also does company discovery and is the deliberate SECOND source, kept
+      in intent_signals rather than here so the source-of-truth layer stays single.
+      If a TAM comes back thin from AI Ark, GetLeads is the gap-fill to try before
+      buying a third tool.
 
   contact_discovery:
-    tool: null
-    status: not_chosen
+    tool: AI Ark
+    status: chosen
     capability: >
       Finds the right people inside a target company (title, seniority,
       function, tenure) without necessarily revealing their email yet.
     run_state_field: null
-    credentials: []
+    credentials: [AI_ARK_API_KEY]
     vendor_pack: null
     notes: >
-      Keeping discovery separate from reveal is what lets you qualify a slice
-      cheaply before paying per contact.
+      people_search covers 400M to 500M profiles (vendor claim, unaudited) and
+      returns titles, seniority, function and company linkage WITHOUT revealing
+      email, which is exactly the cheap-qualify-before-reveal split this slot wants.
+      Keep discovery and reveal separate: qualify the slice on people_search first,
+      then pay for reveal only on the survivors via contact_enrichment.
+      Same enum pre-step as company_discovery applies.
+      GetLeads is the secondary contact source, 402M contacts with 179 fields per
+      lead (52 contact, 127 company), reachable through its MCP.
 
   contact_enrichment:
-    tool: null
-    status: not_chosen
+    tool: AI Ark -> Prospeo (waterfall)
+    status: chosen
     capability: >
       Reveals work email addresses, and optionally phone numbers, for the
       contacts you decided are worth paying for.
     run_state_field: run_state.tam_enrichment_path
-    credentials: []
-    vendor_pack: null
+    credentials: [AI_ARK_API_KEY, PROSPEO_API_KEY]
+    vendor_pack: prospeo
     notes: >
-      If you use more than one, record the waterfall order here and in
-      /email-waterfall. The exhaust-cheapest-first rule only saves money when
-      the order is written down and actually followed.
+      WATERFALL ORDER, mirror this into /email-waterfall:
+        STEP 1, AI Ark, across the whole survivor set.
+        STEP 2, Prospeo, ONLY on the rows AI Ark left blank.
+      Never open Prospeo on a row AI Ark has not already attempted.
+      WHY AI ARK IS PRIMARY: it labels CATCH_ALL as a distinct email type alongside
+      SMTP, which is the signal /list-quality-scorecard needs. Prospeo's status field
+      is binary (VERIFIED / UNAVAILABLE) and therefore COLLAPSES catch-all into
+      valid. Prospeo's verification_method field (SMTP / BOUNCEBAN) recovers the
+      signal, so any pipeline reading Prospeo output MUST read verification_method,
+      not status alone, or it will quietly inflate bounce rate.
+      USE THE RIGHT AI ARK ENDPOINT: route gap-fill through /v1/people/email-finder,
+      which charges 0 credits when no valid email is found. The bulk /v1/people/export
+      path bills 0.5 credits PER PROFILE EVEN ON A MISS (vendor's own worked example:
+      1,000 rows costs 500 credits whether 700 or 1,000 resolve). That is the
+      difference between paying per hit and paying per row routed.
+      Prospeo charges nothing when no result is found and offers free re-enrichment
+      within 90 days. Its enrich-person endpoint takes linkedin_url, but the
+      documented minimum match is name plus a company identifier, so LinkedIn-URL-
+      alone is UNPROVEN. Bulk is 50 persons per request.
+      COST EVIDENCE IS ASYMMETRIC, DO NOT CLAIM CHEAPEST-FIRST IS SATISFIED YET:
+      AI Ark's pricing is vendor-confirmed, Prospeo's is third-party only (tiers
+      reported as 39 / 99 / 199 / 369 USD, UNCONFIRMED, their pricing page is
+      JavaScript-rendered). Read Prospeo's real pricing from a logged-in account and
+      re-check this ordering before treating the waterfall as cost-optimal. The
+      catch-all rationale above holds regardless of price.
+      Both vendors verify at reveal time using the SAME engine, BounceBan.
 
   email_verification:
     tool: null
@@ -182,13 +336,30 @@ lead_data:
     credentials: []
     vendor_pack: null
     notes: >
-      Ask explicitly whether it detects catch-all as a separate signal from
-      valid/invalid. A verifier that collapses the two will quietly inflate
-      your bounce rate.
+      GENUINE GAP. NOTHING IN FNNL'S STACK FILLS THIS. Do not assume otherwise.
+      Neither AI Ark nor Prospeo is a verification product. Both are finders that
+      verify at reveal time via BounceBan and neither exposes a standalone
+      "feed me a list of emails, get back statuses" endpoint.
+      Prospeo's Email Verifier API is REMOVED, not merely undocumented. A live
+      unauthenticated probe on 2026-09-18 returned error_code DEPRECATED for
+      /email-verifier, /email-finder, /linkedin-email-finder, /domain-search and
+      /mobile-finder, while /enrich-person returned INVALID_API_KEY and a bogus
+      endpoint returned a plain 404. The marketing page for the verifier is stale.
+      Plusvibe bundles verification in its credit allowance, but its CATCH-ALL
+      handling is UNVERIFIED, so it is not recorded here on the strength of being
+      bundled.
+      WHAT THIS BLOCKS: re-verification of an aged list before send, and
+      /list-quality-scorecard gating on deliverability as an independent check rather
+      than trusting the finder's own at-reveal verdict. Bounce risk on any list not
+      freshly revealed is currently unmanaged.
+      TO CLOSE IT: either test Plusvibe's bundled verifier for catch-all handling and
+      record the result here, or add a dedicated verifier. The parked
+      _vendor-library/scripts/deliverable/ pack is an email verification client from
+      the upstream workspace and is the cheapest thing to evaluate first.
 
   intent_signals:
-    tool: null
-    status: not_chosen
+    tool: GetLeads
+    status: chosen
     capability: >
       Third-party buying-intent or technographic data that says a company is
       in-market right now, as opposed to merely fitting the ICP.
@@ -196,11 +367,36 @@ lead_data:
     credentials: []
     vendor_pack: null
     notes: >
-      Genuinely optional. Mark `n/a` if FNNL is not buying intent data, so the
-      skills stop offering it as a path.
+      Credentials are empty ON PURPOSE: GetLeads authenticates by OAuth through its
+      MCP server at https://app.getleads.io/api/mcp , roughly 45 tools, so there is
+      no .env key. A REST API exists but has NO public documentation
+      (docs.getleads.io does not resolve), so the MCP is the only supported surface.
+      HONEST SCOPE: this is NOT third-party buying-intent data. There is no Bombora,
+      G2 or 6sense here. What GetLeads gives is (a) company state attributes you
+      filter on, namely funding, hiring, headcount, technographics and traffic, and
+      (b) genuine live scrapes: website-visitor identification pixels, LinkedIn
+      post-engager monitoring and company-follower scrapes. list_funding_signals and
+      list_acquisition_signals exist as tools.
+      Treat funding and hiring as filters, not as real-time event alerts, unless a
+      test proves recency.
+      BILLING MODEL, TWO SEPARATE BALANCES, DO NOT CONFLATE THEM:
+        PLAN CREDITS cover search, export and enrich. Free tier 1,000 credits,
+        Partner 249 USD/mo, Unlimited 497 USD/mo. "Unlimited" is still governed by a
+        daily and monthly fair-use budget.
+        PREPAID WALLET CASH covers only the live scrapes, for example website-visitor
+        identification at a published 0.125 USD per newly identified lead.
+      An empty wallet returns insufficient_wallet_cash while search and export keep
+      working normally. NEVER report "out of credits" on a wallet failure; that would
+      ship a false outage.
+      OPEN QUESTION WORTH ASKING THE VENDOR: the MCP surface exposes more than the
+      marketing site advertises, including acquisition signals that appear nowhere
+      publicly, and the site still lists post-engagement as COMING SOON while the
+      tool already exists. Confirm those are supported before building a campaign on
+      them. The payload shape, recency and upstream source of the funding and
+      acquisition signals are UNKNOWN; only tool existence is established.
 
 # =============================================================================
-# 3. AI AND RESEARCH
+# 4. AI AND RESEARCH
 #    The models that research, classify, and write. Splitting these slots is
 #    deliberate: the cheapest model that can do bulk classification is almost
 #    never the model you want writing final copy.
@@ -209,15 +405,22 @@ lead_data:
 ai:
 
   research_provider:
-    tool: null
-    status: not_chosen
+    tool: Parallel.ai
+    status: chosen
     capability: >
       Primary web research engine for ICP, offer, and account research. Should
       return sourced, citable answers rather than unattributed prose.
     run_state_field: run_state.ai_research_provider
-    credentials: []
+    credentials: [PARALLEL_API_KEY]
     vendor_pack: null
-    notes: null
+    notes: >
+      Purpose-built for agent web research and returns source-attributed results with
+      calibrated confidence, which is what this slot asks for over unattributed prose.
+      Relevant products: Search API for real-time retrieval, Task API for deep
+      research in a single call, FindAll for entity discovery, Monitor for continuous
+      tracking, plus an OpenAI-compatible Responses API.
+      This is a RESEARCH engine, not a general-purpose LLM. It does not fill
+      bulk_classification or copywriting, both of which remain open.
 
   bulk_classification:
     tool: null
@@ -229,8 +432,16 @@ ai:
     credentials: []
     vendor_pack: null
     notes: >
-      Cost per token matters far more than quality here. This is the slot that
-      decides whether qualifying a 40k-company TAM costs dollars or hundreds.
+      GAP. Operator confirmed 2026-09-18 that FNNL has no LLM API key yet.
+      Cost per token dominates here, not quality. This is the slot that decides
+      whether qualifying a 40k-company TAM costs single-digit dollars or hundreds.
+      WHAT THIS BLOCKS: there is no credentialed, scriptable path for TAM-scale ICP
+      fit scoring, hard-no filtering or bulk field extraction. /lead-scoring and the
+      classification passes in /tam-build have to run manually or inside an
+      interactive Claude Code session, which does not scale to tens of thousands of
+      rows and cannot be cost-governed by /api-cost-governance.
+      Parallel.ai does NOT fill this. It is a research engine, not a cheap bulk
+      classifier.
 
   copywriting:
     tool: null
@@ -240,7 +451,14 @@ ai:
     run_state_field: null
     credentials: []
     vendor_pack: null
-    notes: null
+    notes: >
+      GAP. Operator confirmed 2026-09-18 that FNNL has no LLM API key yet.
+      WHAT THIS BLOCKS: /campaign-copywriting and /outreach-copywriting have no
+      credentialed model to generate final copy or the per-lead personalization that
+      /personalization-subagent-pattern fans out. Copy can still be written inside an
+      interactive session, but it cannot be scripted, batched or cost-governed.
+      Keep this slot separate from bulk_classification on purpose. The cheap model
+      that scores 40k companies is not the model that should write final copy.
 
   image_generation:
     tool: null
@@ -250,7 +468,9 @@ ai:
     run_state_field: null
     credentials: []
     vendor_pack: null
-    notes: Optional. Mark `n/a` if FNNL supplies real photos instead.
+    notes: >
+      Not chosen, and genuinely optional. Mark n/a if FNNL supplies real photos for
+      sender personas instead of generating them.
 
   research_routing:
     tool: null
@@ -261,34 +481,50 @@ ai:
     run_state_field: run_state.research_routing
     credentials: []
     vendor_pack: null
-    notes: See /ai-model-routing. This is a decision, so leave `tool` null.
+    notes: >
+      BLOCKED until bulk_classification and copywriting are filled. A routing policy
+      that can only route to one provider is not a policy.
+      What IS decided: Parallel.ai handles web research (ICP, offer, account, signal
+      discovery). What is undecided is which model handles cheap bulk work and which
+      handles final copy, because neither is credentialed.
+      Revisit with /ai-model-routing once an LLM key exists.
 
 # =============================================================================
-# 4. WEB ACCESS
+# 5. WEB ACCESS
 # =============================================================================
 
 web:
 
   search:
-    tool: null
-    status: not_chosen
+    tool: Parallel.ai
+    status: chosen
     capability: Programmatic search results (web, news, places) for research and discovery.
     run_state_field: null
-    credentials: []
+    credentials: [PARALLEL_API_KEY]
     vendor_pack: null
-    notes: null
+    notes: >
+      Parallel's Search API. MAPPING INFERRED, NOT STATED: the operator named
+      Parallel.ai once, as part of the stack. Assigning it to web.search follows from
+      its product surface (it runs its own web-scale index built for LLM use), not
+      from an explicit instruction. Same key as research_provider, so this costs
+      nothing extra to adopt. Reassign freely if FNNL prefers a separate search tool.
 
   crawl:
-    tool: null
-    status: not_chosen
+    tool: Parallel.ai
+    status: chosen
     capability: Website crawling and content extraction for company research and signal detection.
     run_state_field: null
-    credentials: []
+    credentials: [PARALLEL_API_KEY]
     vendor_pack: null
-    notes: null
+    notes: >
+      Parallel's Extract API. MAPPING INFERRED, NOT STATED, on the same basis as
+      web.search above. Covers page content extraction for company research and
+      signal detection. If FNNL later needs deep multi-page site crawls rather than
+      targeted extraction, re-evaluate: the parked spider MCP connector in
+      _vendor-library/mcp-connectors.json is the alternative already catalogued.
 
 # =============================================================================
-# 5. OPERATIONS
+# 6. OPERATIONS
 #    Where the results land and how the team sees them.
 # =============================================================================
 
@@ -304,8 +540,13 @@ operations:
     credentials: []
     vendor_pack: null
     notes: >
-      Confirm who owns the CRM. If it is the client's CRM rather than FNNL's,
-      the integration and the data-handling rules both change.
+      Not chosen. The operator's stack list named no CRM.
+      Operator confirmed 2026-09-18 that FNNL owns all accounts and clients are
+      tenants, so a future CRM would be FNNL's own rather than a per-client
+      integration. A close-crm scaffold is parked in _vendor-library/ but was never
+      tested against a live account upstream and has no reply-to-pipeline sync.
+      WHAT THIS BLOCKS: replies that turn into real conversations have no system of
+      record beyond the sending platform's own inbox.
 
   reporting_destination:
     tool: null
@@ -316,11 +557,14 @@ operations:
     run_state_field: null
     credentials: []
     vendor_pack: null
-    notes: null
+    notes: >
+      Not chosen. The operator's stack list named no reporting destination.
+      WHAT THIS BLOCKS: /cold-email-weekly-rhythm and recurring campaign reporting
+      have nowhere to deliver. Reporting has to be pulled manually from Plusvibe.
 
   document_generation:
-    tool: null
-    status: not_chosen
+    tool: Built-in DOCX/PPTX builders (outbound/scripts/)
+    status: chosen
     capability: >
       Produces the client-facing deliverables: approval briefs, campaign
       sequence presentations, follow-up decks.
@@ -328,9 +572,13 @@ operations:
     credentials: []
     vendor_pack: null
     notes: >
-      The repo ships working DOCX and PPTX builders under
-      outbound/scripts/. If FNNL wants Google Docs or
-      Notion instead, that is a swap here.
+      Keeping the shipped builders, per /stack-setup's recommendation. They are
+      already wired to the four client-facing presentation skills
+      (campaign-approval-brief, cold-email-campaign-sequence-docx-presentation,
+      cold-email-followups-docx-presentation, interested-replies-docx-presentation)
+      and need no credential.
+      NOT YET PROVEN against an FNNL deliverable. They ran in the upstream workspace,
+      so treat them as a working scaffold until one brief is generated end to end.
 
   spreadsheet:
     tool: null
@@ -342,12 +590,19 @@ operations:
     credentials: []
     vendor_pack: null
     notes: >
-      /mailbox-pool-staging expects two sheets and currently holds
+      Not chosen. The operator's stack list did not name a spreadsheet tool.
+      NOTE, not a decision: a google-docs MCP server is already connected at the user
+      level of this machine and covers docs, drive and sheets. If FNNL wants Google
+      Sheets here, that connection likely satisfies it with no new purchase, but it
+      has not been verified against an FNNL-owned Drive and is not recorded as chosen
+      on that basis.
+      WHAT THIS BLOCKS: /mailbox-pool-staging expects two sheets and still holds
       <FNNL_MAILBOX_POOL_SHEET_ID> and <FNNL_MAILBOX_TRACKER_SHEET_ID> as
-      placeholders. Create the sheets, then replace those placeholders.
+      placeholders. Until a spreadsheet surface is chosen and those IDs are filled,
+      mailbox pool staging cannot run.
 
 # =============================================================================
-# 6. EXECUTION DEFAULTS
+# 7. EXECUTION DEFAULTS
 #    Not tools. These are the workspace-level safety settings a new client's
 #    run_state inherits. The defaults below are deliberately conservative:
 #    nothing spends and nothing runs unattended until you say otherwise.
@@ -363,9 +618,16 @@ execution_defaults:
     Raise these only on an explicit instruction from the operator, never
     silently. auto_execute with a non-zero ceiling lets the system spend money
     without asking, so it should be a deliberate decision per client.
+    CONFIRMED BY OPERATOR 2026-09-18: hold the ceiling at 0 and stay on
+    review_gates until each tool has made one verified call from this
+    workspace. Reason given: none of the eight chosen tools is proven here yet,
+    and several bill per record (AI Ark per credit, Prospeo per reveal,
+    GetLeads wallet cash per scrape), so an unattended misconfigured query
+    could burn real money before anyone sees it. Revisit per tool as each one
+    reaches status: live, not as a single blanket change.
 
 # =============================================================================
-# 7. FNNL AGENCY PROCESS OVERRIDES
+# 8. FNNL AGENCY PROCESS OVERRIDES
 #    The system ships with a default cold outbound process. Where FNNL's own
 #    process differs, record it here so the skills follow FNNL's way rather
 #    than the inherited default. Leave empty until you have actually confirmed
@@ -383,6 +645,19 @@ process_overrides:
   notes: >
     /stack-setup asks about these. Anything left null means the system uses
     its built-in default, which is documented in the matching skill.
+    ACCOUNT OWNERSHIP, confirmed by operator 2026-09-18: FNNL OWNS EVERYTHING.
+    FNNL buys the domains and inboxes and runs every client inside its own
+    Plusvibe, ScaledMail and HeyReach accounts. Clients are tenants, not
+    account holders. Consequences the skills should assume: one credential set
+    covers all clients rather than per-client keys; domain and sending
+    reputation is FNNL's asset to protect, so one client's bad list damages
+    other clients' deliverability; and a departing client cannot take the
+    infrastructure with them, which is a commercial conversation to have at
+    offboarding rather than a technical one.
+    Everything else above is still null and therefore still on the built-in
+    default. approval_gates in particular is the one most likely to differ per
+    agency and is client-visible when wrong, so capture it before the first
+    client deliverable ships.
 
 # =============================================================================
 # FORMAT REFERENCE (for hand-editing)

@@ -438,6 +438,40 @@ Based on kickoff answers:
 
 Branch on infrastructure readiness, but route from `run_state`.
 
+#### Step 6.0: Infrastructure readiness gate (operator directive, 2026-09-18)
+
+Before showing the menu below, read `infrastructure.infrastructure_stack` in
+`<outbound>/stack-contract.yaml`. If its notes carry a `DEFERRED` marker or an
+unresolved fork, do NOT route to any domain or mailbox setup skill. Ask the
+operator once, plainly:
+
+> Email infrastructure is still deferred at the FNNL contract level. The
+> registrar-versus-mailbox-provider domain-purchase fork was never resolved,
+> and no infrastructure has been provisioned through this system yet. Before
+> this client's setup: is the sending infrastructure already handled, either
+> bought elsewhere or an existing pool we can point at, or does it still need
+> building?
+
+Route on the answer:
+
+- **Already handled elsewhere.** Record it in `run_state.status` as unverified,
+  operator-supplied context. Skip the setup branch and continue to the lead
+  source and list work, which is not blocked by this. Verify real sender health
+  later through the locked platform's manager before any upload, never on the
+  operator's word alone.
+- **Still needs building.** The fork has to close first. Stop and route to
+  `/stack-setup` to resolve `infrastructure_stack`. Buying domains on an
+  unresolved pairing is the expensive mistake this gate exists to prevent.
+- **Not sure.** Treat it as "still needs building".
+
+This gate is a deliberate, narrow exception to the "do not ask whether domains
+are purchased or inboxes are warmed during kickoff" rule in Step 1. That rule
+assumes a settled infrastructure path. FNNL does not have one yet, so the
+question is a contract-level blocker rather than an intake question.
+
+**Remove this gate** once `infrastructure_stack` is resolved in the contract and
+at least one client's infrastructure has been provisioned through the system.
+
 **If `run_state.status.setup_stage` is not complete or sender readiness has not been verified:**
 
 ```text

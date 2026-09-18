@@ -71,6 +71,10 @@ The read-first / write-after activity-log protocol itself still applies in full.
 
 **Skills live in `.claude/skills/<name>/SKILL.md`** at the repo root. That is the single source of truth for every skill. Edit them there; Claude Code loads them live. There is no second copy and no account upload.
 
+**Exception: most of Luke's personal and operator skills live outside this repo entirely**, in sibling folders `../Personal GTM System/.claude/skills/` (his content engine, creator study library) and `../operator/.claude/skills/` (`daily-intel`, `co-domain-sale-monitor`), shared with his other GTM workspaces. Claude Code auto-discovers both the same way it discovers this repo's own skills, so they're usable from inside this workspace too (invoked as `Personal GTM System:<name>` / `operator:<name>`, or bare `/<name>` when there's no collision). Nothing FNNL-specific belongs in either folder. See `../Personal GTM System/CLAUDE.md` and `../operator/CLAUDE.md`.
+
+**`ask-eric` and `ask-aaron` are dual-homed, by explicit operator request (2026-09-18), not a stale leftover.** Canonical, shared doctrine lives in `../Personal GTM System/.claude/skills/ask-eric` and `ask-aaron`. A **local copy also lives here** in this repo's own `.claude/skills/`, on Luke's explicit instruction. **This local copy does not auto-sync** with the shared one; when the shared doctrine is refreshed, this copy goes stale until someone re-copies it. If either skill's behavior looks out of date, diff this folder against `../Personal GTM System/.claude/skills/<name>` before assuming the doctrine itself is wrong.
+
 **When creating a new skill:** create `.claude/skills/<slug>/SKILL.md`, where the folder name is the command (`/<slug>`), with YAML frontmatter containing `name:` (matching the folder) and `description:`.
 
 ### The whole repo, in one table

@@ -2,9 +2,9 @@
 
 Purpose: define cold email writing standards that protect deliverability, inbox placement, readability, and reply quality.
 
-This file is a principles-only guide. It must not contain reusable email copy, writing samples, sequence scripts, or industry-specific examples. For banned words, risky phrases, and formatting bans, `spam-word-checker.md` is the source of truth.
+This file is a principles-only guide. It must not contain reusable email copy, writing samples, sequence scripts, or industry-specific examples. For formatting, CTA, opener, and voice bans, `spam-word-checker.md` is the source of truth (it no longer enforces a banned-word keyword list; see that file for why).
 
-Compiled from internal campaign-copywriting guidance and cold outbound operators including Nick Abraham, Daniel Fazio, Michel Lieben, Patrick Spychalski, Eric Nowoslawski, Instantly.ai, and Nick Saraev.
+Compiled from internal campaign-copywriting guidance and cold outbound operators including Aaron Shepherd (GrowthFlare; see `/ask-aaron` for the full sourced doctrine), Nick Abraham, Daniel Fazio, Michel Lieben, Patrick Spychalski, Eric Nowoslawski, Instantly.ai, and Nick Saraev.
 
 ---
 
@@ -24,9 +24,11 @@ Every subject line, opener, body line, CTA, follow-up, P.S. line, variable value
 
 ## Core Standard
 
-### GrowthFlare Framework A controls the initial cold touch (HARD RULE, 2026-08-12)
+### Framework A controls the initial cold touch (HARD RULE, 2026-08-12)
 
 The first written cold message in any channel opens with a specific free deliverable, stays at 25 to 35 body words, uses 2 to 3 main-body sentences and exactly 1 question, keeps the sender/prospect workload split in parentheses, and ends the main body with the soft permission question. An optional declarative P.S. is outside the main-body sentence count but inside the word cap. Cold email adds a 2-to-4-word lowercase subject with exactly 1 merge token.
+
+Most of this structure is Aaron Shepherd's own measured finding from his 1.5M-email study, not a house invention; what this workspace adds is making it a hard cap with no exception. The full sourced breakdown of which piece is his and which is this workspace's hardening lives in `outreach-copy-framework.md` and `/ask-aaron` (`aaron-doctrine.md` §13). (An earlier version of this section and `outreach-copy-framework.md` cited a fabricated-looking URL for this rule; that citation is corrected in `outreach-copy-framework.md`, and the substance of the rule below is unchanged.)
 
 This overrides older guidance that allowed 50-to-90-word or 70-to-90-word first messages, setup before the offer, a statement-only initial CTA, or omission of the workload parenthetical. Full rule and QA: `outreach-copy-framework.md`.
 
@@ -53,7 +55,7 @@ The goal is not clever writing. The goal is a clear, plain note that feels speci
 - Do not use misleading subject lines, fake thread prefixes, bait-and-switch claims, or urgency that is not true.
 - Do not overload the email with variables. Too many personalized fields can look scraped.
 - Keep punctuation calm. No all caps, repeated punctuation, decorative characters, or unusual symbols.
-- Use `spam-word-checker.md` as the banned-word list. Do not maintain a separate spam list here.
+- Use `spam-word-checker.md` for formatting, CTA, opener, and voice discipline. It does not enforce a banned-word keyword list (2026-09-18); do not maintain one here either.
 
 ---
 
@@ -461,7 +463,7 @@ Use this before any copy is shown to the user, saved to YAML, or prepared for up
 6. The sequence repeats the same weak angle.
 7. AI personalization adds words without adding relevance.
 8. The YAML version drifts from the reviewed markdown version.
-9. A safe-looking line still contains a banned root word from `spam-word-checker.md`.
+9. A safe-looking line still trips a formatting, CTA, opener, or voice ban from `spam-word-checker.md`.
 10. The email is polished but not believable.
 
 ---
