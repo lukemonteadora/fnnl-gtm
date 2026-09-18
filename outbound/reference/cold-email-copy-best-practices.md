@@ -224,7 +224,7 @@ Decide the tier on one question: is the angle hollow without this proof, or just
 - Hollow without it: the angle's whole credibility hinges on the missing proof. Hold that angle, send the client the fill-in form (`proof-asset-request.md`), and either switch to an angle your on-file evidence already supports or wait for the proof.
 - Would only strengthen: the copy already stands on a real signal. Flag the gap, send the form, ship the viable version now, and upgrade when the proof returns.
 
-This sits next to capability truth (never claim a product capability the client cannot deliver) as a separate rule: capability truth is about not overstating what the client does, the proof-asset gate is about not faking the evidence that it works. Doctrine: memory `proof-asset-gate-doctrine`.
+This sits next to capability truth (never claim a product capability the client cannot deliver) as a separate rule: capability truth is about not overstating what the client does, the proof-asset gate is about not faking the evidence that it works. Doctrine: memory.
 
 Weak offer clarity is not a copy problem. It is a strategy problem showing up in the writing.
 

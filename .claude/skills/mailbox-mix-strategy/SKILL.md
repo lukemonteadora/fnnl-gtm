@@ -100,12 +100,12 @@ This is a guess, not evidence. It is good enough to avoid a blind default, but w
 
 ## Fleet Sizing to the Daily Send Target (high-volume default)
 
-Before the Google/Microsoft split (above) chooses the mix, this step sizes the total warmed mailbox count the client needs. Under the high-volume default (doctrine: `high-volume-default-doctrine`), a client's normal target is **2,000 to 30,000 emails SENT per day**, spread across a few big campaigns (1,000 up to 20,000 leads per campaign). The operator picks a number inside that band. Default to the low end (~2,000/day) to start, then ratchet the fleet up as warmup graduates and the offer proves.
+Before the Google/Microsoft split (above) chooses the mix, this step sizes the total warmed mailbox count the client needs. Under the high-volume default, a client's normal target is **2,000 to 30,000 emails SENT per day**, spread across a few big campaigns (1,000 up to 20,000 leads per campaign). The operator picks a number inside that band. Default to the low end (~2,000/day) to start, then ratchet the fleet up as warmup graduates and the offer proves.
 
 **Capacity is the binding constraint.** Safe daily sends equal active warmed mailboxes times the safe per-mailbox rate. Two multipliers set the fleet size:
 
 - **Safe per-mailbox rate is roughly 15 to 20 cold sends per mailbox per day.** Plan with that band, but read the real number from the warmup / campaign config for the locked platform. Never hardcode it.
-- **Active-rotation fraction is roughly 0.5.** Only ONE rotation mirror-half sends at a time (see the Rotation Batch Split below and `mailbox-rotation-batch-rule`), so active mailboxes are about total x 0.5.
+- **Active-rotation fraction is roughly 0.5.** Only ONE rotation mirror-half sends at a time (see the Rotation Batch Split below), so active mailboxes are about total x 0.5.
 
 **Fleet-sizing formula:**
 
@@ -126,7 +126,7 @@ empty, run `/stack-setup` before quoting any spend figure.
 
 **Surface this LOUDLY before any infra purchase.** A per-client 2k-30k/day target is a MAJOR scale-up, not a config flip. For scale: a comparable agency sending account, measured 2026-07-07 in a previous operation, ran only ~1,000-1,300 emails/day **in total across every client**, with bounce brushing the 3% ceiling. That is a reference data point from someone else's account, not FNNL's ground truth, but it is the right order of magnitude to compare against. FNNL's own current daily volume is whatever its sending platform actually reports, so read it rather than assuming. Either way the sized fleet is a real recurring-spend and time decision, not a setting. State the three numbers explicitly to the operator, in one place, before buying anything: (1) the resulting fleet size, (2) the recurring per-mailbox spend at FNNL's actual provider rate, and (3) the weeks of warmup runway before that fleet can send at target. Under `review_gates` this is an operator decision. Under `auto_execute` it stays bounded by `run_state.spend_ceiling_usd`: if the sized fleet's recurring or upfront cost would exceed the ceiling, surface it and hold rather than silently buying a smaller fleet.
 
-**The split applies WITHIN the sized fleet.** Everything else in this skill (the Google/Microsoft mix, the Rounding Rules) operates on this total, never the reverse. The sized fleet then splits into two warmed mirror halves per the Rotation Batch Split below (`mailbox-rotation-batch-rule`), which is exactly why the active-rotation fraction is ~0.5. Size for the target, split for the provider mix, then halve for rotation.
+**The split applies WITHIN the sized fleet.** Everything else in this skill (the Google/Microsoft mix, the Rounding Rules) operates on this total, never the reverse. The sized fleet then splits into two warmed mirror halves per the Rotation Batch Split below, which is exactly why the active-rotation fraction is ~0.5. Size for the target, split for the provider mix, then halve for rotation.
 
 ## Rounding Rules
 

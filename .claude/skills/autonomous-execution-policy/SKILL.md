@@ -5,7 +5,7 @@ description: Cross-cutting policy for running the coldoutbound flow with minimal
 
 # Autonomous Execution Policy
 
-The operator wants this flow to run **hands-free with as little back-and-forth as possible** (memory: `coldoutbound-autonomous-execution`). This policy is the single source of truth for *when to proceed vs stop*. Where any other skill's older "ask at every material fork" wording conflicts with this, **this policy wins** for runs where `run_state.execution_mode = auto_execute` (the operator's default).
+The operator wants this flow to run **hands-free with as little back-and-forth as possible** (operator directive). This policy is the single source of truth for *when to proceed vs stop*. Where any other skill's older "ask at every material fork" wording conflicts with this, **this policy wins** for runs where `run_state.execution_mode = auto_execute` (the operator's default).
 
 ## Stack Resolution (read before any tool step)
 

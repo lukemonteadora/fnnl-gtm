@@ -359,7 +359,7 @@ When an angle references a named client, a case study, or an exact metric that i
 - BLOCK (hollow without it): the angle's credibility hinges on the missing proof. Emit the fill-in form (`proof-asset-request.md`), route it to the client, and do not ship hollow copy for that angle. Switch to a different angle the on-file proof already supports, or hold the slice until the proof returns.
 - FLAG-AND-PROCEED (would only strengthen): the copy already stands on a real signal or observation. Flag the gap plainly, emit the form, proceed with the viable version now, and upgrade the copy when the proof returns.
 
-Not relaxed by `auto_execute`. This is a missing-source-material input gate, modeled on the List Gate, not an operator pause. The form is a data request to the client, so it is fully compatible with hands-free execution. Proceeding past a BLOCK-tier gap with hollow or invented proof is a hard-rule violation regardless of execution mode. Procedure and form template: `proof-asset-request.md`. Doctrine: memory `proof-asset-gate-doctrine`.
+Not relaxed by `auto_execute`. This is a missing-source-material input gate, modeled on the List Gate, not an operator pause. The form is a data request to the client, so it is fully compatible with hands-free execution. Proceeding past a BLOCK-tier gap with hollow or invented proof is a hard-rule violation regardless of execution mode. Procedure and form template: `proof-asset-request.md`. Doctrine: memory.
 
 ---
 

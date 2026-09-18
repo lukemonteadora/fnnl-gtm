@@ -1,6 +1,6 @@
 # Proof-Asset Request: Gate Procedure and Fill-In Form
 
-This is the reference doc the cold-outbound skills read when a campaign angle needs hard proof (a named client, a real case study, or an exact number) that is not on file yet. It does two things: it defines the **proof-asset gate** (when to block vs flag), and it gives the **easy-to-fill form** to send the client so we get the real evidence back. Canonical doctrine: memory `proof-asset-gate-doctrine`.
+This is the reference doc the cold-outbound skills read when a campaign angle needs hard proof (a named client, a real case study, or an exact number) that is not on file yet. It does two things: it defines the **proof-asset gate** (when to block vs flag), and it gives the **easy-to-fill form** to send the client so we get the real evidence back. Canonical doctrine: memory.
 
 The point, in one line: we don't write hollow or invented copy to cover a missing fact. We be blunt about the gap and go collect the real thing, because real evidence is what makes copy actually land.
 
