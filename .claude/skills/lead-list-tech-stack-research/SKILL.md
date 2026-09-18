@@ -142,6 +142,17 @@ Do not go to 10,000 rows until you know the list actually produces replies.
 
 Before spending credits on any paid tool in this catalog (the contact databases, enrichers, verifiers, scrapers, and workspaces named throughout, for example RevCode, A-Leads, WizLeads, Scrap.io, Prospeo, Apify, Trigify, MillionVerifier), run `/api-cost-governance` to preview the USD/credit cost, check the balance, and block if a key is below cost or under the $10 warning threshold.
 
+## Benchmark A Vendor Before You Pay For It
+
+Every find-rate, coverage, and accuracy number in this catalog is the vendor's own marketing until it has been tested on your data. Run this before any vendor is added, swapped, or paid for. Full method: `eric-deliverability-doctrine.md` Part 2.
+
+1. **Build a frozen, dated reference sample** from a source you are authorized to access: your own recent positive replies, a manually checked set of companies, or a known-good address list. Freeze it and date it, so every candidate is judged on the same rows.
+2. **Run every candidate against that exact same sample.** A benchmark taken on different rows is not a comparison.
+3. **Measure two things, not one.** Raw coverage alone is close to worthless. What counts is each candidate's **incremental unique correct contribution** over what the current stack already returns, and its **false-negative rate**, meaning how often it wrongly rejects something you know is good. A vendor that looks weak on a general benchmark can still earn its slot by recovering exactly the records the current stack misses.
+4. **For contact and company discovery**, score each route on owner/contact accuracy, usable coverage, false positives, unique finds, cost, and time against the same manually verified answer key, then take the **deduplicated union** rather than crowning a single winner.
+5. **For email verifiers specifically**, run addresses you *know* are live (they recently produced real replies) through each candidate. A verifier that flags a meaningful share of that known-good set as catch-all or invalid is silently costing real yield. Swap on the lower false-negative rate **on your own data**, never on either vendor's stated accuracy.
+6. **The failure mode this prevents.** Do not buy every provider just because an agency with many customers can justify the spend. More vendors stacked without this test means more cost and more places for stale or wrong data to enter, not more coverage.
+
 ---
 
 # 1. RevCode
@@ -1849,7 +1860,7 @@ These are all *enrichment passes over an already-targeted person list*, not stan
 - It is enrichment, not discovery — it will not improve a bad ICP or a wrong target list. Garbage rows in, verified-garbage out.
 - Find rate depends on the input quality; a clean `linkedin_url` or an exact `company_domain` lifts results well above a fuzzy company name.
 - The waterfall takes minutes, not seconds — this is an async submit-then-poll flow, never a synchronous lookup. Build it as a two-step job (the script already does).
-- Vendor find-rate claims (60–70% higher, 88% phone) are marketing until benchmarked on your ICP.
+- Vendor find-rate claims (60–70% higher, 88% phone) are marketing until benchmarked on your ICP. Benchmark it properly rather than by feel: run this vendor and its alternatives against one frozen, dated sample, and score each on its **incremental unique correct contribution** over what the current stack already returns plus its **false-negative rate**, not on raw coverage. Method: **Benchmark A Vendor Before You Pay For It** above, from `eric-deliverability-doctrine.md` Part 2.
 - Mobile numbers raise compliance and brand risk — only enable `--phone` when calling/SMS is appropriate and legal for that market.
 - Per-contact credits are expensive at TAM scale — keep it on the live campaign slice (Layer 2), never the whole TAM.
 
@@ -1934,7 +1945,7 @@ The full with/without-LeadMagic recipe per signal is in `signal-strategy-playboo
 
 ## What Would Justify Choosing It
 
-High volume where the per-row composite crawl cost and rate-limit risk exceed LeadMagic's per-credit price: email-to-profile matching on a large email-only list (a crawler needs a profile URL as input, whereas LeadMagic matches the email directly), or a one-time job-change batch-check across 2,000+ archive contacts. Below that volume, the composite path usually wins on cost. That is a slot decision for `/stack-setup`, and any spend routes through `/api-cost-governance`.
+High volume where the per-row composite crawl cost and rate-limit risk exceed LeadMagic's per-credit price: email-to-profile matching on a large email-only list (a crawler needs a profile URL as input, whereas LeadMagic matches the email directly), or a one-time job-change batch-check across 2,000+ archive contacts. Below that volume, the composite path usually wins on cost. That is a slot decision for `/stack-setup`, and any spend routes through `/api-cost-governance`. Before it is stacked on top of the primary provider, benchmark it for incremental unique contribution on a frozen sample per **Benchmark A Vendor Before You Pay For It** above: a second or third provider has to recover records the primary actually misses, or it is only adding cost.
 
 ---
 

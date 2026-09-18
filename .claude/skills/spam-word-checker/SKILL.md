@@ -117,7 +117,7 @@ Safer CTA logic (make "yes" the easy answer, keep the prospect on top):
 
 The ask should feel like the sender is doing the work and the prospect only has to say yes, never like pressure or a catch. Full rule: `cold-email-copy-best-practices.md` (CTA Standards) and `/campaign-copywriting` Hard Rule 32.
 
-**Framework A close.** `Would that be worth hearing more?` is the preferred Email 1 close after the specific free deliverable and workload parenthetical. It is low friction and is not the banned `Worth a look?` / `Interested?`. It must be the message's only question.
+**Framework A close.** `Would that be worth hearing more?` and `Would that be worth sharing more?` (Aaron's own most-used phrasing) are interchangeable and both are the preferred Email 1 close after the specific free deliverable and workload parenthetical. It is low friction and is not the banned `Worth a look?` / `Interested?`. It must be the message's only question.
 
 ---
 

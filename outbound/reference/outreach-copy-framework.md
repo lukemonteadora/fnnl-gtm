@@ -33,7 +33,7 @@ Every initial cold message must pass all of these checks:
 2. **Keep the body to 25 to 35 words.** Count whitespace-delimited tokens, so a hyphenated term with no spaces counts as one word. Count the greeting and optional P.S. Count neither the subject nor the signature.
 3. **Use 2 to 3 main-body sentences and exactly 1 question.** The final main-body sentence is the only question and is the soft permission CTA. An optional P.S. is separate from the main-body sentence count, but it still counts toward the 35-word cap and cannot contain a question.
 4. **Keep the workload split in parentheses.** Name 3 to 4 things the sender handles and the one small action the prospect takes. Use a semicolon, comma, or period inside the parentheses. Never use an em dash.
-5. **End with soft permission.** Prefer `Would that be worth hearing more?`, `Open to it?`, or a concrete permission question such as `Can I send it over?`. The CTA must follow a named deliverable.
+5. **End with soft permission.** Prefer `Would that be worth hearing more?` or `Would that be worth sharing more?` (the second is Aaron Shepherd's own most-used phrasing; both are accepted and interchangeable), `Open to it?`, or a concrete permission question such as `Can I send it over?`. The CTA must follow a named deliverable.
 6. **Use proof only when it is true and compact.** An optional P.S. may carry one declarative proof claim aligned to the offer. It does not count as a main-body sentence, but its words count toward the same 25 to 35 word cap.
 7. **Keep the offer real.** The free deliverable, sender workload, proof, and prospect action must all be accurate and fulfilable at reply scale.
 

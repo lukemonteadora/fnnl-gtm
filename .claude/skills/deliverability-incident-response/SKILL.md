@@ -39,6 +39,10 @@ Was this week's reply rate < 50% of last 4 weeks' average?
   No  → noise, wait another week
 ```
 
+**Read the shape of the drop, not just its size.** A campaign that has ALWAYS been weak points at the offer or the list. A campaign that SUDDENLY collapses points at something mechanical: a contaminated source, a sending-reputation event, or repeated and stale content. Monitor both a 7-day and a 14-day view, and size the alert to the size of the decline rather than to one fixed threshold.
+
+Hold that second half loosely. The claim that a sudden collapse is almost always mechanical is stated with more confidence than the evidence supports, because mix, seasonality, and volume changes can also move a reply rate quickly, so confirm the mechanical cause before acting on it. The full dated rule and its hedge sit in the corpus at `/ask-eric`; `eric-deliverability-doctrine.md` is the deliverability reference this playbook otherwise reads.
+
 If drop is real:
 
 ### Step 2: Is it campaign-specific or fleet-wide?
@@ -68,6 +72,8 @@ Are ALL campaigns dropping, or just one?
    - If bounce <1% but reply rate low → emails landing in spam (Step 1 result)
 
 ### Step 4: You have a spam-placement problem — what to do
+
+**Before you rank senders or shift volume, apply the anti-gaming caution.** Concentrating inboxes onto a domain that looks like a winner contaminates the very comparison used to call it a winner: that domain may simply be sitting on an easier list or a better offer. Require real volume, a genuinely comparable assignment, and a full reply-lag window before ranking domains or sender cohorts against each other, and revisit the ranking once you have changed what sends through them. This applies anywhere in this playbook where sending capacity moves between domains or inboxes. Full caution in `eric-deliverability-doctrine.md`.
 
 Time-ordered actions:
 
@@ -214,6 +220,7 @@ Meanwhile: continue the weekly rhythm via `/cold-email-weekly-rhythm`, which cat
 - Inbox manager for the locked `run_state.sending_platform` (whichever pack `/stack-setup` activated, otherwise the platform's native sender settings): tag, rotate, and retire work
 - Domain setup flow for the locked `run_state.infrastructure_stack` (whichever registrar plus mailbox-provider pack `/stack-setup` activated, otherwise those providers' own consoles): used to replace a burned domain
 - Positive-reply scoring for the locked `run_state.sending_platform` (whichever pack `/stack-setup` activated, otherwise the platform's own reply export): used to confirm recovery
+- `eric-deliverability-doctrine.md`: the anti-gaming caution on reallocating sending capacity
 
 ## The 1% rule sanity check
 

@@ -63,7 +63,7 @@ Before writing or reviewing any campaign copy, apply these files in order:
 
 `outreach-copy-framework.md` is the source of truth for the first written cold touch across every outreach channel. For cold email, it controls the Email 1 structure, length, question count, workload parenthetical, CTA position, and subject shape.
 
-`spam-word-checker.md` is the source of truth for banned words, risky phrases, formatting bans, closeout rules, and deliverability triggers.
+`spam-word-checker.md` is the source of truth for formatting bans, CTA and opener bans, the buzzword and jargon-metaphor ban list, fake-familiarity bans, the implication test, and unsubscribe/closeout logic. Note its enumerated spam-keyword list was REMOVED 2026-09-18 by operator directive, so do not expect a generic banned-word lookup: the named ban lists above are what it still holds, and real placement problems route to `/email-deliverability-audit` or `/deliverability-incident-response`.
 
 `cold-email-copy-best-practices.md` is the source of truth for writing quality, readability, inbox-rate discipline, personalization standards, CTA friction, and sequence quality.
 
@@ -624,15 +624,6 @@ SAME thread as Email 1 (no subject), small-TAM 3-step only. The double-down foll
 [QA-approved email body]
 ```
 
-### Email 4 (retired)
-
-There is no Email 4 (the 4-email / two-thread structure is retired 2026-07-05). The optional third step is Email 3, a same-thread double-down follow-up used only for a small TAM.
-
-**Variant A** ([word count] words)
-```text
-[QA-approved email body]
-```
-
 ### Variables Used
 
 | Variable | Source | Purpose |
@@ -996,7 +987,7 @@ Never export a row where any required output column is blank. Filter to rows whe
 29. Greeting casing. When the body continues on the same line right after the `{first_name},` greeting, the first word is lowercase unless it is a proper noun (company name, product, brand, or acronym). The greeting and the opener are one sentence, so a mid-sentence capital reads as broken. Client-agnostic example — WRONG: `Katrin, Each month the mix of work shifts and someone reconciles it by hand.` RIGHT: `Katrin, each month the mix of work shifts and someone reconciles it by hand.` When the opener legitimately starts with a proper noun, keep its capital: `Katrin, Acme just migrated its ERP, so the team is reconciling two systems.` In the pre-write column model the greeting and first name are baked into each `email_*` body, so the generator must emit the opener already cased correctly (lowercase common word, or proper-noun capital) in the column — there is no separate step that can fix it later.
 30. Human voice, not fake warmth (see Human Voice, Not Fake Warmth). NEVER write fake-familiarity or warmup phrasing in any cold email or follow-up — no "hope you're well"/"hope this finds you well," "just checking in"/"following up"/"following up on my last"/"circling back"/"touching base"/"bumping this," "I wanted to reach out"/"I wanted to connect," unearned flattery ("big fan of what you're building," "saw you're crushing it"), any phrase implying shared history, or any warmup sentence before the first relevant line. Personality lives INSIDE the first relevant line (a point of view plus spoken rhythm), never in a preamble. Every cold email and follow-up must pass the said-out-loud test: read the first two lines aloud; if they sound like a brochure or a textbook, rewrite until they sound like a real person. Follow-ups imply the prior touch without asking the reader to remember it. Framing tokens ("quick one," "this'll sound random but") are optional, testable hypotheses — never assumed to win; A/B them against the clean version.
 31. Every email ends with a CTA, no dead ends. Email 1 ends with Framework A's only question, a soft permission CTA after the specific free deliverable and workload split. The follow-ups carry a soft, low-friction CTA that rotates both the mechanism and wording, never a repeated hard ask, goodbye, or last-touch line.
-32. **Make "yes" the easy answer; the prospect stays on top.** Email 1 closes with one soft permission question such as `Would that be worth hearing more?`, `Open to it?`, `May I send it over?`, `Can I send it across?`, or `Would it help if I sent it?`. The statement-only opt-in `Just reply "Yes" and I'll...` may be used after the initial cold touch, but not in Email 1. NEVER use `Want me to send it?`, `Want us to send it?`, `Want the link?`, `Did you want…?`, `Interested?`, `Let me know if you'd like…`, or `Worth a look?`.
+32. **Make "yes" the easy answer; the prospect stays on top.** Email 1 closes with one soft permission question such as `Would that be worth hearing more?`, `Would that be worth sharing more?` (interchangeable; the second is Aaron's own most-used phrasing), `Open to it?`, `May I send it over?`, `Can I send it across?`, or `Would it help if I sent it?`. The statement-only opt-in `Just reply "Yes" and I'll...` may be used after the initial cold touch, but not in Email 1. NEVER use `Want me to send it?`, `Want us to send it?`, `Want the link?`, `Did you want…?`, `Interested?`, `Let me know if you'd like…`, or `Worth a look?`.
 33. **Write 1-to-1: first-person singular, minimize "we" and "us".** The email is one person writing to one person, so default to "I". Reserve "we"/"us" for genuinely collective facts that cannot honestly be said as "I" (a real team result, a true company capability). Frame the client's value around the prospect ("you're one of the few who...") rather than "we help teams like you." Do not over-apply into stilted copy; quoting the prospect's own likely "We help..." line back to them is the diagnostic mirror, not a violation. Full rule: `cold-email-copy-best-practices.md` (Write 1-to-1).
 34. **RETIRED 2026-07-05 (proven-mode retirement).** Per-contact subject and body personalization (`{{subject_1}}` / `{{subject_3}}` per-contact columns, light-touch relevancy off each row) is retired. Offer-first copy is shared: one offer-led body and one subject template per campaign or offer-angle slice. The Email 1 subject is 2 to 4 lowercase words with exactly one merge token, normally `{{first_name}}`; this is a shared template, not a per-contact generated subject column. Threaded follow-ups carry no subject.
 35. **CTA Hierarchy: Framework A first, then rotate across steps.** Email 1 uses one soft permission question after a real, specific free deliverable. Later steps may use an easy-yes statement or another forward-looking question, but no two steps share the same CTA sentence or mechanism. Never invent a lead magnet to satisfy the skeleton.
@@ -1357,6 +1348,7 @@ Email 1 uses Framework A: name the specific free deliverable first, keep the sen
 **Email 1 (the new thread): a soft permission question is mandatory.**
 
 - `Would that be worth hearing more?`
+- `Would that be worth sharing more?`
 - `Open to it?`
 - `Can I send it over?`
 
@@ -1390,7 +1382,7 @@ The recipient should be able to answer quickly. Avoid CTAs that require scheduli
 
 Each follow-up needs different CTA substance from Email 1: switch the mechanism (a video, a teardown, a lead magnet) or double down on the biggest benefit or risk reversal. Do not keep offering the same vague note just because it is low friction.
 
-**Every email gets a CTA (support emails included).** Email 2 and Email 4 are not exempt. They close with a SOFT CTA — a light re-offer of their own thread's deliverable or a small forward-looking question — so the reader always has a next step. A support email that trails off into a dead-end soft close ("happy to walk through it whenever," "the note still stands." with no ask) leaves the reader nothing to answer and fails QA. Re-offer, do not re-pitch; ask, do not nag. Email 2 re-offers Email 1's deliverable; Email 4 re-offers Email 3's. This is within-thread reinforcement and does not conflict with Hard Rule 21, which governs the Email 1 vs Email 3 deliverables across threads. Acceptable soft-CTA phrasings: `Should I pull it together for your accounts?`, `Should I sketch that out?`, `Open to that?` — keep them off the banned `Want me to send it?` / `Worth a look?` stems.
+**Every email gets a CTA (follow-ups included).** Email 2 and optional Email 3 are not exempt. They close with a SOFT CTA, a light re-offer of Email 1's deliverable or a small forward-looking question, so the reader always has a next step. A support email that trails off into a dead-end soft close ("happy to walk through it whenever," "the note still stands." with no ask) leaves the reader nothing to answer and fails QA. Re-offer, do not re-pitch; ask, do not nag. Email 2 re-offers Email 1's deliverable, and Email 3 doubles down on a different lever. This is within-thread reinforcement and does not conflict with Hard Rule 21, which requires each step to move the conversation and forbids two steps sharing a CTA. Acceptable soft-CTA phrasings: `Should I pull it together for your accounts?`, `Should I sketch that out?`, `Open to that?`. Keep them off the banned `Want me to send it?` / `Worth a look?` stems.
 
 ---
 
@@ -1408,11 +1400,11 @@ Use the same thread. Support Email 1 with proof, story, useful context, or a sha
 
 ### Email 3 - Same-Thread Double-Down Follow-up (small-TAM 3-step only)
 
-Use a new subject, an OFFER-LED opener (leads with the offer), and a different test purpose from Email 1. It must stand alone as a fresh attempt, not the third message in one long thread. Build the opener per the Offer-First Copy Standard. (Question-first openers are retired with proven-mode.)
+Use the SAME thread as Email 1 and Email 2, with an empty subject (Hard Rule 18 and the `variants.yaml` schema). Double down on a DIFFERENT lever from Email 2: the biggest benefit, or the risk reversal that got missed. It must still stand alone as a message, because the reader may not have read the earlier two, but it is the third step of one thread and never a fresh new-thread attempt. (Question-first openers are retired with proven-mode.)
 
-### (No Email 4 — retired 2026-07-05)
+### (No Email 4: the 4-email / two-thread structure was retired 2026-07-05)
 
-Use the same thread as Email 3. Support Email 3 with proof, story, useful context, or a sharper explanation. Close with a soft CTA — a light re-offer of Email 3's deliverable or a forward-looking next step — so the reader always has something to answer; never trail off into a dead-end soft close. The CTA stays forward-looking: do not write a goodbye email, last-touch email, or fake wrap-up.
+There is no fourth step and no second thread. Every campaign is ONE thread with 2 to 3 steps.
 
 ---
 
@@ -1472,10 +1464,10 @@ Run before finalizing any campaign.
 | No colon-as-runway sentences | |
 | No comma-wrapped company descriptors | |
 | Single thread, 2 to 3 steps (Email 1 + 1-2 same-thread follow-ups); 2 default, 3 small-TAM (Hard Rule 18) | |
-| Email 1 and Email 3 have matching split-test rigor | |
+| The A/B split test rides Email 1; the follow-ups are single-variant | |
 | Each follow-up moves the conversation (switch mechanism or double down), never a re-send | |
 | Email 2 (and Email 3 in a 3-step) are same-thread follow-ups that move the conversation | |
-| Email 1 and Email 3 close with the full signature ({full name} / {title} @ {company name} / {company location} / + phone 4th line when the client has one); follow-ups may use first name only | |
+| Email 1 closes with the full signature ({full name} / {title} @ {company name} / {company location} / + phone 4th line when the client has one); the follow-ups (Email 2 and optional Email 3) may sign off with the first name alone, but a sign-off is mandatory on every email | |
 | Signature lives on the sending-tool step, not in any email body or CSV column | |
 | Emails formatted as short blocks separated by blank lines, not one dense paragraph | |
 | Grammar clean and natural, no awkward over-compression or dropped connective words | |

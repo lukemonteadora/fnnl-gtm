@@ -100,6 +100,20 @@ domain itself was at fault. **Treat the 1%-and-cancel action as something he doe
 diagnosis he has made.** Check the offer and the list first. Used as a root-cause fix, this
 rule retires healthy domains that were carrying a weak offer.
 
+### Read the shape of a drop, not just its level
+
+Dated September 2026. A campaign that has **always been weak** points at the offer or the
+list. A campaign that **suddenly collapses** points at something mechanical: a contaminated
+source, a sending-reputation event, or repeated and stale content. Monitor both a **7-day and
+a 14-day view**, and size the alert to the size of the decline rather than to one fixed
+threshold.
+
+**Hold the second half loosely.** He states the "a sharp decline is almost always mechanical"
+claim with more confidence than the evidence supports: mix, seasonality and volume changes can
+also move a rate quickly. Confirm the mechanical cause before acting on it. Note also that
+checking bounces and sends during a real incident investigation is a different job from
+tracking bounce rate as an ongoing north star, which section 9 of his doctrine says not to do.
+
 ### The anti-gaming caution on reallocating capacity
 
 Concentrating more inboxes onto a domain that looks like a winner contaminates the very

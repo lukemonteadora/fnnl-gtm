@@ -49,6 +49,8 @@ Open Google Calendar / Outlook / Apple Reminders / whatever you actually look at
 
 **Optional automation (fail-loud only).** The read-and-propose parts — the Monday audit read, the Wednesday positive-reply sweep, the warmed-capacity check, and the Monthly TAM refresh + experiment proposal — are consolidated into the **Weekly Scheduled Review** section below, runnable as a `/schedule` weekly routine (or on the always-on VPS later). Two rules keep this safe and resolve the silent-failure risk above: (1) the routine only **reads, scores, and proposes** — it never starts a send; every launch stays a human-approved paused draft; and (2) it must **fail loud** — alert (Slack/email) on a missed run, an errored run, or an empty proposal, so a dead routine can't masquerade as "all clear." Keep the manual calendar as the fallback; the routine is a convenience, not the system of record.
 
+**Reconciling this cadence with Eric's health-check rhythm (`eric-deliverability-doctrine.md`).** His described rhythm is daily spam checks, weekly reply-rate reviews, seed tests, and forwarding tests. The cadence above already covers the reply-rate review (the Monday deliverability audit reads the trailing 7-day fleet reply rate), and it does run a spam-placement check, but **monthly rather than daily**. The real gaps are **seed tests and forwarding tests**: no step above runs either one. Carry the doctrine's reconciliation with any of these you add. They are legitimate as **infrastructure diagnostics** (is the sending layer healthy?) and not as a **campaign report card** (did this campaign perform?), which is why running them here does not contradict refusing to judge a campaign by its placement score or bounce rate. This note names what the cadence covers and what it misses. It does not change the cadence above.
+
 ---
 
 ## Weekly Scheduled Review — the automatable read-and-decide engine
@@ -96,7 +98,7 @@ This is precautionary reputation hygiene for young domains, NOT a bounce-cause c
 - **Diagnosis (only when the portfolio is mature enough).** See the cross-campaign diagnosis below. It decides between **launch-new / scale / hold / diagnose-offer**, bounded by the Step-4 capacity verdict.
 
 **Step 6 — Execute to paused drafts.**
-- **Launch-new** routes through `/campaign-strategy` (next-wave signal slices, `[FL]` ≥100-company floor, offer + copy held constant) → the per-slice pipeline (`/lead-source-strategy` → `/email-waterfall` verify → `/list-quality-scorecard` → `/campaign-copywriting` → spintax → paused upload).
+- **Launch-new** routes through `/campaign-strategy` (next-wave signal slices, `[FL]` ≥500-company floor (HARD RULE, operator directive 2026-07-12), offer + copy held constant) → the per-slice pipeline (`/lead-source-strategy` → `/email-waterfall` verify → `/list-quality-scorecard` → `/campaign-copywriting` → spintax → paused upload).
 - **Scale** runs the Scale sub-routine below.
 - **Diagnose-offer** routes to `/offer-intelligence` validation mode (Go / Iterate / Swap), and — because offer and copy are confounded under a constant-copy wave — also flags a copy re-check against `/campaign-copywriting` + `cold-email-copy-best-practices.md`.
 - **Reintroduce catch-alls** (per Step 3b) for every campaign whose domains have matured: auto-prepare the next controlled slice from `leads.catchall-holdback.csv` (or the paused catch-all leads) and **stage it for one-click approval** in the digest — re-rendered against the campaign's current copy, ready to add/resume on approval. Never auto-sent. Re-check bounce after each approved slice before staging the next. This is the discharge of the standing reintroduction obligation that every valid-only launch created.
@@ -233,6 +235,8 @@ For each one:
    - Hypothesis for next iteration (if iterating)
 
 **Critical:** do not skip the log. Over a quarter, these logs become the input for `/experiment-design` quarterly reviews. Without the history, you can't learn across campaigns.
+
+**Domain retirement is a separate, domain-level review (`eric-deliverability-doctrine.md`).** Eric runs a scheduled weekly review, typically Friday, that cancels domains replying under roughly 1%. Note what it acts on: **a domain, not a campaign.** It is not the keep/iterate/kill decision above, and it is not the Monday 1% rule (which flags a *campaign's* reply rate). His own caveat travels with it: this is a **capacity-management habit, not a root-cause diagnosis.** A reply-rate shortfall points at the offer or the list far more often than at the sending domain, so check those first. Used as a root-cause fix, the rule retires healthy domains that were merely carrying a weak offer.
 
 ---
 
