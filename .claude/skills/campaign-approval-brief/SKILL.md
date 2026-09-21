@@ -97,7 +97,7 @@ Read only explicit evidence from saved artifacts:
 
 ```text
 profiles/<business-slug>/client-profile.yaml
-profiles/<business-slug>/source-signal-intelligence.md
+profiles/<business-slug>/data-point-catalog.md
 profiles/<business-slug>/offer-intelligence.md
 profiles/<business-slug>/lead-magnets.md
 profiles/<business-slug>/campaign-strategy.md
@@ -259,7 +259,7 @@ This deck explains campaign logic and shows saved copy variants when requested. 
 
 If the client changes a decision:
 
-- ICP change: rerun source-signal discovery, offer intelligence if affected, campaign strategy, and lead-source planning.
+- ICP change: rerun offer intelligence if affected, then data-point discovery, campaign strategy, and lead-source planning.
 - Offer change: rerun offer intelligence or lead-magnet brainstorm, then campaign strategy and copy.
 - Source change: rerun lead-source planning, the selected source workflow, and list QA.
 - Copy angle change: rerun `/campaign-copywriting` only.

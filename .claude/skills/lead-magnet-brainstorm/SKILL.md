@@ -1,6 +1,6 @@
 ---
 name: lead-magnet-brainstorm
-description: Helps choose a front-end offer for cold emails. Use after /offer-intelligence discovery mode. Scores all candidates on a 7-point rubric, then checks run_state.execution_mode - auto_execute picks the top-scored candidate and proceeds without pausing; review_gates presents ranked options and waits for operator selection. Exact CTA copy is written later in /campaign-copywriting.
+description: Helps choose a front-end offer for cold emails. Use after /offer-intelligence discovery mode, whose Candidate Generation Input block it consumes directly rather than re-deriving buyer pain. The offer LOCKS here, before the list build. Scores all candidates on a 7-point rubric, then checks run_state.execution_mode - auto_execute picks the top-scored candidate and proceeds without pausing; review_gates presents ranked options and waits for operator selection. At lock it runs the Signal-Capability Check (any signal the offer depends on must be obtainable by a capability the stack contract declares) and writes the offer-derived disqualifier list that /tam-build's offer-fit gate consumes. Exact CTA copy is written later in /campaign-copywriting.
 ---
 
 # Lead Magnet Brainstorm
@@ -65,7 +65,7 @@ Always generate at least 3 additional candidates before scoring. The client sugg
 
 ## AI/API Routing
 
-Ideation crunch routes per `ai-model-routing.md`: synthesizing the offer-intelligence brief, source-signal pains, and archetype-fit reasoning across large context → the bulk-classification model; strict rubric scoring and JSON output → a general-purpose model with structured output. Both of those are roles, so `ai-model-routing.md` names which tool fills each one. This skill reads existing research; it does not run new web research (that lives in `/offer-intelligence`). CTA wording stays at direction level for `/campaign-copywriting` (Claude API).
+Ideation crunch routes per `ai-model-routing.md`: synthesizing the offer-intelligence brief (its Candidate Generation Input rows, buyer-pain vectors, and saturation map) and archetype-fit reasoning across large context → the bulk-classification model; strict rubric scoring and JSON output → a general-purpose model with structured output. Both of those are roles, so `ai-model-routing.md` names which tool fills each one. This skill reads existing research; it does not run new web research (that lives in `/offer-intelligence`). CTA wording stays at direction level for `/campaign-copywriting` (Claude API).
 
 ## Required Input
 
@@ -75,18 +75,20 @@ Before asking anything, check for:
 profiles/<business-slug>/offer-intelligence.md
 ```
 
-If it exists, load:
+**Discovery and candidate generation are one continuous offer motion split across two skills.** This skill is the second half of it, so it starts by reading what discovery already established rather than researching pain again. It runs no new web research of its own.
 
-- ICP pain language
-- Saturation map
-- Recommended direction
-- Contrarian opportunity, if any
+If the brief exists, load these four sections **by name** and work from them:
+
+1. **`Candidate Generation Input`** - the numbered persona + pain + open-archetype rows. **This is the primary input.** Generate candidates against these rows: each serious candidate answers a named pain for a named persona, in an archetype the saturation map left open.
+2. **`Pain by persona`** - the full table behind those rows, including any prioritized persona with no pain evidence (a named gap, not a blank to fill by guessing).
+3. **`Saturation Map`** - the open, crowded, and saturated archetypes with their denominator.
+4. **`First-Party Buyer Voice`** and **`ICP Pain (in their words)`** - the buyer's exact words, which the offer gets written in.
+
+**Read these rows, do not rebuild them.** Do not re-derive pain, re-rank personas, or re-research the market here. If `Candidate Generation Input` is missing or empty, that is the signal that `/offer-intelligence` discovery mode has not actually finished: route back to it rather than reconstructing its findings inside this skill.
 
 Also load `profiles/<business-slug>/client-profile.yaml` if it exists. If it contains `offer.client_suggested_lead_magnet`, include that suggestion as Candidate A and preserve any `offer.client_suggested_lead_magnet_details` as delivery context.
 
-Also load `profiles/<business-slug>/source-signal-intelligence.md` if it exists. If it exists, every recommended candidate must connect to at least one ranked source signal or clearly explain why the source signal should not shape the offer.
-
-If it does not exist, ask whether to run `/offer-intelligence` discovery mode first using a native choice prompt:
+If the offer-intelligence brief does not exist, ask whether to run `/offer-intelligence` discovery mode first using a native choice prompt:
 
 ```text
 No offer-intelligence brief exists yet. What should I do?
@@ -99,7 +101,7 @@ D. Custom answer
 
 ## Intake
 
-Ask one at a time using Claude Desktop native Interactive Inputs / Choice Prompts. When the profile, website, source-signal brief, or offer-intelligence brief gives a likely answer, pre-fill it as the recommended option.
+Ask one at a time using Claude Desktop native Interactive Inputs / Choice Prompts. When the profile, website, or offer-intelligence brief gives a likely answer, pre-fill it as the recommended option.
 
 1. What do you sell, in one sentence?
 2. What problem did your best customer have before buying?
@@ -274,15 +276,6 @@ It is recorded here as a **future, operator-decided premium product** (deferred 
 
 **Status: the gate is live, the motion is not.** This gate exists so the option is real and safe to test. It does NOT authorize the motion. The premium custom-asset tier above is still deferred, and opening it for a client is still an explicit operator decision.
 
-## Source-Fit Rule
-
-If `source-signal-intelligence.md` exists:
-
-- Tie every serious candidate to a ranked source signal, why-now hypothesis, or source-backed pain.
-- Do not rank a candidate first if it only fits the broad ICP but does not make sense for the source signal.
-- Treat client-suggested offers as Candidate A, but make them pass the same source-fit check.
-- If a strong offer ignores the top source signal, explain whether the source signal is weak, creepy, low-volume, or a bad fit for the client's capability.
-
 ## Who Delivers the Offer (Fulfillment Split) - HARD
 
 The flow runs a two-party fulfillment split, and the lead-magnet delivery check depends on which party owns what. By default the **agency (operator) owns the entire front end**: inbox infrastructure, sending, reply handling, and delivery of the lead magnet and every front-end promise made in the email. The **client receives only qualified leads / booked meetings** (the SQL hand-off) and delivers only the **back-end paid service** after that hand-off.
@@ -331,7 +324,33 @@ Score every candidate, including Candidate A, against the same 7-point offer rub
 
 Prioritize candidates scoring 6-7. A 5 can be shown only if it has a clear fix. Do not recommend candidates scoring 4 or lower unless the user asks for weak backup ideas.
 
-After the 7-point score, add `Source-signal fit: strong | medium | weak`. A weak source-signal fit cannot be the top recommendation unless the source-signal brief itself is weak and you say why.
+The 7 points above are the whole score. **Do not add a signal-obtainability axis to it.** Real obtainability is measured downstream in `/data-point-discovery` (kickoff step 3.3) against actual coverage, not predicted here, so an axis scored at this point would be scored on a guess and would silently change which offer wins. The one real risk that ordering creates is handled by the single check below, which is a pass/fail on the winner rather than a scoring axis.
+
+## The Signal-Capability Check (at offer lock, one check, not a research phase)
+
+**This check is now the only thing standing between a signal-dependent offer and an unobtainable signal.** There is no separate source-signal discovery step upstream or downstream to catch it: obtainability is confirmed later in `/data-point-discovery` (kickoff step 3.3), which is after the offer has already locked. So if a signal-dependent offer gets through here, the failure surfaces only once the list is being built around a signal nothing can obtain. That makes this a minute well spent, not a formality. Run it once, on the winning candidate only. It is a check, not research.
+
+**Step 1 decides most cases instantly.** Does this offer's relevance depend on an observable buyer signal, meaning something specific that must be true and visible about a prospect right now before the offer makes sense to send them? **If no, the check passes immediately. Stop here and lock the offer.** Do not open the stack contract, do not name a signal, do not write anything beyond `none`. A free deliverable that is useful to any company in the ICP (most audits, templates, research notes, and the `direct_offer` path) needs no signal, and that is the preferred shape precisely because it has no external dependency.
+
+**Step 2, only if step 1 was yes.** Name the signal in one line, plainly (for example "recently posted a job for an SDR", "runs ads on Meta right now", "uses a named checkout platform").
+
+**Step 3.** Open the stack contract and confirm some slot declares a capability that could obtain that signal:
+
+```text
+<outbound>/stack-contract.yaml
+```
+
+The usual slots are `lead_data.company_discovery`, `lead_data.contact_discovery`, `lead_data.intent_signals`, `web.search`, and `web.crawl`. A slot counts as declaring the capability when it names a tool (`status: chosen` or `live`) whose stated `capability` plainly covers the signal. A slot at `not_chosen` or `n/a` declares nothing and does not count.
+
+**Step 4, the ruling.**
+
+- **Something declares it, `status: live`:** the dependency is real and proven. Lock the offer.
+- **Something declares it, `status: chosen`:** the tool is named but has never been proven against a real call, so treat the dependency as unconfirmed rather than satisfied. Lock the offer and record the signal as a dependency for `/data-point-discovery` to verify at step 3.3. Say so in one line when reporting the lock, so nobody reads `chosen` as working.
+- **Nothing declares it:** **the offer is not locked.** Take one of two exits, in this order: drop the signal dependency if the offer still works without it (often it does, and a signal-free offer is the stronger shape anyway), otherwise move to the next-highest-scoring candidate and re-run this check on it. Do not invent a vendor, and do not assume a capability the contract does not name.
+
+Record the outcome either way in `offer.lead_magnet_signal_dependency` (see Save Output). `none` is the common and preferred value.
+
+**This does not replace the Stack Resolution stop at the top of this skill.** If a role this skill actually needs to run is empty in the contract, that stop still fires and still routes to `/stack-setup`. This check is narrower: it is about whether the chosen offer's premise is obtainable, and its remedy is a different offer rather than a different stack.
 
 ## Output
 
@@ -348,7 +367,7 @@ Next step that resolves it: <the call / analysis that closes it, and why it's th
 Build + fill cost: <none, or: build hours + who owns/pays, AND the per-responder fill work with the Fulfillment Split math - archetype K only>
 CTA direction: <plain-English ask direction for /campaign-copywriting, not final wording>
 Why it should work: <short reason tied to ICP pain>
-Source-signal fit: <strong / medium / weak, with the source signal named>
+Signal dependency: <none (needs no observable buyer signal - the common and preferred answer), or: the signal named in one line. On the winning candidate only, add the Signal-Capability Check ruling: declared live / declared but unproven (chosen) / not obtainable>
 Risks: <one reason this could fail>
 Offer score: X/7
 ```
@@ -361,9 +380,49 @@ For any candidate likely to be used in a 4-step campaign, include how the offer 
 
 After scoring is complete and ranked options are ready, check `run_state.execution_mode` from `client-profile.yaml`:
 
-- `auto_execute`: select the highest-scored candidate automatically. Do not pause for input. Report: "Auto-selected offer: [name] (score: X/7). Reason: [one-sentence rationale tied to ICP pain and source-signal fit]." Then proceed directly to Save Output with the chosen candidate.
+Whichever mode applies, the winning candidate must clear the Signal-Capability Check and carry an `offer_fit_disqualifiers` list before it is saved. Neither is a pause: the check passes instantly for any offer that needs no signal, and the disqualifier list is written from the locked offer in a minute.
+
+- `auto_execute`: select the highest-scored candidate automatically. Do not pause for input. Run the Signal-Capability Check on it; if it fails (nothing in the contract can obtain the signal it depends on), drop the signal dependency or move down the ranking and re-check, still without pausing. Report: "Auto-selected offer: [name] (score: X/7). Reason: [one-sentence rationale tied to ICP pain]. Signal dependency: [none, or the signal plus its ruling]." Then write the disqualifier list and proceed directly to Save Output with the chosen candidate.
   - **Exception — `auto_execute` can never self-lock an archetype K tool.** K2 is a human commitment of money, time, and ownership that no auto-selection can make on the operator's behalf. So if a K candidate scores highest and K2 is **not already satisfied on file** (a named, funded, owned build), do not auto-lock it: auto-lock the highest-scoring **non-K** candidate instead and report the K candidate as a flagged recommendation ("K scored highest but needs a committed build owner; locked [next candidate] and surfaced K for your decision"). When K2 **is** already satisfied and recorded, K auto-locks normally like any other candidate, subject to K1 (not the baseline validation wave). This resolves the collision between "pick the highest, don't pause" and a gate that structurally requires a person to say yes.
 - `review_gates` (default): display all ranked candidates. Ask the operator to choose one before saving. Do not continue to strategy or copy until a selection is made.
+
+## Offer-Fit Disqualifiers (produced HERE at offer lock, consumed by `/tam-build`)
+
+Once the offer is locked, before saving, write the list of company types that **cannot use this offer**. This is a required output of offer lock, not an optional extra.
+
+**Why it lives here.** `/tam-build` runs a free disqualifier pre-screen before any paid classification, and it asks Aaron's gate question: *can this business actually use, stock, deploy, or buy the thing the offer delivers?* That question cannot be answered without the locked offer, and the offer is only known here. Producing the list at lock time is what lets the list build drop hopeless companies for free, before enrichment spend.
+
+**The exact field and location `/tam-build` reads (do not rename, do not relocate):**
+
+```text
+outbound/profiles/<business-slug>/client-profile.yaml  ->  offer:  ->  offer_fit_disqualifiers
+```
+
+Shape, one entry per disqualified company type:
+
+```yaml
+offer:
+  offer_fit_disqualifiers:
+    - category: <short stable slug, e.g. already_owns_equivalent>
+      why: <one line on why this company type cannot use the locked offer>
+      check: <the observable that decides it: a firmographic field, the discovery snippet, or a NAME+DOMAIN category match>
+```
+
+**Start from these four and keep whichever genuinely apply to this offer.** Do not pad the list; a disqualifier that does not really apply costs real companies.
+
+- **Already has their own version of it.** The canonical case: a company that already owns or runs the thing the offer delivers has nothing to gain from it.
+- **Franchise, branch, or head-office-controlled entities that cannot decide locally.** The offer may fit the business perfectly while the person reachable at that location has no authority to say yes.
+- **No operational capability to use the deliverable.** No physical footprint, no team, no system, or no process the deliverable plugs into.
+- **Existing customers of the client.** Already in the relationship, so a cold front-end offer is at best noise.
+
+**Write the field even when nothing is disqualified.** An empty list and a missing list mean different things to `/tam-build`:
+
+- `offer_fit_disqualifiers: []` plus a one-line `notes` saying why means "this offer genuinely excludes no company type". The gate runs and drops nobody.
+- The field **absent** means this step never ran. `/tam-build` should route back here rather than assume nobody is disqualified.
+
+**Keep each `check` cheap and precise.** The pre-screen is free only if it reads fields the discovery source already returned. Where a check is a category match, hold `/tam-build`'s existing NAME+DOMAIN-only matching discipline: match on the company name and domain, never on a keyword or specialty blob. Loose keyword matching over-drops real ICP accounts (the repo records 290 false positives against 23 true hits from the looser approach). If a disqualifier can only be decided by a keyword scan or a guess, say so in `check` and let `/tam-build` handle it as a judgement call rather than an auto-drop.
+
+Also write the same list in plain prose into `lead-magnets.md` under a `## Offer-fit disqualifiers` heading, so the operator can see and challenge it. The YAML in `client-profile.yaml` is the source of truth that `/tam-build` reads; the markdown is the human-readable mirror.
 
 ## Save Output
 
@@ -383,6 +442,11 @@ offer:
   lead_magnet_gap: <the loop the asset REOPENS - what the prospect still won't know after consuming it (Next-Step Gate). Required for any real magnet; omit only for `direct_offer`>
   lead_magnet_next_step: <the call / analysis that fills that gap - what the reply routes to>
   lead_magnet_build_owner: <archetype K only - who builds, hosts, maintains, and pays for the one-time build (gate K2). Must be a confirmed commitment, not an assumption>
+  lead_magnet_signal_dependency: <`none` when the offer needs no observable buyer signal (common, preferred), otherwise the signal named in one line plus the Signal-Capability Check ruling (`live` / `chosen, unproven`). Read by /data-point-discovery at step 3.3>
+  offer_fit_disqualifiers:      # REQUIRED at offer lock. Company types that cannot use this offer; /tam-build reads this in its free pre-screen. `[]` means none apply; absent means this step never ran
+    - category: <short stable slug>
+      why: <why this company type cannot use the locked offer>
+      check: <the observable that decides it; NAME+DOMAIN only for category matches>
 ```
 
 `lead_magnet_gap` is what `/campaign-copywriting` reads to decide whether the no-pitch delivery message applies (the Delivery Message rule in its CTA Hierarchy). A magnet with a real gap earns the pure-value delivery; one without it keeps a soft time-proposal at delivery, because nothing else would carry the prospect to a call. So this field is load-bearing, not documentation.
@@ -405,7 +469,9 @@ Do not save exact CTA example fields from this skill. Exact CTA copy belongs to 
 
 ## What To Do Next
 
-If `offer.lead_magnet` is now set in `client-profile.yaml` (by operator selection or auto_execute), run `/campaign-strategy` if strategy is missing.
+The offer locks here, and the rest of the chain is built to fit it. Once `offer.lead_magnet` is set in `client-profile.yaml` (by operator selection or auto_execute), the order is `/data-point-discovery` (step 3.3, where obtainability becomes a measurement against a locked offer rather than a guess), then `/tam-build` (which consumes `offer.offer_fit_disqualifiers` from this skill), then `/social-proof-bank` and `/lead-scoring`, then `/campaign-strategy`. `/cold-email-kickoff` orchestrates that sequence, so on a guided run hand back to it rather than jumping ahead.
+
+If you are already past the list build and strategy is the only missing piece, run `/campaign-strategy`.
 
 If `execution_mode = review_gates` and no ranked option has been selected yet, stop and ask the operator to choose one. Do not continue to strategy or copy from brainstorm-only ideas.
 

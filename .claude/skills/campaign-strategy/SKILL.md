@@ -1,6 +1,6 @@
 ---
 name: campaign-strategy
-description: Generates cold outbound campaign ideas with targeting strategies, source feasibility, AI personalization approaches, and value propositions, then shapes them into a launch wave. Use after the front-end offer is locked. On new-offer paths, read source-signal intelligence and Market Source Landscape so campaign ideas build around source-backed angles instead of inventing source paths from scratch. HARD GATE on the TAM-first flow, do not start until run_state.status.tam_stage == full_enriched; a sample TAM (sample_built) or a bare tam/tam.csv on disk is not enough, so route back to /tam-build first. When the full enriched TAM exists, FIRST measure each signal's real coverage across the enriched rows, then slice by data point. The GOVERNING shape is volume-first, so maximize covered VOLUME and reach, never the raw COUNT of campaigns. A few big campaigns (broad value-prop + the big sold-to message-differential cuts) carry the bulk of a wave's sends at 1,000 to 20,000 leads each; new or unproven signal slices are a bounded ~5-10% testing allocation whose winners scale back INTO the big campaigns; a signal that neither changes the message nor is a live experiment rides a big campaign as a tagged attribution bucket, not its own small campaign. The exception is a genuinely small niche whose whole TAM is small. Launch eligibility is the ≥500-company floor (HARD RULE, operator directive 2026-07-12), a company-universe floor and NOT a verified-contacts floor, retiring the old ≥100-company and ≥100-contact floors; a sub-500 slice is folded, lookalike-expanded to ≥500 while fit holds, or held, never shipped small. Scrape ALL ICP-matching decision-makers on EVERY company. Eligibility is a COUNT threshold, not a rank-and-cut, so sparse high-intent signals (job-change, funding) are never dropped for ranking low. For a NEW client whose offer is not yet market-proven (run_state.offer_market_proven false), the FIRST wave is an Offer-Validation Wave (broad value-prop + Creative Ideas + Lookalike + sold-to splits on the locked offer) that tests the offer before any capacity goes into signal slices; the coverage wave (a few big campaigns plus the bounded signal-test allocation, offer+copy held constant so the wave stays attributable) runs once the offer clears the reply bar, and immediately for an already-proven offer. After saving the strategy file, checks run_state.execution_mode, where auto_execute auto-selects the Offer-Validation Wave for a new client (or the coverage wave for a proven offer) and proceeds, while review_gates presents the wave and waits for operator selection.
+description: Generates cold outbound campaign ideas with targeting strategies, source feasibility, AI personalization approaches, and value propositions, then shapes them into a launch wave. Use after the front-end offer is locked. On new-offer paths, read the data-point catalog and the market source landscape it records so campaign ideas build around source-backed angles instead of inventing source paths from scratch. HARD GATE on the TAM-first flow, do not start until run_state.status.tam_stage == full_enriched; a sample TAM (sample_built) or a bare tam/tam.csv on disk is not enough, so route back to /tam-build first. When the full enriched TAM exists, FIRST measure each signal's real coverage across the enriched rows, then slice by data point. The GOVERNING shape is volume-first, so maximize covered VOLUME and reach, never the raw COUNT of campaigns. A few big campaigns (broad value-prop + the big sold-to message-differential cuts) carry the bulk of a wave's sends at 1,000 to 20,000 leads each; new or unproven signal slices are a bounded ~5-10% testing allocation whose winners scale back INTO the big campaigns; a signal that neither changes the message nor is a live experiment rides a big campaign as a tagged attribution bucket, not its own small campaign. The exception is a genuinely small niche whose whole TAM is small. Launch eligibility is the ≥500-company floor (HARD RULE, operator directive 2026-07-12), a company-universe floor and NOT a verified-contacts floor, retiring the old ≥100-company and ≥100-contact floors; a sub-500 slice is folded, lookalike-expanded to ≥500 while fit holds, or held, never shipped small. Scrape ALL ICP-matching decision-makers on EVERY company. Eligibility is a COUNT threshold, not a rank-and-cut, so sparse high-intent signals (job-change, funding) are never dropped for ranking low. For a NEW client whose offer is not yet market-proven (run_state.offer_market_proven false), the FIRST wave is an Offer-Validation Wave (broad value-prop + Creative Ideas + Lookalike + sold-to splits on the locked offer) that tests the offer before any capacity goes into signal slices; the coverage wave (a few big campaigns plus the bounded signal-test allocation, offer+copy held constant so the wave stays attributable) runs once the offer clears the reply bar, and immediately for an already-proven offer. After saving the strategy file, checks run_state.execution_mode, where auto_execute auto-selects the Offer-Validation Wave for a new client (or the coverage wave for a proven offer) and proceeds, while review_gates presents the wave and waits for operator selection.
 ---
 
 # Campaign Strategy Skill
@@ -263,7 +263,7 @@ This gate is binding regardless of `execution_mode`. A `tam/tam.csv` file existi
 You will receive one or more of:
 - A website URL (minimum required input)
 - A `client-profile.yaml` produced by `/icp-onboarding` (strongly recommended because it contains ICP, offer, and hard/soft filters already codified)
-- A `source-signal-intelligence.md` from `/lead-source-strategy` Source-Signal Discovery Mode for new-offer paths
+- A `data-point-catalog.md` from `/data-point-discovery` (kickoff Step 3.3). It carries the obtainability picture and the market source landscape, including its `Ranked Source Signals` section
 - A `tam/tam.csv` from `/tam-build` (the company-level TAM with firmographic + signal columns, plus a `fit_status` / `enrichment_tier` fit-gate column set). When present, treat the `enrichment_tier = enriched` rows as the primary substrate: generate campaigns by slicing existing columns on enriched rows, not by inventing targeting and not over gate-skipped (`qualified_out`) rows.
 - A `tam/contacts.csv` from `/tam-build` Layer-1d (the **contact-level TAM** — decision-makers at good-fit companies, carrying the Tier-1 contact signals + the `co_*` company-signal join + the `email_found` flag, built up front, NO email reveal). When present, slice contact-signal campaigns on it (e.g. `contact_new_in_seat = true`), test its **company span** against the ≥500-company floor (see the Contact-signal section above), and prefer slices that stack a contact why-now with a `co_*` company signal. Contact-signal campaigns outrank company-signal campaigns at equal viability (see the Contact-signal section above). Email reveal for the confirmed contacts stays in `/email-waterfall`, never here.
 - A `lead-magnets.md` from `/lead-magnet-brainstorm` (optional, but the chosen magnet shapes front-end offer suggestions)
@@ -277,7 +277,7 @@ You will receive one or more of:
 
 If a `client-profile.yaml` exists at `profiles/<business-slug>/`, load it first. Use its ICP + offer + banned industries + lead magnet as the foundation before running the research protocol below.
 
-If `source-signal-intelligence.md` exists, use its `Market Source Landscape` before recommending campaign sources. If it is missing for a new-offer path, stop and route back to `/lead-source-strategy` Source-Signal Discovery Mode instead of inventing source options inside this skill.
+If `data-point-catalog.md` exists, use its `Ranked Source Signals` section and the market source landscape it records before recommending campaign sources. If it is missing for a new-offer path, stop and run `/data-point-discovery` on the locked offer (kickoff Step 3.3, which sits after the offer lock and before `/tam-build`) instead of inventing source options inside this skill. That route goes forward to data-point discovery only. The locked offer is not reopened.
 
 If `tam/tam.csv` exists **and `run_state.status.tam_stage == full_enriched`** (see the TAM-First Gate above — a sample `tam.csv` does NOT qualify), load it and make it the primary substrate for campaign generation (see TAM-Driven Campaign Generation below). Each campaign should map to a slice of the TAM defined by columns that are actually populated; do not propose a campaign whose slice has no rows. When the TAM is genuinely absent (an existing-offer validation path that intentionally skipped `/tam-build`), fall back to the website + ICP research protocol below — but never use that fallback to route around a `sample_built` TAM.
 
@@ -285,13 +285,13 @@ If `tam/tam.csv` exists **and `run_state.status.tam_stage == full_enriched`** (s
 
 Only `offer.lead_magnet` means the front-end offer is locked.
 
-If `client-profile.yaml` contains only `offer.client_suggested_primary_cta`, `offer.client_suggested_lead_magnet`, or `offer.client_suggested_lead_magnet_details`, stop. Those are hypotheses from the form, not decisions. Run `/lead-source-strategy` Source-Signal Discovery Mode, then `/offer-intelligence` in discovery mode, then `/lead-magnet-brainstorm`, before generating campaign strategy.
+If `client-profile.yaml` contains only `offer.client_suggested_primary_cta`, `offer.client_suggested_lead_magnet`, or `offer.client_suggested_lead_magnet_details`, stop. Those are hypotheses from the form, not decisions. Run `/offer-intelligence` in discovery mode, then `/lead-magnet-brainstorm` to lock the offer, then `/data-point-discovery` on that locked offer, before generating campaign strategy.
 
-If `offer.lead_magnet` exists but no `source-signal-intelligence.md` exists and no `offer.offer_validation_path` or `offer_validation_path` evidence pointer exists, stop. This is a locked new-offer path without source-signal discovery. Run `/lead-source-strategy` Source-Signal Discovery Mode, then rerun `/offer-intelligence` and `/lead-magnet-brainstorm` if the source evidence changes the offer.
+If `offer.lead_magnet` exists but no `data-point-catalog.md` exists and no `offer.offer_validation_path` or `offer_validation_path` evidence pointer exists, stop. This is a locked new-offer path that has not yet run data-point discovery. Run `/data-point-discovery` on the locked offer (kickoff Step 3.3), then return here. Do not rerun `/offer-intelligence` or `/lead-magnet-brainstorm`. The offer is already locked, and data-point discovery now runs against it rather than feeding it. If the source evidence genuinely undermines the locked offer, surface that to the operator as a finding rather than reopening completed offer work from inside this skill.
 
-If `offer.lead_magnet` exists, treat it as the locked front-end offer. Use `offer.lead_magnet_details`, `offer.lead_magnet_cta_direction`, or older exact CTA fields only as supporting detail. Do not invent additional front-end offers in this skill. Campaign ideas may vary list, trigger, personalization, proof, and angle, but the front-end offer must stay consistent with the locked offer unless the user explicitly asks to revisit it. On new-offer paths, use `source-signal-intelligence.md` to prioritize campaign angles and source paths that match the source-backed pain behind the locked offer.
+If `offer.lead_magnet` exists, treat it as the locked front-end offer. Use `offer.lead_magnet_details`, `offer.lead_magnet_cta_direction`, or older exact CTA fields only as supporting detail. Do not invent additional front-end offers in this skill. Campaign ideas may vary list, trigger, personalization, proof, and angle, but the front-end offer must stay consistent with the locked offer unless the user explicitly asks to revisit it. On new-offer paths, use `data-point-catalog.md` to prioritize campaign angles and source paths that match the source-backed pain behind the locked offer.
 
-If no offer is locked, do not fill the gap inside `/campaign-strategy`. Run `/lead-source-strategy` Source-Signal Discovery Mode, then `/offer-intelligence` in discovery mode, then `/lead-magnet-brainstorm`, before generating campaign strategy.
+If no offer is locked, do not fill the gap inside `/campaign-strategy`. Run `/offer-intelligence` in discovery mode, then `/lead-magnet-brainstorm` to lock the offer, then `/data-point-discovery` on that locked offer, before generating campaign strategy.
 
 ### When Given a Website - Deep Research Protocol
 
@@ -609,7 +609,7 @@ Format as a brief description:
 
 If `offer.lead_magnet` exists in `client-profile.yaml`, restate it and explain how the campaign ideas use it. Do not suggest alternative offers.
 
-If no locked offer exists, or if only `offer.client_suggested_*` fields exist, stop and route to `/lead-source-strategy` Source-Signal Discovery Mode followed by `/offer-intelligence` discovery mode and `/lead-magnet-brainstorm`. This skill should not invent front-end offers independently.
+If no locked offer exists, or if only `offer.client_suggested_*` fields exist, stop and route to `/offer-intelligence` discovery mode, then `/lead-magnet-brainstorm` to lock the offer, then `/data-point-discovery` on that locked offer. This skill should not invent front-end offers independently.
 
 Format:
 
@@ -619,7 +619,7 @@ Format:
 **Locked offer:** [offer.lead_magnet]
 **Details:** [offer.lead_magnet_details]
 **CTA direction:** [offer.lead_magnet_cta_direction, or summarize older exact CTA fields as direction only]
-**Source-signal basis:** [primary source-backed pain or why-now signal from source-signal-intelligence.md, unless this is evidence-backed existing-offer validation]
+**Source-signal basis:** [primary source-backed pain or why-now signal from the `Ranked Source Signals` section of data-point-catalog.md, unless this is evidence-backed existing-offer validation]
 **How strategy uses it:** [brief rationale connecting the offer to campaign angles]
 ```
 
@@ -657,7 +657,7 @@ Format:
 
 ### Market Source Landscape Used
 
-**Strong source paths:** [Market-specific sources from source-signal-intelligence.md]
+**Strong source paths:** [Market-specific sources from the market source landscape in data-point-catalog.md]
 **Weak or risky source paths:** [Sources with poor coverage, weak evidence, high cost, or platform risk]
 **Blue-ocean sources:** [Country-specific or niche sources a generic database would miss]
 
@@ -682,7 +682,7 @@ Format:
 **Locked offer:** [Offer from client-profile.yaml]
 **Details:** [Details from client-profile.yaml]
 **CTA direction:** [CTA direction from client-profile.yaml, not final copy]
-**Source-signal basis:** [Source-backed pain or why-now signal from source-signal-intelligence.md]
+**Source-signal basis:** [Source-backed pain or why-now signal from the `Ranked Source Signals` section of data-point-catalog.md]
 **How strategy uses it:** [How the campaign ideas route prospects toward the locked offer]
 ```
 
@@ -708,11 +708,11 @@ Before finalizing output, verify:
 - [ ] Each AI strategy uses only publicly available data
 - [ ] Each campaign has Source Strategy, Source Options, Location Fit, Data Availability Risk, Primary Source, Backup Source, and Evidence Needed
 - [ ] Each campaign source recommendation reflects the target geography and the `Market Source Landscape`
-- [ ] New-offer paths use `source-signal-intelligence.md`, or the skill stopped and routed back to Source-Signal Discovery Mode
+- [ ] New-offer paths use `data-point-catalog.md`, or the skill stopped and routed back to `/data-point-discovery`
 - [ ] A general-purpose contact database or Google Maps is used only when it is genuinely the best source for the campaign signal, and every named source resolves to a capability role in the stack contract rather than an assumed brand
 - [ ] Campaign overviews have enough detail for copywriter handoff
 - [ ] At least one no-AI campaign included
-- [ ] Locked front-end offer included, or strategy stopped and routed to `/lead-source-strategy` Source-Signal Discovery Mode + `/offer-intelligence` + `/lead-magnet-brainstorm`
+- [ ] Locked front-end offer included, or strategy stopped and routed to `/offer-intelligence` + `/lead-magnet-brainstorm` + `/data-point-discovery` on the locked offer
 - [ ] Campaign overviews preserve the locked offer or lead magnet instead of inventing new offers
 - [ ] 4-step campaign overviews define different purposes for Email 1 and Email 3
 - [ ] 4-step campaign overviews define Email 2 and Email 4 as support emails for their own thread
@@ -750,7 +750,8 @@ If you do not have inboxes and a list yet, pause here. Come back after the setup
 - `/tam-build` - produces the company and contact TAMs
 - `/lead-scoring` - produces the scored TAM files and governed queue this skill must read
 - `/icp-onboarding` - produces the `client-profile.yaml` this skill reads
-- `/lead-source-strategy` - produces `source-signal-intelligence.md` before offer work and the final `lead-source-plan.md` after campaign selection
+- `/data-point-discovery` - produces `data-point-catalog.md` after the offer locks (kickoff Step 3.3), carrying the obtainability picture and the market source landscape this skill slices on
+- `/lead-source-strategy` - produces the per-campaign `lead-source-plan.md` in Lead Source Plan Mode after campaign selection
 - `/offer-intelligence` - produces the discovery brief that informs the offer
 - `/lead-magnet-brainstorm` - picks the locked offer this strategy builds around
 - `/campaign-copywriting` - writes the actual emails for campaigns defined here

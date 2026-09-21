@@ -43,9 +43,11 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 
 This is a high-level map so a newcomer can see the shape of the workflow. It is **not** the operating checklist and is intentionally not detailed — `/cold-email-kickoff` owns the exact steps, order, and gates. If this map and `/cold-email-kickoff` ever disagree, kickoff is correct.
 
+**The shape in one sentence:** Buyer and pain, then the offer, then the list built to fit that offer, then the copy.
+
 0. **Workspace setup, once:** `/stack-setup` (records FNNL's tools + process into the stack contract) then `/preflight-credentials`
 1. **Start a client:** `/cold-email-kickoff` (locks that client's run_state from the contract, then drives everything below)
-2. **Offer & strategy:** source-signal discovery → offer intelligence → lead-magnet brainstorm → data-point discovery → TAM build → campaign strategy
+2. **Offer & strategy:** offer intelligence → lead-magnet brainstorm (the offer locks here) → data-point discovery → TAM build → campaign strategy
 3. **Infrastructure:** mailbox-mix-strategy → domain setup → inbox manager → tracker
 4. **List:** lead-source plan → approval brief → source build → qualify → email waterfall → list-quality scorecard
 5. **Copy:** campaign copywriting (with copy-QA gate) → spintax
@@ -60,7 +62,7 @@ For the real sequence with all prerequisites and gates, run `/cold-email-kickoff
 - Save the stack in `run_state` and respect it.
 - Do not suggest provider paths outside the locked stack.
 - Do not ask startup questions about provider keys, purchased domains, or warmup age. Check access and sender readiness only inside the selected execution skill when needed.
-- Do not lock a new front-end offer before `/lead-source-strategy` Source-Signal Discovery Mode creates `source-signal-intelligence.md`.
+- Lock the new front-end offer first, then run `/data-point-discovery` on that locked offer to create `data-point-catalog.md`, before any list work. At offer lock, confirm the stack can actually obtain any buyer signal the offer's relevance depends on (the Signal-Capability Check that `/lead-magnet-brainstorm` owns).
 - Do not let a campaign idea into strategy unless its source path has a plausible target-geography fit.
 - Do not build a list before `/lead-source-strategy` Lead Source Plan Mode decides what signal the list must prove.
 - Do not treat onboarding form offers as locked. Store them under `offer.client_suggested_*`, then run discovery and ranked brainstorm.

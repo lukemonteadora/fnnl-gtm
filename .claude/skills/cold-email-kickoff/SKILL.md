@@ -1,6 +1,6 @@
 ---
 name: cold-email-kickoff
-description: Single "start here" orchestrator for new cold email operators. Runs a pre-fill discovery pass first (.env, existing profiles, website scrape), then checks for profiles/<business-slug>/intake-form.md - if found, skips all intake questions and reads execution_mode and spend_ceiling_usd from the form. If no form, it fills the infrastructure and sending-platform capability slots from the stack contract at <outbound>/stack-contract.yaml, never from a default vendor, and stops for /stack-setup when a slot the run needs is empty. Runs /icp-onboarding -> /lead-source-strategy Source-Signal Discovery Mode -> /offer-intelligence (discovery) -> /lead-magnet-brainstorm -> /data-point-discovery -> /tam-build -> /lead-scoring -> /campaign-strategy -> /lead-source-strategy Lead Source Plan Mode for new offers, or /offer-intelligence (validation) for existing offers. With execution_mode=auto_execute, picks top-ranked offer and campaign without pausing. Runs /mailbox-mix-strategy before any mailbox infrastructure spend. Spend gate auto-approves purchases only when a non-zero spend_ceiling_usd is explicitly set; the default ceiling is 0, meaning always confirm before any spend.
+description: Single "start here" orchestrator for new cold email operators. Runs a pre-fill discovery pass first (.env, existing profiles, website scrape), then checks for profiles/<business-slug>/intake-form.md - if found, skips all intake questions and reads execution_mode and spend_ceiling_usd from the form. If no form, it fills the infrastructure and sending-platform capability slots from the stack contract at <outbound>/stack-contract.yaml, never from a default vendor, and stops for /stack-setup when a slot the run needs is empty. Runs /icp-onboarding -> /offer-intelligence (discovery) -> /lead-magnet-brainstorm (offer locks) -> /data-point-discovery -> /tam-build -> /lead-scoring -> /campaign-strategy, then /lead-source-strategy Lead Source Plan Mode after campaign selection, for new offers; or /offer-intelligence (validation) for existing offers. With execution_mode=auto_execute, picks top-ranked offer and campaign without pausing. Runs /mailbox-mix-strategy before any mailbox infrastructure spend. Spend gate auto-approves purchases only when a non-zero spend_ceiling_usd is explicitly set; the default ceiling is 0, meaning always confirm before any spend.
 ---
 
 # Cold Email Kickoff
@@ -39,7 +39,7 @@ Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURR
 ## What this skill produces
 
 - A populated client profile under the canonical profile root from `/icp-onboarding`
-- Source-signal, offer, lead-magnet, a per-client data-point catalog (`data-point-catalog.md`), company and contact TAMs, a client-and-offer lead-scoring rubric, scored TAM files, campaign strategy, campaign plan, and campaign-level artifacts under the same profile folder
+- Offer, lead-magnet, a per-client data-point catalog (`data-point-catalog.md`), company and contact TAMs, a client-and-offer lead-scoring rubric, scored TAM files, campaign strategy, campaign plan, and campaign-level artifacts under the same profile folder
 - A locked `run_state` that every later skill must respect
 - A `run_state.mailbox_mix_strategy` gate before mailbox infrastructure spend, when setup starts from kickoff
 - A next-skill menu based on the locked stack and infrastructure status
@@ -106,21 +106,13 @@ Onboarding form answers are research inputs, not locked decisions.
 
 If a profile contains `offer.client_suggested_primary_cta`, `offer.client_suggested_lead_magnet`, or `offer.client_suggested_lead_magnet_details`, pass those into offer work as hypotheses. Do not treat them as `offer.lead_magnet`.
 
-For a new client or new campaign, always run `/lead-source-strategy` Source-Signal Discovery Mode, then `/offer-intelligence` discovery mode, then `/lead-magnet-brainstorm`, even when the form already includes a lead magnet idea. The form idea becomes Candidate A in the brainstorm and must be scored against at least 3 alternatives.
+For a new client or new campaign, always run `/offer-intelligence` discovery mode, then `/lead-magnet-brainstorm`, then `/data-point-discovery` against the locked offer, even when the form already includes a lead magnet idea. The shape of the whole chain: buyer and pain, then the offer, then the list built to fit that offer, then the copy. The form idea becomes Candidate A in the brainstorm and must be scored against at least 3 alternatives.
 
 Use validation mode only for a real existing offer backed by live or prior campaign evidence. A form-submitted ROI calculator, audit, template, or trial idea is not an existing validated offer.
 
-## Source Signals Shape Offer Creation
-
-For a new client or new campaign, source-first work happens before the front-end offer is locked.
-
-Run `/lead-source-strategy` in **Source-Signal Discovery Mode** after `/icp-onboarding` and before `/offer-intelligence`. It writes `profiles/<business-slug>/source-signal-intelligence.md`, which captures the capability boundary, target geography, market source landscape, ranked source signals, likely pain, why-now hypotheses, risks, and possible micro-offers.
-
-This discovery file is evidence, not a decision. It must not write to `offer.lead_magnet`. The lead magnet is locked only after `/offer-intelligence` and `/lead-magnet-brainstorm`.
-
 ## Proof-Asset Collection
 
-**Proof-asset collection (doctrine: `proof-asset-gate-doctrine`).** Good copy needs real evidence: a client you can name, a case study with a real before/after, an exact number. `/client-intake-form` collects these up front, and **Step 3.6 `/social-proof-bank` then builds the full, copy-ready Social Proof + Trigger Bank** (proof mapped per segment × service line, plus the why-now trigger/angle bank) — self-gathering from the intake, call notes, offer-intelligence, and the client's own site before asking the client for anything. That proactive bank is what makes the copy-time gate almost always pass. When a planned angle still needs proof that is not on file, the flow is blunt about the gap and collects it from the client with an easy fill-in form (`proof-asset-request.md`, bank mode for the whole-client sweep) instead of writing hollow or invented copy. `/campaign-strategy` flags any remaining gap earliest and `/campaign-copywriting` enforces the Proof-Asset Gate at copy time. This is a missing-source-material input gate, so it is not relaxed by `auto_execute` (the form is a data request to the client, not a pause that re-asks the operator).
+**Proof-asset collection (doctrine: `proof-asset-gate-doctrine`).** Good copy needs real evidence: a client you can name, a case study with a real before/after, an exact number. `/client-intake-form` collects these up front, and **Step 3.5 `/social-proof-bank` then builds the full, copy-ready Social Proof + Trigger Bank** (proof mapped per segment × service line, plus the why-now trigger/angle bank) — self-gathering from the intake, call notes, offer-intelligence, and the client's own site before asking the client for anything. That proactive bank is what makes the copy-time gate almost always pass. When a planned angle still needs proof that is not on file, the flow is blunt about the gap and collects it from the client with an easy fill-in form (`proof-asset-request.md`, bank mode for the whole-client sweep) instead of writing hollow or invented copy. `/campaign-strategy` flags any remaining gap earliest and `/campaign-copywriting` enforces the Proof-Asset Gate at copy time. This is a missing-source-material input gate, so it is not relaxed by `auto_execute` (the form is a data request to the client, not a pause that re-asks the operator).
 
 ## Flow
 
@@ -187,14 +179,13 @@ If a profile already exists, do not restart from the top. Resume from the earlie
 | Profile state | Resume at |
 |---|---|
 | No `client-profile.yaml` | Step 2 (create via `/icp-onboarding`) |
-| Profile exists but neither `offer.lead_magnet` nor `offer.offer_validation_path` exists | Step 3A — source-signal discovery, then offer work |
-| Profile contains only `offer.client_suggested_*` fields | Step 3A — `/lead-source-strategy` Source-Signal Discovery, then `/offer-intelligence` discovery, then `/lead-magnet-brainstorm` |
-| Locked new-offer `offer.lead_magnet` but no `source-signal-intelligence.md` and no `offer_validation_path` | Step 3A — source-signal discovery before campaign strategy |
-| Offer locked but no `data-point-catalog.md` | Step 3.4 — `/data-point-discovery` |
-| `data-point-catalog.md` exists but `proof_bank_stage` not complete (no `social-proof-bank.md`) | Step 3.6 — `/social-proof-bank` (runs in parallel with TAM build; does not block Step 4) |
-| Offer locked but `tam_stage` is `none` (no `tam/tam.csv`) | Step 3.5 — `/tam-build` (Phase A sample) |
-| `tam_stage = sample_built` (sample only; not the full enriched universe) | Step 3.5 — GO gate (auto-approves within ceiling under `auto_execute`, else operator go) → Phase B full build + enrich; campaign work stays blocked |
-| `tam_stage = full_enriched` but `scoring_stage != complete` | Step 3.7, `/lead-scoring` |
+| Profile exists but neither `offer.lead_magnet` nor `offer.offer_validation_path` exists | Step 3A, offer work: `/offer-intelligence` discovery, then `/lead-magnet-brainstorm` |
+| Profile contains only `offer.client_suggested_*` fields | Step 3A, `/offer-intelligence` discovery, then `/lead-magnet-brainstorm` with the form idea as Candidate A |
+| Offer locked but no `data-point-catalog.md` | Step 3.3 — `/data-point-discovery` |
+| `data-point-catalog.md` exists but `proof_bank_stage` not complete (no `social-proof-bank.md`) | Step 3.5 — `/social-proof-bank` (runs in parallel with TAM build; does not block Step 4) |
+| Offer locked but `tam_stage` is `none` (no `tam/tam.csv`) | Step 3.4 — `/tam-build` (Phase A sample) |
+| `tam_stage = sample_built` (sample only; not the full enriched universe) | Step 3.4 — GO gate (auto-approves within ceiling under `auto_execute`, else operator go) → Phase B full build + enrich; campaign work stays blocked |
+| `tam_stage = full_enriched` but `scoring_stage != complete` | Step 3.6, `/lead-scoring` |
 | `tam_stage = full_enriched`, `scoring_stage = complete`, but no `campaign-strategy.md` | Step 4, `/campaign-strategy` |
 | No launch campaign selected from `campaign-strategy.md` | Step 6 — campaign selection |
 | `run_state.status.setup_stage` not complete | Step 6 — infrastructure branch |
@@ -211,7 +202,7 @@ Group the industries from `icp_hard_filters.industries_in` into segments. Exampl
 
 Rules:
 - Cap at 5 segments. Single-segment clients run Steps 3A-3B once.
-- If more than 3 segments exist, ask the user to prioritize the top 3 for discovery work - run source-signal discovery and offer intelligence on those only.
+- If more than 3 segments exist, ask the user to prioritize the top 3 for discovery work - run offer intelligence on those only.
 - If all segments share the same source landscape and offer fit, one combined discovery run is acceptable - flag it explicitly.
 
 Present the segments before proceeding:
@@ -222,7 +213,7 @@ I see N distinct ICP segments in your profile:
 2. [Segment 2] - [titles / industry]
 ...
 
-I will run source-signal discovery and offer intelligence on each before selecting lead magnets.
+I will run offer intelligence on each and select the lead magnet, then catalog the data points against the locked offer.
 
 A. [Recommended] Proceed with these N segments
 B. Merge some segments (explain which)
@@ -281,19 +272,11 @@ Choose A for new clients, new campaigns, and any onboarding form suggestion that
 
 **Run once per distinct segment confirmed in Step 2.5.** For each segment, pass the segment's ICP parameters (industry, titles, headcount, geography) and any relevant case studies or proof points specific to that vertical.
 
-If all confirmed segments share the same source landscape and offer fit, one combined discovery run is acceptable - explicitly note it covers all segments.
+If all confirmed segments share the same buyer pain and offer fit, one combined discovery run is acceptable - explicitly note it covers all segments.
 
 **Research-routing gate (first research step of the run).** *(Wired enforcement: after the offer-research sub-skills run, execute `node scripts/research/research_routing_check.mjs --skill <skill> --client <business-slug> --json` per research skill — or the no-`--skill` full audit once per client — and treat `violation:true` / exit 1 as a flagged routing violation that blocks declaring research done.)* Check `run_state.research_routing`: if **unset**, default to **`claude_deep_research`** (the Claude native `/deep-research` fan-out harness as the primary research brain) and proceed — do NOT stop to ask. Switch to **`third_party_ai`** (older Perplexity-led primary) or **`claude_native`** (bare inline WebSearch, the weak path) only on an explicit operator opt-out. In `claude_deep_research` mode the primary pass MUST be an actual **`/deep-research` invocation** (hand it the assembled brief so its sub-agents cover every category in parallel), not a single inline WebSearch or a DiscoGen per-row pass — record `ai_research_provider = claude-deep-research` + an `api-balance-ledger.md` line; a research step finishing with **no recorded `/deep-research` primary** is a **flagged violation**. No third-party key is needed for the primary; a missing key hard-stops only if the operator explicitly chose `third_party_ai`. Full rule: `/ai-model-routing`.
 
-Invoke `/lead-source-strategy` in **Source-Signal Discovery Mode**. It runs before any offer exists, researching the target market's source reality, sampling likely high-signal source families, and writing:
-
-```text
-profiles/<business-slug>/source-signal-intelligence.md
-```
-
-(For multi-segment clients, the file may use per-segment sections, or a separate file per segment such as `source-signal-intelligence-insurance.md`.)
-
-Then invoke `/offer-intelligence` in **discovery mode**. It reads the source-signal brief, researches ICP pain in the prospect's own words, maps which offer archetypes are saturated or open in this market, and flags contrarian opportunity.
+Invoke `/offer-intelligence` in **discovery mode**. This is the first offer step and it leads with buyer pain: it researches that pain in the prospect's own words from the client profile, the client's website, and public buyer voice. From that pain it maps which offer archetypes are saturated or open in this market and flags contrarian opportunity.
 
 This produces `profiles/<business-slug>/offer-intelligence.md` as a discovery brief. It does not lock an offer. For multi-segment clients, the saturation map must include per-segment ratings when segments differ meaningfully.
 
@@ -316,23 +299,25 @@ Validation mode is allowed only when there is evidence that the offer exists out
 
 If the evidence-backed offer was captured during onboarding, read it from `offer.validation_candidate` and verify `offer.validation_candidate_evidence` before invoking validation mode.
 
-- If validation returns Go: lock the offer in `client-profile.yaml`, including `offer_validation_run` and `offer_validation_path`, then proceed through Steps 3.4, 3.5, and 3.7 before Step 4.
+- If validation returns Go: lock the offer in `client-profile.yaml`, including `offer_validation_run` and `offer_validation_path`, then proceed through Steps 3.3, 3.4, and 3.6 before Step 4.
 - If validation returns Iterate: keep the same offer source of truth, revise only the weak parts, then rerun validation until it scores 6+/7.
 - If validation returns Swap or Swap (Contrarian): use the validated replacement offer from evidence, or run `/lead-magnet-brainstorm` only for replacement options informed by validation.
 
-### Step 3.4: Catalog the data points (data-point discovery)
+### Step 3.3: Catalog the data points (data-point discovery)
 
 Once the offer is locked, it must be able to pass the copy-time Offer Architecture gate in `/campaign-copywriting`: SQL vs MQL framing, the easy-to-say-yes-to test, and a named risk reversal. If the locked offer has no clean risk reversal or fails the easy-yes test, flag it now so it is resolved before Email 1 rather than at copy time.
 
-After the offer is locked (via Step 3A or 3B) and before the TAM is built, invoke `/data-point-discovery`. Given the locked offer, ICP, and `source-signal-intelligence.md`, it exhaustively catalogs every company- and contact-level data point a campaign could slice on, cross-checks each for obtainability against the actual stack, classifies each `standard` / `client_specific` / `in_reserve`, and ranks by campaign value × obtainability × cost. It writes:
+After the offer is locked (via Step 3A or 3B) and before the TAM is built, invoke `/data-point-discovery`. Given the locked offer and ICP, it exhaustively catalogs every company- and contact-level data point a campaign could slice on, cross-checks each for obtainability against the actual stack, classifies each `standard` / `client_specific` / `in_reserve`, and ranks by campaign value × obtainability × cost. It also records the market source landscape: where this market's data physically lives, and which of the stack contract's tools can reach it. It writes:
 
 ```text
 profiles/<business-slug>/data-point-catalog.md
 ```
 
+**Do not rename the two headings the approval deck parses.** `outbound/scripts/campaign_approval_brief.ps1` reads the literal strings `## Ranked Source Signals` and `- **Source risks:**` out of that catalog to build the client-facing approval deck, so both must stay byte-identical. Renaming either one silently empties a deck section while the script still exits 0. This is a naming guard on the catalog's headings, never a stop gate: do not halt a run over it.
+
 This is **discovery, not collection** — it spends nothing beyond a small AI brainstorm (gated by `/api-cost-governance`) and reveals/verifies no contacts. The catalog is the contract `/tam-build` collects against. One catalog covers all confirmed segments (per-segment sections when segments differ). On completion set `run_state.status.datapoint_stage: complete`.
 
-### Step 3.5: Build the company-level TAM
+### Step 3.4: Build the company-level TAM
 
 > **`/social-proof-bank`'s seed + proof-readiness portion runs BEFORE this step; the rest runs concurrently (parallelize-by-default).** `/tam-build`'s default discovery motion is a **seeded lookalike expansion from the client's case-study / customer companies** (run through whichever lookalike or similar-company tool the stack contract declares), so `/social-proof-bank` must FIRST produce the **per-group seed set** and clear the **Seed-and-Proof Readiness gate**: each proven-motion group needs its seed domains AND copy-ready proof-facts, and a `gap_block` on a group holds THAT group's TAM until the client returns the fact (never the other groups). A group with no case study at all is not a proven-motion group — route it to this step's EXPANSION motion (broad ICP filter, offer-led, no proof gate) as a deliberate net-new play. Once the seed sets exist, launch the **rest** of `/social-proof-bank` (full trigger bank, one-liners) alongside `/tam-build` — that remainder depends only on the locked offer + confirmed segments + `data-point-catalog.md`, NOT the TAM, so do **not** park it behind this step's sample→full **GO gate** (which governs TAM scaling only).
 
@@ -344,11 +329,15 @@ profiles/<business-slug>/tam/tam.csv
 
 This is **Layer 1 only**: discovery + web-crawl + company-database signals + cheap AI normalization. It does **not** reveal or verify per-contact emails — that per-credit work is deferred to the live slice in `/email-waterfall`. One `tam.csv` covers all confirmed segments and case-study groups via `segment`, `group`, and `discovery_motion` columns (`proven` = seeded lookalike, `expansion` = broad filter).
 
-Spend gate: `/tam-build` runs `/api-cost-governance` first and respects `run_state.spend_ceiling_usd`; collection is **complete, not tiered** — every obtainable `collect_now` signal across the qualified TAM up front (Collection Completeness HARD RULE in `/data-point-discovery`), with `in_reserve` only the narrow exception; if full collection would exceed the ceiling, `/tam-build` surfaces it and recommends raising the ceiling rather than silently dropping signals. If `data-point-catalog.md` is missing, route back to Step 3.4 (`/data-point-discovery`); if `source-signal-intelligence.md` is missing, route back to `/lead-source-strategy` Source-Signal Discovery Mode before building.
+**Offer-fit is a HARD survival gate, not just an ICP call.** Because the offer is locked before the TAM is built, `fit_status` is judged against the locked offer as well as the ICP. The gate question is: can this business actually use, stock, deploy, or buy the thing the offer delivers? A company that cannot resolves to `fit_status: bad` and is dropped before Layer 1b enrichment spend, staying in the file rather than being deleted, consistent with the existing gated-out convention. An offer-derived disqualifier list is built at offer lock and applied in the free pre-screen before any paid classification. `/tam-build` owns the exact mechanics, including the NAME+DOMAIN-only matching discipline for auto-DQ.
+
+**Mandatory reporting guard on that gate.** A hard gate can silently starve a launch slice, so after it runs `/tam-build` must report, per segment and per group: companies in, companies dropped by ICP fit, companies dropped by offer fit, survivors. **If any slice falls below the ≥500-company launch floor, that must be flagged loudly at the TOP of the report, naming the offer-fit gate as the cause**, with the option to relax the offer-fit criterion or widen the segment. Never let a slice starve quietly. This is verify-before-done applied to the gate, so do not accept a TAM result that reports survivors without those drop counts.
+
+Spend gate: `/tam-build` runs `/api-cost-governance` first and respects `run_state.spend_ceiling_usd`; collection is **complete, not tiered** — every obtainable `collect_now` signal across the qualified TAM up front (Collection Completeness HARD RULE in `/data-point-discovery`), with `in_reserve` only the narrow exception; if full collection would exceed the ceiling, `/tam-build` surfaces it and recommends raising the ceiling rather than silently dropping signals. If `data-point-catalog.md` is missing, route back to Step 3.3 (`/data-point-discovery`) before building. That gate sits after the offer lock, so it never sends a client back into offer work that is already done.
 
 **Two phases + a GO gate (TAM-First Sequencing HARD RULE — see `/tam-build`).** `/tam-build` first builds a bounded **sample**, validates the fit-rate + data-point collectability, sets `run_state.status.tam_stage: sample_built`, and holds at the GO gate. That gate **auto-approves the full build under `auto_execute` when the previewed enrichment cost is within `run_state.spend_ceiling_usd` and no slice-first launch is on record, and otherwise stops for the operator's explicit "build the full TAM"** (`/tam-build` owns the exact rule). On the go (auto-approved or explicit), it discovers the **full qualified universe**, qualifies cheap, and enriches all survivors with the `collect_now` data points — **either** Seat A automated **or** the operator's external-workspace round-trip (export → operator completes data points → returns the enriched CSV, which is ingested as source of truth; this is a blocking wait). Only when the full survivor set is enriched does it set `run_state.status.tam_stage: full_enriched`. **Do not advance to Step 4 until `tam_stage == full_enriched`** — a `sample_built` TAM blocks campaign work.
 
-### Step 3.6: Build the Social Proof + Trigger Bank
+### Step 3.5: Build the Social Proof + Trigger Bank
 
 After the offer is locked and `/data-point-discovery` has written `data-point-catalog.md`, invoke `/social-proof-bank`. It builds the client's copy-ready **Social Proof + Trigger Bank** — two banks in one artifact: (1) the client's real case studies mapped one row per **ICP segment × service line** (hard result, timeframe, referenceable client, a copy-ready one-liner, and a diagnostic-mirror "poke the bear" question), and (2) a categorized **Trigger & Angle bank** of why-now signals (each with why it works, a poke-the-bear question, relevant ICPs, and priority). It writes:
 
@@ -358,9 +347,9 @@ profiles/<business-slug>/social-proof-bank.md
 
 It **self-gathers first** — from the intake `proof:` block + `icp.triggers`, `onboarding-call-notes.md`, `offer-intelligence.md`, the client's own case-study/website scrape, and any voicenotes — and only routes the genuine **raw-fact** gaps to the client, once, through `/proof-asset-request` (bank mode). The client is never asked for copy: the skill synthesizes every one-liner and poke-the-bear question and runs each through the Copy QA Gate (`spam-word-checker.md` + `cold-email-copy-best-practices.md`). Its data-backed trigger rows reuse `/data-point-discovery`'s exact canonical column names, so it feeds — never forks — `/campaign-strategy`'s Signal-Driven Slice Library and `/campaign-copywriting`'s Signal Angle Library.
 
-**Runs in parallel with Step 3.5.** It needs the locked offer + the confirmed segments (Step 2.5) + `data-point-catalog.md`, NOT the enriched TAM — so under `auto_execute` launch it alongside `/tam-build` rather than after it (parallelize-by-default). It is a **soft gate**: it does not block campaign work, and a still-pending client fact-request does not hold it open (the bank is usable now and upgrades when facts return). The hard enforcement stays the copy-time Proof-Asset Gate in `/campaign-copywriting`, which this pre-loads. On completion set `run_state.status.proof_bank_stage: complete`. Discovery/synthesis only — no per-record spend (only a small AI copy-synthesis pass, gated by `/api-cost-governance`).
+**Runs in parallel with Step 3.4.** It needs the locked offer + the confirmed segments (Step 2.5) + `data-point-catalog.md`, NOT the enriched TAM — so under `auto_execute` launch it alongside `/tam-build` rather than after it (parallelize-by-default). It is a **soft gate**: it does not block campaign work, and a still-pending client fact-request does not hold it open (the bank is usable now and upgrades when facts return). The hard enforcement stays the copy-time Proof-Asset Gate in `/campaign-copywriting`, which this pre-loads. On completion set `run_state.status.proof_bank_stage: complete`. Discovery/synthesis only — no per-record spend (only a small AI copy-synthesis pass, gated by `/api-cost-governance`).
 
-### Step 3.7: Score the company and contact TAMs
+### Step 3.6: Score the company and contact TAMs
 
 After `tam_stage = full_enriched`, invoke `/lead-scoring`. It inspects the real TAM headers and distributions, the locked offer, ICP, segment definitions, and data-point catalog. It writes the client-and-offer rubric plus `tam/tam.scored.csv`, `tam/contacts.scored.csv`, and `tam/lead-scoring-report.md`.
 
@@ -368,9 +357,9 @@ The score orders the full marketable list from P1 through P5. It does not delete
 
 ### Step 4: Generate campaign strategy
 
-**Gate (HARD RULE):** do not invoke `/campaign-strategy` until `run_state.status.tam_stage == full_enriched` and `run_state.status.scoring_stage == complete`. If the TAM is `sample_built`, return to Step 3.5. If scoring is incomplete, return to Step 3.7.
+**Gate (HARD RULE):** do not invoke `/campaign-strategy` until `run_state.status.tam_stage == full_enriched` and `run_state.status.scoring_stage == complete`. If the TAM is `sample_built`, return to Step 3.4. If scoring is incomplete, return to Step 3.6.
 
-Invoke `/campaign-strategy`. It reads `tam/tam.scored.csv` and `tam/contacts.scored.csv` plus the profile, source-signal brief, market source landscape, website, and case studies. It proposes campaigns per data point, reports each slice's score distribution, and orders contacts by score without deleting P3, P4, or P5 rows.
+Invoke `/campaign-strategy`. It reads `tam/tam.scored.csv` and `tam/contacts.scored.csv` plus the profile, the data-point catalog and the market source landscape it records, the website, and case studies. It proposes campaigns per data point, reports each slice's score distribution, and orders contacts by score without deleting P3, P4, or P5 rows.
 
 ```text
 profiles/<business-slug>/campaign-strategy.md
@@ -384,7 +373,7 @@ Pull from the artifacts above and write:
 profiles/<business-slug>/campaign-plan.md
 ```
 
-When source-signal intelligence and offer intelligence exist (i.e., Step 3A ran), include this per-segment offer summary before the infrastructure section:
+When `data-point-catalog.md` and `offer-intelligence.md` both exist (Step 3.3 always writes the first, and either offer path writes the second), include this per-segment offer summary before the infrastructure section:
 
 ```markdown
 ## Per-Segment Offer Summary
@@ -409,7 +398,7 @@ Full strategy: profiles/<business-slug>/campaign-strategy.md
 
 When `tam/tam.csv` exists, also include the **maximal first-launch wave** from `/campaign-strategy` — every viable, non-overlapping proven-signal `[FL]` slice proposed for simultaneous launch. The wave maximizes proven-signal campaigns and is uncapped (not a fixed top-N); the final capacity trim is applied at Step 6, where the warmed-mailbox count is known.
 
-If source-signal and offer intelligence were skipped (Step 3B / existing-offer path), use the original "Top 3 Recommended Campaigns" list format instead.
+If either artifact is genuinely missing (an older profile that never ran Step 3.3 data-point discovery, or a run where offer intelligence was skipped), use the original "Top 3 Recommended Campaigns" list format instead, and note which artifact was absent.
 
 Include this exact infrastructure section:
 
@@ -589,14 +578,14 @@ Follow the Step 6 branch that matches `run_state`. This skill hands off cleanly 
 - `/autonomous-execution-policy` - cross-cutting policy this skill defers to; governs when to proceed vs stop, the single upfront spend ceiling, the no-re-ask rule, the hard-stop list, and the don't-idle-wait rule under `execution_mode = auto_execute`
 - `/client-intake-form` - run before kickoff to pre-populate all static answers and set execution_mode; when found, kickoff skips all intake questions
 - `/icp-onboarding` - invoked in Step 2 (skipped when icp.source = intake_form)
-- `/lead-source-strategy` - invoked in Source-Signal Discovery Mode before new-offer discovery and in Lead Source Plan Mode after campaign selection
-- `/offer-intelligence` - invoked in discovery mode after source-signal discovery for new offers, or validation mode for evidence-backed existing offers
+- `/lead-source-strategy` - single-mode. Invoked in Lead Source Plan Mode at Step 6, after campaign selection and before any list builder, scraper, database pull, or enrichment spend
+- `/offer-intelligence` - invoked in discovery mode at Step 3A as the first offer step (buyer pain first), or in validation mode for evidence-backed existing offers
 - `/lead-magnet-brainstorm` - invoked only for new offers or validated replacement options
 - `/campaign-strategy` - invoked in Step 4 (reads the TAM and proposes campaigns per data point)
-- `/lead-scoring` - invoked in Step 3.7 to build the governed P1 through P5 queue before campaign selection or email spend
-- `/data-point-discovery` - invoked in Step 3.4 to catalog the data points (`data-point-catalog.md`, the contract the TAM collects against) before `/tam-build`
-- `/social-proof-bank` - invoked in Step 3.6 to build the client's copy-ready Social Proof + Trigger Bank (`social-proof-bank.md`); self-gathers first, asks the client (via `/proof-asset-request` bank mode) only for genuine raw-fact gaps; runs in parallel with `/tam-build`, feeds `/campaign-strategy` + `/campaign-copywriting`
-- `/tam-build` - invoked in Step 3.5 to build the company-level TAM before campaign strategy
+- `/lead-scoring` - invoked in Step 3.6 to build the governed P1 through P5 queue before campaign selection or email spend
+- `/data-point-discovery` - invoked in Step 3.3 to catalog the data points (`data-point-catalog.md`, the contract the TAM collects against) before `/tam-build`
+- `/social-proof-bank` - invoked in Step 3.5 to build the client's copy-ready Social Proof + Trigger Bank (`social-proof-bank.md`); self-gathers first, asks the client (via `/proof-asset-request` bank mode) only for genuine raw-fact gaps; runs in parallel with `/tam-build`, feeds `/campaign-strategy` + `/campaign-copywriting`
+- `/tam-build` - invoked in Step 3.4 to build the company-level TAM before campaign strategy
 - `/lead-list-tech-stack-research` - tool-fit map used by `/lead-source-strategy` before selecting source, workflow, and enrichment layers
 - `/campaign-approval-brief` - creates the client-facing approval brief after campaign selection and Lead Source Plan Mode, before list build when review is needed
 - `/mailbox-mix-strategy` - required before mailbox infrastructure setup decides the Google Workspace / Microsoft 365 purchase mix

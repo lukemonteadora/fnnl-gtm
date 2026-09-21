@@ -44,7 +44,7 @@ Five directories. The split is by *what reads the file*, not by topic.
 
 | Path | Contents | Who reads it |
 |---|---|---|
-| `.claude/skills/` | The 53 active skills. Edit here; Claude Code loads them live. | Claude, automatically |
+| `.claude/skills/` | The 57 active skills (53 owned here, plus 4 mirrored persona-consult skills that are edited in Personal GTM System). Edit here; Claude Code loads them live. | Claude, automatically |
 | `outbound/` | Everything the skills operate on. | Skills, at runtime |
 | `_vendor-library/` | Parked integrations for specific tools. **Nothing loads until `/stack-setup` activates it.** | Nothing, until activated |
 | `library/` | Third-party PDFs and DOCX: copywriting courses, prompt packs, spintax samples. | Humans, by hand |

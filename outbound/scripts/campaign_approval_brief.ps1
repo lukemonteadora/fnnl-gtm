@@ -294,14 +294,33 @@ function Get-FirstStandaloneBold {
 }
 
 function Get-SourceSignalAlternatives {
+    param([object[]] $CatalogLines)
     $items = New-Object System.Collections.Generic.List[string]
-    $rows = Get-MarkdownTableRows -Lines (Get-MarkdownSection -Lines $sourceSignalLines -HeadingRegex '^##\s+Ranked Source Signals\s*$')
+    $rows = Get-MarkdownTableRows -Lines (Get-MarkdownSection -Lines $CatalogLines -HeadingRegex '^##\s+Ranked Source Signals\s*$')
     foreach ($row in $rows) {
         if ($row.Cells.Count -ge 3) {
             Add-UniqueText -List $items -Text "$($row.Cells[1]): $($row.Cells[2])"
         }
     }
     return @($items.ToArray())
+}
+
+function Assert-DataPointCatalogSections {
+    param([string] $Path, [object[]] $CatalogLines)
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        throw "Data point catalog not found: $Path. The client-facing approval deck cannot build the 'Source-signal decision' alternatives or the 'Targeting decision' risk line without it. Run /data-point-discovery for this client, then rerun this script."
+    }
+
+    $signalRows = @(Get-SourceSignalAlternatives -CatalogLines $CatalogLines)
+    if ($signalRows.Count -eq 0) {
+        throw "No ranked source signals parsed from $Path. That file needs a '## Ranked Source Signals' heading above a markdown table whose first three columns stay Rank, Source family, Exact observable signal. Without it the 'Source-signal decision' section of the client deck would be blank."
+    }
+
+    $risksValue = Get-FirstMatch -Lines $CatalogLines -Pattern '^\-\s+\*\*Source risks:\*\*\s*(.+)$'
+    if ([string]::IsNullOrWhiteSpace($risksValue)) {
+        throw "No source risks line parsed from $Path. That file needs a bullet in the exact form '- **Source risks:** <text>', bold intact and a non-empty value after the colon. Without it the 'Targeting decision' risk line of the client deck would be blank."
+    }
 }
 
 function Get-OfferAlternatives {
@@ -668,12 +687,12 @@ function New-CampaignBrief {
     }
 
     $campaignAlternatives = @(Get-CampaignAlternatives -CampaignStrategyLines $campaignStrategyLines -SelectedSlugs $slugs)
-    $sourceSignalAlternatives = @(Get-SourceSignalAlternatives)
+    $sourceSignalAlternatives = @(Get-SourceSignalAlternatives -CatalogLines $dataPointCatalogLines)
     $offerAlternatives = @(Get-OfferAlternatives -ChosenOffer $offer)
     $leadSourceAlternatives = @(Get-LeadSourceAlternatives -LeadSourceLines $leadSourceLines)
     $copyAlternatives = @(Get-CopyAlternatives -VariantData $variantData)
 
-    $sourceRisks = Convert-ClientFacingText (Get-FirstMatch -Lines $sourceSignalLines -Pattern '^\-\s+\*\*Source risks:\*\*\s*(.+)$')
+    $sourceRisks = Convert-ClientFacingText (Get-FirstMatch -Lines $dataPointCatalogLines -Pattern '^\-\s+\*\*Source risks:\*\*\s*(.+)$')
     $primaryOfferSection = Get-MarkdownSection -Lines $leadMagnetLines -HeadingRegex '^##\s+Primary Offer'
     $secondaryOfferSection = Get-MarkdownSection -Lines $leadMagnetLines -HeadingRegex '^##\s+Secondary Offer'
     $primaryOfferWhy = Get-FirstMatch -Lines $primaryOfferSection -Pattern '^Why this works:\s*(.+)$'
@@ -1322,7 +1341,7 @@ function Write-ApprovalDocx {
         Add-PageBreak -Doc $doc
         Add-QueuedCampaigns -Doc $doc -BlockedCampaigns $BlockedCampaigns
         $impactItems = @(
-            "ICP change: rerun source-signal discovery, offer intelligence if affected, campaign strategy, and lead-source planning.",
+            "ICP change: rerun offer intelligence if affected, then data-point discovery, campaign strategy, and lead-source planning.",
             "Offer change: rerun offer intelligence or lead-magnet brainstorm, then campaign strategy and copy.",
             "Source change: rerun lead-source planning, the selected source workflow, and list QA.",
             "Copy angle change: rerun campaign-copywriting only."
@@ -1344,7 +1363,7 @@ function Write-ApprovalDocx {
 $clientProfilePath = Join-Path $profileDir "client-profile.yaml"
 $campaignPlanPath = Join-Path $profileDir "campaign-plan.md"
 $campaignStrategyPath = Join-Path $profileDir "campaign-strategy.md"
-$sourceSignalPath = Join-Path $profileDir "source-signal-intelligence.md"
+$dataPointCatalogPath = Join-Path $profileDir "data-point-catalog.md"
 $offerIntelPath = Join-Path $profileDir "offer-intelligence.md"
 $leadMagnetsPath = Join-Path $profileDir "lead-magnets.md"
 
@@ -1356,9 +1375,13 @@ $clientContact = Get-YamlValue -Lines $businessSection -Key "contact" -Default "
 
 $campaignPlanLines = Get-Lines $campaignPlanPath
 $campaignStrategyLines = Get-Lines $campaignStrategyPath
-$sourceSignalLines = Get-Lines $sourceSignalPath
+$dataPointCatalogLines = Get-Lines $dataPointCatalogPath
 $offerIntelLines = Get-Lines $offerIntelPath
 $leadMagnetLines = Get-Lines $leadMagnetsPath
+
+# The data point catalog feeds two client-facing deck fields. Get-Lines returns empty on a missing
+# file with no error, so block here instead of shipping a deck with those fields silently blank.
+Assert-DataPointCatalogSections -Path $dataPointCatalogPath -CatalogLines $dataPointCatalogLines
 
 $campaigns = New-Object System.Collections.Generic.List[object]
 $index = 1
@@ -1512,7 +1535,7 @@ if ($blockedCampaigns.Count -gt 0) {
 
 $md.Add("## Change Impact Map")
 $md.Add("")
-$md.Add("- ICP change: rerun source-signal discovery, offer intelligence if affected, campaign strategy, and lead-source planning.")
+$md.Add("- ICP change: rerun offer intelligence if affected, then data-point discovery, campaign strategy, and lead-source planning.")
 $md.Add("- Offer change: rerun offer intelligence or lead-magnet brainstorm, then campaign strategy and copy.")
 $md.Add("- Source change: rerun lead-source planning, the selected source workflow, and list QA.")
 $md.Add("- Copy angle change: rerun campaign-copywriting only.")

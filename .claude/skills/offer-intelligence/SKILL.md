@@ -1,6 +1,6 @@
 ---
 name: offer-intelligence
-description: Two-mode offer research skill. Discovery mode runs after /icp-onboarding and /lead-source-strategy Source-Signal Discovery Mode, then before /lead-magnet-brainstorm. It researches source-backed pain, ICP pain, competitor offer saturation, and open archetypes so the brainstorm invents from evidence. Validation mode runs standalone when a live campaign underperforms and evaluates an existing offer against market evidence with a Go / Iterate / Swap decision.
+description: Two-mode offer research skill. Discovery mode runs FIRST on the offer path, immediately after /icp-onboarding and before /lead-magnet-brainstorm, and requires no list-side or data-side work beforehand. It leads with buyer pain: the client's own won and lost sales-call recordings, public buyer voice, competitor offer saturation across 5 to 10 competitors, paid-ad angles from the Meta Ad Library and LinkedIn, and open archetypes, with every pain row mapped to the persona who feels it, so the brainstorm invents from evidence. It ends by handing /lead-magnet-brainstorm a named Candidate Generation Input block (persona + pain + open archetype rows) that candidate generation consumes directly instead of re-deriving pain. Obtainability and the list are worked out later, after the offer locks. Validation mode runs standalone when a live campaign underperforms and evaluates an existing offer against market evidence with a Go / Iterate / Swap decision.
 ---
 
 # Offer Intelligence
@@ -16,7 +16,7 @@ Here `<outbound>` is the root of this skill library - resolve it to wherever the
 
 Cold email operators default to two failure modes: (1) copying whatever offer their competitors use, or (2) brainstorming in a vacuum with no market signal. This skill escapes both.
 
-**In discovery mode**, it runs before the offer exists, after source-signal discovery on new-offer paths. It researches the market and source-backed pain first so that `/lead-magnet-brainstorm` invents from evidence, not from gut feel.
+**In discovery mode**, it runs first on the offer path, immediately after `/icp-onboarding` and before the offer exists. It researches buyer pain and the market so that `/lead-magnet-brainstorm` invents from evidence, not from gut feel. The order of the whole chain is: buyer and pain, then the offer, then the list built to fit that offer, then the copy. Nothing in this mode waits on any list or data work.
 
 **In validation mode**, it runs after an offer is live - evaluating whether the offer is strong, weak, or invisible due to saturation, and deciding whether to keep it or swap it.
 
@@ -54,53 +54,66 @@ Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURR
 
 ### When to trigger
 
-- Invoked by `/cold-email-kickoff` after `/icp-onboarding` and `/lead-source-strategy` Source-Signal Discovery Mode, before `/lead-magnet-brainstorm`
+- Invoked by `/cold-email-kickoff` immediately after `/icp-onboarding`, before `/lead-magnet-brainstorm`
 - When starting fresh with no existing offer
 - When the user wants to understand the market before deciding what to offer
 
-For new clients and new campaigns, source-signal discovery must run before this mode. Evidence-backed existing-offer validation does not require source-signal discovery first.
+This mode runs from the client profile, the client website, the client's own sales-call recordings, and public buyer voice alone. It does not wait on any list, data-point, or obtainability work, all of which now run after the offer locks so they are measured against a real offer instead of a guessed one.
 
 ### What this mode does
 
-Runs the Source-Signal Vector plus Vectors 1-4. No send data exists yet because no campaign exists. Builds a market signal brief covering where pain is observable, why the source signal implies pain now, ICP pain in the prospect's own words, a saturation map of which offer archetypes are overused in this space, and the open or contrarian archetypes that `/lead-magnet-brainstorm` should build toward.
+Runs the First-Party Call Vector, then Vectors 1-4. No send data exists yet because no campaign exists. Builds a market signal brief covering buyer pain in the buyer's own words (first-party from the client's won and lost calls, then public), each pain mapped to the persona who feels it, a saturation map of which offer archetypes are overused in this space, and the open or contrarian archetypes that `/lead-magnet-brainstorm` should build toward.
 
 Does **not** evaluate an offer or output a Go/Iterate/Swap decision. There is nothing to evaluate yet. The output is research that feeds invention.
 
 ### AI/API Routing
 
-> **Research Routing — HARD RULE (Claude deep-research primary, enforced).** Read `run_state.research_routing`: if it is **unset**, default to **`claude_deep_research`** and proceed. The primary research brain is the Claude native `/deep-research` fan-out harness (multiple sub-agents research every needed category in parallel, fetch real sources, adversarially verify each claim, and synthesize a cited report). Do NOT stop to ask, and do NOT satisfy the primary pass with a bare inline WebSearch (that is the weak `claude_native` path, which is not the same thing as `claude_deep_research`). The operator can explicitly opt back to **`third_party_ai`** (the older Perplexity-led primary); switch to that only on an explicit opt-out. In `claude_deep_research` mode the primary pass MUST be an **actual `/deep-research` invocation** (native inline WebSearch/WebFetch, DiscoGen, or a complement engine do NOT satisfy it) — record `ai_research_provider = claude-deep-research` and append an `api-balance-ledger.md` line; a research step that finishes with **no `/deep-research` primary** is a **flagged violation** (run it, or get a fresh explicit OK to skip). **Wired check:** after the primary pass, run `node scripts/research/research_routing_check.mjs --skill offer-intelligence --client <business-slug> --json` — a `violation:true` / exit 1 means no logged primary; do not declare this research step done until it passes. No third-party key is needed for the primary pass (it is the native harness); a missing `PERPLEXITY_API_KEY` is a credential **HARD-STOP** only if the operator explicitly chose `third_party_ai`. Full rule: `/ai-model-routing`.
+> **Research Routing — HARD RULE (Claude deep-research primary, enforced).** Read `run_state.research_routing`: if it is **unset**, default to **`claude_deep_research`** and proceed. The primary research brain is the Claude native `/deep-research` fan-out harness (multiple sub-agents research every needed category in parallel, fetch real sources, adversarially verify each claim, and synthesize a cited report). Do NOT stop to ask, and do NOT satisfy the primary pass with a bare inline WebSearch (that is the weak `claude_native` path, which is not the same thing as `claude_deep_research`). The operator can explicitly opt back to **`third_party_ai`** (the older Perplexity-led primary); switch to that only on an explicit opt-out. In `claude_deep_research` mode the primary pass MUST be an **actual `/deep-research` invocation** (native inline WebSearch/WebFetch, DiscoGen, or a complement engine do NOT satisfy it) — record `ai_research_provider = claude-deep-research` and append an `api-balance-ledger.md` line; a research step that finishes with **no `/deep-research` primary** is a **flagged violation** (run it, or get a fresh explicit OK to skip). **Wired check:** after the primary pass, run `node scripts/research/research_routing_check.mjs --skill offer-intelligence --client <business-slug> --json` — a `violation:true` / exit 1 means no logged primary; do not declare this research step done until it passes. No third-party key is needed for the primary pass (it is the native harness); a missing `PERPLEXITY_API_KEY` is a credential **HARD-STOP** only if the operator explicitly chose `third_party_ai`. **Scope note:** the First-Party Call Vector sits outside this routing path entirely, because it reads client-supplied recordings and transcripts, spends nothing externally, and picks no engine. It does NOT satisfy or substitute for the `/deep-research` primary pass, so running it first leaves the primary-pass requirement and the wired check exactly where they were. Full rule: `/ai-model-routing`.
 
 This skill runs at `pass_depth = deep` on the single premium-by-default, non-redundant research path (`/ai-model-routing`) — there is no cheap/standard tier to pick. Assemble the research brief (goal, ICP, decision, output, freshness, confidence, source types, VOC?, assumptions, open questions). The Claude native `/deep-research` fan-out harness runs the primary broad pass (web-grounded competitor/ad/market research + cited source discovery via parallel sub-agents, adversarial verification, cited synthesis); Serper and Grok are discovery helpers (raw URLs / X-social), not a second research brain; raw page extraction → Spider Cloud; **ICP-pain VOC mining (Vector 3) → the VOC / Raw-Evidence pipeline** (Grok → Perplexity Search/Serper for the exact discussion URLs → Spider Cloud to scrape, with `source_class` kept); saturation synthesis and pain-language crunch → DeepSeek (bulk + pre-compress raw dumps before any premium model). After the primary pass, fill ONLY its gaps with the demoted gap-fill engines — **Perplexity** (web-grounded gap-fill) and **OpenAI `o4-mini-deep-research`** (thin / technical / multi-step coverage, weak/unsupported claims, missing counterexamples, overclaimed ICP, contradictions); never a duplicate broad pass (`o4-mini-deep-research` default, `o3-deep-research` pinpoint; OpenAI 1-3 prompts/client). When the corpus is too big or references too many, use **scale mode**: Perplexity + OpenAI + Serper EMIT ranked URLs → Spider Cloud scrapes → DeepSeek compresses → Claude Code synthesizes. Run the Validation Gate before the brief is finalized: a pain counts only at `frequency_count >= 3` independent `buyer_quote` sources, counterexamples kept. The brief this skill writes is research, not copy. Keep CTA wording out — final copy is written later by `/campaign-copywriting` (Claude Code native, clean-packet sub-agent) and any CTA must still pass `spam-word-checker.md` and `cold-email-copy-best-practices.md`.
 
 ### Inputs
 
-- `profiles/<business-slug>/client-profile.yaml` - ICP, value prop, hard filters
-- `profiles/<business-slug>/source-signal-intelligence.md` - required for new-client and new-campaign new-offer paths
+- `profiles/<business-slug>/client-profile.yaml` - ICP, value prop, hard filters, and `icp_soft_preferences.personas_to_prioritize` (captured by `/icp-onboarding`, and the list every pain row is mapped against)
+- The client's own recorded sales calls, won and lost. **Check `sales_call_library` in `client-profile.yaml` FIRST**, because `/icp-onboarding` already asked for this at intake and recorded whether recordings exist, where they live, the rough count, and the won/lost mix. Only request them from the client when that field is absent or says access is still pending. Re-asking for something intake already captured wastes the client's patience on the exact step that depends on their goodwill. `sales_call_library.exists: false` is a real answer: a stated gap, not a prompt to ask again
+- `buyer_pain_hypothesis` in `client-profile.yaml` - the client's own unverified belief about what their buyers struggle with, captured at intake. Treat it as the hypothesis this mode sets out to **confirm or overturn**, never as a finding. Where public buyer voice and first-party calls contradict it, say so plainly in the brief: a client wrong about their own buyers' pain is one of the most valuable things this research can surface
 - Client website URL
-- Competitor names or URLs - ask if not already in the profile
+- Competitor names or URLs - ask if not already in the profile. Target 5 to 10, see the sample-size floor in Vector 1
 
-If discovery mode is invoked for a new client or new campaign and `source-signal-intelligence.md` is missing, stop and route to `/lead-source-strategy` Source-Signal Discovery Mode first. Do not lock an offer before source-signal discovery unless this is evidence-backed existing-offer validation.
+This mode has no list-side or data-side prerequisite of any kind. Proceed from the client profile, the client website, the client's own call recordings, and public buyer voice. Do not route back to `/lead-source-strategy` or `/data-point-discovery` to satisfy this mode: both run after the offer locks.
 
 ### Steps
 
-**Source-Signal Vector - observable source context**
+**First-Party Call Vector - the client's own won and lost sales calls**
 
-- Load `profiles/<business-slug>/source-signal-intelligence.md`.
-- Extract the top ranked source signals, capability boundary, why-now hypotheses, likely pain, possible micro-offers, and risks.
-- For each top signal, assess:
-  1. where the pain signal lives
-  2. why the signal implies internal pain now
-  3. expected volume and reachability
-  4. evidence URL quality
-  5. creep risk
-  6. offer-fit risk
-- Treat possible micro-offers as hypotheses only. They do not become `offer.lead_magnet` until `/lead-magnet-brainstorm` ranks options and the operator selects one.
+This is the only first-party pain input in the chain. Every other vector reconstructs pain from public strangers. The client's recorded sales calls are the buyer saying it directly, to the client, about this exact category, so they outrank every public source wherever the two disagree. Run this vector first and let its language set the terms the rest of the research is measured against.
 
-Extract: 2-4 source-backed pains and 2-4 source-backed micro-offer directions that deserve comparison against competitor and ICP evidence.
+- Ask the client for recordings or transcripts of recent sales calls, both **won and lost**. Lost calls matter more than won ones for offer design, because they name the objection that actually stopped the deal.
+- Aim for 5 to 10 calls with a mix of both outcomes. Fewer is still worth mining, just mark the confidence down.
+- Read or transcribe them and pull the buyer's **exact words**: how they name the problem, the jargon and shorthand they use for it, the objections they raise, the alternative they compared against, and what they had already tried.
+
+Extract, per pain or objection:
+1. `exact_quote` - verbatim, never cleaned up or paraphrased
+2. `persona` - the role of the person who said it, mapped against `icp_soft_preferences.personas_to_prioritize` where it fits
+3. `call_outcome` - won or lost
+4. `source_class: first_party_call`
+5. What this implies the offer has to answer
+
+Then **reword the offer direction into that language**. If the client's buyers say "coverage gaps" and the client's own website says "risk exposure optimization", the offer says "coverage gaps". This rewrite is the point of the vector, not a nice-to-have: carry it into the brief as an explicit offer-language line that `/lead-magnet-brainstorm` and `/campaign-copywriting` inherit.
+
+**Hard rules for this vector:**
+- **Never fabricate a quote.** If you did not read it in a real recording or transcript, it does not go in the brief.
+- **Never present a public quote as a first-party one.** `source_class` is the guard. `first_party_call` means a real client sales call and nothing else.
+- **A first-party quote does not count toward Vector 3's `frequency_count`.** The `frequency_count >= 3` floor governs public buyer voice and stays exactly as it is. First-party call evidence is a different and stronger class, so a single objection from a real lost deal is reportable on its own, tagged and outcome-labelled. Do not mix the two pools in either direction.
+- **If the client has no recordings, state that plainly in the brief** in the First-Party Buyer Voice section, mark that section's confidence Low, and proceed on public buyer voice alone. Do not silently omit the section, and do not quietly backfill it with Vector 3 material.
+
+This vector reads client-supplied material, so it carries no external research spend and no routing gate of its own.
 
 ---
 
 **Vector 1 - Competitor front-end offers + saturation count**
+
+**Sample-size floor: research 5 to 10 competitors.** A saturation verdict is a claim about a field, and a field of two or three is not a field. Below 5 there is no denominator that can carry the word "saturated". Build the list from the client profile, the competitors the client names, and a search for adjacent players serving the same ICP, until you have at least 5. Record the count, because the verdict is only auditable next to its denominator.
 
 - Fetch competitor websites. Look at: homepage hero CTA, pricing page CTA, pop-up or inline lead magnets, any "free X" offer, how trial or demo is framed
 - Check their LinkedIn company pages for pinned posts or sponsored lead gen content
@@ -112,33 +125,48 @@ Extract for each competitor:
 2. Which archetype it maps to (A-K from `/lead-magnet-brainstorm`)
 3. How long they appear to have been running it
 
-Build the saturation table:
+Build the saturation table. Head it with the denominator:
+
+**Competitors researched: [N]**
 
 | Competitor | Offer | Archetype | Running how long |
 |---|---|---|---|
 | [Name] | [Offer] | [Letter] | [Duration or Unknown] |
 
-**Saturation rule:** Count how many competitors use the same archetype.
-- 3 or more -> **SATURATED** (ICP is numb to it)
-- 2 -> **CROWDED** (notable but not fatal)
-- 0-1 -> **OPEN** (uncontested)
+**Saturation rule:** Count how many competitors use the same archetype, out of the total number you actually researched (the denominator).
+- Denominator below 5 -> **INSUFFICIENT SAMPLE**. SATURATED may not be fired at all. Report how many competitors were researched and how many used the archetype, and leave the archetype unverdicted until the sample reaches 5.
+- Denominator 5 or more, 3 or more competitors using the archetype -> **SATURATED** (ICP is numb to it)
+- Denominator 5 or more, 2 using it -> **CROWDED** (notable but not fatal)
+- Denominator 5 or more, 0-1 using it -> **OPEN** (uncontested)
 
 A saturated archetype is not evidence the offer works. It is evidence it used to work.
 
 ---
 
-**Vector 2 - LinkedIn ads intelligence**
+**Vector 2 - Paid ads intelligence (Meta Ad Library, then LinkedIn)**
 
-- Search LinkedIn's ad library for competitor or adjacent brands
-- Use web search `"[competitor]" linkedin ad OR sponsored OR "lead gen form"` as proxy if direct access is limited
+Read the **angle and the positioning, not the creative execution**. A competitor running 10 to 50 variations of a single angle has already paid to learn that this market responds to that angle. The variations are them optimizing execution around something already proven, so the angle is the finding. Report what problem the angle names and what it promises, not the headline wording, the stock photo, or the button colour.
+
+**Meta Ad Library (start here, it is public and needs no authentication)**
+
+- Search Meta's Ad Library by advertiser name or Facebook page for each competitor and adjacent brand. It is a public ad-transparency registry, so there is no login, no ad account, and no API key involved. Access detail and the bulk options (a ready-made scraping actor, or a direct crawl with JavaScript rendering, plus the equivalent Google Ads Transparency Center route) are documented in `signal-strategy-playbook.md` under the ads-intelligence substitutes.
+- For each advertiser, group the active ads by distinct angle and count the variations behind each one. Ten to fifty variations of a single angle is the strongest read available in this vector: proven paid demand for that angle.
+- Note how long each angle has been running. Long-running plus many variations means real budget behind something that works.
+- Capture per angle: the problem it names, the promise, the offer or CTA type, the variation count, and how long it has run.
+
+**LinkedIn ads**
+
+- Search LinkedIn's ad library for the same competitor and adjacent brands
+- Use web search `"[competitor]" linkedin ad OR sponsored OR "lead gen form"` only as a fallback when the ad library itself cannot be reached. A search-result proxy is weaker than the library, so mark anything sourced that way low confidence
 - Look for: what problem does the ad headline name? What CTA? What offer?
 
 Weight correctly:
 - Ad running 30+ days with engagement = real spend = high signal
+- Many variations of one angle = the advertiser already validated that angle = high signal
 - Fresh or low-engagement ad = hypothesis, not proof = low signal
 - Multiple competitors running same angle = cross-reference with Vector 1 to distinguish "validated" from "everyone copied each other"
 
-Extract: the 1-3 offer angles in this space that have real paid spend behind them.
+Extract: the 1-3 offer angles in this space that have real paid spend behind them, each with the platform it was found on and the variation count where available.
 
 ---
 
@@ -150,10 +178,11 @@ This is the VOC layer. Run the **VOC / Raw-Evidence pipeline** defined in `/ai-m
 2. **Perplexity Search / Serper** - find the EXACT discussion URLs (Reddit, Quora, G2 / Capterra / Trustpilot, Hacker News, YouTube, industry forums, Slack archives). Query seed: `[ICP job title] + [problem domain] + ("how do I" OR "looking for" OR "recommend" OR "struggling with")`. This hop returns URLs only - it must not summarize.
 3. **Spider Cloud** - scrape each thread to clean text; capture exact quotes.
 4. Tag every quote with `source_class` (`buyer_quote` / `competitor_claim` / `analyst_claim` / `news`). Only `buyer_quote` counts as pain - a competitor landing page is positioning, not pain.
+5. Tag every quote with the `persona` who voiced it, using the role or function the poster states about themselves. Pain is felt by a person, not by a company. Two personas inside one ICP often carry completely different pains, and flattening them into a single blob produces an offer that is mildly relevant to everyone and urgent to nobody. Where the stated role maps to an entry in `icp_soft_preferences.personas_to_prioritize`, use that entry's wording so the rows join cleanly. Where the role is genuinely not stated, write `persona: unknown` rather than guessing a role to fill the field.
 
 A question the ICP asks publicly in their own words = a problem they will trade their attention to solve. That problem is the lever your offer should pull.
 
-Extract: the 3-5 problems this ICP complains about in their own language, each as a verbatim `exact_quote` with its `source_url`, `frequency_count` (how many independent `buyer_quote` sources voiced it), and any `counterexample`. A pain only graduates into the brief at `frequency_count >= 3` (Validation Gate in `/ai-model-routing`); record weaker ones as `confidence_score: low`. This exact phrasing feeds copywriting later and anchors the offer brainstorm.
+Extract: the 3-5 problems this ICP complains about in their own language, each as a verbatim `exact_quote` with its `source_url`, `persona`, `frequency_count` (how many independent `buyer_quote` sources voiced it), and any `counterexample`. A pain only graduates into the brief at `frequency_count >= 3` (Validation Gate in `/ai-model-routing`); record weaker ones as `confidence_score: low`. First-party call quotes are a separate, stronger class and never count toward this `frequency_count`. This exact phrasing feeds copywriting later and anchors the offer brainstorm.
 
 Sample before scaling: collect 20-30 quotes first; expand only if patterns are strong. If community signal is weak (niche market, hard-to-find ICP): note it, weight this vector low, lean more on Vectors 1 and 4.
 
@@ -170,6 +199,7 @@ Extract:
 2. What tools or processes does the JD mention? (signals what they already have and what's missing)
 3. What outcomes is the hire accountable for? (the ICP's pressure point - a good offer relieves it)
 4. Are multiple companies posting the same role? (recurring hire = systemic pain = strong offer angle)
+5. Which `persona` owns this problem? Use the role the hire reports into or works alongside, so a job-posting pain carries a persona like every other pain row and joins the pain-by-persona table.
 
 Job postings represent budget decisions. A company spending $80K/year to hire for a problem will pay to solve it.
 
@@ -177,7 +207,7 @@ Job postings represent budget decisions. A company spending $80K/year to hire fo
 
 **Synthesize and output the discovery brief**
 
-After source-signal discovery and all four market vectors, build the brief that `/lead-magnet-brainstorm` reads.
+After the First-Party Call Vector and all four market vectors, build the brief that `/lead-magnet-brainstorm` reads.
 
 Save to `profiles/<business-slug>/offer-intelligence.md`:
 
@@ -186,24 +216,48 @@ Save to `profiles/<business-slug>/offer-intelligence.md`:
 **Date:** YYYY-MM-DD
 **Mode:** Discovery
 **Status:** Feeds /lead-magnet-brainstorm - no offer locked yet
+**Competitors researched:** [N] (floor is 5, see Vector 1)
+**First-party call recordings reviewed:** [N won / N lost, or "none available from client"]
+
+---
+
+### First-Party Buyer Voice (the client's own calls)
+
+[From the First-Party Call Vector. One bullet per pain or objection, each carrying the verbatim `exact_quote`, the `persona` who said it, `call_outcome` (won or lost), and what the offer has to answer. These outrank public quotes wherever the two disagree. Never fabricate a quote, and never move a public quote into this section.
+
+If the client has no recordings, write exactly: "Client has no call recordings available. All pain below is reconstructed from public buyer voice." Mark this section's confidence Low and leave it at that. Do not backfill it with Vector 3 material.]
+
+**Offer language rewrite:** [the buyer's own words the offer should adopt, and the client-side jargon each one replaces. `/lead-magnet-brainstorm` and `/campaign-copywriting` inherit this line.]
 
 ---
 
 ### ICP Pain (in their words)
-[3-5 bullets, each a verbatim `exact_quote` with its `source_url`, `frequency_count`, and any `counterexample` from Vector 3 + 4. No paraphrasing - record how they actually describe the problem. Only pains at `frequency_count >= 3` independent `buyer_quote` sources are stated as pain; mark weaker ones `confidence_score: low` (Validation Gate, `/ai-model-routing`).]
+[3-5 bullets, each a verbatim `exact_quote` with its `source_url`, `persona`, `frequency_count`, and any `counterexample` from Vector 3 + 4. No paraphrasing - record how they actually describe the problem. Only pains at `frequency_count >= 3` independent `buyer_quote` sources are stated as pain; mark weaker ones `confidence_score: low` (Validation Gate, `/ai-model-routing`). First-party call quotes live in the section above and never count toward this `frequency_count`.]
 
 ---
 
-### Source-Signal Brief
+### Pain by persona
 
-- Primary source signal:
-- Why-now hypothesis:
-- Likely pain:
-- Evidence quality:
-- Volume and reachability:
-- Creep risk:
-- Offer-fit risk:
-- Micro-offer hypotheses to compare:
+Every pain row carries the persona who feels it, so `/lead-magnet-brainstorm` and `/campaign-strategy` can aim the offer at a specific buyer instead of an averaged ICP.
+
+| Persona | Pain (their words) | Source class | Frequency or call outcome | Priority |
+|---|---|---|---|---|
+| [role] | [exact quote] | first_party_call / buyer_quote / job_posting | [N independent sources, or won/lost] | High / Med / Low |
+
+**Prioritized personas from the ICP:** [`icp_soft_preferences.personas_to_prioritize` from `client-profile.yaml`]
+**Prioritized personas with no pain evidence found:** [list, or "none"]. A prioritized persona with no evidence is a gap to name out loud, not a blank to leave sitting.
+
+If `icp_soft_preferences.personas_to_prioritize` is absent or empty, which is common on a profile written under an older flow, do not stall and do not invent a priority list. Derive the personas from the evidence itself, fill the table from those, and write "ICP supplied no persona priority list, personas below are derived from evidence" on the Prioritized personas line.
+
+---
+
+### Paid Ads Angles (Vector 2)
+
+Angles only. The creative execution is not the finding. Ten to fifty variations behind one angle means the market already pays for that angle.
+
+| Angle (problem named + promise) | Platform | Advertiser | Variations | Running how long | Signal strength |
+|---|---|---|---|---|---|
+| | Meta / LinkedIn | | [count or Unknown] | [Duration or Unknown] | High / Med / Low |
 
 ---
 
@@ -211,8 +265,9 @@ Save to `profiles/<business-slug>/offer-intelligence.md`:
 
 | Source | Signal found | Confidence |
 |---|---|---|
-| Source-signal discovery | [top source-backed pain and why-now signal] | High / Med / Low |
-| Competitor offers | [what you found] | High / Med / Low |
+| First-party sales calls | [the buyer's own words, and the objection that stopped lost deals, or "none available"] | High / Med / Low |
+| Competitor offers | [what you found, with the denominator] | High / Med / Low |
+| Meta Ad Library | [angles with real paid spend, and variation counts] | High / Med / Low |
 | LinkedIn ads | [what you found] | High / Med / Low |
 | ICP community | [what you found] | High / Med / Low |
 | Job postings | [what you found] | High / Med / Low |
@@ -221,9 +276,11 @@ Save to `profiles/<business-slug>/offer-intelligence.md`:
 
 ### Saturation Map
 
+**Competitors researched (the denominator):** [N]. Below 5, every verdict is INSUFFICIENT SAMPLE and SATURATED may not be fired at all.
+
 | Archetype | Letter | Status |
 |---|---|---|
-| Free audit / diagnostic | A | SATURATED / CROWDED / OPEN |
+| Free audit / diagnostic | A | SATURATED / CROWDED / OPEN / INSUFFICIENT SAMPLE |
 | Data / research piece | B | |
 | Competitive intel | C | |
 | Template / checklist | D | |
@@ -240,29 +297,54 @@ Save to `profiles/<business-slug>/offer-intelligence.md`:
 **Saturated archetypes (avoid):** [list]
 **Crowded archetypes (proceed with caution):** [list]
 **Open archetypes (prioritize):** [list]
+**Unverdicted (INSUFFICIENT SAMPLE, denominator below 5):** [list, or "none, denominator is [N]"]
 
 ---
 
 ### Recommended direction for /lead-magnet-brainstorm
 
-**Source-backed angle:** Use [primary source signal] to make the offer feel timely and specific without overclaiming buying intent.
+**Buyer language to use:** [the exact words from the First-Party Buyer Voice section. Where the client had no recordings, fall back to the Vector 3 quotes and say so. The offer gets written in these words.]
+**Target persona:** [the persona from the Pain by persona table carrying the strongest, best-evidenced pain, and one line on why it beats the others]
+**Proven paid angle to borrow or avoid:** [from Paid Ads Angles. Name the angle, not the creative.]
 **Primary:** Focus invention on [open archetype(s)] - uncontested in this market, aligned with ICP pain #[X].
 **Secondary:** [another open archetype] if delivery capacity supports it.
 **Avoid:** [saturated archetypes] - ICP has been overexposed, pattern interrupt value is gone.
 
 ### Contrarian opportunity (if applicable)
 [Only populate if all or most archetypes are saturated/crowded. Name the archetype furthest from the saturated ones and why it could break the pattern.]
+
+### Candidate Generation Input (the handoff `/lead-magnet-brainstorm` consumes)
+
+The rows below are not a summary. They are the working input the next skill invents from, so each one must be filled from the sections above rather than restated loosely.
+
+| # | Persona | Pain, in their words | Open archetype(s) to build for | Why this pairing |
+|---|---|---|---|---|
+| 1 | [persona from Pain by persona] | [exact quote, not paraphrase] | [letter(s) from Open archetypes] | [one line] |
+| 2 | | | | |
+| 3 | | | | |
+
+**Open archetypes still uncontested:** [letters + names from the Saturation Map's Open line]
+**Closed to candidates:** [saturated archetypes, which candidate generation may not build toward without an explicit reason]
 ```
 
 ### What to do next (discovery mode)
 
-Hand off directly to `/lead-magnet-brainstorm`. That skill reads this brief and uses the source-signal brief, saturation map, and ICP pain language to anchor archetype selection instead of working blind.
+Hand off directly to `/lead-magnet-brainstorm`. Discovery and candidate generation are one continuous offer motion split across two skills, so this mode is not finished until the handoff is usable as-is.
+
+**What carries forward, by section name.** `/lead-magnet-brainstorm` opens by reading these four, and reads them rather than rebuilding them:
+
+1. **`Candidate Generation Input`** - the numbered persona + pain + open-archetype rows. This is the primary input: candidates are generated against these rows.
+2. **`Pain by persona`** - the full table behind those rows, including the prioritized personas with no pain evidence, which are named gaps rather than blanks.
+3. **`Saturation Map`** - the open, crowded, and saturated archetypes with the denominator, so archetype choice is bounded by evidence.
+4. **`First-Party Buyer Voice`** and **`ICP Pain (in their words)`** - the exact words the offer gets written in.
+
+Nothing else in this brief is a prerequisite for that handoff. If `Candidate Generation Input` is empty or missing, this mode has not actually finished, so complete it here rather than letting the next skill re-derive pain from scratch.
 
 ---
 
 ## Mode: Validation
 
-> **Research Routing — HARD RULE (Claude deep-research primary, enforced) applies here too.** Validation mode runs research (Vectors 1–4: competitor / ads / ICP-community / job-postings) and is often the path where `run_state.research_routing` is still **unset** (fresh diagnostic session). Apply the same gate as **AI/API Routing** above: if `research_routing` is unset, default to **`claude_deep_research`** and proceed — the primary brain is the Claude native `/deep-research` fan-out harness. Do NOT stop to ask, and do NOT satisfy the primary pass with a bare inline WebSearch (the weak `claude_native` path is not the same thing as `claude_deep_research`); the operator can explicitly opt back to **`third_party_ai`** (the older Perplexity-led primary) only on an explicit opt-out. In `claude_deep_research` mode the primary pass MUST be an **actual `/deep-research` invocation** (native inline WebSearch/WebFetch, DiscoGen, or a complement engine do NOT satisfy it) — record `ai_research_provider = claude-deep-research` and append an `api-balance-ledger.md` line; finishing with **no `/deep-research` primary** is a **flagged violation**. No third-party key is needed for the primary; a missing key is a credential **HARD-STOP** only if the operator explicitly chose `third_party_ai`. Full rule: `/ai-model-routing`.
+> **Research Routing — HARD RULE (Claude deep-research primary, enforced) applies here too.** Validation mode runs research (Vectors 1–4: competitor / ads / ICP-community / job-postings) and is often the path where `run_state.research_routing` is still **unset** (fresh diagnostic session). Apply the same gate as **AI/API Routing** above: if `research_routing` is unset, default to **`claude_deep_research`** and proceed — the primary brain is the Claude native `/deep-research` fan-out harness. Do NOT stop to ask, and do NOT satisfy the primary pass with a bare inline WebSearch (the weak `claude_native` path is not the same thing as `claude_deep_research`); the operator can explicitly opt back to **`third_party_ai`** (the older Perplexity-led primary) only on an explicit opt-out. In `claude_deep_research` mode the primary pass MUST be an **actual `/deep-research` invocation** (native inline WebSearch/WebFetch, DiscoGen, or a complement engine do NOT satisfy it) — record `ai_research_provider = claude-deep-research` and append an `api-balance-ledger.md` line; finishing with **no `/deep-research` primary** is a **flagged violation**. No third-party key is needed for the primary; a missing key is a credential **HARD-STOP** only if the operator explicitly chose `third_party_ai`. **Scope note:** validation mode runs the First-Party Call Vector first, and that vector sits outside this routing path entirely (client-supplied recordings, no external spend, no engine choice). It does NOT satisfy or substitute for the `/deep-research` primary pass on Vectors 1-4. Full rule: `/ai-model-routing`.
 
 ### When to trigger
 
@@ -271,18 +353,18 @@ Hand off directly to `/lead-magnet-brainstorm`. That skill reads this brief and 
 - User says "let's test a different offer" - run this before `/experiment-design` so the new offer is market-validated, not random
 - After `/lead-magnet-brainstorm` outputs an offer and you want a second opinion before locking. For a fast, hands-off second opinion - especially on a new or contrarian offer whose evidence is thin - run `/roast` on the offer: it returns a green-light / reshape / kill verdict plus the single cheapest test to run before committing copy build and list spend. Treat a thinly-evidenced offer's first small wave as that cheapest test rather than over-investing in a full build up front.
 
-Do not use validation mode just because an onboarding form contains a suggested lead magnet or CTA. A form answer is a hypothesis. For new clients and new campaigns, run `/lead-source-strategy` Source-Signal Discovery Mode first, then discovery mode here, then `/lead-magnet-brainstorm`, with the client suggestion treated as Candidate A.
+Do not use validation mode just because an onboarding form contains a suggested lead magnet or CTA. A form answer is a hypothesis. For new clients and new campaigns, run discovery mode here first (it follows `/icp-onboarding` directly), then `/lead-magnet-brainstorm`, with the client suggestion treated as Candidate A. No list-side or data-side work is a prerequisite for either, because all of it runs after the offer locks.
 
 ### Inputs
 
 For validation mode, the existing offer to evaluate can come from `offer.validation_candidate` in `client-profile.yaml` when onboarding captured an evidence-backed offer, or from `profiles/<business-slug>/lead-magnets.md` when a previously locked offer exists. The evidence must be visible in `offer.validation_candidate_evidence`, prior campaign artifacts, or live send data.
 
-If validation mode is requested but the only offer fields are `offer.client_suggested_*` and no evidence pointer exists, stop. Route to `/lead-source-strategy` Source-Signal Discovery Mode, then discovery mode here, then `/lead-magnet-brainstorm` instead. Client suggestions without evidence are candidates, not validation inputs.
+If validation mode is requested but the only offer fields are `offer.client_suggested_*` and no evidence pointer exists, **stop**. Do not run validation mode. Route to discovery mode here (which follows `/icp-onboarding` directly), then `/lead-magnet-brainstorm` instead. Client suggestions without evidence are candidates, not validation inputs. This stop is unconditional: missing evidence is the whole reason for it, and the reordering of the chain changes only where the route goes, never whether the stop fires.
 
-- `profiles/<business-slug>/client-profile.yaml` - ICP, value prop, hard filters
+- `profiles/<business-slug>/client-profile.yaml` - ICP, value prop, hard filters, `icp_soft_preferences.personas_to_prioritize`
 - `profiles/<business-slug>/lead-magnets.md` - the existing offer to evaluate
-- `profiles/<business-slug>/source-signal-intelligence.md` - optional context for validation; not required when validating a real existing offer with evidence
-- `profiles/<business-slug>/offer-intelligence.md` - load if it exists from a prior discovery run (Source-Signal Vector and Vectors 1-4 may already be done; only run Vector 5 when send data exists)
+- The client's own won and lost sales-call recordings - the strongest evidence available for judging whether a live offer matches buyer reality. Request them if not already on file
+- `profiles/<business-slug>/offer-intelligence.md` - load if it exists from a prior discovery run (the First-Party Call Vector and Vectors 1-4 may already be done; only run Vector 5 when send data exists)
 - Client website URL
 - Competitor names or URLs
 - Live send data (optional) - reply rate and reply sentiment from current campaign
@@ -308,11 +390,11 @@ Before any research, run the existing offer through four questions. This catches
 
 **Step 2: Research vectors**
 
-If a discovery brief already exists at `profiles/<business-slug>/offer-intelligence.md`: the Source-Signal Vector and Vectors 1-4 may already be done. Cross-reference the existing source-signal brief, saturation map, and signal summary. Run Vector 5 only if a campaign is already live and send data exists.
+If a discovery brief already exists at `profiles/<business-slug>/offer-intelligence.md`: the First-Party Call Vector and Vectors 1-4 may already be done. Cross-reference the existing first-party buyer voice, pain-by-persona table, paid-ads angles, saturation map, and signal summary. Run Vector 5 only if a campaign is already live and send data exists.
 
-If no discovery brief exists: run the Source-Signal Vector when `source-signal-intelligence.md` is available, then Vectors 1-4, then run Vector 5 only if a campaign is already live and send data exists.
+If no discovery brief exists: run the First-Party Call Vector, then Vectors 1-4. Then run Vector 5 only if a campaign is already live and send data exists.
 
-**Source-Signal Vector and Vectors 1-4** - same as discovery mode above. The Source-Signal Vector is optional in validation mode when a real existing offer already has live or prior campaign evidence.
+**First-Party Call Vector and Vectors 1-4** - same as discovery mode above. Run the First-Party Call Vector here whenever the client has recordings: validation mode's whole job is checking an offer against buyer reality, and the client's own won and lost calls are the closest thing to that reality on file. It is not a hard requirement, because some clients record nothing.
 
 **Vector 5 - Live send data**
 
@@ -444,6 +526,8 @@ Save the CTA at **direction-level** only (`lead_magnet_cta_direction` — a plai
 **Existing offer evaluated:** [what they had]
 **Evidence reviewed:** [offer.validation_candidate_evidence, campaign artifact, or send-data source]
 **Pre-flight red flags:** [0 / 1 / 2+ - list any]
+**Competitors researched:** [N] (floor is 5, see Vector 1)
+**First-party call recordings reviewed:** [N won / N lost, or "none available from client"]
 **Decision:** Go | Iterate | Swap | Swap (Contrarian)
 
 ---
@@ -452,18 +536,20 @@ Save the CTA at **direction-level** only (`lead_magnet_cta_direction` — a plai
 
 | Source | Signal | Confidence |
 |---|---|---|
+| First-party sales calls | | |
 | Competitor offers | | |
+| Meta Ad Library | | |
 | LinkedIn ads | | |
 | ICP community | | |
 | Job postings | | |
 | Send data | | |
 
-**Saturation status:** [SATURATED / CROWDED / OPEN] - [archetype, competitor count]
+**Saturation status:** [SATURATED / CROWDED / OPEN / INSUFFICIENT SAMPLE] - [archetype, competitors using it out of competitors researched. SATURATED may not be fired on a denominator below 5.]
 
 ---
 
 ### ICP Pain (in their words)
-[3-5 bullets in their exact language]
+[3-5 bullets in their exact language, each tagged with the `persona` who voiced it and its source class. First-party call quotes are labelled as such and never blended into the public-source counts.]
 
 ---
 
@@ -511,7 +597,7 @@ offer:
   lead_magnet_cta_direction: <plain-English ask direction, not final copy>
   offer_intelligence_run: YYYY-MM-DD
   offer_decision: go | iterate | swap | swap-contrarian
-  saturation_status: saturated | crowded | open
+  saturation_status: saturated | crowded | open | insufficient_sample
   offer_validation_run: YYYY-MM-DD
   offer_validation_path: profiles/<business-slug>/offer-validations/YYYY-MM-DD-offer-validation.md
 ```
@@ -529,7 +615,10 @@ Only add `offer_validation_run` and `offer_validation_path` when validation mode
 - **Treating reply rate alone as an offer problem.** Offer is only a candidate bottleneck after deliverability, bounce rate, list quality, and copy have been checked. If open rate is below 20%, run `/email-deliverability-audit` first.
 - **Iterating the offer without changing the language.** Iteration means rewriting toward the ICP's own words from Vector 3. Keeping your language gets the same result.
 - **Skipping discovery mode because "the client already has a strong offer."** Strong relative to what? Run discovery first so the brainstorm is informed, not assumed.
-- **Skipping source-signal discovery on new-offer paths.** You will invent a generic lead magnet before knowing what source context makes the outreach timely. Run `/lead-source-strategy` Source-Signal Discovery Mode first.
+- **Reconstructing every pain from public strangers while the client's call recordings sit unopened.** Public buyer voice is a proxy. The client's own won and lost sales calls are the buyer saying it directly, in the exact words the offer should use, about this exact category. Ask for the recordings before you mine forums. If the client genuinely has none, state that in the brief rather than letting the gap pass unnoticed.
+- **Flattening pain into one ICP blob.** Two personas inside the same ICP feel different pains, and an offer aimed at their average is urgent to nobody. Every pain row carries a `persona`.
+- **Firing SATURATED off three competitors.** Three is not a field. Research 5 to 10, record the denominator, and mark the archetype INSUFFICIENT SAMPLE below 5 instead of guessing.
+- **Reading the ad creative instead of the ad angle.** Fifty variations of one angle is the finding. The headline wording and the imagery are the advertiser optimizing around something already proven, not the proof itself.
 
 ---
 
@@ -537,19 +626,19 @@ Only add `offer_validation_run` and `offer_validation_path` when validation mode
 
 | Skill | Relationship |
 |---|---|
-| `/icp-onboarding` | Runs before source-signal discovery. Produces the ICP and value prop this skill researches around. |
-| `/lead-source-strategy` | Runs in Source-Signal Discovery Mode before this skill on new-offer paths. Produces `source-signal-intelligence.md`. |
-| `/lead-magnet-brainstorm` | Runs after discovery mode. Reads the offer-intelligence.md brief to anchor archetype selection and use source-backed pain plus ICP language from Vector 3. |
-| `/campaign-strategy` | Reads the locked offer from `client-profile.yaml` and the source-signal brief. The front-end offer suggestions section should defer to this output. |
+| `/icp-onboarding` | Runs immediately before this skill. Produces the ICP, the value prop, `icp_soft_preferences.personas_to_prioritize` (the persona list every pain row maps against), `sales_call_library` (whether the client's won and lost recordings exist and where, which the First-Party Call Vector reads before asking the client for anything), and `buyer_pain_hypothesis` (the client's unverified belief about buyer pain, which this skill confirms or overturns). |
+| `/lead-source-strategy` | Runs in Lead Source Plan Mode AFTER campaign selection, far downstream of this skill. The chain is: buyer and pain, then the offer, then the list built to fit that offer, then the copy. Nothing it produces is a prerequisite here. |
+| `/lead-magnet-brainstorm` | Runs after discovery mode. Reads the offer-intelligence.md brief to anchor archetype selection, using the first-party buyer language, the pain-by-persona table, the paid-ads angles, and the ICP language from Vector 3. |
+| `/campaign-strategy` | Reads the locked offer from `client-profile.yaml` and the data-point catalog. The front-end offer suggestions section should defer to this output. |
 | `/experiment-design` | If validation mode decision = Swap or Swap (Contrarian), this skill writes the offer-only experiment hypothesis that `/experiment-design` formalizes. |
 | `/roast` | Optional fast pre-lock stress test of a candidate offer (hands-off council → green-light / reshape / kill + the single cheapest 48-hour validation test). Useful for a new or contrarian offer before committing build and spend; complements this skill's evidence-based Go/Iterate/Swap rather than replacing it. |
-| `/cold-email-kickoff` | Invokes source-signal discovery after `/icp-onboarding`, then this discovery mode before `/lead-magnet-brainstorm`. |
+| `/cold-email-kickoff` | Invokes this discovery mode immediately after `/icp-onboarding`, then `/lead-magnet-brainstorm`, then `/data-point-discovery` once the offer is locked. |
 | `/cold-email-weekly-rhythm` | If reply rate drops below 1% on a running campaign, trigger validation mode before changing copy or list. |
 | `/email-deliverability-audit` | If open rate is below 20%, run that skill first. Do not diagnose the offer when deliverability may be the actual problem. |
 
 ## What to do next
 
-- **Discovery mode complete:** Hand off to `/lead-magnet-brainstorm`. It reads `profiles/<business-slug>/source-signal-intelligence.md` and the brief at `profiles/<business-slug>/offer-intelligence.md`.
+- **Discovery mode complete:** Hand off to `/lead-magnet-brainstorm`. It reads the brief at `profiles/<business-slug>/offer-intelligence.md`, starting from its `Candidate Generation Input` block. Nothing list-side or data-side has run at this point, and none of it is needed for the handoff.
 - **Validation - Go:** Proceed to `/campaign-strategy`. Offer is locked in `client-profile.yaml`.
 - **Validation - Iterate:** Stay here, rewrite using ICP language from Vector 3, re-score. Repeat until score hits 6+.
 - **Validation - Swap or Swap (Contrarian):** Take the experiment hypothesis to `/experiment-design`. Run as offer-only experiment. Keep everything else frozen.

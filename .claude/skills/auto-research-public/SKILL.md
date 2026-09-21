@@ -45,15 +45,15 @@ Before doing any work, verify:
 - `run_state.status.setup_stage = complete`
 - Sender readiness has been verified through the locked sending platform manager
 - `offer.lead_magnet` exists, or the user approved a validated existing offer with an `offer_validation_path`
-- For new-offer paths, `profiles/<business-slug>/source-signal-intelligence.md` exists and includes `Market Source Landscape`
+- For new-offer paths, `profiles/<business-slug>/data-point-catalog.md` exists and includes its `Ranked Source Signals` section (written by `/data-point-discovery` on the locked offer, kickoff Step 3.3)
 - Selected platform, source, and verifier access are available locally when those selected execution skills require them
-- Source-tool credentials are available for the source selected by `/lead-source-strategy`, or the run must stop after `lead-source-plan.md` until credentials or approval are ready
+- Source-tool credentials are available for the source selected by `/lead-source-strategy` Lead Source Plan Mode, or the run must stop after `lead-source-plan.md` until credentials or approval are ready
 
 If any prerequisite fails, stop and route to the missing skill. Do not fill the gap inside this skill.
 
-If the profile contains only `offer.client_suggested_primary_cta`, `offer.client_suggested_lead_magnet`, or `offer.client_suggested_lead_magnet_details`, stop. Client suggestions are not locked offers. Route to `/lead-source-strategy` Source-Signal Discovery Mode, then `/offer-intelligence` discovery mode, then `/lead-magnet-brainstorm`, before continuing.
+If the profile contains only `offer.client_suggested_primary_cta`, `offer.client_suggested_lead_magnet`, or `offer.client_suggested_lead_magnet_details`, stop. Client suggestions are not locked offers. Route to `/offer-intelligence` discovery mode, then `/lead-magnet-brainstorm` to lock the offer, then `/data-point-discovery` on that locked offer, before continuing.
 
-If `offer.lead_magnet` exists but `source-signal-intelligence.md` is missing and there is no `offer.offer_validation_path` or `offer_validation_path` evidence pointer, stop. This is a new-offer path that skipped source-signal discovery. Route back to `/lead-source-strategy` Source-Signal Discovery Mode before campaign or list work.
+If `offer.lead_magnet` exists but `data-point-catalog.md` is missing and there is no `offer.offer_validation_path` or `offer_validation_path` evidence pointer, stop. This is a locked new-offer path that has not yet run data-point discovery. Run `/data-point-discovery` on the locked offer (kickoff Step 3.3), then resume here, before campaign or list work. The offer stays locked. Do not reopen `/offer-intelligence` or `/lead-magnet-brainstorm`.
 
 ## Output
 
@@ -223,7 +223,8 @@ Leave run_state.status.upload_stage unset. Do not report a draft as created.
 ## Related Skills
 
 - `/cold-email-kickoff` - the single entry-point orchestrator (safer full launch path)
-- `/lead-source-strategy` - required Source-Signal Discovery Mode with Market Source Landscape before new-offer work and Lead Source Plan Mode before list routing
+- `/data-point-discovery` - required after the offer locks on new-offer paths (kickoff Step 3.3); its `data-point-catalog.md` carries the obtainability picture and the market source landscape
+- `/lead-source-strategy` - Lead Source Plan Mode, required before list routing
 - `/lead-list-tech-stack-research` - source-tool fit map used before source and enrichment routing
 - Contact-database export path - title and industry list pulls, only when the source plan selects one (whichever pack `/stack-setup` activated, otherwise the provider's own export)
 - /email-waterfall - email finding and verification

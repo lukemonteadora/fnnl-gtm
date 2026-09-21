@@ -1,6 +1,6 @@
 ---
 name: lead-source-strategy
-description: Two-mode source-first router for cold email campaigns. Source-Signal Discovery Mode runs after /icp-onboarding and before /offer-intelligence so source evidence and market source reality shape offer creation. Lead Source Plan Mode runs after campaign selection and before any list source, scraper, database pull, contact enrichment, custom workflow, or enrichment spend.
+description: Single-purpose source router for cold email campaigns. Produces the per-campaign lead source plan at profiles/<slug>/campaigns/<campaign-slug>/lead-source-plan.md, naming the source-of-truth signal, the collection tool, the contact layer, and the QA path for the ONE campaign the operator selected. Runs after /campaign-strategy and after campaign selection, and BEFORE any list source, scraper, database pull, contact enrichment, custom workflow, or enrichment spend. Every tool it names must be one the stack contract declares; if a needed slot is empty, it stops and routes to /stack-setup.
 ---
 
 # Lead Source Strategy
@@ -14,16 +14,13 @@ All profiles/<business-slug> paths in this skill resolve under:
 
 Here `<outbound>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
 
-This skill has two jobs:
+This skill has one job: after campaign selection, choose the final source path for list building and write it down.
 
-1. Before offer selection, discover which public source signals expose real prospect pain.
-2. After campaign selection, choose the final source path for list building.
-
-It does not scrape, enrich, verify, write copy, upload, or lock an offer. Discovery mode writes signal intelligence and market source reality. Plan mode writes a source plan that proves the list source matches the selected campaign.
+It does not scrape, enrich, verify, write copy, upload, or lock an offer. It writes a lead source plan that proves the list source matches the selected campaign.
 
 Defaulting to whichever contact database or maps scrape is easiest is weak thinking. Use a source when it is the best evidence for the signal. Otherwise, build from the source that actually proves fit.
 
-In Lead Source Plan Mode, read `/lead-list-tech-stack-research` before choosing the source stack. That skill is the tool-fit map. This skill makes the decision.
+Read `/lead-list-tech-stack-research` before choosing the source stack. That skill is the tool-fit map. This skill makes the decision.
 
 ## Material Decision Rule
 
@@ -45,13 +42,13 @@ Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURR
 
 ## When To Use
 
-Use **Source-Signal Discovery Mode** after `/icp-onboarding` and before `/offer-intelligence` for new clients, new campaigns, or any new front-end offer path. This mode helps the offer work start from observable market context instead of a generic ICP.
+Use this skill after `/campaign-strategy` and after the user chooses the first campaign to launch. That is its only entry point.
 
-Keep the flow intact: ICP/capability boundary -> source-signal discovery -> offer intelligence -> lead magnet -> campaign strategy -> final source plan. Do not add a separate source-research phase. Put market and location source research inside Source-Signal Discovery, then let campaign strategy use it.
+Keep the flow intact: buyer and pain, then the offer, then the list built to fit that offer, then the copy. Concretely, that is `/icp-onboarding` -> `/offer-intelligence` discovery -> `/lead-magnet-brainstorm` (the offer locks here) -> `/data-point-discovery` -> `/tam-build` -> `/social-proof-bank` -> `/lead-scoring` -> `/campaign-strategy` -> this skill.
 
-Use **Lead Source Plan Mode** after `/campaign-strategy` and after the user chooses the first campaign to launch.
+This skill has one procedure and no modes. An older route that says "Lead Source Plan Mode" means this skill, so follow it straight here. Do not split it into a separate research phase earlier in the chain either. It researches the source landscape for the one selected campaign, under the research routing rule below, and that research belongs here at campaign time rather than as its own step before the list is built.
 
-Run Lead Source Plan Mode before any list-source action, including:
+Run it before any list-source action, including:
 
 - account discovery
 - contact database export
@@ -64,24 +61,22 @@ Run Lead Source Plan Mode before any list-source action, including:
 
 ## Inputs
 
-For both modes, read:
+Read:
 
 - `profiles/<business-slug>/client-profile.yaml`
 - Client website URL, if available
 - onboarding form responses or call notes, if available
 - any source preferences or blocked sources in `client-profile.yaml`
 - target geography fields from `client-profile.yaml`, including countries, states, regions, cities, and excluded markets
-
-For Source-Signal Discovery Mode, also read any capability, proof, delivery, legal, or compliance constraints from the profile. If the client suggested a lead magnet, treat it as a hypothesis only.
-
-For Lead Source Plan Mode, also read:
-
+- any capability, proof, delivery, legal, or compliance constraints from the profile
 - `lead-list-tech-stack-research.md`
 - `profiles/<business-slug>/campaign-strategy.md`
 - selected campaign name and row
-- `profiles/<business-slug>/source-signal-intelligence.md`, if present
+- `profiles/<business-slug>/data-point-catalog.md`, if present, for what the stack can actually obtain
 - `profiles/<business-slug>/offer-intelligence.md`, if present
 - `profiles/<business-slug>/lead-magnets.md`, if present
+
+The front-end offer is already locked by the time this skill runs, so read it and never write it. Take `offer.lead_magnet` and the lead-magnet detail fields from `profiles/<business-slug>/client-profile.yaml`, plus `profiles/<business-slug>/lead-magnets.md`, and make sure the source path you choose puts people on the list that the locked offer actually serves.
 
 Optional source preferences:
 
@@ -97,11 +92,11 @@ lead_sourcing:
 
 Capability boundary first, source signal second.
 
-Do not chase a clever source the client cannot serve. Do not lock an offer just because a source looks interesting. Source-first means the source signal constrains the micro-offer; it does not replace market reasoning or delivery reality.
+Do not chase a clever source the client cannot serve. This skill never locks, re-opens, or edits an offer. By the time it runs the offer is already locked, so source-first means the source signal has to prove the locked offer is believable to the buyer that source puts on the list. It does not replace market reasoning or delivery reality.
 
-In discovery mode, choose source signals from observable pain and timing.
+Choose the source from the selected campaign signal, not from tool comfort.
 
-In plan mode, choose the source from the selected campaign signal, not from tool comfort.
+**Do not rewrite the offer to fit an attractive source.** Do not write to `offer.lead_magnet`, do not re-open the locked offer, and do not create a second locked offer field. A tempting source is a reason to consider a source path, never a reason to swap the offer out from under the rest of the chain.
 
 Ask:
 
@@ -113,7 +108,7 @@ Ask:
 6. Can we reach the right person after collection?
 7. Can we reference the signal without sounding fake, creepy, or overfit?
 8. What source would miss these leads?
-9. What offer would this source make believable?
+9. Does this source make the locked offer believable to the people it puts on the list?
 10. What could fail if we overread the signal?
 
 If the answer is "we only know titles and industries," a database pull may be fine. If the answer is "they appeared in a niche directory, joined a platform ecosystem, posted about a pain, sponsored an event, or show a public website pattern," a generic database pull is probably the lazy path.
@@ -144,7 +139,7 @@ Default role choices:
 
 > **Research Routing — HARD RULE (Claude deep-research primary, enforced).** Read `run_state.research_routing`: if it is **unset**, default to **`claude_deep_research`** and proceed. The primary research brain is the Claude native `/deep-research` fan-out harness (multiple sub-agents research every needed category in parallel, fetch real sources, adversarially verify each claim, and synthesize a cited report). Do NOT stop to ask, and do NOT satisfy the primary pass with a bare inline WebSearch (that is the weak `claude_native` path, which is not the same thing as `claude_deep_research`). The operator can explicitly opt back to **`third_party_ai`** (the older Perplexity-led primary); switch to that only on an explicit opt-out. In `claude_deep_research` mode the primary pass MUST be an **actual `/deep-research` invocation** (native inline WebSearch/WebFetch, DiscoGen, or a complement engine do NOT satisfy it) — record `ai_research_provider = claude-deep-research` and append an `api-balance-ledger.md` line; a research step that finishes with **no `/deep-research` primary** is a **flagged violation** (run it, or get a fresh explicit OK to skip). **Wired check:** after the primary pass, run `node scripts/research/research_routing_check.mjs --skill lead-source-strategy --client <business-slug> --json` — a `violation:true` / exit 1 means no logged primary; do not declare this research step done until it passes. No third-party key is needed for the primary pass (it is the native harness); a missing `PERPLEXITY_API_KEY` is a credential **HARD-STOP** only if the operator explicitly chose `third_party_ai`. Full rule: `/ai-model-routing`.
 
-The five tool roles above are data layers. AI/model routing is a parallel layer for Discovery mode's research, and it runs the single premium-by-default, non-redundant path in `/ai-model-routing` — there is no cheap/standard tier. The Claude native `/deep-research` fan-out harness runs the primary broad pass (web-grounded company/market research via parallel sub-agents, source fetch, adversarial verification, cited synthesis). Perplexity, OpenAI `o4-mini-deep-research`, and Grok are demoted to gap-fill + grounding helpers that fill ONLY the gaps the primary pass leaves (thin / technical / too-broad / unverified), never a duplicate broad pass (Perplexity for web-grounded gap-fill, Serper/Grok for raw URLs / X-social, `o4-mini-deep-research` default with `o3-deep-research` pinpoint; OpenAI 1-3 prompts/client); raw URL extraction → Spider Cloud; bulk synthesis / pain-extraction / pre-compressing raw dumps → DeepSeek. When references are too many, scale mode has the helpers EMIT ranked URLs → Spider Cloud scrapes → DeepSeek compresses → Claude Code synthesizes. When a campaign signal lives in buyer discussion (Reddit, review sites, forums, YouTube), collect it through the **VOC / Raw-Evidence pipeline** in `/ai-model-routing` (Grok → Perplexity Search/Serper for the exact discussion URLs → Spider Cloud to scrape; tag `source_class`), not a loose web search - and every source carries a `source_url`. See `ai-model-routing.md` for the full pipeline (Brief → `/deep-research` primary → Source Registry → Spider extract → VOC → DeepSeek → Claude Code synthesis → Perplexity/OpenAI gap-fill + validation → Packet → Copy → QA), env-var names, and the fallbacks used when a helper key (Perplexity or MiniMax) is absent. This skill produces evidence, not emails — do not route final copy here; that is `/campaign-copywriting` (Claude Code native, clean-packet sub-agent) from a clean packet. Keep the canonical CSV fields (`source, source_type, source_url, evidence_url, signal, fit_reason, source_confidence`) intact; the AI-routing columns in `lead-list-tech-stack-research.md` map onto them.
+The five tool roles above are data layers. AI/model routing is a parallel layer for this skill's own market and source research, and it runs the single premium-by-default, non-redundant path in `/ai-model-routing` — there is no cheap/standard tier. The Claude native `/deep-research` fan-out harness runs the primary broad pass (web-grounded company/market research via parallel sub-agents, source fetch, adversarial verification, cited synthesis). Perplexity, OpenAI `o4-mini-deep-research`, and Grok are demoted to gap-fill + grounding helpers that fill ONLY the gaps the primary pass leaves (thin / technical / too-broad / unverified), never a duplicate broad pass (Perplexity for web-grounded gap-fill, Serper/Grok for raw URLs / X-social, `o4-mini-deep-research` default with `o3-deep-research` pinpoint; OpenAI 1-3 prompts/client); raw URL extraction → Spider Cloud; bulk synthesis / pain-extraction / pre-compressing raw dumps → DeepSeek. When references are too many, scale mode has the helpers EMIT ranked URLs → Spider Cloud scrapes → DeepSeek compresses → Claude Code synthesizes. When a campaign signal lives in buyer discussion (Reddit, review sites, forums, YouTube), collect it through the **VOC / Raw-Evidence pipeline** in `/ai-model-routing` (Grok → Perplexity Search/Serper for the exact discussion URLs → Spider Cloud to scrape; tag `source_class`), not a loose web search - and every source carries a `source_url`. See `ai-model-routing.md` for the full pipeline (Brief → `/deep-research` primary → Source Registry → Spider extract → VOC → DeepSeek → Claude Code synthesis → Perplexity/OpenAI gap-fill + validation → Packet → Copy → QA), env-var names, and the fallbacks used when a helper key (Perplexity or MiniMax) is absent. This skill produces evidence, not emails — do not route final copy here; that is `/campaign-copywriting` (Claude Code native, clean-packet sub-agent) from a clean packet. Keep the canonical CSV fields (`source, source_type, source_url, evidence_url, signal, fit_reason, source_confidence`) intact; the AI-routing columns in `lead-list-tech-stack-research.md` map onto them.
 
 ## Accepted Source Families
 
@@ -164,103 +159,15 @@ Use any public, legal, campaign-relevant source family that fits the signal:
 
 Do not treat this list as complete. If a human could find the signal publicly in 10 minutes, it can be considered.
 
-## Mode 1: Source-Signal Discovery
+## The Lead Source Plan
 
-Run this before `/offer-intelligence` on new-offer paths.
-
-The goal is not to build the list yet. The goal is to find source-backed pain signals that can shape the offer, lead magnet, and later campaign strategy.
-
-### Discovery Steps
-
-1. Define the capability boundary:
-   - what the client can actually deliver
-   - proof points or case studies
-   - legal and operational limits
-   - hard ICP filters
-   - any client-suggested offer, stored only as a hypothesis
-2. Define the market boundary:
-   - target countries, states, regions, cities, and excluded markets
-   - language requirements, if relevant
-   - whether the market is local, national, regional, or global
-3. Build a Market Source Landscape before judging signals:
-   - public sources that exist in the target geography
-   - weak or missing sources in that geography
-   - country-specific directories, registries, associations, marketplaces, job boards, event pages, public databases, and platform ecosystems
-   - possible blue-ocean sources a generic contact database would miss
-   - whether Prospeo, Google Maps, social scraping, or custom scraping has real coverage for that market
-4. Identify 5-8 source families where the ICP's pain may be visible.
-5. Pull a small public sample or evidence examples for each promising source family. Do not spend enrichment credits or scrape at scale.
-6. Score each signal on:
-   - pain proximity
-   - timing
-   - specificity
-   - evidence URL quality
-   - target geography fit
-   - source availability risk
-   - expected volume
-   - buyer reachability
-   - creep risk
-   - offer-fit risk
-7. Rank the top source signals.
-8. Propose possible micro-offers only as hypotheses for `/offer-intelligence` and `/lead-magnet-brainstorm`.
-
-### Source-Signal Discovery Output
-
-Write:
-
-```text
-profiles/<business-slug>/source-signal-intelligence.md
-```
-
-Use this structure:
-
-```markdown
-# Source Signal Intelligence - <Client>
-
-## Capability Boundary
-- What the client can deliver:
-- Proof available:
-- Operational limits:
-- Legal or compliance limits:
-- Hard ICP filters:
-
-## Market Source Landscape
-- Target geography:
-- Out-of-scope geography:
-- Source reality summary:
-- Strong market-specific sources:
-- Weak or missing sources:
-- Blue-ocean source candidates:
-- Contact database fit:
-- Maps/local data fit:
-- Directory/registry fit:
-- Social or event-source fit:
-- Source risks:
-
-## Ranked Source Signals
-| Rank | Source family | Exact observable signal | Target geography fit | Evidence examples | Why-now hypothesis | Likely pain | Possible micro-offers | Risks |
-|---:|---|---|---|---|---|---|---|---|
-| 1 |  |  |  |  |  |  |  |  |
-
-## Recommended Source-Backed Direction For /offer-intelligence
-- Primary source signal:
-- Why it should shape the offer:
-- Source-backed pain language:
-- Signals to avoid:
-- Micro-offers to test as hypotheses:
-```
-
-Do not write to `offer.lead_magnet`. Do not create a second locked offer field. This file is evidence for offer work, not a decision. It is also consumed later by `/data-point-discovery` (kickoff Step 3.4, after the offer locks) as the seed for the exhaustive per-client data-point catalog.
-
-## Mode 2: Lead Source Plan
-
-Use this mode only after `/campaign-strategy` and after the operator selects one campaign to launch.
+Run this only after `/campaign-strategy` and after the operator selects one campaign to launch.
 
 ### Source Path Selection
 
 Use this routing logic:
 
-This table is a starting map, not a shortcut. Apply the Market Source Landscape and the selected campaign row before choosing the final source. A source that is strong in one country can be useless in another.
+This table is a starting map, not a shortcut. Apply the target market's real source reality and the selected campaign row before choosing the final source. A source that is strong in one country can be useless in another.
 
 Start every plan with Claude Code native as the workflow layer (RevCode is the preferred optional workspace if you want it) unless another operator path is stronger. Then pick the source-of-truth signal and collection tool.
 
@@ -432,7 +339,7 @@ Public web data is allowed as a source candidate. That does not make it automati
 - For public-web, directory, job-board, event, marketplace, or pricing-page signals, use Serper plus Spider Cloud, Apify, or a custom parser before contact enrichment.
 - **Event sponsorship is three signals in one artifact, and the middle one is the valuable one.** A company that paid to sponsor or exhibit at a show has disclosed, voluntarily and at real cost: (1) **budget** (they paid), (2) **who they sell to** (they paid to stand in a room full of one specific buyer), and (3) a **dated why-now** (the event has a date). Number 2 is the reason to bother. The `sold_to` axis is the highest-leverage message-differential cut we have (`/campaign-strategy`, `sold-to-axis-doctrine`), and today it is *derived* by classifying website text at `med` coverage. A sponsor roster is a near-100%-precision `sold_to` oracle instead: a company that paid $40k to stand in a GTM room has stated who it sells to more reliably than any homepage classifier can infer it. Treat a sponsor list as ground truth for `sells_to_*`, not just as another list to scrape.
 - **Sponsor lists: niche and regional shows only, never the famous ones (HARD).** Eric's own list-building doctrine praises custom scraping as "hidden gold, less competition" and then his demo pulls Dreamforce and SaaStr, which are the single most-scraped sponsor lists in B2B software. Those inboxes are the most-hit in the market, so the famous shows invert the very advantage the source family exists for. A 200-sponsor roster from a regional or vertical show is the play. If the event has its own Wikipedia page, assume every competitor already mailed that list this quarter and pick a different show.
-- **Events enter as a company signal, not as the TAM spine.** Sponsorship joins onto companies as `co_event_*` per `/tam-build`'s Layer 1d. Building a list whose source of truth *is* the event roster is this skill's source-signal-first motion and is fine; what it must not do is displace the case-study-seeded lookalike as the TAM discovery spine (`/tam-build` Case-Study-Anchored Discovery HARD RULE).
+- **Events enter as a company signal, not as the TAM spine.** Sponsorship joins onto companies as `co_event_*` per `/tam-build`'s Layer 1d. Building a list whose source of truth *is* the event roster is this skill's source-first motion and is fine; what it must not do is displace the case-study-seeded lookalike as the TAM discovery spine (`/tam-build` Case-Study-Anchored Discovery HARD RULE).
 - Use Claude Code native as the default operating layer for multi-source lists, scoring, dedupe, evidence preservation, and final export preparation — the session builds the CSV directly via MCP + scripts. RevCode is the preferred optional workspace for the same work (no API, so manual/human-in-the-loop — reach for it for its UI or local large-list engine). Either path produces an identical CSV, so nothing downstream changes.
 - Do not pick a source because it is easy if another public source proves campaign fit or target-geography fit better.
 - Do not scrape a niche source at scale until a small sample passes `/icp-prompt-builder`.
@@ -442,9 +349,7 @@ Public web data is allowed as a source candidate. That does not make it automati
 
 ## What To Do Next
 
-After Source-Signal Discovery Mode, run `/offer-intelligence` discovery mode. It should read `profiles/<business-slug>/source-signal-intelligence.md` before `/lead-magnet-brainstorm` locks a front-end offer.
-
-After Lead Source Plan Mode, run the selected source workflow. Then run:
+Once the plan is written, run the selected source workflow. Then run:
 
 1. `/icp-prompt-builder`
 2. /email-waterfall
@@ -456,11 +361,11 @@ Only then proceed to the upload path matching locked `run_state.sending_platform
 ## Related Skills
 
 - `/lead-list-tech-stack-research` - tool-fit map that separates workflow layer, source signal, collection, contact enrichment, and QA
-- `/icp-onboarding` - produces the profile and capability boundary this skill reads in discovery mode
-- `/offer-intelligence` - consumes `source-signal-intelligence.md` before lead magnet selection
-- `/data-point-discovery` - later consumes `source-signal-intelligence.md` (kickoff Step 3.4, after offer lock) to seed the per-client data-point catalog
-- `/lead-magnet-brainstorm` - uses source-backed pain signals to score micro-offers
-- `/campaign-strategy` - produces the campaign ideas this skill routes in plan mode
+- `/icp-onboarding` - produces the profile, the hard ICP filters, and the capability boundary this skill reads
+- `/offer-intelligence` - runs far earlier in the chain; its buyer-pain research feeds the offer that `/lead-magnet-brainstorm` then locks
+- `/lead-magnet-brainstorm` - locks the front-end offer into `offer.lead_magnet`; this skill reads that locked offer and never writes it
+- `/data-point-discovery` - runs earlier (kickoff Step 3.3); catalogs what the stack can actually obtain, which this skill's source path has to respect
+- `/campaign-strategy` - produces the campaign ideas, and the selected campaign row this skill routes
 - `/icp-prompt-builder` - qualifies source samples before scale
 - /email-waterfall - fills and verifies email data
 - `/list-quality-scorecard` - grades the final list before copy or upload
