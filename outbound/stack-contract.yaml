@@ -299,63 +299,109 @@ lead_data:
     credentials: [AI_ARK_API_KEY, PROSPEO_API_KEY]
     vendor_pack: prospeo
     notes: >
-      WATERFALL ORDER, mirror this into /email-waterfall:
-        STEP 1, AI Ark, across the whole survivor set.
-        STEP 2, Prospeo, ONLY on the rows AI Ark left blank.
+      WATERFALL ORDER, with verification interleaved per operator directive
+      2026-09-18. Mirror this into /email-waterfall:
+        STEP 0. VERIFY FIRST any email the row already carries. Never pay a finder to
+                re-discover an address you can verify for 0.25 credits.
+        STEP 1. AI Ark reveal, across the whole survivor set.
+        STEP 2. LeadMagic verify on everything step 1 returned.
+        STEP 3. Prospeo, ONLY on rows AI Ark left blank or LeadMagic rejected.
+        STEP 4. LeadMagic verify on everything step 3 returned.
       Never open Prospeo on a row AI Ark has not already attempted.
+      NO SOURCE IS EXEMPT FROM RE-VERIFICATION. Both AI Ark and Prospeo verify at
+      reveal time using the same third-party engine (BounceBan), and that is EXPLICITLY
+      NOT the send-gate. /email-waterfall's Verification Doctrine states a finding
+      tool's own internal verification is never a substitute. Every address they
+      return is re-verified by LeadMagic regardless.
       WHY AI ARK IS PRIMARY: it labels CATCH_ALL as a distinct email type alongside
-      SMTP, which is the signal /list-quality-scorecard needs. Prospeo's status field
-      is binary (VERIFIED / UNAVAILABLE) and therefore COLLAPSES catch-all into
-      valid. Prospeo's verification_method field (SMTP / BOUNCEBAN) recovers the
-      signal, so any pipeline reading Prospeo output MUST read verification_method,
-      not status alone, or it will quietly inflate bounce rate.
+      SMTP. Prospeo's status field is binary (VERIFIED / UNAVAILABLE) and therefore
+      COLLAPSES catch-all into valid; its verification_method field (SMTP / BOUNCEBAN)
+      recovers the signal, so any pipeline reading Prospeo output MUST read
+      verification_method, not status alone.
+      NOTE THE IRONY, it matters for list QA: AI Ark's own CATCH_ALL label is more
+      informative than what LeadMagic returns, because LeadMagic folds catch-all into
+      `unknown`. So AI Ark's reveal-time type is worth PRESERVING as a column even
+      though it is not the send-gate. It is the only catch-all signal in the stack.
       USE THE RIGHT AI ARK ENDPOINT: route gap-fill through /v1/people/email-finder,
-      which charges 0 credits when no valid email is found. The bulk /v1/people/export
-      path bills 0.5 credits PER PROFILE EVEN ON A MISS (vendor's own worked example:
-      1,000 rows costs 500 credits whether 700 or 1,000 resolve). That is the
-      difference between paying per hit and paying per row routed.
-      Prospeo charges nothing when no result is found and offers free re-enrichment
-      within 90 days. Its enrich-person endpoint takes linkedin_url, but the
-      documented minimum match is name plus a company identifier, so LinkedIn-URL-
-      alone is UNPROVEN. Bulk is 50 persons per request.
+      which charges 0 credits when no valid email is found. The bulk
+      /v1/people/export path bills 0.5 credits PER PROFILE EVEN ON A MISS (vendor's
+      worked example: 1,000 rows costs 500 credits whether 700 or 1,000 resolve).
       COST EVIDENCE IS ASYMMETRIC, DO NOT CLAIM CHEAPEST-FIRST IS SATISFIED YET:
-      AI Ark's pricing is vendor-confirmed, Prospeo's is third-party only (tiers
-      reported as 39 / 99 / 199 / 369 USD, UNCONFIRMED, their pricing page is
-      JavaScript-rendered). Read Prospeo's real pricing from a logged-in account and
-      re-check this ordering before treating the waterfall as cost-optimal. The
-      catch-all rationale above holds regardless of price.
-      Both vendors verify at reveal time using the SAME engine, BounceBan.
+      AI Ark's pricing is vendor-confirmed, Prospeo's is third-party only (reported as
+      39 / 99 / 199 / 369 USD, UNCONFIRMED, their pricing page is JavaScript-rendered).
+      Read Prospeo's real pricing from a logged-in account before treating this
+      ordering as cost-optimal. The catch-all rationale above holds regardless.
+      Prospeo charges nothing when no result is found, offers free re-enrichment
+      within 90 days, and its bulk limit is 50 persons per request. Its enrich-person
+      endpoint takes linkedin_url, but the documented minimum match is name plus a
+      company identifier, so LinkedIn-URL-alone is UNPROVEN.
 
   email_verification:
-    tool: null
-    status: not_chosen
+    tool: LeadMagic
+    status: chosen
     capability: >
       Confirms a revealed address will actually accept mail, and flags
       catch-all domains, before that address ever enters a campaign.
     run_state_field: null
-    credentials: []
+    credentials: [LEADMAGIC_API_KEY]
     vendor_pack: null
     notes: >
-      GENUINE GAP. NOTHING IN FNNL'S STACK FILLS THIS. Do not assume otherwise.
-      Neither AI Ark nor Prospeo is a verification product. Both are finders that
-      verify at reveal time via BounceBan and neither exposes a standalone
-      "feed me a list of emails, get back statuses" endpoint.
-      Prospeo's Email Verifier API is REMOVED, not merely undocumented. A live
-      unauthenticated probe on 2026-09-18 returned error_code DEPRECATED for
-      /email-verifier, /email-finder, /linkedin-email-finder, /domain-search and
-      /mobile-finder, while /enrich-person returned INVALID_API_KEY and a bogus
-      endpoint returned a plain 404. The marketing page for the verifier is stale.
-      Plusvibe bundles verification in its credit allowance, but its CATCH-ALL
-      handling is UNVERIFIED, so it is not recorded here on the strength of being
-      bundled.
-      WHAT THIS BLOCKS: re-verification of an aged list before send, and
-      /list-quality-scorecard gating on deliverability as an independent check rather
-      than trusting the finder's own at-reveal verdict. Bounce risk on any list not
-      freshly revealed is currently unmanaged.
-      TO CLOSE IT: either test Plusvibe's bundled verifier for catch-all handling and
-      record the result here, or add a dedicated verifier. The parked
-      _vendor-library/scripts/deliverable/ pack is an email verification client from
-      the upstream workspace and is the cheapest thing to evaluate first.
+      Operator directive 2026-09-18: LeadMagic is FNNL's verifier of record, run
+      BETWEEN each stage of the enrichment waterfall. That pattern is already law in
+      /email-waterfall's Verification Doctrine ("the email verifier is the UNIVERSAL
+      VERIFIER OF RECORD; there are NO source exemptions"), so this fills an existing
+      rule rather than creating a new one.
+      RAW API: POST https://api.leadmagic.io/v1/people/email-validation , auth header
+      X-API-Key, body {"email": "..."}. Official hosted MCP at
+      https://mcp.leadmagic.io/mcp (OAuth, no key). 0.25 credits per validation:
+      INVALID BILLS, UNKNOWN IS FREE. Plans 49.99 to 849 USD/mo. Async bulk via POST
+      /bulk/submit with /v1/batch/preview-cost and /v1/batch/budgets for hard credit
+      ceilings. Rate limit 600 req/min. Free tier 100 credits, no card.
+      ### CATCH-ALL: CONTESTED, NOT SETTLED. RESOLVE BY TEST, NOT BY ARGUMENT.
+      The operator's position (2026-09-19): LeadMagic already includes catch-all
+      verification. The evidence genuinely splits by SURFACE, and since FNNL works
+      inside Clay, the operator's position is the operationally relevant one.
+        EVIDENCE FOR CATCH-ALL BEING AVAILABLE (the Clay surface, which is where FNNL
+        actually works): Clay's own community and waterfall documentation reference
+        the statuses `valid_catch_all` and `catch_all`, plus an "Only mark 'Safe to
+        Send' emails as valid" toggle that EXCLUDES both. Clay's Email Waterfall
+        therefore does carry a catch-all discriminator, and by DEFAULT returns
+        catch-alls AS VALID unless that toggle is set.
+        EVIDENCE AGAINST IT BEING IN LEADMAGIC'S RAW API: LeadMagic's official
+        OpenAPI 3.1 spec was downloaded and all 323,658 bytes grepped for "catch",
+        returning ZERO matches. Current documented email_status values are only
+        valid | invalid | unknown, and LeadMagic's docs state accept-all domains
+        return `unknown` and are free. The legacy API (/email-validate, with
+        email_status valid|valid_catch_all|catch_all AND an is_domain_catch_all
+        boolean) is gone; LeadMagic's own deprecated MCP repo still declares that
+        field, which is why stale references persist.
+        Clay's LeadMagic "Validate Email" action page lists outputs as Contact Email
+        Work, Contact Email Personal, and Email Validity Status, with data strength
+        "Non Catch-all Emails" and NO dedicated catch-all output field.
+      LIKELY RECONCILIATION, labelled as inference not fact: the `valid_catch_all` /
+      `catch_all` statuses and the Safe-to-Send toggle belong to CLAY'S waterfall and
+      validation layer, which classifies across providers, rather than to LeadMagic's
+      own API response. If so, FNNL gets the catch-all discriminator BECAUSE it works
+      in Clay, not because LeadMagic returns it. That would make both positions true
+      about different surfaces.
+      WHY IT MATTERS EITHER WAY. /email-waterfall's Catch-All Timing gate holds
+      verified catch-alls out of the send file and reintroduces them once sending
+      domains have 2-3 weeks of healthy sending. That gate NEEDS a catch-all
+      discriminator. If Clay supplies it, the gate works and FNNL must make sure the
+      Safe-to-Send toggle is OFF at verification time so catch-alls are LABELLED
+      rather than silently dropped, then held by FNNL's own gate. If only the raw API
+      is used, catch-alls arrive as `unknown` (a three-way overload with dead-server
+      and inconclusive) and get dropped, costing addressable VOLUME.
+      THE TEST THAT SETTLES IT, cheap and decisive: run a control set of known
+      catch-all domains through the ACTUAL surface FNNL will use (a Clay LeadMagic
+      validation column), and read the returned status values. LeadMagic's free tier
+      is 100 credits with no card. Record the real values here and delete this block.
+      ALSO UNRESOLVED, vendor docs contradict each other on cost: Clay's integrations
+      page lists LeadMagic Validate Email as a "Free Action" while Clay University
+      says "1 credit per enriched cell". Bring-your-own-key sidesteps the credit but
+      still consumes a Clay Action.
+      NOTE regardless of outcome: AI Ark's reveal-time CATCH_ALL label is an
+      independent catch-all signal already in the stack. Preserve it as a column.
 
   intent_signals:
     tool: GetLeads
@@ -394,6 +440,68 @@ lead_data:
       tool already exists. Confirm those are supported before building a campaign on
       them. The payload shape, recency and upstream source of the funding and
       acquisition signals are UNKNOWN; only tool existence is established.
+
+  list_workbench:
+    tool: Clay (CANONICAL working list)
+    status: chosen
+    capability: >
+      The visible, human-editable surface the working lead list lives on:
+      rows, columns, tabs, enrichment steps, and manual correction. Where the
+      operator can see and steer the list instead of only receiving a CSV.
+    run_state_field: run_state.list_workbench
+    credentials: [CLAY_API_KEY]
+    vendor_pack: null
+    notes: >
+      Operator directive 2026-09-18/19: FNNL already uses Clay this way, and as of
+      2026-09-19 CLAY IS THE CANONICAL WORKING LEAD LIST, not a mirror. Clay is the
+      frame, not the data vendor: FNNL's own tools (LeadMagic, Prospeo, AI Ark) do the
+      enrichment through Clay columns.
+      WHAT CANONICAL MEANS HERE, and what it costs. The CSV paths the skill library
+      assumes (tam/tam.csv, contacts.csv, leads.verified.csv) become EXPORTS of Clay,
+      not the source of truth. Roughly 50 skills read those paths, so /tam-build,
+      /email-waterfall, /lead-scoring and /list-quality-scorecard need rework to treat
+      Clay as upstream. That rework is NOT done yet and is the largest open item in
+      this contract.
+      WORKSPACE IS WRONG TODAY. The connected Clay MCP is pinned to workspace
+      a-sales.co (ID 161971), the PREVIOUS company's workspace, matching the
+      sequence.a-sales.co instance URL in the machine-level MCP config. Operator
+      confirmed FNNL NEEDS ITS OWN WORKSPACE. Do NOT build any client list in 161971.
+      THE MCP IS THE WRONG SURFACE FOR TABLE WORK, verified against the live tool
+      manifest in session. The Clay MCP exposes search-companies, search-contacts,
+      add-company-data-points, add-contact-data-points and run_subroutine. There is NO
+      create-table, NO add-column, NO read-rows and NO update-cell. Everything hangs
+      off an ephemeral search taskId, not a Clay table. Its five subroutines are
+      Clay's OWN enrichments, which spend Clay credits, so pointing an agent at the
+      MCP is more likely to SPEND credits than to save them. Its result widget also
+      does not render in Claude Code, only in claude.ai, ChatGPT and Cursor.
+      THE SURFACES THAT DO WORK: an INBOUND WEBHOOK to push rows into a table
+      (consumes ZERO Actions), and the Routines API (POST /routines/{id}/run) to
+      invoke saved logic. Public REST base https://api.clay.com/public/v0 , header
+      clay-api-key.
+      TWO METERS, correcting a common assumption: Clay bills ACTIONS (platform
+      orchestration, tenths of a penny) SEPARATELY from DATA CREDITS (vendor data,
+      pennies). Bring-your-own-key removes the DATA CREDITS but NOT the Actions.
+      Clay's own wording: "Using your own API keys (still counts as platform usage)"
+      and "an Action will still be consumed." Nothing inside Clay enriches for free,
+      including the HTTP API column. Webhook import, viewing, manual editing,
+      formulas, filters and CSV export DO cost zero Actions.
+      NATIVE vs HTTP COLUMN: LeadMagic and Prospeo are NATIVE Clay integrations and
+      both support bring-your-own-key. AI ARK IS NOT NATIVE, so reaching it from Clay
+      needs an HTTP API column, which requires Clay's GROWTH plan (~446 USD/mo). With
+      Clay canonical that cost is now on the critical path, not optional. The
+      alternative is calling AI Ark from a script and pushing results in by webhook,
+      which is free of Actions.
+      THE READ-BACK CONSTRAINT, the one real risk to Clay-canonical: below Clay's
+      ENTERPRISE tier there is no general "read current table state" call. Public-API
+      Tables are read-only AND Enterprise-gated ("not create tables, add fields, or
+      write records"). So an agent can write rows IN but cannot read back what the
+      sheet says after enrichment and human edits. With Clay canonical, the boundary
+      OUT is therefore a manual CSV export, an HTTP column POSTing outward (1 Action
+      per row, Growth+), or Routines results. Accepted deliberately: the operator
+      wants visibility and manual control over blind CSV handoffs, and a
+      human-in-the-loop export at the upload boundary is the price of that.
+      Worth reading before building anything custom: the clay-workflows and
+      clay-prompt skills in the anthropic-skills plugin set.
 
 # =============================================================================
 # 4. AI AND RESEARCH
