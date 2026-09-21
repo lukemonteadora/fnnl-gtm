@@ -227,4 +227,4 @@ Keep the "add rows as you discover new signals" spirit of the example: the trigg
 - `/cold-email-kickoff` - invokes this skill at Step 3.6 (after offer lock + `/data-point-discovery`, parallel with `/tam-build`, before `/campaign-strategy`)
 - `/continue-client`, `/cold-email-flow-audit` - resume / certify this gate as part of the chain
 - `/api-cost-governance`, `/ai-model-routing` - gate and route the small copy-synthesis AI pass
-- Reference doc: `social-proof-bank.md` (procedure detail, worked example, the xlsx export). Client-fill Google Sheet structure + example rows + ready email/Slack messages: `social-proof-bank-client-fill-template.md`. Doctrine: memory `social-proof-bank-doctrine`.
+- Reference doc: `social-proof-bank.md` (procedure detail, worked example, the xlsx export). Client-fill Google Sheet structure + example rows + ready email/Slack messages: `social-proof-bank-client-fill-template.md`. Doctrine: memory.

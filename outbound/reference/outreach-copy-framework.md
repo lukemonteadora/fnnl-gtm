@@ -1,6 +1,23 @@
-# GrowthFlare Framework A: Initial Cold Outreach
+# Framework A: Initial Cold Outreach
 
-Source: `https://growthflare-copyframeworks-sop.netlify.app/#s1` (Framework A, Initial Offer; retrieved 2026-08-12).
+**"Framework A" is this workspace's own label, not one of Aaron Shepherd's stable named frameworks** (his own lettered names shift between videos, and he describes several different framework sets over time; `/ask-aaron` never uses a letter to refer to a specific pattern for that reason). This file names our operational contract clearly and cites where each piece of it actually comes from.
+
+## Source and what's genuinely Aaron's vs. this workspace's own hardening
+
+The structure below is real, not fabricated: Aaron Shepherd (GrowthFlare) ran an analysis of his own 1.5M-email corpus and reported it in "I Studied 1,500,000 Cold Emails With Claude Code" (2026-05-11). That is the actual source. (An earlier version of this file cited a URL, `growthflare-copyframeworks-sop.netlify.app`, that does not match Aaron's real site: his site is `growthflare.io`, and its "retrieved" date was never a publication date. That citation is corrected here.)
+
+Per the full doctrine and dated conflict ledger in `/ask-aaron` (`aaron-doctrine.md` §9, §13, ledger entry R07), the mechanical pieces below split into two groups:
+
+| Rule | Status |
+|---|---|
+| Offer-first opening, no preamble | **Aaron's own** stated finding from the 1.5M-email study, and emphatic in his own words. He also shows exceptions elsewhere (a soft-question path, context-led openers), so "no exceptions ever" is this workspace's hardening, not his universal position. |
+| 25 to 35 words, 2 to 3 sentences | **Aaron's own** measured winner shape from the same study. He has a floor ("almost too short") and a saturation exception where he shipped longer copy; a hard cap with no exception is this workspace's choice. |
+| The 3-to-4-task parenthetical workload split | **Aaron's own**, both the device and its sizing. Making it mandatory on every message, rather than a pattern of the winning shape, is this workspace's hardening. |
+| 2-to-4-word lowercase subject | **Aaron's own**, stated repeatedly (he also notes subject lines are his lowest-leverage lever). |
+| Exactly one merge token in the subject | **This workspace's rule.** Aaron says "one to two variables," and shows zero-variable subjects too. |
+| Exactly one question | **This workspace's rule.** His own later material (S13) contains multi-question demonstration copy. Still a useful editing discipline. |
+
+None of this changes the operational rule below: for a governed campaign in this workspace, the full hard structure applies as written. The table exists so nobody mistakes the *hardness* of a rule for something Aaron himself insists on; when in doubt or when weighing an exception, the reasoning above is why the rule reads the way it does. For a looser, explicitly-Aaron-only read of any of this (useful for teardowns or education, never for shipping non-conforming copy), consult `/ask-aaron`.
 
 ## Scope
 
@@ -16,7 +33,7 @@ Every initial cold message must pass all of these checks:
 2. **Keep the body to 25 to 35 words.** Count whitespace-delimited tokens, so a hyphenated term with no spaces counts as one word. Count the greeting and optional P.S. Count neither the subject nor the signature.
 3. **Use 2 to 3 main-body sentences and exactly 1 question.** The final main-body sentence is the only question and is the soft permission CTA. An optional P.S. is separate from the main-body sentence count, but it still counts toward the 35-word cap and cannot contain a question.
 4. **Keep the workload split in parentheses.** Name 3 to 4 things the sender handles and the one small action the prospect takes. Use a semicolon, comma, or period inside the parentheses. Never use an em dash.
-5. **End with soft permission.** Prefer `Would that be worth hearing more?`, `Open to it?`, or a concrete permission question such as `Can I send it over?`. The CTA must follow a named deliverable.
+5. **End with soft permission.** Prefer `Would that be worth hearing more?` or `Would that be worth sharing more?` (the second is Aaron Shepherd's own most-used phrasing; both are accepted and interchangeable), `Open to it?`, or a concrete permission question such as `Can I send it over?`. The CTA must follow a named deliverable.
 6. **Use proof only when it is true and compact.** An optional P.S. may carry one declarative proof claim aligned to the offer. It does not count as a main-body sentence, but its words count toward the same 25 to 35 word cap.
 7. **Keep the offer real.** The free deliverable, sender workload, proof, and prospect action must all be accurate and fulfilable at reply scale.
 
@@ -82,3 +99,7 @@ Before showing, saving, serializing, or uploading the first cold message, record
 - email subject, when applicable: 2 to 4 words, lowercase, exactly 1 merge token
 
 Any failed row blocks the copy.
+
+## Related
+
+`/ask-aaron` holds the full sourced doctrine, the dated conflict ledger, and his verbatim examples and rejections behind this structure. It is advisory: consult it for teardowns, offer pressure-testing, or understanding why a rule reads the way it does. It never relaxes the hard structure above for a governed campaign.

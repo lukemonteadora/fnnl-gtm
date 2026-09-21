@@ -2,9 +2,9 @@
 
 Purpose: define cold email writing standards that protect deliverability, inbox placement, readability, and reply quality.
 
-This file is a principles-only guide. It must not contain reusable email copy, writing samples, sequence scripts, or industry-specific examples. For banned words, risky phrases, and formatting bans, `spam-word-checker.md` is the source of truth.
+This file is a principles-only guide. It must not contain reusable email copy, writing samples, sequence scripts, or industry-specific examples. For formatting, CTA, opener, and voice bans, `spam-word-checker.md` is the source of truth (it no longer enforces a banned-word keyword list; see that file for why).
 
-Compiled from internal campaign-copywriting guidance and cold outbound operators including Nick Abraham, Daniel Fazio, Michel Lieben, Patrick Spychalski, Eric Nowoslawski, Instantly.ai, and Nick Saraev.
+Compiled from internal campaign-copywriting guidance and cold outbound operators including Aaron Shepherd (GrowthFlare; see `/ask-aaron` for the full sourced doctrine), Nick Abraham, Daniel Fazio, Michel Lieben, Patrick Spychalski, Eric Nowoslawski, Instantly.ai, and Nick Saraev.
 
 ---
 
@@ -24,9 +24,11 @@ Every subject line, opener, body line, CTA, follow-up, P.S. line, variable value
 
 ## Core Standard
 
-### GrowthFlare Framework A controls the initial cold touch (HARD RULE, 2026-08-12)
+### Framework A controls the initial cold touch (HARD RULE, 2026-08-12)
 
 The first written cold message in any channel opens with a specific free deliverable, stays at 25 to 35 body words, uses 2 to 3 main-body sentences and exactly 1 question, keeps the sender/prospect workload split in parentheses, and ends the main body with the soft permission question. An optional declarative P.S. is outside the main-body sentence count but inside the word cap. Cold email adds a 2-to-4-word lowercase subject with exactly 1 merge token.
+
+Most of this structure is Aaron Shepherd's own measured finding from his 1.5M-email study, not a house invention; what this workspace adds is making it a hard cap with no exception. The full sourced breakdown of which piece is his and which is this workspace's hardening lives in `outreach-copy-framework.md` and `/ask-aaron` (`aaron-doctrine.md` §13). (An earlier version of this section and `outreach-copy-framework.md` cited a fabricated-looking URL for this rule; that citation is corrected in `outreach-copy-framework.md`, and the substance of the rule below is unchanged.)
 
 This overrides older guidance that allowed 50-to-90-word or 70-to-90-word first messages, setup before the offer, a statement-only initial CTA, or omission of the workload parenthetical. Full rule and QA: `outreach-copy-framework.md`.
 
@@ -53,7 +55,7 @@ The goal is not clever writing. The goal is a clear, plain note that feels speci
 - Do not use misleading subject lines, fake thread prefixes, bait-and-switch claims, or urgency that is not true.
 - Do not overload the email with variables. Too many personalized fields can look scraped.
 - Keep punctuation calm. No all caps, repeated punctuation, decorative characters, or unusual symbols.
-- Use `spam-word-checker.md` as the banned-word list. Do not maintain a separate spam list here.
+- Use `spam-word-checker.md` for formatting, CTA, opener, and voice discipline. It does not enforce a banned-word keyword list (2026-09-18); do not maintain one here either.
 
 ---
 
@@ -222,7 +224,7 @@ Decide the tier on one question: is the angle hollow without this proof, or just
 - Hollow without it: the angle's whole credibility hinges on the missing proof. Hold that angle, send the client the fill-in form (`proof-asset-request.md`), and either switch to an angle your on-file evidence already supports or wait for the proof.
 - Would only strengthen: the copy already stands on a real signal. Flag the gap, send the form, ship the viable version now, and upgrade when the proof returns.
 
-This sits next to capability truth (never claim a product capability the client cannot deliver) as a separate rule: capability truth is about not overstating what the client does, the proof-asset gate is about not faking the evidence that it works. Doctrine: memory `proof-asset-gate-doctrine`.
+This sits next to capability truth (never claim a product capability the client cannot deliver) as a separate rule: capability truth is about not overstating what the client does, the proof-asset gate is about not faking the evidence that it works. Doctrine: memory.
 
 Weak offer clarity is not a copy problem. It is a strategy problem showing up in the writing.
 
@@ -242,7 +244,7 @@ Weak offer clarity is not a copy problem. It is a strategy problem showing up in
   - **Email 1 (the new thread): one soft permission question is mandatory.** Name the specific free deliverable, keep the workload split in parentheses, then close with the message's only question, such as `Would that be worth hearing more?`, `Open to it?`, or `Can I send it over?`. The statement-only `Just reply "Yes"...` opt-in is reserved for later steps.
   - **Follow-ups (Email 2, and Email 3 in a 3-step): a forward-looking question.** A short question they can answer (a light re-offer framed as a question, or a routing question). Not the opt-in, never a dead end.
   - **`May I send it over to you?` / `Can I send it across?` / `Would it help if I sent it?` are acceptable alternatives.** German: `Darf ich es Ihnen schicken?` (not `Möchten Sie…?` / `Wollen Sie…?`). The selected Email 1 CTA is the message's only question.
-  - **Framework A close:** `Would that be worth hearing more?` is the preferred default after the specific free deliverable and workload parenthetical. It is not the banned `Worth a look?` / `Interested?`.
+  - **Framework A close:** `Would that be worth hearing more?` and `Would that be worth sharing more?` (Aaron's own most-used phrasing, interchangeable) are the preferred default after the specific free deliverable and workload parenthetical. It is not the banned `Worth a look?` / `Interested?`.
   - **Never use** framing that puts the prospect in the wanting / needing / obligated seat: `Want me to send it?`, `Want us to send it?`, `Want the link?`, `Did you want…?`, `Interested?`, `Let me know if you'd like…`, `You'll want this`, `Don't miss…`, `Worth a look?`, or anything that implies they are asking us, chasing us, or short of something. Expand the spirit, not just these tokens: if a line could make a confident owner feel pitched-at, talked-down-to, or like the favour runs toward us, rewrite it so the deference runs toward them.
 - Make the next step useful, not just low effort.
 - Make both yes and no easy to answer.
@@ -461,7 +463,7 @@ Use this before any copy is shown to the user, saved to YAML, or prepared for up
 6. The sequence repeats the same weak angle.
 7. AI personalization adds words without adding relevance.
 8. The YAML version drifts from the reviewed markdown version.
-9. A safe-looking line still contains a banned root word from `spam-word-checker.md`.
+9. A safe-looking line still trips a formatting, CTA, opener, or voice ban from `spam-word-checker.md`.
 10. The email is polished but not believable.
 
 ---

@@ -1,19 +1,20 @@
 ---
 name: spam-word-checker
 description: >
-  Always-on spam and deliverability guardrails for cold email copy. Apply these rules whenever
-  writing, reviewing, or QA-ing subject lines, openers, follow-ups, CTAs, or any cold outreach
-  copy. Trigger on phrases like "check this for spam", "spam word check", "deliverability review",
-  "QA this copy", "flag banned words", "check subject line", "is this safe to send", "scan for
-  spam triggers", or any time cold email copy is being generated or reviewed. Also trigger
-  automatically as a background rule whenever the campaign-copywriting or cold-email-copywriting
-  skill is active -- these guardrails apply to EVERY piece of outbound copy generated, even if
-  the user does not explicitly ask for a check.
+  Always-on formatting, voice, and structural guardrails for cold email copy. Apply these rules whenever
+  writing, reviewing, or QA-ing subject lines, openers, follow-ups, CTAs, or any cold outreach copy.
+  Trigger on phrases like "check this for spam", "spam word check", "deliverability review",
+  "QA this copy", "check subject line", "is this safe to send", or any time cold email copy is being
+  generated or reviewed. Also trigger automatically as a background rule whenever the campaign-copywriting
+  or cold-email-copywriting skill is active -- these guardrails apply to EVERY piece of outbound copy
+  generated, even if the user does not explicitly ask for a check. Does NOT enforce a hard-coded banned-word
+  list (see "Why this file no longer bans a keyword list" below) -- it enforces formatting, CTA, opener,
+  and voice discipline instead.
 ---
 
 # Spam Word Checker
 
-Always-on spam and deliverability rules. Apply to every subject line, opener, second line, follow-up, and CTA generated or reviewed.
+Always-on formatting, voice, and structural rules. Apply to every subject line, opener, second line, follow-up, and CTA generated or reviewed.
 
 ## Stack Resolution (read before any tool step)
 
@@ -37,75 +38,36 @@ an artifact this skill writes.
 - Subject lines, openers, second lines, follow-ups, CTAs
 - Any cold outreach copy being written or QA'd
 - The initial cold touch must also pass `outreach-copy-framework.md`: offer first, 25 to 35 body words, 2 to 3 main-body sentences, exactly 1 question, mandatory workload parenthetical, soft permission question last, and the email-specific subject rule. Any optional P.S. is declarative, outside the main-body sentence count, and inside the word cap
-- If a deliverability checker or review flags a word/phrase, treat it as banned going forward unless user explicitly approves an exception
 - When in doubt, choose the lower-hype rewrite
 
 ---
 
-## Banned Single Words
+## Why this file no longer bans a keyword list
 
-Single words split into two tiers. Tier 1 is a hard ban, including inside compounds. Tier 2 words are legitimate business vocabulary - flag them only when used as standalone promotional hype, and allow them inside real business phrases, vertical terms, and names.
+This file used to carry an enumerated list of banned single words, banned phrases, "high-risk" promotional wording, phishing-style language, and irrelevant blacklisted categories (gambling, pharma, and the like). That list is removed (2026-09-18, operator directive).
 
-### Tier 1 - Hard ban (standalone or inside any compound)
+Modern inbox placement (Google / Yahoo / Microsoft bulk-sender enforcement, 2024 onward) is driven by domain authentication, mailbox warmup, sending volume, and spam-complaint rate, not single-keyword matching in message content. A warmed, authenticated domain sending reasonable volume is not junked because an email contains the word "free" or "now." The old list also produced a real, standing self-contradiction: it hard-banned `free`, `no cost`, `no obligation`, `risk-free`, `full refund`, and `money-back guarantee` in its High-Risk section while a separate section explicitly allowed all of them for risk-reversal copy. Removing the blocklist resolves that contradiction rather than papering over it.
 
-`cash`, `mortgage`, `investment`, `freedom`, `urgent`, `now`, `soon`, `extra`
+What remains below is not keyword-matching: formatting rules, CTA discipline, opener and voice rules, and unsubscribe/closeout logic. Those stay because they are cited as live QA gates from `/campaign-copywriting`, `cold-email-copy-best-practices.md`, and `/ask-aaron`, and because a house style choice (no em dashes, no fake familiarity, no observational openers) is a different kind of rule than a deliverability keyword ban.
 
-Punctuation, hyphens, or splits do not make a Tier 1 token safe. Treat close variants as banned when the root token is still obvious:
-- `cash-cycle` -> still `cash` -> banned
-- `mortgage-rate` -> still `mortgage` -> banned
-- `extra-room` -> still `extra` -> banned
-- `investment-tip` -> still `investment` -> banned
-
-**Conversational "now" carve-out.** The `now` ban targets promotional urgency, not the plain temporal adverb. Still banned: `now` as a standalone pressure word and in urgency constructions (`buy now`, `act now`, `get it now`, `order now`, `call now`, `claim now`, `apply now`, and any "...now" used as a CTA closer or paired with an action verb to push speed). Allowed: the conversational adverb in its temporal sense, which carries no urgency — `right now`, `now that [X]`, `by now`, `at a different stage now`, and the like (for example "Is that what you're navigating right now?" or "Who owns quota right now?"). The test is sense, not the exact phrase: temporal "at this point in time" is fine; a speed/urgency push is not. This is the ban's existing intent made explicit, not a loosening: the urgency target is already evident from the High-Risk list (`buy now`, `act now`, `order now`, `claim now`), and the signal-first opener examples in `/campaign-copywriting` use "right now" as a natural closer.
-
-### Tier 2 - Context-flag (allowed in legitimate business use)
-
-`get`, `bank`, `access`, `open`, `compare`, `problem`, `finance`, `financial`, `billing`, `invoice`, `purchase`, `deal`, `credit`, `claims`, `insurance`, `medical`, `diagnostics`, `new`, `performance`, `home`, `sales`, `life`, `marketing`, `friend`
-
-These are real business words. Flag them only when used as standalone promotional hype (for example "get now", "access now", "new offer", "instant sales"). Allow them inside genuine business phrases, vertical terms, and the client or company name - for example `sales team`, `financial services`, `insurance brokers`, `medical devices`, `billing system`, `purchase order`, `deal size`, and `ExampleCo Sales`. Do not ban a Tier 2 word just because it appears in a compound. (Spammy multiword constructions that use these roots stay banned via the High-Risk list below: `best deal`, `cash bonus`, `extra income`, `affordable deal`. Only the single business word is demoted here.)
+If a live campaign actually hits a deliverability problem, diagnose it as a real incident through `/email-deliverability-audit` or `/deliverability-incident-response` (DNS authentication, warmup state, volume, complaint rate, list quality) rather than reviving a blanket word list. If a specific phrase is confirmed to be causing a real placement problem in a real test, flag that phrase to the user and handle it as a one-off, not a permanent addition to an enumerated list.
 
 ---
 
 ## Allowed in the Body — Risk-Reversal & Plain-Offer Vocabulary (use sparingly)
 
-Risk reversal is the single strongest lever in a 2026 cold email (Aaron Shepherd doctrine), and it is built from words the old lists over-banned. The following are ALLOWED in the body, and this allowance OVERRIDES the High-Risk and other banned lists below for these specific tokens:
+Risk reversal is the single strongest lever in a 2026 cold email (Aaron Shepherd doctrine; see `/ask-aaron`), built from ordinary words that are safe to use in the body:
 
 `free`, `for free`, `free trial`, `no cost`, `no obligation`, `no strings attached`, `risk-free`, `full refund`, `money-back guarantee`, `no catch`
 
-Guardrails (this is a loosening, not an open door):
+Guardrails (this is guidance on natural use, not a blocklist exception):
 
 - **Body only, never the subject line.** Subject-line trigger words carry far more placement risk than body words. Keep every subject line clean.
-- **Sparingly: at most two or three trigger words in a whole email, and don't pile several into one sentence.** A natural pair reads fine ("the first look is free, no obligation"). A stack does not ("100% free, risk-free, no cost, no catch").
-- **Still hard-banned (the scam / guarantee-of-outcome constructions):** `100% free`, `free money`, `free gift`, `free membership`, `free quote`, `free consultation`, `sign up free`, `guaranteed results`, `guaranteed deposit`, `satisfaction guaranteed`. Casual risk elimination is allowed; hype and guaranteed-outcome claims are not.
-- **Why this is safe:** modern inbox placement (Google / Yahoo / Microsoft bulk-sender enforcement from 2024 on) is driven by authentication, warmup, sending volume, and spam-complaint rate, not single-keyword matching. A warmed, authenticated domain is not junked for a sparing, natural "free" or "no obligation." When in doubt, placement-test the copy before scaling.
+- **Sparingly: at most two or three trigger words in a whole email, and don't pile several into one sentence.** A natural pair reads fine ("the first look is free, no obligation"). A stack does not ("100% free, risk-free, no cost, no catch"). Piling them on reads as hype regardless of deliverability; that is a voice problem, not a spam-filter problem.
+- **Avoid scam-adjacent constructions on their own merits:** `100% free`, `free money`, `free gift`, `free membership`, `guaranteed results`, `guaranteed deposit`, `satisfaction guaranteed`. These fail because they sound like an ad or overstate a guarantee you cannot back, not because a filter is scanning for them. If a claim needs to be true (`no obligation`, `no strings attached`), make sure it actually is; a false version is a truth violation regardless of deliverability.
+- **Why this is safe:** modern inbox placement is driven by authentication, warmup, sending volume, and spam-complaint rate, not single-keyword matching. A warmed, authenticated domain is not junked for a sparing, natural "free" or "no obligation."
 
 Prefer the casual, reasonable-person phrasing Aaron calls "casual risk elimination" ("the first look is free, no obligation", "if it's not a fit, no hard feelings") over the washed-out `money-back guarantee` framing.
-
----
-
-## Banned Short Phrases
-
-`off chance`, `one time`, `all good`, `following up`, `following up here`, `just following up`, `just checking in`, `checking in`, `quick question`, `hope this finds you well`, `last note`, `last note from me here`, `I've reached out`, `reaching out again`, `great fit`, `bumping this once`, `just following up once`, `circle back`, `one more quick follow-up`, `keep this open`, `compare notes`, `compare notes live`, `appreciate the reply`, `want me to send it`, `want me to send this`, `want me to share it`, `want us to send it`, `want us to send this`, `want us to share it`, `interested?`, `worth a look`, `worth a quick look`
-
----
-
-## High-Risk Promotional / Pressure Wording (Banned)
-
-> **Exception:** the risk-reversal words listed under *Allowed in the Body — Risk-Reversal & Plain-Offer Vocabulary* above are permitted in the body, used sparingly. This list still bans every hype, scarcity, guaranteed-outcome, and scam construction below.
-
-`$$$`, `50% off`, `100% guaranteed`, `100% free`, `100% off`, `100% satisfied`, `access now`, `act fast`, `act immediately`, `act now`, `action required`, `affordable deal`, `amazing`, `amazing deal`, `amazing offer`, `apply here`, `apply now`, `avoid bankruptcy`, `bargain`, `best bargain`, `best deal`, `best offer`, `best price`, `best rates`, `big profit`, `bonus`, `buy now`, `buy today`, `call now`, `can't live without`, `cash bonus`, `cash out`, `claim now`, `claim your discount`, `click`, `click below`, `click here`, `click this link`, `contact us immediately`, `deal ending soon`, `discount`, `don't delete`, `double your money`, `double your wealth`, `drastically reduced`, `earn`, `earn cash`, `earn extra income`, `earn money`, `easy income`, `exclusive deal`, `expires today`, `extra cash`, `extra income`, `fantastic`, `fantastic offer`, `fast cash`, `final call`, `for free`, `free access`, `free consultation`, `free gift`, `free membership`, `free money`, `free quote`, `free trial`, `full refund`, `get it now`, `get out of debt`, `get started now`, `giveaway`, `great news`, `guaranteed deposit`, `guaranteed results`, `hurry up`, `important information`, `immediately`, `increase revenue`, `increase sales`, `incredible deal`, `instant earnings`, `instant income`, `instant savings`, `investment advice`, `join millions`, `limited time`, `lowest price`, `make money`, `million dollars`, `money-back guarantee`, `must read`, `no catch`, `no cost`, `no obligation`, `no strings attached`, `once in a lifetime`, `only $`, `only available here`, `order now`, `order today`, `please read`, `price protection`, `profits`, `promise`, `pure profit`, `quote`, `risk-free`, `satisfaction guaranteed`, `save $`, `save big money`, `save up to`, `sign up free`, `special invitation`, `special offer`, `special promotion`, `supplies are limited`, `take action now`, `the best`, `this won't last`, `thousands`, `time limited`, `today`, `top urgent`, `trial`, `unbeatable offer`, `unbelievable`, `unlimited`, `urgent`, `what are you waiting for?`, `while supplies last`, `why pay more?`, `will not believe`, `winner announced`, `wonderful`, `you are a winner`, `you will not believe your eyes`
-
----
-
-## Phishing-Style / Security-Warning Language (Banned)
-
-`access your account`, `account update`, `activate now`, `change password`, `click to verify`, `confirm your details`, `confidential information`, `data breach`, `download now`, `final notice`, `important update`, `immediate action required`, `install now`, `last warning`, `log in now`, `new login detected`, `password reset`, `payment details needed`, `phishing alert`, `security breach`, `security update`, `update account`, `verify identity`, `warning message`
-
----
-
-## Irrelevant Blacklisted Categories (Never Appear in Copy)
-
-`100% natural`, `adult content`, `bet now`, `blackjack`, `casino bonus`, `cure for`, `diet pill`, `doctor recommended`, `fat burner`, `fast weight loss`, `free chips`, `free spins`, `gamble online`, `guaranteed weight loss`, `jackpot`, `lottery winner`, `medical breakthrough`, `miracle cure`, `natural remedy`, `no prescription needed`, `online betting`, `online casino`, `online pharmacy`, `pain relief`, `poker tournament`, `prescription drugs`, `reverse aging`, `risk-free bet`, `safe and effective`, `scientifically proven`, `secret formula`, `slots jackpot`, `spin to win`, `vip offer`, `weight loss`, `winning numbers`, `xxx`
 
 ---
 
@@ -151,11 +113,11 @@ Safer CTA logic (make "yes" the easy answer, keep the prospect on top):
 
 1. Name the concrete thing the sender can provide.
 2. Explain why it is worth the prospect's time.
-3. Keep the prospect on top. Framework A Email 1 ends with exactly one soft permission question, such as `Would that be worth hearing more?`, `Open to it?`, `May I send it over?`, or `Can I send it across?`. The statement-only `Just reply "Yes"...` opt-in is reserved for later steps. Follow-ups use their own forward-looking question and CTA-rotation rules.
+3. Keep the prospect on top. Framework A Email 1 ends with exactly one soft permission question, such as `Would that be worth hearing more?`, `Open to it?`, or `May I send it over?`. The statement-only `Just reply "Yes"...` opt-in is reserved for later steps. Follow-ups use their own forward-looking question and CTA-rotation rules.
 
 The ask should feel like the sender is doing the work and the prospect only has to say yes, never like pressure or a catch. Full rule: `cold-email-copy-best-practices.md` (CTA Standards) and `/campaign-copywriting` Hard Rule 32.
 
-**Framework A close.** `Would that be worth hearing more?` is the preferred Email 1 close after the specific free deliverable and workload parenthetical. It is low friction and is not the banned `Worth a look?` / `Interested?`. It must be the message's only question.
+**Framework A close.** `Would that be worth hearing more?` and `Would that be worth sharing more?` (Aaron's own most-used phrasing) are interchangeable and both are the preferred Email 1 close after the specific free deliverable and workload parenthetical. It is low friction and is not the banned `Worth a look?` / `Interested?`. It must be the message's only question.
 
 ---
 
@@ -219,11 +181,11 @@ Banned observational openers:
 - `I'm reaching out`
 - Any opener whose only job is to say the sender looked the prospect up
 
-Note: `quick question` is already banned (see Banned Short Phrases). Do not use it as a fallback opener. There is no "no personalization data" fallback branch anymore: every cold email opens with the OFFER (`/campaign-copywriting` Hard Rule 19), which needs nothing about the individual contact, so the opener is the same shared offer-led line for everyone on the list. (The older "open with the signal or a segment-level pain question" fallback is retired 2026-07-17 along with the signal-first opener.)
+Note: `quick question` reads as generic and templated (see Buzzword & Jargon-Metaphor Bans for the plain-vocabulary principle behind this). Do not use it as a fallback opener. There is no "no personalization data" fallback branch anymore: every cold email opens with the OFFER (`/campaign-copywriting` Hard Rule 19), which needs nothing about the individual contact, so the opener is the same shared offer-led line for everyone on the list. (The older "open with the signal or a segment-level pain question" fallback is retired 2026-07-17 along with the signal-first opener.)
 
-### The implication test (catches what the word bans miss)
+### The implication test (catches what a plain read misses)
 
-The banned phrases above only catch the blunt version. A line can dodge every banned word and still narrate the observation, which is the actual failure. Apply this test to **any line that references a signal**, wherever it sits. (Line 1 itself is offer-led per Hard Rule 19, so in practice this catches the slice-shared signal fact riding inside the offer sentence, per Hard Rule 38.) If the line describes what the sender saw, noticed, or came across, it is an observation and it fails. Rewrite from the implication of the data point, not the data point itself. The prospect does not care that you found the information; they care what it means for their situation.
+Reading for banned phrases only catches the blunt version. A line can dodge every banned word and still narrate the observation, which is the actual failure. Apply this test to **any line that references a signal**, wherever it sits. (Line 1 itself is offer-led per Hard Rule 19, so in practice this catches the slice-shared signal fact riding inside the offer sentence, per Hard Rule 38.) If the line describes what the sender saw, noticed, or came across, it is an observation and it fails. Rewrite from the implication of the data point, not the data point itself. The prospect does not care that you found the information; they care what it means for their situation.
 
 Flag and route back to `/campaign-copywriting` when any line does any of these, even with no banned phrase present:
 
@@ -240,7 +202,7 @@ The full six-mode bank with exact wrong/right rewrites lives in `/campaign-copyw
 
 ## Buzzword & Jargon-Metaphor Bans (plain vocabulary, Hormozi tone) — HARD RULE (2026-07-12)
 
-Cold copy must sound like a plain-spoken operator talking to a peer, not a marketing brochure. Ban buzzwords and jargon-metaphors dressed up as insight; say the plain thing instead.
+Cold copy must sound like a plain-spoken operator talking to a peer, not a marketing brochure. Ban buzzwords and jargon-metaphors dressed up as insight; say the plain thing instead. This is a voice/clarity rule, not a deliverability rule: these words don't trip spam filters, they just read as corporate filler.
 
 Banned (rewrite to plain language):
 `leak` / `leakage` (say "where you're losing revenue most" / "lose to manual billing"), `unlock`, `leverage` (as a verb), `streamline`, `optimize` / `optimise`, `supercharge`, `seamless`, `synergy`, `empower`, `robust`, `game-changer`, `frictionless`, `turnkey`, `cutting-edge`, `best-in-class`, `next-level`, `revolutionize`, `transform` (as hype).
@@ -278,7 +240,9 @@ Rule of thumb: **the user has to do something explicit for the sequence to stop*
 
 ## Safe Replacement Patterns
 
-| Banned / Risky | Safe Replacement |
+These are style preferences, not a hard-fail scan (there is no enumerated blocklist behind them anymore) — they read better and sound less like an ad, which is worth doing regardless of any spam-filter effect.
+
+| Hype / Risky Phrasing | Preferred |
 |---|---|
 | `free consultation` | `open to a short conversation` |
 | `special offer` | `what we're seeing in the market` |
@@ -309,37 +273,20 @@ Rule of thumb: **the user has to do something explicit for the sequence to stop*
 
 ---
 
-## Company Name Handling
-
-If a banned word appears inside a company name used in copy:
-1. Do not drop the company reference entirely if the name is still needed
-2. Rewrite the displayed name so the banned token is removed from standalone form
-3. Priority: remove the token if the remaining name still reads clearly; only abbreviate or compress when needed
-
-Examples:
-- `Access Brand Communications` -> `AB Communications`
-- `Calcon Mutual Mortgage` -> `Calcon Mutual`
-- `Buckeye Insurance` -> `Buckeye`
-- `Coming Soon New York` -> `Coming NY`
-
----
-
 ## Final QA Checklist
 
 Before approving any copy:
 
-- [ ] Scan subject line for spam-trigger wording
 - [ ] Email 1 subject is 2 to 4 lowercase words with exactly 1 merge token. It is not bland or generic, and it keeps raw statistics, percentages, hype, and the offer out of the subject.
 - [ ] Scan for buzzwords / jargon-metaphors (`leak`/`leakage`, `unlock`, `leverage`, `streamline`, `optimize`, `seamless`, `synergy`, `empower`, `robust`, `game-changer`, `frictionless`, `turnkey`) — rewrite to plain vocabulary (HARD RULE). No source citations in the body (`(MGI Research)`, `(Gartner)`).
 - [ ] A real quantified value exists in the locked offer record. It appears in Framework A Email 1 only when it fits naturally inside the 25-to-35-word body; otherwise it is reserved for the optional P.S., follow-up, or reply path. No fabricated number and no storytelling preamble.
 - [ ] No segment/acronym label said AT the reader (`MSPs lose...`, `for SaaS companies like you`, `as a fintech...`) — speak to "you"/{{company_name}} and attribute benchmarks to their cause, not their category (HARD RULE). Value/loss named simply (revenue), not vague and not over-listed.
-- [ ] Copy is PLAIN and value-first: no buzzwords / jargon-metaphors (`leak`/`leakage`, `unlock`, `leverage`, `streamline`, `optimize`, `supercharge`, `seamless`, `synergy`, `empower`, `robust`, `cutting-edge`, `game-changer`, `frictionless`, `turnkey`) — say the plain version; no story-telling preamble before the offer; the number/value is wired INTO the offer sentence, not a setup line (HARD RULE — see `/campaign-copywriting` + `cold-email-copy-best-practices.md`). A real industry term the buyer uses (e.g. `true-up`) is fine.
-- [ ] Scan body for banned or high-risk wording
+- [ ] Copy is PLAIN and value-first: no buzzwords / jargon-metaphors; no story-telling preamble before the offer; the number/value is wired INTO the offer sentence, not a setup line (HARD RULE — see `/campaign-copywriting` + `cold-email-copy-best-practices.md`). A real industry term the buyer uses (e.g. `true-up`) is fine.
 - [ ] Scan for em dashes, double hyphens, and mid-sentence dash separators
 - [ ] Scan for colon-as-runway sentences and comma-wrapped company descriptors
 - [ ] Scan for weak follow-up openers and follow-up-reference openers
 - [ ] Scan for observational openers (`I noticed`, `I saw that`, `Congrats on`, `I stumbled upon`, `I came across`, `I wanted to reach out`)
-- [ ] Line 1 is offer-led and carries no signal (`/campaign-copywriting` Hard Rule 19; the signal-first opener is retired 2026-07-17). Apply the implication test to any line that references a signal, even when no banned phrase is present: reject lines that compliment the signal, name the fact with no "so what", lead with generic pain before the signal, bury the signal behind a pitch, use the signal as flattery into a pitch, or recite a raw scraped count / name-drop employees (surveillance)
+- [ ] Line 1 is offer-led and carries no signal (`/campaign-copywriting` Hard Rule 19; the signal-first opener is retired 2026-07-17). Apply the implication test to any line that references a signal, even when it reads as plausible: reject lines that compliment the signal, name the fact with no "so what", lead with generic pain before the signal, bury the signal behind a pitch, use the signal as flattery into a pitch, or recite a raw scraped count / name-drop employees (surveillance)
 - [ ] Scan for fake-familiarity / warmth phrases (`hope you're well`, `hope this finds you well`, `circling back`, `touching base`, `bumping this`, `I wanted to connect`, unearned flattery) and any warmup before the first relevant line; first two lines pass the said-out-loud test
 - [ ] Confirm Framework A Email 1 is 25 to 35 body words, with 2 to 3 main-body sentences and exactly 1 question, the specific free deliverable first, and the sender/prospect workload split in parentheses. Any optional P.S. is declarative and included in the word count
 - [ ] Confirm the body format matches its slot: compact Framework A offer block for Email 1; short separated blocks for later messages
@@ -369,6 +316,7 @@ Do not show the off-path platform. Provider drift after QA is how campaigns get 
 
 - `/outreach-copywriting` - applies the cross-channel Framework A first-touch rule
 - `/campaign-copywriting` - produces the copy this skill screens
+- `/ask-aaron` - the sourced doctrine behind the risk-reversal and offer-first guidance above; advisory only, does not relax this skill's rules
 
 ## Activity Log Protocol
 

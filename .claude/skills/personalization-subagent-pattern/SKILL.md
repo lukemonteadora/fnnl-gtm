@@ -1,6 +1,6 @@
 ---
 name: personalization-subagent-pattern
-description: Reusable approval-loop pattern for fanning out lead personalization across parallel Claude Code Task sub-agents. Shows the user 1 sample personalization, collects feedback, runs 10 more, approves, runs 10 more, stops when 2 consecutive rounds have zero edits, then scales to the full list. ALWAYS uses Claude Code Task tool sub-agents. Use when any skill needs per-lead custom variables, approved CTA context, or personalized full-body first-touch copy. Any generated initial cold touch must pass the GrowthFlare Framework A gate in outreach-copy-framework.md.
+description: Reusable approval-loop pattern for fanning out lead personalization across parallel Claude Code Task sub-agents. Shows the user 1 sample personalization, collects feedback, runs 10 more, approves, runs 10 more, stops when 2 consecutive rounds have zero edits, then scales to the full list. ALWAYS uses Claude Code Task tool sub-agents. Use when any skill needs per-lead custom variables, approved CTA context, or personalized full-body first-touch copy. Any generated initial cold touch must pass the Framework A gate in outreach-copy-framework.md.
 ---
 
 # Personalization Sub-Agent Pattern
@@ -16,7 +16,7 @@ Here `<outbound>` is the root of this skill library - resolve it to wherever the
 
 Cold email personalization at scale requires per-lead generation. Claude Code's Task tool lets you fan out to many sub-agents in parallel, each personalizing a slice of the lead list. This skill defines the reusable approval-loop pattern.
 
-## GrowthFlare Framework A hard gate
+## Framework A hard gate
 
 Before a sub-agent generates any complete initial cold email or other first written cold touch, read `<outbound>/reference/outreach-copy-framework.md`. That rule controls the finished message even when personalization is generated per lead. It overrides older word-count, layout, opener, subject, proof, and CTA examples anywhere in this file.
 
@@ -188,6 +188,8 @@ For 1000 leads:
 
 ### 5. The sub-agent prompt template
 
+**Never ask one sub-agent to both research and write.** An AI is good at one focused job at a time, so the research pass that builds a lead's clean packet (`company_description` and signal context) and the message-writing pass are separate sequential calls, never one combined prompt. This holds for both prompt modes, the field-fragment template below and the full-body prompt. Source: `/ask-eric` (`eric-doctrine.md` section 7).
+
 Every personalization sub-agent gets a prompt of this shape:
 
 ```
@@ -310,7 +312,7 @@ There is no separate fallback column. Each `email_*` column holds either a perso
 
 Use this prompt shape (one variant per run; loop A then B). Adapt the CAMPAIGN CONTEXT per campaign. It handles the personalized-or-fallback decision per row. Every Email 1 output passes `outreach-copy-framework.md`, then `spam-word-checker.md`, then `cold-email-copy-best-practices.md` before export.
 
-> **LIVE MODEL:** Email 1 is the only new-thread message and must follow GrowthFlare Framework A exactly. Email 2 and optional Email 3 are same-thread follow-ups. There is no Email 4, second new thread, per-contact subject, or long personalized exception for Email 1.
+> **LIVE MODEL:** Email 1 is the only new-thread message and must follow Framework A exactly. Email 2 and optional Email 3 are same-thread follow-ups. There is no Email 4, second new thread, per-contact subject, or long personalized exception for Email 1.
 
 ```
 You are writing one cold email body per lead for [Campaign Name].
@@ -467,6 +469,7 @@ If you're reading this directly, return to whichever skill sent you here.
 - `/auto-research-public` - the primary consumer of this pattern
 - `/icp-onboarding` - produces the `client-profile.yaml` the prompt pulls from
 - `/campaign-copywriting` - copy principles the prompt enforces
+- `/ask-eric` - the live home of the research-then-write separation this skill carries (`eric-doctrine.md` section 7). Advisory only: it never sends, spends, or edits live systems.
 
 ## Activity Log Protocol
 

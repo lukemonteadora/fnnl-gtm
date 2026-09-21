@@ -17,7 +17,7 @@ So this skill file contains the **method** (how to audit a stage), and **never t
 
 ## How "built under an outdated skill" is detected
 
-Artifacts carry no version stamp, so there is nothing to version-diff. The only tractable signal is **content-conformance**: does the artifact's content satisfy what the current skill requires? (Example: copy with one offer where only the Email-1 opener varies fails today's `/campaign-copywriting` per-contact-full-body requirement — it is stale regardless of when it was made. That is the real stale-copy bug this skill exists for, caught systematically.)
+Artifacts carry no version stamp, so there is nothing to version-diff. The only tractable signal is **content-conformance**: does the artifact's content satisfy what the current skill requires? (Example: copy whose personalization rung does not match what the current `/campaign-copywriting` requires for that list fails conformance. Read the rung rule off the skill at audit time rather than from this line: as of 2026-09-18 its Hard Rule 34 and its Pre-Written Email Copy Architecture section state different body defaults and the fork is flagged unresolved, which is exactly the kind of criterion this file must never hardcode.) An artifact built under a superseded rung rule is stale regardless of when it was made, and that is the real stale-copy bug this skill exists to catch systematically.
 
 > **Future enhancement (out of scope here, note only):** producing skills could stamp each artifact with `skill-name + date/git-SHA`, making future audits near-instant. Worth doing later; this skill does not depend on it.
 

@@ -99,7 +99,7 @@ Constants:
 - Industry filter: unchanged
 - Headcount: unchanged
 - Geography: unchanged
-- Copy: unchanged (same 4-step sequence)
+- Copy: unchanged (same sequence)
 - Offer: unchanged (same lead magnet)
 - Sending infrastructure: unchanged (same 20 domains, 40 inboxes)
 - Send schedule: unchanged
@@ -117,7 +117,7 @@ Running an experiment on a broken baseline is wasted effort: you'll learn that "
 
 The smaller your effect, the more leads you need. Use these rough rules for cold email:
 
-> **This is read-out, not launch eligibility.** These sends-per-arm minimums tell you how long to run a controlled A/B test before the result is trustworthy. Whether a signal slice is worth *launching* at all is a separate, upstream gate owned by `/campaign-strategy`: the **≥100-company signal floor** (≥100 enriched companies must carry the signal). The floor is a company-level count; these minimums are contact-level sends. A near-floor slice is launch-eligible but thin to read — give it full daily volume and the 21-day run to accumulate enough sends.
+> **This is read-out, not launch eligibility.** These sends-per-arm minimums tell you how long to run a controlled A/B test before the result is trustworthy. Whether a signal slice is worth *launching* at all is a separate, upstream gate owned by `/campaign-strategy`: the **≥500-company signal floor** (≥500 enriched companies must carry the signal; HARD RULE, operator directive 2026-07-12, which retired the old ≥100-company and ≥100-contact floors). The floor is a company-level count; these minimums are contact-level sends. A near-floor slice is launch-eligible but thin to read, so give it full daily volume and the 21-day run to accumulate enough sends.
 
 | Current baseline | Expected lift | Minimum sends per arm |
 |---|---|---|
@@ -210,7 +210,7 @@ Once you have a baseline, the priority order of experiments is usually:
 4. **Opener / first line** (after subject, the big lever)
 5. **CTA** (how you end the email)
 6. **Sequence timing** (Day 3 vs Day 2 follow-up)
-7. **Sequence length** (4-step vs 6-step)
+7. **Sequence length** (2 steps vs 3, within the single-thread 2-to-3-step rule; the 4-step / two-thread structure was retired 2026-07-05)
 
 Don't jump to step 6 when step 1 is broken.
 

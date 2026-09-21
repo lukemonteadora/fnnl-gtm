@@ -1,6 +1,6 @@
 ---
 name: outreach-copywriting
-description: Creates and QA-checks first-touch cold written outreach across cold email, LinkedIn DMs, LinkedIn connection notes, SMS, X DMs, and other prospecting channels. Use whenever writing, revising, reviewing, serializing, or preparing initial outbound copy for any channel. Enforces the GrowthFlare Framework A initial-offer structure as a hard rule and routes full cold-email campaign work through campaign-copywriting.
+description: Creates and QA-checks first-touch cold written outreach across cold email, LinkedIn DMs, LinkedIn connection notes, SMS, X DMs, and other prospecting channels. Use whenever writing, revising, reviewing, serializing, or preparing initial outbound copy for any channel. Enforces the Framework A initial-offer structure as a hard rule and routes full cold-email campaign work through campaign-copywriting.
 ---
 
 # Outreach Copywriting
@@ -31,7 +31,7 @@ Do not draft around a missing or unfulfillable deliverable. Fix the offer first.
 
 ## Drafting Rule
 
-Apply GrowthFlare Framework A from `outreach-copy-framework.md` without substituting another framework:
+Apply Framework A from `outreach-copy-framework.md` without substituting another framework:
 
 - offer first
 - 25 to 35 body words
@@ -52,5 +52,6 @@ Rewrite internally until every check passes. Do not show failed copy as an optio
 ## Related Skills
 
 - `/campaign-copywriting`: full cold-email campaign workflow and artifacts
-- `/spam-word-checker`: always-on deliverability and wording guardrails
+- `/spam-word-checker`: always-on formatting, CTA, opener, and voice guardrails
+- `/ask-aaron`: advisory persona consult for a line-by-line teardown or offer pressure-test; never relaxes this skill's hard rules
 - The multichannel sending layer for the locked `run_state.sending_platform`, if `/stack-setup` activated a pack that provides one (e.g. `/getsales-io`): it carries the LinkedIn and email touches and is never the copy-authoring source of truth. If no pack is active, use that platform's native surface directly. If neither exists, say so and place the copy manually rather than implying coverage.

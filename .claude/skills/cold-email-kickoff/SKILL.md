@@ -23,7 +23,7 @@ This skill defers to `/autonomous-execution-policy`. Under `run_state.execution_
 
 ## First-Wave Default: validate the offer before scaling
 
-For a new client, the first campaigns exist to prove the offer, not to scale or personalize. While `run_state.offer_market_proven` is `false`, use the Offer-Validation Wave posture in `first-wave-eric-defaults.md`: broad offer tests, minimal per-contact personalization, a TAM-sized 2-to-3-step sequence, and Tue-to-Thu sending. GrowthFlare Framework A in `outreach-copy-framework.md` controls Email 1 in every wave: 25 to 35 body words, offer first, mandatory workload parenthetical, and exactly one soft permission question. The phase flag changes strategy and measurement, not the initial-copy framework.
+For a new client, the first campaigns exist to prove the offer, not to scale or personalize. While `run_state.offer_market_proven` is `false`, use the Offer-Validation Wave posture in `first-wave-eric-defaults.md`: broad offer tests, minimal per-contact personalization, a TAM-sized 2-to-3-step sequence, and Tue-to-Thu sending. Framework A in `outreach-copy-framework.md` controls Email 1 in every wave: 25 to 35 body words, offer first, mandatory workload parenthetical, and exactly one soft permission question. The phase flag changes strategy and measurement, not the initial-copy framework.
 
 ## Activity Log Protocol
 
@@ -112,7 +112,7 @@ Use validation mode only for a real existing offer backed by live or prior campa
 
 ## Proof-Asset Collection
 
-**Proof-asset collection (doctrine: `proof-asset-gate-doctrine`).** Good copy needs real evidence: a client you can name, a case study with a real before/after, an exact number. `/client-intake-form` collects these up front, and **Step 3.5 `/social-proof-bank` then builds the full, copy-ready Social Proof + Trigger Bank** (proof mapped per segment × service line, plus the why-now trigger/angle bank) — self-gathering from the intake, call notes, offer-intelligence, and the client's own site before asking the client for anything. That proactive bank is what makes the copy-time gate almost always pass. When a planned angle still needs proof that is not on file, the flow is blunt about the gap and collects it from the client with an easy fill-in form (`proof-asset-request.md`, bank mode for the whole-client sweep) instead of writing hollow or invented copy. `/campaign-strategy` flags any remaining gap earliest and `/campaign-copywriting` enforces the Proof-Asset Gate at copy time. This is a missing-source-material input gate, so it is not relaxed by `auto_execute` (the form is a data request to the client, not a pause that re-asks the operator).
+**Proof-asset collection.** Good copy needs real evidence: a client you can name, a case study with a real before/after, an exact number. `/client-intake-form` collects these up front, and **Step 3.5 `/social-proof-bank` then builds the full, copy-ready Social Proof + Trigger Bank** (proof mapped per segment × service line, plus the why-now trigger/angle bank) — self-gathering from the intake, call notes, offer-intelligence, and the client's own site before asking the client for anything. That proactive bank is what makes the copy-time gate almost always pass. When a planned angle still needs proof that is not on file, the flow is blunt about the gap and collects it from the client with an easy fill-in form (`proof-asset-request.md`, bank mode for the whole-client sweep) instead of writing hollow or invented copy. `/campaign-strategy` flags any remaining gap earliest and `/campaign-copywriting` enforces the Proof-Asset Gate at copy time. This is a missing-source-material input gate, so it is not relaxed by `auto_execute` (the form is a data request to the client, not a pause that re-asks the operator).
 
 ## Flow
 
@@ -284,7 +284,7 @@ Then invoke `/lead-magnet-brainstorm`. It loads the discovery brief and uses the
 
 If the onboarding form suggested a lead magnet, `/lead-magnet-brainstorm` treats it as Candidate A and generates at least 3 additional candidates. The client suggestion can win, but only after it scores higher than the alternatives.
 
-At the end of `/lead-magnet-brainstorm`, ranked candidates are available. Apply `run_state.execution_mode` (`auto_execute` is the recommended default for this operator, per memory `coldoutbound-autonomous-execution`):
+At the end of `/lead-magnet-brainstorm`, ranked candidates are available. Apply `run_state.execution_mode` (`auto_execute` is the recommended default for this operator, per operator directive):
 
 - `auto_execute`: select the highest-scored candidate automatically. Report: "Auto-selected offer: [name] (score: X/7). Reason: [one-sentence rationale]." Write it to `profiles/<business-slug>/lead-magnets.md` and lock in `client-profile.yaml`. Do not pause for input.
 - `review_gates`: show ranked options and wait for operator selection. Only then write the chosen offer.
@@ -427,6 +427,40 @@ Based on kickoff answers:
 
 Branch on infrastructure readiness, but route from `run_state`.
 
+#### Step 6.0: Infrastructure readiness gate (operator directive, 2026-09-18)
+
+Before showing the menu below, read `infrastructure.infrastructure_stack` in
+`<outbound>/stack-contract.yaml`. If its notes carry a `DEFERRED` marker or an
+unresolved fork, do NOT route to any domain or mailbox setup skill. Ask the
+operator once, plainly:
+
+> Email infrastructure is still deferred at the FNNL contract level. The
+> registrar-versus-mailbox-provider domain-purchase fork was never resolved,
+> and no infrastructure has been provisioned through this system yet. Before
+> this client's setup: is the sending infrastructure already handled, either
+> bought elsewhere or an existing pool we can point at, or does it still need
+> building?
+
+Route on the answer:
+
+- **Already handled elsewhere.** Record it in `run_state.status` as unverified,
+  operator-supplied context. Skip the setup branch and continue to the lead
+  source and list work, which is not blocked by this. Verify real sender health
+  later through the locked platform's manager before any upload, never on the
+  operator's word alone.
+- **Still needs building.** The fork has to close first. Stop and route to
+  `/stack-setup` to resolve `infrastructure_stack`. Buying domains on an
+  unresolved pairing is the expensive mistake this gate exists to prevent.
+- **Not sure.** Treat it as "still needs building".
+
+This gate is a deliberate, narrow exception to the "do not ask whether domains
+are purchased or inboxes are warmed during kickoff" rule in Step 1. That rule
+assumes a settled infrastructure path. FNNL does not have one yet, so the
+question is a contract-level blocker rather than an intake question.
+
+**Remove this gate** once `infrastructure_stack` is resolved in the contract and
+at least one client's infrastructure has been provisioned through the system.
+
 **If `run_state.status.setup_stage` is not complete or sender readiness has not been verified:**
 
 ```text
@@ -446,7 +480,7 @@ Before invoking the setup skill, check `run_state.mailbox_mix_strategy`.
 - If it is missing, invoke `/mailbox-mix-strategy` first and save the result in `run_state.mailbox_mix_strategy`.
 - If setup was started without enough ICP context to make even a headcount-based guess, `/mailbox-mix-strategy` must ask the direct-start question with a recommended guess, balanced default, and manual override.
 
-**High-volume default sizes the fleet (surface the spend + warmup runway before buying).** Under the high-volume default (`high-volume-default-doctrine`), the client's daily send target (2,000 to 30,000 emails/day per client, spread across a few big campaigns of 1,000 up to 20,000 leads each) DRIVES how many warmed mailboxes to buy, not the reverse. `/mailbox-mix-strategy` now sizes that fleet (daily target / ~15-20 safe sends per mailbox per day / ~0.5 active-rotation fraction) before it splits Google vs Microsoft within it. That fleet size is a real recurring-spend and warmup-runway decision, not a config flip: roughly ~200 mailboxes (~$600/mo) for 2,000/day, up to ~3,000-4,000 mailboxes (~$9,000-12,000/mo) for 30,000/day, plus weeks of warmup before the fleet can send at target. Surface the sized fleet, its ~$3/mailbox/mo recurring cost, and the warmup runway to the operator BEFORE any mailbox purchase, and default to the low end (~2,000/day), ratcheting up as warmup graduates and the offer proves. Details: `/mailbox-mix-strategy` Fleet Sizing and `high-volume-default-doctrine`.
+**High-volume default sizes the fleet (surface the spend + warmup runway before buying).** Under the high-volume default (operator directive 2026-07-07), the client's daily send target (2,000 to 30,000 emails/day per client, spread across a few big campaigns of 1,000 up to 20,000 leads each) DRIVES how many warmed mailboxes to buy, not the reverse. `/mailbox-mix-strategy` now sizes that fleet (daily target / ~15-20 safe sends per mailbox per day / ~0.5 active-rotation fraction) before it splits Google vs Microsoft within it. That fleet size is a real recurring-spend and warmup-runway decision, not a config flip: roughly ~200 mailboxes (~$600/mo) for 2,000/day, up to ~3,000-4,000 mailboxes (~$9,000-12,000/mo) for 30,000/day, plus weeks of warmup before the fleet can send at target. Surface the sized fleet, its ~$3/mailbox/mo recurring cost, and the warmup runway to the operator BEFORE any mailbox purchase, and default to the low end (~2,000/day), ratcheting up as warmup graduates and the offer proves. Details: `/mailbox-mix-strategy` Fleet Sizing and.
 
 **Check the pre-warmed pool first.** Before provisioning fresh, invoke `/mailbox-pool-staging` to see whether a ready, isolation-clean Stage-1 group already exists for this client's market. If one does, assign it and skip the ~3-week buy-and-warm wait (launch in days, not six weeks). Only provision fresh through the setup skill below if the pool can't serve them.
 
@@ -489,7 +523,7 @@ Remind the user that real sending remains blocked until sender readiness is veri
 
 **If infrastructure is ready:**
 
-If no launch campaign has been selected, apply `run_state.execution_mode` (`auto_execute` is the recommended default for this operator, per memory `coldoutbound-autonomous-execution`):
+If no launch campaign has been selected, apply `run_state.execution_mode` (`auto_execute` is the recommended default for this operator, per operator directive):
 
 **When `tam/tam.scored.csv` exists, select a first-launch WAVE, not a single campaign.** `/campaign-strategy` proposes the maximal wave, every proven, non-overlapping signal slice that clears the **≥500-company signal floor**. Apply the capacity trim here. Reveal and verify P1 first, then move through P2 to P5 as capacity opens. Lower tiers stay queued. Dedup every wave campaign against the others and the suppression registry so no company is double-contacted.
 

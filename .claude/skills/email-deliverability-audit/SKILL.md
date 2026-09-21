@@ -55,6 +55,10 @@ Once the platform is known, route in this order:
 | List risk | Verification coverage, ICP drift, duplicate domains | `/list-quality-scorecard` |
 | Spam placement | Inbox placement test if available | The locked platform's own placement test, or an external seed-list tool |
 
+**Run these as a recurring, multi-signal rhythm, not one dashboard number:** daily spam checks, weekly reply-rate reviews, seed tests, and forwarding tests. No single one of them is trustworthy alone.
+
+These same instruments are legitimate here as **infrastructure** diagnostics (is the sending layer healthy), and not as a campaign report card (did the campaign perform). Using them this way is not in tension with refusing to judge a campaign by spam-placement scores, platform reputation numbers, or bounce rate. Both the rhythm and that reconciliation are in `eric-deliverability-doctrine.md`.
+
 ## The 1 Percent Rule
 
 A healthy domain should have at least 1% overall reply rate after 200+ sends.
@@ -65,6 +69,8 @@ Flag any sender or domain with:
 - `reply_rate < 1%`
 
 Below 200 sends, do not overread the data.
+
+**This is a capacity-management habit, not a root-cause diagnosis.** Eric runs the weekly cancel at roughly 1%, but he never claims the domain itself was at fault rather than the offer or the list, and sections 1 and 9 of his doctrine put a reply-rate shortfall on the offer or the list more often than on the sending domain. So check the offer and the list first: audit step 4 below, `Check Copy And List Before Blaming Infrastructure`, runs before any domain is retired on this rule. Used as a root-cause fix, this rule retires healthy domains that were carrying a weak offer. The caveat is in `eric-deliverability-doctrine.md`.
 
 ## Inputs
 

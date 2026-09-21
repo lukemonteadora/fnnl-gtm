@@ -60,7 +60,7 @@ Author in exactly this order. Headings must match verbatim. Do **not** hardcode 
 3. **`## 2. The Campaigns At A Glance`**: a table with the **fixed columns** `# | Campaign | Reaches | Offer | Role | Status`; emoji status (✅ Ready / ⚠️ / ⛔), **plain role labels** (see vocabulary below), then a short "why these" paragraph or bullet list and the no-overlap line.
 4. **`## 3. Campaign Details`**: one `### Campaign N: <Name> (<count>)` block per campaign. Each block is a two-column table with the **fixed rows** `Who we email / Why they're on this list / What we offer / How we build it / Expected volume / Copy`, followed by **2–3 bullets**: *why the signal matters*, *why this role (<plain label>)*, and *the main risk and how we handle it*, all in plain words, no vendor names, no filter syntax.
 5. **`## 4. How We Write & Personalize The Emails`**: **Step 1–4**, written once for all campaigns and placed **after** the campaigns:
-   - **Step 1: The sequence.** Describe the short two-thread sequence over ~two weeks per contact, two versions of each email to test, reply stops the sequence.
+   - **Step 1: The sequence.** Describe the short single-thread sequence of 2 to 3 emails over ~two weeks per contact, two versions of the first email to test, reply stops the sequence.
    - **Step 2: What gets personalized.** A plain table with columns `What we mention | Example | Where it comes from`, with **no `{{braces}}`**.
    - **Step 3: Per-company build (before send).** What the per-company research names, in plain words.
    - A **quality-rule blockquote** (`>`): every personalized claim must point to something real; if we can't see it, we don't say it.
@@ -186,7 +186,7 @@ No company appears in more than one list, so the campaigns never compete for the
 
 ## 4. How We Write & Personalize The Emails
 
-**Step 1: The sequence.** A short two-thread sequence over about two weeks per contact (two separate threads with two different purposes, not the same ask repeated). We write two versions of each email to test, and a reply always stops the sequence.
+**Step 1: The sequence.** A short sequence of 2 to 3 emails over about two weeks per contact, all in one thread (the follow-ups build on the first email rather than repeating the same ask). We write two versions of the first email to test, and a reply always stops the sequence.
 
 **Step 2: What gets personalized.** Every email is filled in from facts we already hold about each company, so it reads like a person who looked, not a mass mail-merge:
 
