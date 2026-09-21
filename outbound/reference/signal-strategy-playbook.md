@@ -3,7 +3,7 @@
 > **What this is.** The canonical reference for the eight timing/context signals this cold-outbound flow can slice campaigns on, plus each signal's campaign slices, copy angles, and acquisition paths. Skills read it; it is not itself a skill. Resolve any skill reference to `signal-strategy-playbook.md` here under `outbound/`.
 >
 > **How it maps into the live skills** (the runnable extracts live in the skills; this doc is the superset):
-> - **Copy Rules (the six observational-opener failure modes)** below are ALREADY enforced in `/campaign-copywriting` (Signal-First Anti-Patterns), `cold-email-copy-best-practices.md` (Opener Standards), `/spam-word-checker` (Observational Opener Bans), and `/personalization-subagent-pattern` (generation prompt). They are repeated here so the playbook is self-contained; the skills are the enforcement home.
+> - **Copy Rules (the six observational-opener failure modes)** below are ALREADY enforced in `/campaign-copywriting` (Signal-First Anti-Patterns), `cold-email-copy-best-practices.md` (Opener Standards), and `/spam-word-checker` (Observational Opener Bans). (`/personalization-subagent-pattern`'s per-contact generation prompt, once a fourth home, was archived on 2026-09-21 with per-contact copy.) They are repeated here so the playbook is self-contained; the skills are the enforcement home.
 > - **The eight signals' campaign slices + the five combos + Build Priority** → `/campaign-strategy` (Signal-Driven Slice Library).
 > - **The eight signals' copy angles + per-signal caveats** → `/campaign-copywriting` (Signal Angle Library).
 > - **The signals as data points** (what to collect, obtainability) → `/data-point-discovery`, collected at `/tam-build` Layer 1 and `/email-waterfall` Layer 2.

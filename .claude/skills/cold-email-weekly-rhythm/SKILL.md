@@ -78,7 +78,7 @@ It does **not** replace the manual cadence below — that stays the system of re
 
 **Step 1 — Read state.** Load the activity-log CURRENT STATE, `run_state`, the prior `campaign-strategy.md`, `experiments/*.json`, `retrospectives/*.md`, and the client's `suppression-list.csv`. This is what prevents redoing finished work or re-proposing a killed slice.
 
-**Step 2 — Inbox / reply check.** Run the reply scorer the stack contract names for the locked `run_state.sending_platform`, plus a master-inbox read. Classify everything that came in since the last run — `positive_interested` / `positive_soft` / `positive_referral` / `not_now` / `wrong_person` / `negative_hostile` / `bounce` — and **surface the ones that need a human**: every interested reply, every referral, every hostile. It **never auto-replies** (replying is a human action). Negative/unsubscribe/bounce feed the suppression loop as usual.
+**Step 2 — Inbox / reply check.** Run the reply scorer the stack contract names for the locked `run_state.sending_platform`, plus a master-inbox read. Classify everything that came in since the last run — `positive_interested` / `positive_soft` / `positive_referral` / `not_now` / `wrong_person` / `negative_hostile` / `bounce` — and **surface the ones that need a human**: every interested reply, every referral, every hostile. Also tag each positive reply whose thread moves toward a time as **time-agreed** (the magnet-inflation guard's sending-platform proxy, `/campaign-strategy`), because winner picks and scaling are judged on it (operator-approved Aaron alignment, 2026-09-21; doctrine §0, §2 step 5). It **never auto-replies** (replying is a human action). Negative/unsubscribe/bounce feed the suppression loop as usual.
 
 **Step 3 — Deliverability flags.** Read the trailing 7-day fleet reply rate and bounce rate (the Monday-audit signal). Flag any campaign under the 1% reply-rate rule and any inbox bouncing above 2%. A deliverability flag **blocks** any launch-new or scale proposal for the affected senders until it's cleared via `/deliverability-incident-response` — you don't pour volume onto a leaking fleet.
 
@@ -96,6 +96,7 @@ This is precautionary reputation hygiene for young domains, NOT a bounce-cause c
 - **Gate A — TAM signal freshness.** Were the TAM's signal columns refreshed within ~30 days? If stale, propose a `/tam-build` refresh first (cost-gated) — fresh signals are required before generating new why-now slices **and** before scaling a why-now winner (job-change/funding/new-exec signals decay fastest).
 - **Gate B — portfolio maturity (the "enough data to decide?" gate).** Count **mature** campaigns: live ≥21 days **and** ≥300 sends each. If **fewer than 3 mature campaigns across at least 2 distinct signals**, the portfolio is too thin to diagnose anything systemic — **skip the diagnosis and just propose the next new signal slice** (more coverage). This is the rule that stops a premature "the offer is dead" call when you've only launched a few campaigns.
 - **Diagnosis (only when the portfolio is mature enough).** See the cross-campaign diagnosis below. It decides between **launch-new / scale / hold / diagnose-offer**, bounded by the Step-4 capacity verdict.
+- **Offer-Validation Wave read (while `run_state.offer_market_proven` is false).** Read `/campaign-strategy`'s flip criterion per arm on pooled positive replies (PROVEN / DEAD / HOLD), never pooled across arms, and deactivate a dead arm. Report time-agreed replies per 1,000 first touches beside the positive-reply rate for every arm; among PROVEN arms, propose as winner the one that does not lose on it, and label a PROVEN arm whose time-agreed replies are zero or clearly lag the other arms as farming interest (judged against the other arms; the operator confirms): not scaled, routed to reshape the offer so it filters better, not killed. This read is not the Gate B maturity diagnosis, which is for coverage waves (operator-approved Aaron alignment, 2026-09-21).
 
 **Step 6 — Execute to paused drafts.**
 - **Launch-new** routes through `/campaign-strategy` (next-wave signal slices, `[FL]` ≥500-company floor (HARD RULE, operator directive 2026-07-12), offer + copy held constant) → the per-slice pipeline (`/lead-source-strategy` → `/email-waterfall` verify → `/list-quality-scorecard` → `/campaign-copywriting` → spintax → paused upload).
@@ -123,7 +124,7 @@ This fires only when Gate B says the portfolio is mature enough. The inference i
 
 Walk the same rule-out ladder `/offer-intelligence` already enforces, applied **across** the portfolio — do not shortcut to "offer":
 
-1. **Open/deliverability** (open rate <20% or sub-1% reply with bounce/placement issues) → it's deliverability, not the offer → `/email-deliverability-audit` / `/deliverability-incident-response`.
+1. **Deliverability, on a trigger only** (operator-approved Aaron alignment, 2026-09-21): bounce above the Step 3 threshold, a placement-test flag (a trigger to investigate, never decisive alone), a reply rate near 0.1%, or contacts-per-positive jumping → it's deliverability, not the offer → `/email-deliverability-audit` / `/deliverability-incident-response`. Open rate is never this trigger: opens are not tracked here (open tracking stays off on the sending platform), so it reads 0% (doctrine §9, "Don't track opens"; Eric agrees). With no trigger fired, the offer stays a live candidate (doctrine §2 order) and the ladder continues.
 2. **Bounce / wrong-person replies** high → list-quality problem, not the offer → fix lists first.
 3. **Copy** fails `/spam-word-checker` or `cold-email-copy-best-practices.md` → copy problem → re-check copy.
 4. **Only then, offer.** If deliverability, bounce, list, and copy are all clean and the flatness spans **≥3 mature campaigns over ≥2 distinct signals**, flag the **common factor = offer-or-copy** and route to `/offer-intelligence` validation **plus** a copy re-check (the constant-copy wave can't separate the two alone). Never call the offer broken below 300 sends per campaign.
@@ -132,7 +133,7 @@ A single individual dud campaign is **not** this trigger — that's the per-camp
 
 ### Scale sub-routine (owned here — the gap no other skill fills)
 
-For a **winner** (positive-reply rate ≥2× the client's baseline, HIGH confidence per `/experiment-design`), scale it **without confounding the result** — offer and copy stay frozen:
+For a **winner** (positive-reply rate ≥2× the client's baseline, HIGH confidence per `/experiment-design`, and not below the baseline on time-agreed replies per 1,000 first touches, because a positive lift with no rise in time-agreed replies is farming interest, not a winner; doctrine §4, operator-approved Aaron alignment, 2026-09-21), scale it **without confounding the result** — offer and copy stay frozen:
 
 1. **Re-check signal freshness** (Gate A) — a winner scaled a month later needs fresh signal rows, especially why-now signals.
 2. **Expand the slice's list** — pull more enriched-TAM rows carrying the **same signal** (the same `[FL]` predicate), deduped against the `suppression-list.csv` and everyone already contacted, then run them through `/email-waterfall` (Layer-2 reveal + email verification) and `/list-quality-scorecard`. Same signal, more rows — not a new angle.
@@ -148,6 +149,7 @@ If there's no warmed headroom to scale into, the Scale move surfaces a **domain-
 - **What to launch next week** — the proposed new signal slice(s) or scale-ups, each with its signal, matching company count, and one-line rationale (or "hold — at capacity / not enough data yet").
 - **Replies to handle** — counts of interested / referral / hostile, with the ones needing a human this week.
 - **Deliverability flags** — any campaign under 1% or inbox over 2% bounce.
+- **Offer read:** per campaign, and per arm in an Offer-Validation Wave, the positive-reply rate beside time-agreed replies per 1,000 first touches, plus each validation arm's flip state (PROVEN / DEAD / HOLD) and any farming-interest label (operator-approved Aaron alignment, 2026-09-21).
 - **Capacity** — the plain "room for one more / at capacity" verdict.
 
 **`profiles/<client>/portfolio-review.md`** — newest-first log, the audit trail behind the digest:
@@ -156,6 +158,7 @@ If there's no warmed headroom to scale into, the Scale move surfaces a **domain-
 ## <YYYY-MM-DD> Weekly Review — <client>
 - Portfolio maturity: <N mature campaigns / M signals>  → diagnosis run? <yes/no>
 - Replies: <interested>/<referral>/<hostile>; needs-human: [...]
+- Offer read: positive-reply rate <x%> | time-agreed per 1,000 first touches <y> (per arm while validating; arm flip states)
 - Deliverability: <clean | flags: ...>
 - Capacity: <headroom verdict>
 - TAM signal freshness: <fresh | refreshed this run | refresh proposed>
@@ -225,12 +228,12 @@ For each one:
 1. Run the reply-scoring skill the stack contract names for locked `run_state.sending_platform`, scoped to this campaign (`--campaign-id=<id>`)
 2. Compare to previous campaigns' positive reply rate baselines
 3. Decide:
-   - **Winner (positive reply rate >=2x-baseline):** keep running, consider scaling (clone to more inboxes)
+   - **Winner (positive reply rate >=2x-baseline, and not below baseline on time-agreed replies per 1,000 first touches; operator-approved Aaron alignment, 2026-09-21):** keep running, consider scaling (clone to more inboxes). A positive lift with no rise in time-agreed replies is farming interest (doctrine §4): treat it as Middling, not scaled, and reshape it so it filters better rather than killing it.
    - **Middling (near baseline):** iterate on copy or list — run `/experiment-design` Monday to plan the next variant
    - **Loser (<50% of baseline):** kill it. Document why in the experiment log.
 
 4. Log the result in `profiles/<business-slug>/experiments/<YYYY-MM-DD>-<campaign>.json`:
-   - `positive_reply_rate`, `reply_rate`, `bounce_rate`
+   - `positive_reply_rate`, `reply_rate`, `bounce_rate`, `time_agreed_per_1000` (time-agreed replies per 1,000 first touches, added 2026-09-21)
    - Your decision (keep / iterate / kill) + reasoning
    - Hypothesis for next iteration (if iterating)
 
@@ -298,6 +301,7 @@ This is the self-improving loop: refreshed data in, ranked next-round experiment
 Read all `experiments/*.json` from the last quarter. Identify patterns:
 
 - Which campaigns had the highest positive reply rate?
+- Which offers, and which validation arms, won on time-agreed replies per 1,000 first touches, not just on positives?
 - Which list sources produced the best leads?
 - Which copy angles resonated (Observation → Implication? Pain? Social proof?)
 - Which ICP archetypes converted best?

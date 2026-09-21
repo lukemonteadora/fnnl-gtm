@@ -1,6 +1,6 @@
 ---
 name: experiment-design
-description: Framework for running single-variable cold email experiments. Defines experiment types (list-only, copy-only, combined), confidence weighting, minimum sample sizes, and success criteria. Use when the user wants to improve a campaign, test a new list vs old one, or compare copy variants. Prevents the #1 learning-loop mistake - changing list + copy + offer at once and losing all signal. Includes a Generative Proposal Mode that mines tam/tam.csv (from /tam-build) and prior results to propose ranked, data-grounded experiment candidates for the next round.
+description: Framework for running single-variable cold email experiments. Defines experiment types (offer-only, list-only, copy-only, combined), the test order (offer, then positioning of the offer, then CTA and delivery, with list cuts in parallel and subject lines last), confidence weighting, minimum sample sizes, and success criteria judged on time-agreed replies beside positive replies. Use when the user wants to improve a campaign, test a new list vs old one, compare copy variants, or run offer-validation arms. Prevents the #1 learning-loop mistake - changing list + copy + offer at once and losing all signal. Includes a Generative Proposal Mode that mines tam/tam.csv (from /tam-build) and prior results to propose ranked, data-grounded experiment candidates for the next round.
 ---
 
 # Experiment Design
@@ -34,7 +34,7 @@ Do not turn failed or unsafe paths into user-facing options. If this skill's QA 
 
 When asking the user, use the Claude Desktop native Interactive Inputs / Choice Prompts pattern from /clarification-first: recommended option first, short choices, and Custom answer last when a custom answer is plausible.
 
-## The three experiment types
+## The four experiment types
 
 ### A. List-only experiment
 - **What varies:** the list (targeting criteria)
@@ -54,6 +54,14 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 - **When to use:** launching a whole new campaign for a new ICP. You can't isolate because everything is new.
 - **Confidence on learnings:** MEDIUM on everything. Use as hypothesis-generation, not conclusion.
 
+### D. Offer-only experiment (the offer-validation arms; operator-approved Aaron alignment, 2026-09-21)
+- **What varies:** the front-end offer (the free deliverable and what depends on it), nothing else
+- **What stays fixed:** the list (the same broad list, split evenly and at random), the copy skeleton, the sequence and timing, and the infrastructure split
+- **What you learn:** which offer the market actually wants, the highest-leverage question in cold email (doctrine §3: "It is truly the 80/20")
+- **When to use:** first, before any copy test. `/campaign-strategy`'s Offer-Validation Wave runs the primary offer plus at least one arm from `offer.validation_arms` this way from the first wave, and `/offer-intelligence` hands its Swap hypotheses here. Aaron tests three or four offers (doctrine §5), one variable at a time (doctrine §5 step 9).
+- **How it is judged:** per arm, on `/campaign-strategy`'s pooled flip (PROVEN / DEAD / HOLD on raw positive replies, never pooled across arms), not on the sample table in Step 3. Among PROVEN arms the winner is the one that does not lose on time-agreed replies per 1,000 first touches; a PROVEN arm that farms interest is reshaped, not scaled.
+- **Confidence on learnings:** HIGH on the offer, once each arm's pooled read decides; LOW on copy and list.
+
 ## Generative Proposal Mode (propose experiments from the TAM)
 
 Use this mode when you do not have a hypothesis yet and want the system to **propose** the next round of experiments from data you already hold — the self-improving loop. It reads:
@@ -68,7 +76,7 @@ Then it outputs **ranked single-variable experiment candidates grounded in colum
 1. **Mine the TAM for untested slices — `enrichment_tier = enriched` rows only.** Each candidate is a list-only experiment defined by populated TAM columns with enough rows that have not been tested yet (e.g. `has_demo_cta = true AND sales_ic_count = 0`, row count N). **Slice only `enriched` rows: a blank `gate_role = enrich` column on an enriched row is a real negative, but a blank on a `qualified_out` row is a gate-skip (never collected), not data — never build a slice on it.** (If a legacy `tam.csv` has no `enrichment_tier` column, treat all rows as eligible.) Never propose a slice with too few rows for the sample-size table below. Also mine `data-point-catalog.md` for `in_reserve` rows (catalogued but not yet collected): proposing one means **collecting that column first**, which routes through `/tam-build`'s tiering + `/api-cost-governance` as new Layer-1 spend (gated), not an automatic crawl.
 2. **Mine results for copy/offer variables.** From `experiments/*.json` and reply-scoring history, surface copy or angle variables worth a copy-only test against the current baseline.
 3. **Rank by expected positive-reply lift × confidence × row availability.** Prefer candidates that isolate one variable and have the rows to reach significance.
-4. **One variable per candidate** — list-only or copy-only, never both. Combined tests are only for genuinely new ICPs.
+4. **One variable per candidate:** list-only, copy-only or offer-only, never two at once. Combined tests are only for genuinely new ICPs.
 5. **Human approval gate.** Present the ranked candidates (recommended first) and let the operator pick which to run. Do not auto-launch sends. Under `auto_execute`, you may auto-select the top candidate(s) for the next wave and write their plan files, but launching still goes through the upload skill's paused-draft + manual-start gate.
 
 For each approved candidate, drop into **The Framework** below to write the full experiment plan (`experiments/YYYY-MM-DD-<name>.yaml`).
@@ -83,7 +91,9 @@ Every experiment starts with a one-sentence hypothesis:
 
 Or:
 
-> "Leading with a question about their recent product launch will get a higher reply rate than our current benefit-focused opener, because [reason]."
+> "Offering a free look-alike list of 100 companies shaped like their best client will get more time-agreed replies per 1,000 first touches than our current free teardown offer, because [reason]."
+
+(House example, conforms to Framework A: an offer-only test, the first rung of the test order below. The earlier question-opener example is archived at `outbound/_archive/aaron-alignment-2026-09-21/experiment-design--hypothesis-example-and-priority-order.md`; operator-approved Aaron alignment, 2026-09-21.)
 
 If you can't write the hypothesis in one sentence, you don't understand the experiment yet. Go back.
 
@@ -109,7 +119,7 @@ If ANY constant is actually changing, stop. Either lock it down, or reclassify a
 
 ### Baseline sanity check - the 1% rule
 
-Before running any experiment, confirm your baseline is healthy: **overall reply rate >=1% after 200+ sends.** If your baseline is below 1% after 200 sends, the problem isn't your experiment - your infrastructure or copy is already broken. Run `/email-deliverability-audit` first.
+Before running any experiment, confirm your baseline is healthy: **overall reply rate >=1% after 200+ sends.** If your baseline is below 1% after 200 sends, the problem isn't your experiment - your infrastructure, list, offer or copy is already broken. Run `/email-deliverability-audit` first when a deliverability trigger fires (bounce above the house threshold, a placement-test flag, reply rate near 0.1%, contacts-per-positive jumping; `/offer-intelligence` Vector 5). Otherwise the offer is the live candidate, per Aaron's diagnostic order (doctrine §2). Open rate never decides this: opens are not tracked in this system (operator-approved Aaron alignment, 2026-09-21).
 
 Running an experiment on a broken baseline is wasted effort: you'll learn that "both arms are bad," not "which arm wins."
 
@@ -131,6 +141,8 @@ Rule of thumb: **if your test has fewer than 500 sends per arm, you can't tell s
 
 For most beginners, 2,000 sends per arm is the right default.
 
+> **Read this table with its assumption in view (operator-approved Aaron alignment, 2026-09-21).** Every row assumes a 1-2% positive-reply baseline. Real bands can run far lower: Eric's above-average contacts-per-positive band (1 per 150 to 1 per 400) is roughly 0.25% to 0.67% positive, and at that rate even 2,000 sends per arm cannot see a 2x lift (his arithmetic). So read **copy tests on raw reply rate**, the more frequent event, and make **offer calls on `/campaign-strategy`'s pooled flip**, judged per arm, never on this table. No number in the table changes.
+
 ### Step 4: Build the success criteria up front
 
 Before launching, write:
@@ -139,8 +151,11 @@ Before launching, write:
 Success = positive reply rate > X% (our current baseline is Y%)
 Failure = positive reply rate < Z%
 Inconclusive = between X and Z
+Guard = time-agreed replies per 1,000 first touches not below the control's
 Required sample: at least N sends per arm, reported after day 21 of sequence
 ```
+
+For an offer-only test (type D), the success line is `/campaign-strategy`'s per-arm flip on positive replies, followed by its time-agreed winner pick, not a positive-reply target from this table.
 
 Decide now - not after seeing the data. This prevents "oh we learned something else instead" rationalization.
 
@@ -152,7 +167,7 @@ Best practice on most sending platforms: create two campaigns, assign each half 
 
 ### Step 6: Measure at day 21
 
-Wait until the full sequence (typically Day 0, 3, 7, 11 + reply grace period) has finished for ALL leads. Measuring earlier biases toward the first email's reply rate.
+Wait until the full sequence (one thread of 2 to 3 steps, Hard Rule 18, plus the reply grace period) has finished for ALL leads. Measuring earlier biases toward the first email's reply rate.
 
 Pull metrics via the positive-reply scoring path for the locked `run_state.sending_platform`: the scoring skill from whichever pack `/stack-setup` activated, otherwise that platform's own reply export, otherwise a hand-classified reply read with the gap stated.
 
@@ -160,11 +175,13 @@ Pull metrics via the positive-reply scoring path for the locked `run_state.sendi
 - Total replies (per arm)
 - Positive replies (per arm, classified by Claude)
 - Positive reply rate = positive replies / total sent
+- **Time-agreed replies per 1,000 first touches** (per arm): positive replies whose thread moves toward a time, counted with `/campaign-strategy`'s magnet-inflation-guard sending-platform proxy, divided by first-touch contacts, times 1,000. Report it beside the positive-reply rate: a positive reply is not a booked call (doctrine §0, §2 step 5; operator-approved Aaron alignment, 2026-09-21).
 
 Secondary metrics (report but don't optimize for):
 - Overall reply rate (positive replies / total sent is primary, but this shows raw engagement)
-- Open rate (if available)
 - Bounce rate (sanity check - if one arm bounces more, your list is bad, not your copy)
+
+Open rate is not reported: opens are not tracked in this system (open tracking stays off on the sending platform), so it reads 0% and means nothing (doctrine §9, "Don't track opens").
 
 ### Step 7: Weight the learnings
 
@@ -196,23 +213,27 @@ HIGH only if: experiment type isolates the variable AND sample size meets the mi
 - **Winner by <10% lift:** inconclusive. Run bigger next time or drop.
 - **Loser:** document WHY you think it lost. Don't just move on - the loss is a learning.
 - **Combined experiment winner:** do NOT adopt as a new baseline. Instead, split into single-variable follow-ups to figure out which part actually drove the lift.
+- **A winner must not lose on time-agreed replies per 1,000 first touches** (operator-approved Aaron alignment, 2026-09-21). An arm that wins on positive-reply rate but whose time-agreed replies are zero or clearly lag the control's is labeled farming interest (doctrine §4): do not adopt or scale it, and reshape it so it filters better (more specific) rather than killing it. "Clearly lag" has no numeric cut-off: it is judged against the other arm, and the operator confirms. The lift thresholds above are unchanged.
 
 ## What NOT to experiment on (at first)
 
-If you're just starting out, **don't run controlled copy/offer experiments** until you have a baseline. You need a control before you can test a single variable.
+If you're just starting out, **don't run controlled copy experiments** until you have a baseline. You need a control before you can test a single variable. **The offer is the exception** (operator-approved Aaron alignment, 2026-09-21): the Offer-Validation Wave tests it from the first wave, as offer-only arms on the same broad list (type D above), because the offer is the highest-leverage lever and every later test sits on top of it (doctrine §3, §5).
 
-**Coverage waves are not controlled experiments — and they are how you build that baseline.** A TAM-driven Wave 1 (see `/campaign-strategy` → Launch waves) launches several **list-only** slices at once while holding the offer and copy approach **constant**, so positive-reply differences are attributable to the list/signal. That is a coverage portfolio, not a confounded multi-variable test — it is the right first move and it produces the baseline. Reserve single-variable copy/offer experiments for Wave 2+, once a slice's baseline exists.
+**Coverage waves are not controlled experiments, and they are how you build that baseline.** A TAM-driven Wave 1 (see `/campaign-strategy` → Launch waves) launches several **list-only** slices at once while holding the offer and copy approach **constant**, so positive-reply differences are attributable to the list/signal. That is a coverage portfolio, not a confounded multi-variable test: it is the right move once the offer is validated, and it produces the baseline. Reserve single-variable copy experiments, and positioning tests of the winning offer, for Wave 2+, once a slice's baseline exists.
 
-Once you have a baseline, the priority order of experiments is usually:
-1. **List** (biggest impact - bad list kills any copy)
-2. **Offer / lead magnet** (second biggest - "book a call" vs a real magnet)
-3. **Subject line** (cheap to test, drives open rate)
-4. **Opener / first line** (after subject, the big lever)
-5. **CTA** (how you end the email)
-6. **Sequence timing** (Day 3 vs Day 2 follow-up)
-7. **Sequence length** (2 steps vs 3, within the single-thread 2-to-3-step rule; the 4-step / two-thread structure was retired 2026-07-05)
+**The test order (Aaron's; doctrine §5 step 9, §9; operator-approved Aaron alignment, 2026-09-21):**
+1. **The offer** (the offer-validation arms: which free deliverable the market wants)
+2. **The positioning of the offer** (how the same offer is framed; under Framework A the opener is the offer, so opener tests live here)
+3. **The CTA and delivery** (the ask, and what happens after the yes)
 
-Don't jump to step 6 when step 1 is broken.
+**In parallel from launch, not in sequence:** data source and segment (list cuts). The coverage wave's list-only slices and the sold-to splits are this lever; they run alongside the rungs above instead of waiting behind them.
+
+**After those:**
+4. **Sequence timing** (Day 3 vs Day 2 follow-up; live delays stay a house decision)
+5. **Sequence length** (2 steps vs 3, within the single-thread 2-to-3-step rule; the 4-step / two-thread structure was retired 2026-07-05)
+6. **Subject line, last.** Aaron calls it the lowest-leverage lever, *"never going to be the highest leverage thing to update"* (doctrine §9). Test it only once the offer, its positioning and the CTA are settled.
+
+Don't test a lower rung while a higher one is broken (doctrine §2): no CTA or subject-line test on an offer that has not won its arm. The earlier list-first order (which ranked subject lines third) is archived at `outbound/_archive/aaron-alignment-2026-09-21/experiment-design--hypothesis-example-and-priority-order.md`.
 
 ## Common mistakes
 
@@ -221,6 +242,8 @@ Don't jump to step 6 when step 1 is broken.
 - **Calling it early.** Wait 21 days minimum. Cold email replies trickle in over weeks.
 - **Changing infrastructure mid-test.** If one arm uses new domains and one uses old, deliverability skews everything.
 - **Ignoring bounce rate.** If variant's bounce rate is 2x control, the list is bad - not the copy. Disqualify the test.
+- **Declaring a winner on replies alone.** A positive-reply lift with no rise in time-agreed replies per 1,000 first touches is farming interest (doctrine §4). Report both, every time.
+- **Testing subject lines or CTAs before the offer has won.** The offer is the 80/20 (doctrine §3); walk the test order top-down.
 
 ## Output: experiment plan file
 
@@ -236,7 +259,7 @@ Schema:
 experiment:
   name: <short name>
   hypothesis: <one sentence>
-  type: list-only | copy-only | combined
+  type: offer-only | list-only | copy-only | combined
   variable: <what changes>
   constants: <list of what stays fixed>
 
@@ -257,6 +280,8 @@ arms:
 results: <empty until day 21>
   control_positive_reply_rate: null
   variant_positive_reply_rate: null
+  control_time_agreed_per_1000: null    # time-agreed replies per 1,000 first touches (added 2026-09-21)
+  variant_time_agreed_per_1000: null
   winner: null
   confidence: null
   decision: null

@@ -1,6 +1,6 @@
 ---
 name: social-proof-bank
-description: Build a per-client, copy-ready Social Proof + Trigger Bank BEFORE copy is written. Two banks in one artifact - (1) a Case Studies / proof bank (one row per ICP segment x service line, each with the hard result, timeframe, referenceable client, a copy-ready one-liner, and a diagnostic-mirror "poke the bear" question), and (2) a Trigger & Angle bank (categorized why-now signals, each with why it works, a poke-the-bear question, relevant ICPs, and priority). Gathers everything WE can find ourselves first (intake proof block + triggers, onboarding-call notes, offer-intelligence, website / case-study scrape, voicenotes), and only asks the client - via the existing proof-asset-request form - for the genuine RAW-FACT gaps we cannot find. The client is never asked for copy; the skill synthesizes every one-liner and poke-the-bear question to pass the Copy QA Gate. Also produces the per-group SEED SET (the client's case-study/customer company domains) that seeds /tam-build's DEFAULT lookalike discovery motion, and enforces a per-group Seed-and-Proof Readiness gate - a proven-motion group's seeds must exist and its copy-facts be on file (else flag + collect) BEFORE that group's TAM is built. Runs after the offer is locked and /data-point-discovery; its seed+gate portion runs before /tam-build for the proven motion, the rest in parallel with /tam-build, before /campaign-strategy and /campaign-copywriting. Triggers include "build the proof bank", "social proof bank", "gather <client>'s case studies and triggers", "proof and trigger bank", and "/social-proof-bank".
+description: Build a per-client, copy-ready Social Proof + Trigger Bank BEFORE copy is written. Two banks in one artifact - (1) a Case Studies / proof bank (one row per ICP segment x service line, each with the hard result, timeframe, referenceable client, a copy-ready one-liner written as the single PS proof line, and an optional pain line for a labeled two-line test arm, kept in the poke_the_bear field), and (2) a Trigger & Angle bank (categorized why-now signals, each with why it works, an optional test-arm line, relevant ICPs, and priority). Gathers everything WE can find ourselves first (intake proof block + triggers, onboarding-call notes, offer-intelligence, website / case-study scrape, voicenotes), and only asks the client - via the existing proof-asset-request form - for the genuine RAW-FACT gaps we cannot find. The client is never asked for copy; the skill synthesizes every one-liner and test-arm line to pass the Copy QA Gate. Also produces the per-group SEED SET (the client's case-study/customer company domains) that seeds /tam-build's DEFAULT lookalike discovery motion, and enforces a per-group Seed-and-Proof Readiness gate - a proven-motion group's seeds must exist and its copy-facts be on file (else flag + collect) BEFORE that group's TAM is built. Runs after the offer is locked and /data-point-discovery; its seed+gate portion runs before /tam-build for the proven motion, the rest in parallel with /tam-build, before /campaign-strategy and /campaign-copywriting. Triggers include "build the proof bank", "social proof bank", "gather <client>'s case studies and triggers", "proof and trigger bank", and "/social-proof-bank".
 ---
 
 # Social Proof + Trigger Bank
@@ -9,17 +9,17 @@ Build the client's **evidence-and-angle asset** once, up front, in copy-ready fo
 
 Two banks live in one artifact:
 
-1. **Case Studies bank (proof).** One row per **ICP segment x service line**: the hard result, the timeframe, the referenceable client (and whether we may name it), a **copy-ready one-liner** that drops straight into an email, and a **"poke the bear"** diagnostic-mirror question tied to that proof.
-2. **Trigger & Angle bank (why-now -> message).** A categorized library of the timing signals that create a reason to reach out - each with why it works, a **poke the bear** question, the relevant ICP segments, and a priority. It is the *messaging* companion to `/data-point-discovery`'s *targeting* catalog: same signals, but written as angles the copywriter can use, plus the message-only triggers (events, macro shifts, seasonal, competitor moves) that never become a TAM column.
+1. **Case Studies bank (proof).** One row per **ICP segment x service line**: the hard result, the timeframe, the referenceable client (and whether we may name it), a **copy-ready one-liner** written as the email's single PS proof line, and an optional **`poke_the_bear`** pain line tied to that proof, used only in a labeled two-line test arm (both defined in The two copy-ready lines, below).
+2. **Trigger & Angle bank (why-now -> message).** A categorized library of the timing signals that create a reason to reach out - each with why it works, an optional **`poke_the_bear`** test-arm line, the relevant ICP segments, and a priority. It is the *messaging* companion to `/data-point-discovery`'s *targeting* catalog: same signals, but written as angles the copywriter can use, plus the message-only triggers (events, macro shifts, seasonal, competitor moves) that never become a TAM column.
 
-**The one-line rule.** Gather it ourselves first; only ask the client for the raw facts we genuinely cannot find; never ask the client to write copy. We synthesize the one-liner and the poke-the-bear question from the gathered facts, and every synthesized line passes the Copy QA Gate.
+**The one-line rule.** Gather it ourselves first; only ask the client for the raw facts we genuinely cannot find; never ask the client to write copy. We synthesize the one-liner and the optional `poke_the_bear` line from the gathered facts, and every synthesized line passes the Copy QA Gate.
 
 This is the proactive front end to the **Proof-Asset Gate**. A well-built bank is what makes the copy-time gate in `/campaign-copywriting` and `/campaign-strategy` almost always pass, because the proof the copy needs is already on file, mapped to the segment, and pre-written.
 
 ## What this is, and what it is NOT
 
-- **This IS** a per-client, populated, durable asset - the client's *actual* case studies mapped to their *actual* segments, and their *actual* observed triggers with *actual* poke-the-bear questions. It is the populated instance the two example workbooks show.
-- **This is NOT** the general copy rulesets. `/campaign-strategy`'s **Signal-Driven Slice Library** (which slice to build) and `/campaign-copywriting`'s **Signal Angle Library** (how to open on a signal) are general, skill-embedded frameworks. This bank FEEDS them with the client-specific, populated rows and the ready poke-the-bear openers. It does not restate or fork them, and it never invents a new signal vocabulary.
+- **This IS** a per-client, populated, durable asset - the client's *actual* case studies mapped to their *actual* segments, and their *actual* observed triggers with *actual*, validated test-arm lines. It is the populated instance the two example workbooks show.
+- **This is NOT** the general copy rulesets. `/campaign-strategy`'s **Signal-Driven Slice Library** (which slice to build) and `/campaign-copywriting`'s **Signal Angle Library** (how to open on a signal) are general, skill-embedded frameworks. This bank FEEDS them with the client-specific, populated rows: PS-ready proof and optional test-arm lines, never default openers. It does not restate or fork them, and it never invents a new signal vocabulary.
 - **This is NOT** `/data-point-discovery`. That skill catalogs which prospect DATA to collect to filter and slice the TAM (the targeting layer). This bank is the MESSAGING layer: given a signal we can observe, what does it MEAN for the buyer and what proof answers it. Every trigger row that maps to a collectable data point **reuses that skill's canonical column name** (`change_timing`, `sold_to`, `contact_new_in_seat`, etc.) so the two never drift apart.
 - **This is NOT** the reactive gap-ask. `/proof-asset-request` is the single client-facing form. This skill USES it (extended to a bank mode) for the gaps it cannot fill itself. It does not create a second client-ask path.
 
@@ -96,31 +96,50 @@ Everything else in the bank stays the soft, parallel build described below.
 Gather in this order and stop asking the client the moment we have the fact ourselves. Every value carries a `source` tag so a later session can see where it came from and how solid it is.
 
 1. **Intake form proof block + triggers** - `client-profile.yaml` `proof:` (`referenceable_clients`, `case_studies`, `hard_numbers`, `naming_constraints`) and `icp.triggers`. Also `offer.deliverable_constraints` and `best_customer`.
-2. **Onboarding-call notes** - `profiles/<slug>/onboarding-call-notes*.md` (from `/client-onboarding-call-summarizer`): its "What We Learned" -> Proof and Pain & why-now sections, and the **verbatim** "In Their Own Words" quotes (these are gold for the poke-the-bear questions).
+2. **Onboarding-call notes** - `profiles/<slug>/onboarding-call-notes*.md` (from `/client-onboarding-call-summarizer`): its "What We Learned" -> Proof and Pain & why-now sections, and the **verbatim** "In Their Own Words" quotes (these are what make a `poke_the_bear` pain line validated rather than guessed).
 3. **Offer-intelligence** - `profiles/<slug>/offer-intelligence.md`: the ICP Pain (in their words) vectors, the proof/competitor findings, and the saturation map. Mine each named result and pain for a case-study row or a trigger row.
 4. **Website + case-study scrape** - the client's own case-studies / customers / results pages (Spider/Serper per `/lead-list-tech-stack-research`). This is where most real results, named clients, territories, and timeframes actually live. Extract them verbatim; never round or invent a number.
 5. **Voicenotes / transcripts** - any raw client voice memo or call transcript the operator supplies. Route long ones through `/client-onboarding-call-summarizer` first, then mine the notes.
 6. **Data-point catalog** - `profiles/<slug>/data-point-catalog.md`: the `change_timing`, `sold_to`, `demand`, `tech_hiring`, and contact-discovery signal rows. Each collectable signal becomes a **data-backed** trigger row (reuse its canonical column name verbatim).
 
-Only a fact that is **still blank after all six passes** routes to the client. Route it through `/proof-asset-request` (bank mode) as an easy fill-in form for the missing RAW FACTS only - never for a one-liner or a question.
+Only a fact that is **still blank after all six passes** routes to the client. Route it through `/proof-asset-request` (bank mode) as an easy fill-in form for the missing RAW FACTS only - never for a one-liner or a test-arm line.
 
 ## Division of labor (why the client-ask stays tiny)
 
 The example workbooks encode this exactly: the client supplies raw proof facts (result, timeframe, named client, territory, service line); the operator column "poke the bear question" and the "one-liner (for copy)" are marked "will complete this" - **we** write them.
 
 - **Client supplies (only if we can't find it):** the raw facts - the result/metric, the timeframe, the referenceable client name, the territory, the service line, and permission to name.
-- **We synthesize (always, never asked of the client):** the copy-ready `one_liner` and the `poke_the_bear` question. Both are written to pass `spam-word-checker.md` + `cold-email-copy-best-practices.md`, and the poke-the-bear question is written as a **diagnostic-mirror opener** (the conversational register) so it drops straight into an Email 1 / Email 3 opener. This is the bank's payoff.
+- **We synthesize (always, never asked of the client):** the copy-ready `one_liner` and the optional `poke_the_bear` line, both defined in The two copy-ready lines (below) and both written to pass the Copy QA below. The bank's payoff is proof that is already segment-matched and PS-ready.
+
+## The two copy-ready lines (definitions; operator-approved Aaron alignment, 2026-09-21)
+
+Stated once, here. The reference doc `social-proof-bank.md` carries worked examples only. Both field names stay, because `/campaign-copywriting`, `/campaign-strategy` and the xlsx builder read them; what they hold changed on 2026-09-21. The old diagnostic-mirror "poke the bear" opener is gone: that register was already retired as an opener with proven-mode (2026-07-05), and Aaron's rejection bank kills the poke-the-bear curiosity opener outright (examples §8).
+
+**`one_liner` is the single PS proof line.** Proof sits low in Aaron's hierarchy: one point maximum, never in line one or two, PS only, or saved for email two (doctrine §9, examples §6). So the `one_liner` is written in PS form with exactly one plain, named number, from a near-twin case (same space, similar size, doctrine §4) that used the same mechanism the offer uses (same-mechanism proof, doctrine §9). His template, `[AS]` examples §6: "Client went from X bad result to X good result using this exact process." Borrow the shape, not the words (doctrine §9 portability rule). Rules that travel with it:
+- **One number.** When a row has two results, the line carries the one this buyer cares about (metrics the buyer ignores are on his rejection list, examples §8); the `result` cell keeps both.
+- **No acronyms:** "as soon as you jump into really crazy acronyms and things like that, you lost them" (examples §6).
+- **Never generic** ("we've worked with hundreds of clients" is on his refusal list, `[ANTI]` examples §6), never another firm's totals presented as the client's, and never an exact-industry claim for a close-match case (Procedure step 2).
+- **Never contradicts the body** it sits under (doctrine §9).
+
+**`poke_the_bear` is the optional line one of a labeled two-line test arm, never the default opener.** Aaron's default opens straight on the offer with "no pain, no observation, no preamble" (doctrine §9), and he rejects the poke-the-bear curiosity opener: "that was your typical poke the bear, basically trying to create intrigue before presenting the offer" (`[ANTI]`, examples §8). He keeps one controlled use: the two-line pattern, where line one is a common validated pain or a relevance line and line two is the offer, A/B-tested against the one-liner (ledger R14, doctrine §9). That test arm is the only place this field is used, and `/campaign-copywriting` records it as a labeled arm. Rules:
+- **A statement, never a question.** Question-form pain openers are on his kill-list ("kind of sounds like a cheesy ad", examples §8), so the value is declarative even though the field name, and the xlsx header "Poke the Bear Question", keep the old wording. The soft neutral question for less-aware buyers (doctrine §8, framework 4) is a separate variant that `/campaign-copywriting` owns; this field never carries it.
+- **Capped.** It "builds a little bit of pain but doesn't focus on it too much" (doctrine §9): one short clause, no picture-painting.
+- **Validated, never guessed.** A common pain the client's buyers state in their own words (call notes, offer-intelligence), never a model-generated pain presented as fact (doctrine §5 step 1). For a trigger row it may instead be the relevance line: what the signal means for the buyer, never that we saw it.
+- **Matched to the offer's pain.** The pain in line one must be the pain the offer in line two solves; his hook-payoff rule rejects "leaning on one pain point and then using a different solution, which isn't correlated at all" (examples §8).
+- **Optional.** Leave it blank when no validated line exists. A blank beats an invented pain.
+
+A trigger's default job is list relevance: it picks the slice, and the offer carries the email (doctrine §8). Where that relevance earns copy space, it goes to the PS by default (the opening-line swap, examples §1.1), not line one.
 
 ## Procedure
 
 1. **Read state + self-gather.** Read the six sources above in order. Build a working set of proof facts (per segment x service line) and trigger facts (per signal). Tag every fact with its `source`. Never fabricate a value to fill a cell - a genuinely-absent fact stays blank and becomes a client-ask candidate.
 
-2. **Map proof to segments.** For each confirmed ICP segment (Step 2.5) crossed with each service line the client actually delivers, place the best-matching real case study. A segment x service-line cell with no real proof is a **gap** - do not manufacture one. (The proof-relevance hierarchy in `/campaign-copywriting` Step 1 - direct match / close match / no match - governs which real case study best fits a segment; a close-match case study is placed with a "close match" note, never dressed up as a direct-industry metric.)
+2. **Map proof to segments.** For each confirmed ICP segment (Step 2.5) crossed with each service line the client actually delivers, place the best-matching real case study. A segment x service-line cell with no real proof is a **gap** - do not manufacture one. (The proof-relevance hierarchy in `/campaign-copywriting` Step 1 - direct match / close match / no match - governs which real case study best fits a segment; a close-match case study is placed with a "close match" note, never dressed up as a direct-industry metric. Aaron's rule is the same: never claim a case is from the recipient's exact industry when it is only loosely similar, doctrine §9.)
 
-3. **Synthesize the copy-ready lines** (self, no client-ask). For each proof row write the `one_liner` (a single sentence a prospect would find credible, built only on the real facts) and the `poke_the_bear` diagnostic-mirror question. For each trigger row write its `poke_the_bear`. Run every synthesized line through the Copy QA Gate before it is written to the artifact (see Copy QA below). This synthesis is the only step that may spend a small AI pass; route it per `/ai-model-routing` and gate it with `/api-cost-governance`.
+3. **Synthesize the copy-ready lines** (self, no client-ask). For each proof row write the `one_liner` (the single PS proof line, built only on the real facts) and, only where a validated pain exists, the `poke_the_bear` test-arm line, both per The two copy-ready lines above. For each trigger row write its `poke_the_bear` only where a validated pain or relevance line exists. Run every synthesized line through the Copy QA Gate before it is written to the artifact (see Copy QA below). This synthesis is the only step that may spend a small AI pass; route it per `/ai-model-routing` and gate it with `/api-cost-governance`.
 
 4. **Build the trigger bank, reusing canonical vocabulary.** For each trigger, set `data_backed`:
-   - `y` when the trigger maps to a collectable TAM/contact column - fill `canonical_column` with the **exact** `/data-point-discovery` name (`new_sales_leader_90d`, `sells_to_vertical`, `contact_new_in_seat`, `running_meta_ads`, `hiring_roles`/`jd_pain_language`, `funded_last_90d`, ...). These rows FEED `/campaign-strategy`'s Signal-Driven Slice Library and `/campaign-copywriting`'s Signal Angle Library with the client-specific angle + poke-the-bear opener.
+   - `y` when the trigger maps to a collectable TAM/contact column - fill `canonical_column` with the **exact** `/data-point-discovery` name (`new_sales_leader_90d`, `sells_to_vertical`, `contact_new_in_seat`, `running_meta_ads`, `hiring_roles`/`jd_pain_language`, `funded_last_90d`, ...). These rows FEED `/campaign-strategy`'s Signal-Driven Slice Library and `/campaign-copywriting`'s Signal Angle Library with the client-specific angle (and the optional test-arm line).
    - `n` when it is a message-only trigger with no TAM column (events / webinars, macro or regulatory shifts, seasonal / budget-flush timing, competitor moves, a prospect's public LinkedIn post, competitor-user signals). These are the NEW value the bank adds beyond the data catalog; note their `acquisition` (how the signal is spotted - manual, social listening, a per-campaign research pull) so `/campaign-strategy` knows they are not a free TAM slice.
    Never invent a new category name for a `data_backed = y` row; only the message-only rows may use the extra categories.
 
@@ -131,7 +150,7 @@ The example workbooks encode this exactly: the client supplies raw proof facts (
 
 6. **Emit ONE client-ask for the real gaps (the client-fill Google Sheet + ready message).** If any `gap_block` or `gap_flag` rows exist, or a campaign needs a case study we don't have, build the client the **fill sheet** and send it with a ready message. Facts only, never copy. The canonical structure, the industry-mixed example rows (the fill-guide), and the outreach copy all live in `social-proof-bank-client-fill-template.md` (resolved under `outbound/`). Do this:
    - **Build the Google Sheet.** Preferred: create a live Google Sheet via the **google-docs MCP** (`createSpreadsheet` → `writeSpreadsheet`/`appendRows` → `setFilePermission` to share) with the three tabs from the template: "Start here" (what / why / how + the worked example rows so the client has a guide), "Your results" (the grid to fill, pre-filled with everything already on file marked "confirm", blank rows grouped by the ICP segments we still need proof for), and the optional "Timing + competitors" tab. If the google-docs MCP or its credentials are unavailable, fall back to the tested builder `python "<outbound>/scripts/social_proof_bank_to_xlsx.py" --client <business-slug> --template` → writes `social-proof-bank-client-fill.xlsx` (same three tabs + examples) for the operator to upload to Drive.
-   - **Ask ONLY for raw facts** (result, timeframe, client name, permission to name, territory, which service/product line), grouped by segment. The client never writes a one-liner or a poke-the-bear question.
+   - **Ask ONLY for raw facts** (result, timeframe, client name, permission to name, territory, which service/product line), grouped by segment. The client never writes a one-liner or a `poke_the_bear` line.
    - **Send the ready message.** Use the draft email OR Slack message in the template (each covers **what** it is, **why** it matters, **how** to fill it), with the sheet link dropped in. Log it PENDING in the activity log.
    - `/proof-asset-request` bank mode is the same gate for a lighter, paste-back markdown ask when a full sheet is overkill (one or two blanks). Same rule: raw facts only.
 
@@ -153,8 +172,8 @@ The example workbooks encode this exactly: the client supplies raw proof facts (
 
 Every `one_liner` and `poke_the_bear` is sendable copy, so it passes the same guardrails before it is written to the bank:
 
-- Pass `spam-word-checker.md` (banned words, no em dashes, no colon-as-runway, no comma-wrapped company descriptors).
-- Pass `cold-email-copy-best-practices.md` - the poke-the-bear question is a **diagnostic-mirror opener**: it reflects the prospect's own situation or their buyers' real pain back to them and leads with the implication, never a warmup, never an observational "I noticed / I saw that / congrats on".
+- Pass `spam-word-checker.md` (formatting, CTA, opener and voice bans, including Aaron's named kill-list; no em dashes, no colon-as-runway, no comma-wrapped company descriptors). It no longer carries a keyword blocklist.
+- Pass `cold-email-copy-best-practices.md`, and check every line against Aaron's rejection bank (`aaron-examples.md` §8, in `/ask-aaron`). The `one_liner` meets the PS proof rules and the `poke_the_bear` line meets the test-arm rules in The two copy-ready lines: a statement, capped, validated, matched to the offer's pain, never a warmup, never an observational "I noticed / I saw that / congrats on" (operator-approved Aaron alignment, 2026-09-21).
 - **Capability truth + Proof-Asset truth:** a one-liner may only state a real, on-file result the client can defend, and only name a client we are allowed to name (`proof.naming_constraints`). No invented metric, no unnamed stand-in dressed as a name, no cross-industry metric claimed as directly applicable.
 - **Anti-surveillance:** the sold-to and department triggers carry the same caveat as the Signal Angle Library - never recite the prospect's customer list, logos, or a raw headcount back at them; state what the signal MEANS, not that we saw it.
 
@@ -180,8 +199,8 @@ Header: client, date, segments covered, source coverage summary (how many rows c
 | `seed_domain` | the case-study/customer company's primary domain - the lookalike SEED for this group (resolve `named_client` to its domain; blank only if genuinely unresolvable). Naming constraints do NOT block seeding: a `naming_ok = n` company can still seed the lookalike even though it cannot be named in copy |
 | `group` | the case-study group this row belongs to (sub-industry / what-they-sell cluster); rows sharing a `group` share a seed set and one group-TAM |
 | `discovery_motion` | `proven` (seeded lookalike, this group has a real win) or `expansion` (no case study, routed to the broad-filter net-new motion) |
-| `one_liner` | **synthesized** copy-ready proof sentence (passes Copy QA) |
-| `poke_the_bear` | **synthesized** diagnostic-mirror question tied to this proof (passes Copy QA) |
+| `one_liner` | **synthesized** single PS proof line: one plain named number, near-twin, same mechanism (passes Copy QA; see The two copy-ready lines) |
+| `poke_the_bear` | **synthesized, optional** line one for a labeled two-line test arm: a short, validated pain statement matched to the offer's pain, never a question, never the default opener (passes Copy QA; blank when no validated line exists) |
 | `proof_status` | `on_file` / `gap_block` / `gap_flag` |
 | `source` | `intake` / `call_notes` / `offer_intel` / `website` / `voicenote` / `client_form` |
 
@@ -195,7 +214,7 @@ Header: client, date, segments covered, source coverage summary (how many rows c
 | `data_backed` | `y` (maps to a TAM/contact column -> feeds a slice) / `n` (message-only, no TAM column) |
 | `acquisition` | how the signal is spotted (`tam_column` / `manual` / `social_listening` / `per_campaign_research`) - message-only rows name their non-TAM source |
 | `why_it_works` | one line on why this trigger creates a real reason to reach out |
-| `poke_the_bear` | **synthesized** diagnostic-mirror question for this trigger (passes Copy QA) |
+| `poke_the_bear` | **synthesized, optional** test-arm line for this trigger: a short pain or relevance statement (what the signal means, never that we saw it), never a question (passes Copy QA; blank when no validated line exists) |
 | `relevant_icps` | which segments / tiers this trigger applies to (`All`, `Tier 1`, a named segment) |
 | `priority` | `urgent` / `high` / `medium` |
 | `source` | where the trigger came from |
@@ -206,14 +225,14 @@ Keep the "add rows as you discover new signals" spirit of the example: the trigg
 
 - **No offer lock / no segments.** If `offer.lead_magnet` is not locked or the confirmed segment list (Step 2.5) is missing, route back - proof can't be mapped to a segment x service line without them.
 - **No fabricated proof, ever.** A gap stays a gap. Do not fill a `result`, `named_client`, or number with an invented value, a vague "a leading firm", or a cross-industry metric claimed as directly applicable. Route the fact request instead. This holds in every execution mode.
-- **No client-ask for copy.** The form only ever requests raw facts. If you catch yourself asking the client to write a one-liner or a question, stop - that is our job.
+- **No client-ask for copy.** The form only ever requests raw facts. If you catch yourself asking the client to write a one-liner or a test-arm line, stop - that is our job.
 - **No parallel vocabulary.** A `data_backed = y` trigger row must reuse an existing `/data-point-discovery` canonical column name. If a signal has no canonical name and no TAM column, it is `data_backed = n` (message-only), not a new data column.
 
 ## What to do next
 
 - `/tam-build`: for a **proven-motion** group it WAITS on this skill's seed set + cleared Seed-and-Proof Readiness gate before it builds that group (the seeds feed the lookalike). For everything else, `/tam-build` runs in parallel with the rest of the bank. Let the parallel part finish the prospect universe.
 - Then `/campaign-strategy` reads `social-proof-bank.md` alongside `tam.csv`: it weights each slice by whether real, segment-matched proof exists, and pulls the data-backed triggers into its Signal-Driven Slice Library.
-- Then `/campaign-copywriting` reads the bank: it selects the segment-matched `one_liner` for the proof line and the matching `poke_the_bear` as the diagnostic-mirror opener, and its Proof-Asset Gate now finds the proof already on file.
+- Then `/campaign-copywriting` reads the bank: it selects the segment-matched `one_liner` as the PS proof line (or email two's single proof point), uses a `poke_the_bear` line only inside a labeled two-line test arm, and its Proof-Asset Gate now finds the proof already on file.
 
 ## Related skills
 
@@ -223,8 +242,9 @@ Keep the "add rows as you discover new signals" spirit of the example: the trigg
 - `/client-onboarding-call-summarizer` - turns call transcripts / voicenotes into the proof + verbatim-pain notes the bank mines
 - `/offer-intelligence` - the ICP-pain and proof research the bank draws case-study and trigger rows from
 - `/campaign-strategy` - reads the bank; its Signal-Driven Slice Library is fed by the data-backed triggers
-- `/campaign-copywriting` - reads the bank; its Proof-Asset Gate and Signal Angle Library consume the proof rows and poke-the-bear openers
-- `/cold-email-kickoff` - invokes this skill at Step 3.6 (after offer lock + `/data-point-discovery`, parallel with `/tam-build`, before `/campaign-strategy`)
+- `/campaign-copywriting` - reads the bank; its Proof-Asset Gate and Signal Angle Library consume the proof rows (PS-ready one-liners) and, for labeled test arms only, the `poke_the_bear` lines
+- `/ask-aaron` - the doctrine behind the two copy-ready lines (`aaron-doctrine.md` §9, `aaron-examples.md` §6 and the §8 rejection bank); advisory only
+- `/cold-email-kickoff` - invokes this skill at Step 3.5 (after offer lock + `/data-point-discovery`, parallel with `/tam-build`, before `/campaign-strategy`)
 - `/continue-client`, `/cold-email-flow-audit` - resume / certify this gate as part of the chain
 - `/api-cost-governance`, `/ai-model-routing` - gate and route the small copy-synthesis AI pass
 - Reference doc: `social-proof-bank.md` (procedure detail, worked example, the xlsx export). Client-fill Google Sheet structure + example rows + ready email/Slack messages: `social-proof-bank-client-fill-template.md`. Doctrine: memory.

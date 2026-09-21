@@ -1,6 +1,6 @@
 ---
 name: lead-magnet-brainstorm
-description: Helps choose a front-end offer for cold emails. Use after /offer-intelligence discovery mode, whose Candidate Generation Input block it consumes directly rather than re-deriving buyer pain. The offer LOCKS here, before the list build. Scores all candidates on a 7-point rubric, then checks run_state.execution_mode - auto_execute picks the top-scored candidate and proceeds without pausing; review_gates presents ranked options and waits for operator selection. At lock it runs the Signal-Capability Check (any signal the offer depends on must be obtainable by a capability the stack contract declares) and writes the offer-derived disqualifier list that /tam-build's offer-fit gate consumes. Exact CTA copy is written later in /campaign-copywriting.
+description: Helps choose a front-end offer for cold emails. Use after /offer-intelligence discovery mode, whose Candidate Generation Input block it consumes directly rather than re-deriving buyer pain. The offer LOCKS here, before the list build. Generates candidates across Aaron Shepherd's three offer buckets, runs the four-sentence test, the twenty-yes economics, the why-not and farming-interest checks, the weak-offer screen and the fulfillment-first reply plan on each, and scores all candidates on a 7-point rubric, then checks run_state.execution_mode - auto_execute locks the top-scored candidate as the primary offer plus one to three validation arms (offer.validation_arms) and proceeds without pausing; review_gates presents ranked options and waits for operator selection. At lock it runs the Signal-Capability Check (any signal the offer depends on must be obtainable by a capability the stack contract declares) and writes the offer-derived disqualifier list that /tam-build's offer-fit gate consumes. Exact CTA copy is written later in /campaign-copywriting.
 ---
 
 # Lead Magnet Brainstorm
@@ -33,13 +33,15 @@ Cold email needs a reason to reply. A vague "book a call" ask is weak unless the
 
 This skill chooses the front-end offer. It does not write final cold email copy.
 
-**A direct offer with no lead magnet is a valid, often-preferred outcome (the CTA Hierarchy).** Per the offer-first CTA Hierarchy (`/campaign-copywriting` → Offer-First Copy Standard), the booked call is always the goal and a lead magnet is optional, never mandatory. Do NOT invent a front-end asset just to have one. Score the direct-offer path (lead with the offer, close with a soft ask like `Would that be worth sharing more?`) as a first-class candidate alongside any real magnet. A real, low-friction asset can win, especially as a follow-up mechanism, but a manufactured one should not. When the client has no natural free resource to give, the strongest recommendation is usually "no front-end magnet, lead with the direct offer". Record that as `offer.lead_magnet: direct_offer` (the List Gate and `/campaign-copywriting` accept this sentinel in place of a magnet). If every magnet candidate is invented or high-friction, the direct offer wins.
+**The front-end offer is one real, inspectable unit of the paid work, given free (operator-approved Aaron alignment, 2026-09-21; doctrine §3).** In this skill "lead magnet" means that front-end offer in any of its forms, not only a document. Aaron's standard for it: it is free and says so ("free" or "no cost"; leaving the word out is, in his words, "a huge miss", doctrine §3); it gives the most value for the least work on our end; its delivery odds are effectively 100% (doctrine §4); it bridges naturally into the core offer; it keeps its value if they decline (doctrine §5 step 7); it carries a truthful reason it is free; and it hides no condition ("Remove homework, not honesty", doctrine §3). Do NOT manufacture a filler asset (a generic PDF, a thin report) just to have one, because a useful piece of actual work beats a consultation, a generic audit, a big guarantee, or an AI-generated PDF (doctrine §3). When the client has no natural asset, look for the unit of the paid work first: that is not inventing an asset, it is the offer.
+
+**`offer.lead_magnet: direct_offer` stays a valid locked value, but it is now the exception, not the preferred outcome.** The List Gate, `/tam-build` and `/campaign-copywriting` still accept the sentinel in place of a magnet. Use it only when no unit of the paid work can honestly be given free at twenty yeses, and only for a direct offer that is still a concrete, low-commitment next step: it passes the diagnostic order below and hits none of the weak-offer patterns (a service description, a stretch outcome promise, a performance guarantee on the core service; doctrine §6). Its shape is his lending email (examples §1.2, `[AS-client]`, his own paraphrase): state plainly what we offer, with no pitch. That email closes on "worth a quick coffee chat", a meeting ask, so take the shape, not the close. `direct_offer` is the exception, and Email 1 still closes with his permission CTA (ledger R17 retired the meeting ask), so a yes is permission to share more, not agreement to a call. The reply shares it in one or two sentences plus the information or asset, keeps the call one layer down and refusable, and proposes times only when the prospect asks to talk (explicit booking intent). His permission CTA is "Would that be worth sharing more?" by default (examples §4; `/campaign-copywriting` Hard Rule 32: permission to send or show something, never a meeting). Score it like any other candidate. (operator-approved Aaron alignment, 2026-09-21: this used to name doctrine §8's passive introduction as the legitimate shape, with examples §1.2 as his instance and its coffee-chat close left standing.) The earlier "direct offer is often preferred" paragraph is archived at `outbound/_archive/aaron-alignment-2026-09-21/lead-magnet-brainstorm--direct-offer-default.md` (doctrine §3: "Your offer is not your service", and "The front-end offer now outranks the guarantee-style main offer").
 
 Final CTA wording must be handled by `/campaign-copywriting`. Keep CTA output here at direction level only, then let `/campaign-copywriting` apply the confirmed-deliverable gate and the permission-based, value-backed CTA framework.
 
 CTA direction must still be specific enough to prevent generic copy. Name the deliverable, what the prospect receives, why it is useful, and what must be true before it can be promised. Do not leave `/campaign-copywriting` with only a vague "short note" direction unless that generic wording is the deliberate test.
 
-Whatever offer wins must be able to pass the Offer Architecture gate at copy time: SQL vs MQL framing, the easy-to-say-yes-to test, and a named risk reversal (full gate in `/campaign-copywriting`). Prefer candidates with a clear, low-friction risk reversal. Flag any pick that has none so `/campaign-copywriting` can resolve it before Email 1.
+Whatever offer wins must be able to pass the Offer Architecture gate at copy time: SQL vs MQL framing, the easy-to-say-yes-to test, and a named risk reversal (full gate in `/campaign-copywriting`). Prefer candidates with a clear, low-friction risk reversal. Flag any pick that has none so `/campaign-copywriting` can resolve it before Email 1. In Aaron's method the risk reversal is the free front end itself plus casual risk elimination ("We'll do this for free and then we only move forward if we actually see something worth implementing." `[AS]`, examples §5; it shows the shape, never paste it into client copy, doctrine §9 portability rule), never a money-back guarantee (his "incredibly washed out") and never a performance guarantee on the core service (doctrine §3, §6).
 
 ## Material Decision Rule
 
@@ -61,7 +63,7 @@ Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURR
 
 If `client-profile.yaml`, an onboarding form, call notes, or the operator includes a client-suggested lead magnet, treat it as Candidate A. Do not confirm it as the answer.
 
-Always generate at least 3 additional candidates before scoring. The client suggestion may win, but it must beat the alternatives on the same rubric.
+Always generate at least 3 additional candidates before scoring, spread across Aaron's three buckets (Generate Candidates below). The client suggestion may win, but it must beat the alternatives on the same rubric and pass the same gates.
 
 ## AI/API Routing
 
@@ -79,7 +81,7 @@ profiles/<business-slug>/offer-intelligence.md
 
 If the brief exists, load these four sections **by name** and work from them:
 
-1. **`Candidate Generation Input`** - the numbered persona + pain + open-archetype rows. **This is the primary input.** Generate candidates against these rows: each serious candidate answers a named pain for a named persona, in an archetype the saturation map left open.
+1. **`Candidate Generation Input`** - the numbered persona + pain + open-archetype rows. **This is the primary input.** Generate candidates against these rows: each serious candidate answers a named pain for a named persona, in an archetype the saturation map left open. If the block carries the optional **cross-client priors** line (other clients' proven offers in this workspace, as patterns only), treat each prior as a hint about an offer shape worth trying, rebuilt around this client's real service and buyer; never carry another client's name, number or data into a candidate.
 2. **`Pain by persona`** - the full table behind those rows, including any prioritized persona with no pain evidence (a named gap, not a blank to fill by guessing).
 3. **`Saturation Map`** - the open, crowded, and saturated archetypes with their denominator.
 4. **`First-Party Buyer Voice`** and **`ICP Pain (in their words)`** - the buyer's exact words, which the offer gets written in.
@@ -139,7 +141,7 @@ This table is the canonical archetype reference for the cold-outbound flow. The 
 
 | Letter | Archetype | What it gives | Best when | Main risk |
 |---|---|---|---|---|
-| A | Audit or diagnostic | A short review of one measurable problem | Agencies, consultants, dev shops, compliance, operations | Everyone offers audits, so the angle must be specific |
+| A | Audit or diagnostic | A short review of one measurable problem | Agencies, consultants, dev shops, compliance, operations | Everyone offers audits, so the angle must be specific. Never *name* the offer an audit ("the word audit is just so overplayed", doctrine §3): a bounded, evidence-based diagnostic ships under a name that says what decision it clarifies (ledger R09). The letter stays A as the saturation key |
 | B | Data or research note | A useful finding about their segment or peer group | The client has data, benchmarks, or repeatable research | Generic reports get ignored |
 | C | Competitive intel | A public pattern from competitors or peers | Buyers care about market movement | Fabricated competitor claims destroy trust |
 | D | Template or checklist | A usable asset the prospect can apply | The client has a strong repeatable process | Gated PDFs kill replies |
@@ -161,13 +163,13 @@ Encoded from the Aaron Shepherd "589 positive replies in 60 days" method (transc
 
 **Why it beats a PDF.** A generic document could apply to 10,000 other companies, so it reads as mass-produced and gets ignored. A tool's output is about the reader's own business, so it feels custom without being custom. **The build is one-time and the tool itself then runs at ~zero cost per responder** — but do not stop reading there, because K3's gap-fill reintroduces a real per-responder cost that K2 exists to catch. The honest claim is narrower than "zero marginal cost forever": a tool is the cheapest way to make an asset *feel* bespoke at cold volume, and what it costs after that depends entirely on how expensive its gap is to fill.
 
-**Aaron's own warning, and why the gates below exist.** His 589 is a count of **positive replies, not meetings.** He says it plainly: getting a reply and booking a call are two completely different things, and most people who build a magnet like this get a flood of yeses and a terrible meeting-to-lead ratio. The tool is a reply engine by default; whether it also becomes a *meeting* engine is the open question K3 tries to answer, and the honest state of that answer is "plausible, unproven" (see K3). A tool that leaves the reader with no reason to talk is the shape most likely to produce polite dead ends.
+**Aaron's own warning, and why the gates below exist.** His 589 is a count of **positive replies, not meetings.** He says it plainly: getting a reply and booking a call are two completely different things, and people who build magnets and calculators with no natural progression to the next step get lots of yeses and, in his words, *"such a low meeting to lead ratio"* (S06, transcript 2026-07-13; attribution corrected 2026-09-21: this used to paraphrase him as "a terrible meeting-to-lead ratio"). The tool is a reply engine by default; whether it also becomes a *meeting* engine is the open question K3 tries to answer, and the honest state of that answer is "plausible, unproven" (see K3). A tool that leaves the reader with no reason to talk is the shape most likely to produce polite dead ends.
 
 ### The four gates (K1, K2, K4 are HARD; K3 is a strong default)
 
 These sit on top of the standard eligibility gates, not instead of them. They are deliberately not all the same strength: **K1, K2 and K4 must pass before a tool is locked** (they protect the measurement, the money, and the prospect's trust). **K3 is a strong default, not a veto** — a tool with no unresolved motive is heavily marked down and cannot be the top recommendation, but it is not auto-rejected, because the evidence under the mechanic is one unrun build (see K3). Note K4 governs whatever K3 produces: if there IS a gap, it must be real; a candidate that honestly has no gap fails K3's default, not K4.
 
-**K1 — No tool fronts a baseline Offer-Validation Wave (the measurement-integrity gate).** A tool may not be the E1 asset for the FIRST validation wave on an offer. It is welcome in any follow-on wave, once that offer has a baseline reply read on offer-led copy.
+**K1 — No tool fronts a baseline Offer-Validation Wave (the measurement-integrity gate).** A tool may not be the E1 asset for the FIRST validation wave on an offer. It is welcome in any follow-on wave, once that offer has a baseline reply read on offer-led copy. K1 binds validation arms too (Lock One Primary Plus Validation Arms, below): a tool is never an arm in a baseline validation wave, for the same measurement reason.
 
 **The reason is measurement, NOT cost.** Getting this reason right matters, because the wrong one invites the wrong exception. A validation wave exists to read one instrument: does this offer draw a reply? A strong tool inflates that reply rate on its own merits (Aaron's own words: it "opens the floodgates"), so fronting a wave with one contaminates the instrument the wave exists to read. You don't want a better number during validation, you want a *true* one. That holds no matter what the tool costs.
 
@@ -218,7 +220,7 @@ A tool is worth what it cost to acquire, and the prospect can't see that unless 
 - **What clients pay for the same process:** "this is the exact audit we run for clients paying $10,000+."
 - **What the equivalent costs annually:** "this platform costs $6,000/year; this is the first look, free."
 
-Anchor on something real. Aaron's own line on the neighbouring tactic (naming the prospect's industry in the copy) is the binding principle: *don't lie about it.* Only claim the scale, the price, or the industry coverage if it is genuinely true and the data genuinely includes them. This anchor is a direction here; `/campaign-copywriting` owns the final wording and applies the anti-fabrication rule.
+Anchor on something real. Aaron's own line on the neighbouring tactic (naming the prospect's industry in the copy) is the binding principle: *"I wouldn't go lying about the industry type"* (examples §1.6, his industry variant; S06, transcript 2026-07-13; attribution corrected 2026-09-21: this used to italicize a paraphrase, "don't lie about it"). Only claim the scale, the price, or the industry coverage if it is genuinely true and the data genuinely includes them. This anchor is a direction here; `/campaign-copywriting` owns the final wording and applies the anti-fabrication rule.
 
 **Optional: a VSL in the tool's header.** A short video of the sender walking through how to read the result puts a face to the name, removes confusion about how to use it, and states the natural next step. Cheap, and it lifts the meeting rate rather than the reply rate.
 
@@ -310,6 +312,77 @@ Record both in the candidate's output block (`Unresolved motive:` / `Next step t
 
 **Enforcement is HERE, at selection time, not at copy time.** This is a strong default, not a hard veto, and `/campaign-copywriting` only WARNS when the fields are missing, it never blocks. The reason is concrete: the fields landed 2026-07-17 and were populated on zero clients in a prior 8-client book while 7 of 8 carried a real locked magnet, so a hard gate at copy time would fail nearly the whole of that book over a defect never observed in any of them. Backfill existing clients at their next campaign refresh. New magnets get this right from the start, which is the point.
 
+## The Diagnostic Order: walk it before scoring (doctrine §2; operator-approved Aaron alignment, 2026-09-21)
+
+Aaron's spine for judging any offer. Walk it top-down and stop at the highest broken item; do not work on a lower item while a higher one is broken.
+
+0. **The buyer is real and specific.** A named buyer type with a problem they already know they have, plus role, authority, current situation, and exclusions. "Founders" or "B2B companies" is not a buyer. Here the buyer comes from the brief's `Pain by persona` rows, not from this skill.
+1. **The offer is a concrete thing, not a description of the company:** what they get, how fast, what they must do, and what risk they take.
+2. **We can deliver it at twenty yeses** (the four-sentence test's economics below, and the Fulfillment Split above).
+3. **The copy can lead with the offer and every word can be true.** This skill writes no copy, so here it means nothing in the offer rests on a claim we cannot back (Capability Truth, the Proof-Asset Gate).
+4. **The next step is one easy action, and each follow-up can earn its place** (the Next-Step Gate above; follow-up direction in Output).
+5. **We will judge the right number:** time-agreed replies per 1,000 first touches beside positive-reply rate, never reply count alone (doctrine §0, §2 step 5; `/campaign-strategy` winner pick).
+
+## Generate Candidates Across Aaron's Three Buckets (doctrine §5)
+
+Aaron never validates a single guess: *"When you're coming up with your offer, you're always going to want to test like three or four"* (doctrine §5). Generate from the `Candidate Generation Input` rows across his three buckets, at least one candidate per bucket wherever the real service allows one:
+
+1. **Service-based:** a growth-potential mapping or a bounded, evidence-based diagnostic (named for the decision it clarifies, never "audit"; ledger R09). Usually archetype A, G, I or J.
+2. **Service-delivery-based:** *"something tangible to them"*, one real unit of the paid work done free (a free ad creative, a free listing creative, a free video). Usually F or H.
+3. **Lead-magnet or asset-based:** an asset valuable in itself (*"If you have a really valuable asset that helps them solve a problem, that's what you're offering"*). Usually B, C, D, J or K (K stays fenced by K1 and K2).
+
+Within the buckets, reach for his first-offer families (doctrine §5 step 2): a done-for-you artifact, a bounded evidence-based diagnostic, a data asset (for example a look-alike list built from the prospect's own best case study), a trial or guided pilot, plus tools such as a calculator or a valuation, and samples or mockups (S13). **Choose on the real service and buyer, not on which is easiest to generate** (doctrine §5). The archetype letter still records each candidate for the saturation map; the bucket makes sure the set is broad enough to test.
+
+**Shape each candidate with the value equation, his way (doctrine §4):**
+
+- **Dream outcome: imply it through the artifact by default.** Keep the magnitude inside the contents of the free thing (his instance: a video walking through a comparable brand already doing 80 million, not "we'll help you get to 80 million in revenue"; doctrine §4, examples §1.4). Deliverable-first stays the default (his measured winner). A conditional that names the outcome and pairs it with a zero-risk term ("if we could [result]... at no cost", a free trial, zero upfront payment) is also his own shape (doctrine §4; his Jun 29 and Sep 14 scripts) and runs as a labeled arm (operator-approved Aaron alignment, 2026-09-21): no proof claim on line one, no guarantee on the core service, and an outcome that is not a stretch (that last limit is the corpus's reading, not his words). Still banned: an outcome stated with no risk term, and the retired bundle of an outcome plus a named comparable and its number on line one (proof goes to the PS, one point). (The arm is a copy arm that `/campaign-copywriting` logs in `copy.md`, not an offer validation arm. This bullet used to read "imply it through the artifact, never promise it", a blanket ban his own Jun 29 and Sep 14 copy contradicts.)
+- **Perceived likelihood: shrink what is being judged.** Move the judgment off the big outcome and onto the deliverable, pick a deliverable whose delivery odds are effectively 100%, and weave a near-twin case into the offer instead of asserting proof.
+- **Time delay: a date-certain free deliverable.** The day count must be a real capacity term the front-end owner can keep; his "7 days" is an example, not a default (doctrine §0).
+- **Effort: strip the prospect to one act** ("All you have to do is record." `[AS-client]`, examples §1.3; shape, not sentences, doctrine §9 portability rule).
+
+The reader must be able to answer three things: *what's in it for them / how long it takes / what they have to do* (doctrine §4).
+
+## The Four-Sentence Test and the Twenty-Yes Economics (every candidate)
+
+Write four plain sentences for every candidate (doctrine §5): **who gets the offer, what they receive, what they must provide, and what happens afterward.** Cross out any outcome you cannot prove or deliver. Then **estimate the total work if 20 qualified buyers say yes.** If the economics break, reduce scope, limit availability truthfully, or use a paid pilot. The capacity gate is Aaron's (doctrine §2 step 2: *"super low friction, easy for you to fulfill, but super valuable for them"*); the specific twenty-buyer figure is this system's safeguard built around his teaching (doctrine §13), and the Fulfillment Split above is the reply-scale version of the same check. Record both in the candidate's output block.
+
+## The "Why Not?" Test and the Farming-Interest Check (every candidate, both must pass)
+
+**The "why not?" test** is his acceptance criterion, stated three separate times (doctrine §4): *"if I don't have to pay a massive amount, I don't have to do a lot of work, and I really want the thing that you're offering, why wouldn't I say yes?"* A candidate that leaves the reader a reason to hesitate (cost, effort, access, a vague deliverable) fails.
+
+**The farming-interest check** catches the offer that passes "why not?" and is still worthless: *"anyone can really make their offer a broad enough question to get a yes, but that doesn't mean anything if the person was never going to buy from you"* (doctrine §4). The offer must be *"specific enough to filter out those who don't and compelling enough to pull in those that do."* Ask whether the people who say yes are the people who buy the paid service. If the free thing attracts a different audience than the paid service, it collects replies without building demand (doctrine §3). Record the ruling as `Why not / farming check:` in the output block.
+
+## The Weak-Offer Screen (reject on sight; doctrine §6, examples §9)
+
+Reject any candidate that is one of these, whatever it scores:
+
+- a performance guarantee on the core service as the front end (his named bad offer: *"offering them 20 to 30 calls per month or they don't pay"*);
+- a description of the service instead of the thing they get;
+- a dream outcome so large it reads as a stretch;
+- an offer that sounds like a project or a headache (a new CRM, a new vendor, a big change);
+- a 30, 60 or 90-day window for the front end (a quick win before commitment beats any guarantee window, doctrine §4);
+- a template-shaped offer, or a commoditized one with no layer above it;
+- generic proof bolted on, or process narration standing in for the offer;
+- a market too small to validate;
+- a generic stranger audit that creates homework, or back-end access asked for cold (*"they don't know you, they don't like you, they don't trust you"*);
+- a broad yes-farming question;
+- an inbound or referral offer reused on strangers (his "#1 cold email killer").
+
+**Never name the offer an "audit"** (doctrine §3, examples §8). A bounded, evidence-based diagnostic can survive under a better name that says what decision it clarifies (ledger R09), which is why archetype A stays in the table.
+
+**Aaron's "strategic bait" is not adopted** (doctrine §5: *"Almost a white lie, so to speak"*). Capability-truth governs: a claim of buyer intent that is not specifically true of the recipient fails, and "technically true at the firm level" does not make it true in the sentence the prospect reads.
+
+## Fulfillment First: the Four Artifacts Before Any Offer Locks (doctrine §11)
+
+**The reply is the start of the promise, not permission to change it** (doctrine §11 bolds this as the corpus's own summary of his reply-stage teaching; it is not his quote, attribution corrected 2026-09-21). Before the primary offer or any validation arm locks, write its four fulfillment artifacts. **If any one cannot be written honestly, the offer is not ready to lock.**
+
+1. **Delivery reply:** what we send on a yes, how, and by when. It delivers what was promised first, with no unexpected booking gate and no calendar link in the delivery reply. Never propose times in a delivery reply, whether or not the asset leaves an open question; the next step sits one layer down and refusable ("calendar's on the next page if you think there's interest", examples §7.3; ledger R03); times are proposed only on explicit booking intent. No offer to walk them through it on a call either: that is a call ask disguised as help, and his rule is "you don't want to add any sort of sales friction until they've actually consumed the value" (S06, transcript 2026-07-13). (operator-approved Aaron alignment, 2026-09-21)
+2. **Input needed after yes:** what the prospect must send before we can deliver (a URL, a logo, an invoice, access). Write `none` only if a one-word yes truly suffices: a one-word yes does not supply an invoice, an address, consent, or system access (doctrine §5 step 4).
+3. **If they don't qualify:** the honest one-line reply for a yes we cannot or will not serve. State the real criteria plainly; never invent a reason.
+4. **Paid next step, explained:** one or two plain sentences on the paid engagement the free thing leads into, as the prospect would read it. It must agree with `Next step that resolves it:` from the Next-Step Gate.
+
+These are fulfillment facts in plain words, not send-ready copy. Final reply wording belongs to `/campaign-copywriting` (Hard Rule 36) and the reply-agent setup skill for the locked sending platform, which read them from `lead-magnets.md` (Save Output).
+
 ## Score Ideas
 
 Score every candidate, including Candidate A, against the same 7-point offer rubric used by `/offer-intelligence`:
@@ -324,11 +397,13 @@ Score every candidate, including Candidate A, against the same 7-point offer rub
 
 Prioritize candidates scoring 6-7. A 5 can be shown only if it has a clear fix. Do not recommend candidates scoring 4 or lower unless the user asks for weak backup ideas.
 
+**The Aaron gates are pass/fail, not points.** The diagnostic order, the four-sentence test and twenty-yes economics, the "why not?" and farming-interest check, the weak-offer screen, and the four fulfillment artifacts sit outside the 7 points (the rubric itself is this system's scale, doctrine §13). A candidate that fails any of them cannot lock as the primary or as a validation arm, whatever it scores.
+
 The 7 points above are the whole score. **Do not add a signal-obtainability axis to it.** Real obtainability is measured downstream in `/data-point-discovery` (kickoff step 3.3) against actual coverage, not predicted here, so an axis scored at this point would be scored on a guess and would silently change which offer wins. The one real risk that ordering creates is handled by the single check below, which is a pass/fail on the winner rather than a scoring axis.
 
 ## The Signal-Capability Check (at offer lock, one check, not a research phase)
 
-**This check is now the only thing standing between a signal-dependent offer and an unobtainable signal.** There is no separate source-signal discovery step upstream or downstream to catch it: obtainability is confirmed later in `/data-point-discovery` (kickoff step 3.3), which is after the offer has already locked. So if a signal-dependent offer gets through here, the failure surfaces only once the list is being built around a signal nothing can obtain. That makes this a minute well spent, not a formality. Run it once, on the winning candidate only. It is a check, not research.
+**This check is now the only thing standing between a signal-dependent offer and an unobtainable signal.** There is no separate source-signal discovery step upstream or downstream to catch it: obtainability is confirmed later in `/data-point-discovery` (kickoff step 3.3), which is after the offer has already locked. So if a signal-dependent offer gets through here, the failure surfaces only once the list is being built around a signal nothing can obtain. That makes this a minute well spent, not a formality. Run it once per saved offer (the primary and each validation arm), never on candidates that lost. It is a check, not research.
 
 **Step 1 decides most cases instantly.** Does this offer's relevance depend on an observable buyer signal, meaning something specific that must be true and visible about a prospect right now before the offer makes sense to send them? **If no, the check passes immediately. Stop here and lock the offer.** Do not open the stack contract, do not name a signal, do not write anything beyond `none`. A free deliverable that is useful to any company in the ICP (most audits, templates, research notes, and the `direct_offer` path) needs no signal, and that is the preferred shape precisely because it has no external dependency.
 
@@ -352,43 +427,72 @@ Record the outcome either way in `offer.lead_magnet_signal_dependency` (see Save
 
 **This does not replace the Stack Resolution stop at the top of this skill.** If a role this skill actually needs to run is empty in the contract, that stop still fires and still routes to `/stack-setup`. This check is narrower: it is about whether the chosen offer's premise is obtainable, and its remedy is a different offer rather than a different stack.
 
+## Lock One Primary Plus Validation Arms (doctrine §5; operator-approved Aaron alignment, 2026-09-21)
+
+Aaron tests three or four offers and lets the market pick (doctrine §5; *"Let the market tell you what you should do"*, doctrine §3). Locking one offer and validating it is validating a single guess. So the lock writes two things:
+
+- **One primary offer** in `offer.lead_magnet` (unchanged field). It stays the only field that means "the offer is locked", and every downstream skill keeps reading it.
+- **One to three validation arms** in the new list field `offer.validation_arms`: the next candidates, in score order, that pass every gate the primary passed (the diagnostic order, the weak-offer screen, the four-sentence test and twenty-yes economics, the "why not?" and farming check, the four fulfillment artifacts, the Fulfillment Split, the Next-Step Gate, and the Signal-Capability Check). Each entry carries the same fields as the primary offer block (Save Output).
+
+**Rules for arms:**
+
+- **Prefer an arm from a different bucket than the primary** where one passes every gate, so the first wave tests offers rather than phrasings of one offer. Positioning of the offer is the second test, after the offer itself (doctrine §5 step 9).
+- **An arm must be able to run on the primary's list.** `/campaign-strategy` splits the same broad list across the primary and its arms with the same copy skeleton, so the offer is the only variable. An arm may therefore not depend on a buyer signal the broad list does not carry (drop the dependency or skip the candidate). Its `offer_fit_disqualifiers` should add no company type the primary's list keeps; where one does, record it, and `/campaign-strategy` applies the union of disqualifiers to the validation list so every arm sees the same companies.
+- **K1 binds arms:** no archetype K tool as an arm in a baseline validation wave.
+- **Arms are ranked.** Arm 1 always runs beside the primary; arms 2 and 3 run only when send capacity gives each its own pooled-flip floor. `/campaign-strategy` makes that call at launch, because capacity is unknown here.
+- **Empty is an exception, not a default.** If no second candidate passes every gate, generate more across the buckets first. Only if none survives, write `validation_arms: []` and say why in `lead-magnets.md` under `## Validation arms` and in the lock report: a single-offer wave validates one guess.
+
+**After the wave, the market decides.** The winning arm becomes, or stays, `offer.lead_magnet` for scale, and arms that do not get proper responses are deactivated (doctrine §5 step 9: *"deactivat[e] the angles that don't get proper responses"*). `/campaign-strategy`'s flip criterion owns that read: each arm flips on its own pooled positive replies, and among PROVEN arms the winner is the one that does not lose on time-agreed replies per 1,000 first touches; a PROVEN arm that farms interest is reshaped to filter better, not scaled and not killed. Promotion re-uses a candidate that already passed every gate here, so it does not reopen offer work.
+
 ## Output
 
 For each idea:
 
 ```markdown
 **[Offer name]**
+Bucket: <service-based / service-delivery-based / lead-magnet or asset-based (doctrine §5)>
 What it is: <one sentence>
 Who it is for: <ICP segment>
+Four-sentence test: <who gets it / what they receive / what they must provide / what happens afterward (doctrine §5)>
+At twenty yeses: <the total work if 20 qualified buyers say yes, and whether the economics hold (the twenty-buyer figure is house, doctrine §13)>
 What is needed to deliver it: <tools, data, time>
 Front-end delivery: <who delivers it - agency by default; if it needs the client, name the dependency to confirm> | agency can deliver at reply-scale: <yes / no>
+Why not / farming check: <why a buyer would say yes with no reason to hesitate, AND why the people who say yes are buyers of the paid service rather than farmed interest (doctrine §4)>
+Weak-offer screen: <pass, or the pattern it hits (doctrine §6, examples §9)>
 Unresolved motive: <what still makes them want to talk after consuming this - knowledge / capability / capacity / delegation / desire (Next-Step Gate)>
 Next step that resolves it: <the call / analysis that closes it, and why it's the natural closer>
+Delivery reply: <what we send on a yes, how, and by when; delivers first, no booking gate, no calendar link, no proposed times, no offer to walk them through it on a call (doctrine §11; times only on explicit booking intent)>
+Input needed after yes: <what the prospect must send before we can deliver, or "none" only if a one-word yes truly suffices>
+If they don't qualify: <the honest one-line reply for a yes we cannot or will not serve>
+Paid next step, explained: <one or two plain sentences on the paid engagement the free thing leads into>
 Build + fill cost: <none, or: build hours + who owns/pays, AND the per-responder fill work with the Fulfillment Split math - archetype K only>
 CTA direction: <plain-English ask direction for /campaign-copywriting, not final wording>
 Why it should work: <short reason tied to ICP pain>
-Signal dependency: <none (needs no observable buyer signal - the common and preferred answer), or: the signal named in one line. On the winning candidate only, add the Signal-Capability Check ruling: declared live / declared but unproven (chosen) / not obtainable>
+Signal dependency: <none (needs no observable buyer signal - the common and preferred answer), or: the signal named in one line. On the primary and every arm, add the Signal-Capability Check ruling: declared live / declared but unproven (chosen) / not obtainable>
 Risks: <one reason this could fail>
 Offer score: X/7
+Role at lock: <primary / validation arm 1, 2 or 3 / not locked, with the reason>
 ```
+
+The four fulfillment fields (`Delivery reply`, `Input needed after yes`, `If they don't qualify`, `Paid next step, explained`) are required for the primary and every arm before lock (doctrine §11). For other candidates, fill them once the candidate is in contention.
 
 Show the ranked options before locking anything. Do not include final CTA lines, subject lines, openers, or send-ready phrasing.
 
-For any candidate, include how the offer can carry Email 1 and its one or two same-thread follow-ups without repeating the same generic deliverable. The sequence is ONE thread with 2 to 3 steps (`/campaign-copywriting` Hard Rule 18); the 4-email / two-thread structure was retired 2026-07-05, so there is no second new-thread purpose to support. Keep this at direction level only.
+For any candidate, include how the offer can carry Email 1 and its one or two same-thread follow-ups without repeating the same generic deliverable. The sequence is ONE thread with 2 to 3 steps (`/campaign-copywriting` Hard Rule 18); the 4-email / two-thread structure was retired 2026-07-05, so there is no second new-thread purpose to support. In Aaron's method a follow-up either adds to the offer (a pre-handled concern, a benefit layer, a risk reversal, the reason it is free) or strips it back to a lower-friction version of the same offer (his two-minute Loom); it never repeats Email 1 (doctrine §11, ledger R12). Keep this at direction level only.
 
 ## Execution Mode Gate
 
 After scoring is complete and ranked options are ready, check `run_state.execution_mode` from `client-profile.yaml`:
 
-Whichever mode applies, the winning candidate must clear the Signal-Capability Check and carry an `offer_fit_disqualifiers` list before it is saved. Neither is a pause: the check passes instantly for any offer that needs no signal, and the disqualifier list is written from the locked offer in a minute.
+Whichever mode applies, the primary offer and every validation arm must pass the Aaron gates (pass/fail, Score Ideas), clear the Signal-Capability Check, carry its four fulfillment artifacts, and carry an `offer_fit_disqualifiers` list before it is saved. None of these is a pause: the check passes instantly for any offer that needs no signal, and the artifacts and the disqualifier list are written from the locked offer in minutes.
 
-- `auto_execute`: select the highest-scored candidate automatically. Do not pause for input. Run the Signal-Capability Check on it; if it fails (nothing in the contract can obtain the signal it depends on), drop the signal dependency or move down the ranking and re-check, still without pausing. Report: "Auto-selected offer: [name] (score: X/7). Reason: [one-sentence rationale tied to ICP pain]. Signal dependency: [none, or the signal plus its ruling]." Then write the disqualifier list and proceed directly to Save Output with the chosen candidate.
+- `auto_execute`: select the highest-scored candidate that passes every gate as the primary, and the next one to three gate-passing candidates (ranked, preferring a different bucket) as validation arms, all automatically. Do not pause for input. Run the Signal-Capability Check on each; if one fails (nothing in the contract can obtain the signal it depends on), drop the signal dependency or move down the ranking and re-check, still without pausing. Report: "Auto-selected offer: [name] (score: X/7), plus validation arms: [name (score), ...]. Reason: [one-sentence rationale tied to ICP pain]. Signal dependency: [none, or the signal plus its ruling]." If no arm survives, say so in the report (Lock One Primary Plus Validation Arms). Then write the disqualifier lists and the fulfillment plan and proceed directly to Save Output.
   - **Exception — `auto_execute` can never self-lock an archetype K tool.** K2 is a human commitment of money, time, and ownership that no auto-selection can make on the operator's behalf. So if a K candidate scores highest and K2 is **not already satisfied on file** (a named, funded, owned build), do not auto-lock it: auto-lock the highest-scoring **non-K** candidate instead and report the K candidate as a flagged recommendation ("K scored highest but needs a committed build owner; locked [next candidate] and surfaced K for your decision"). When K2 **is** already satisfied and recorded, K auto-locks normally like any other candidate, subject to K1 (not the baseline validation wave). This resolves the collision between "pick the highest, don't pause" and a gate that structurally requires a person to say yes.
-- `review_gates` (default): display all ranked candidates. Ask the operator to choose one before saving. Do not continue to strategy or copy until a selection is made.
+- `review_gates` (default): display all ranked candidates with the recommended primary and validation arms marked. Ask the operator to choose the primary and confirm the arms before saving. Do not continue to strategy or copy until a selection is made.
 
 ## Offer-Fit Disqualifiers (produced HERE at offer lock, consumed by `/tam-build`)
 
-Once the offer is locked, before saving, write the list of company types that **cannot use this offer**. This is a required output of offer lock, not an optional extra.
+Once the offer is locked, before saving, write the list of company types that **cannot use this offer**. This is a required output of offer lock, not an optional extra. Write one list for the primary (`offer.offer_fit_disqualifiers`, the one `/tam-build` reads) and one inside each validation arm. Arms run on the primary's list, so an arm's list should add no company type the primary's keeps (Lock One Primary Plus Validation Arms).
 
 **Why it lives here.** `/tam-build` runs a free disqualifier pre-screen before any paid classification, and it asks Aaron's gate question: *can this business actually use, stock, deploy, or buy the thing the offer delivers?* That question cannot be answered without the locked offer, and the offer is only known here. Producing the list at lock time is what lets the list build drop hopeless companies for free, before enrichment spend.
 
@@ -436,7 +540,7 @@ After the offer is selected (by operator choice or auto_execute), update `client
 
 ```yaml
 offer:
-  lead_magnet: <top pick name>
+  lead_magnet: <top pick name>  # the PRIMARY offer; still the only field that means "locked"
   lead_magnet_details: <one sentence on what gets delivered>
   lead_magnet_cta_direction: <plain-English ask direction with deliverable, usefulness, and delivery constraint, not final copy>
   lead_magnet_gap: <the loop the asset REOPENS - what the prospect still won't know after consuming it (Next-Step Gate). Required for any real magnet; omit only for `direct_offer`>
@@ -447,9 +551,24 @@ offer:
     - category: <short stable slug>
       why: <why this company type cannot use the locked offer>
       check: <the observable that decides it; NAME+DOMAIN only for category matches>
+  validation_arms:              # NEW 2026-09-21 (operator-approved Aaron alignment, doctrine §5). 1 to 3 ranked arms beside the primary; [] only when no second candidate passes every gate (say why in lead-magnets.md)
+    - rank: 1                   # arm 1 always runs beside the primary; arms 2 and 3 only when /campaign-strategy finds capacity for each arm's pooled-flip floor
+      status: active            # active | deactivated (no proper responses in the wave) | farming_interest (PROVEN on positives but losing on time-agreed replies per 1,000; reshape to filter better, not scaled) | promoted (won; its fields now sit in the primary block above)
+      lead_magnet: <arm name>
+      lead_magnet_details: <one sentence on what gets delivered>
+      lead_magnet_cta_direction: <plain-English ask direction, not final copy>
+      lead_magnet_gap: <the arm's own unresolved motive (Next-Step Gate); omit only for `direct_offer`>
+      lead_magnet_next_step: <the call / analysis that resolves it>
+      lead_magnet_build_owner: <archetype K only; K1 keeps a tool out of a baseline validation wave, so normally absent on an arm>
+      lead_magnet_signal_dependency: <`none`, or a signal the primary's broad list already carries, plus its ruling>
+      offer_fit_disqualifiers: []   # same shape as the primary's; ideally adds nothing the primary's list keeps, and /campaign-strategy applies the union to the validation list
 ```
 
-`lead_magnet_gap` is what `/campaign-copywriting` reads to decide whether the no-pitch delivery message applies (the Delivery Message rule in its CTA Hierarchy). A magnet with a real gap earns the pure-value delivery; one without it keeps a soft time-proposal at delivery, because nothing else would carry the prospect to a call. So this field is load-bearing, not documentation.
+**Write the fulfillment plan and the arms into `lead-magnets.md` as well**, since the four fulfillment artifacts live there rather than in the YAML: a `## Fulfillment plan` heading with one block per locked offer (primary first, then each arm) carrying `Delivery reply:`, `Input needed after yes:`, `If they don't qualify:` and `Paid next step, explained:`, and a `## Validation arms` heading listing each arm, its bucket, its score, and why it was chosen (or, when `validation_arms: []`, why no second candidate survived). The reply-agent setup skill for the locked sending platform and `/campaign-copywriting` read the fulfillment plan from there.
+
+**When the wave picks a winner** (`/campaign-strategy` flip criterion), a winning arm's fields move into the primary block, the arm's `status` becomes `promoted`, and the previous primary is recorded as an arm with `status: deactivated`. Record the swap in the activity log. It re-uses fields that already passed every gate here, so it is not a new offer lock.
+
+`lead_magnet_gap` is what `/campaign-copywriting` reads to decide which delivery shape applies (the Delivery Message rule in its CTA Hierarchy, Hard Rule 36). A magnet with a real gap earns the pure-value delivery, and its required day 2-3 follow-up carries the ask, aimed at the gap; one without a gap carries one soft, refusable pointer to the next step in the delivery itself, because no follow-up aimed at a gap exists to carry it. Never propose times in a delivery reply, whether or not the asset leaves an open question; the next step sits one layer down and refusable ("calendar's on the next page if you think there's interest", examples §7.3; ledger R03); times are proposed only on explicit booking intent. So this field is load-bearing, not documentation. (operator-approved Aaron alignment, 2026-09-21: a magnet without a gap used to keep "a soft time-proposal at delivery".)
 
 Do not overwrite or delete `offer.client_suggested_*` fields. They are useful context showing what the client originally believed.
 
@@ -466,10 +585,15 @@ Do not save exact CTA example fields from this skill. Exact CTA copy belongs to 
 - **Fronting an offer's baseline validation wave with a tool** (it inflates the reply rate the wave exists to read, so you learn nothing about the offer), or locking one with no committed, funded, OWNED build. See gates K1 and K2. Note K1 is about measurement, not cost: a tool is cheap, and "it's cheap" is not an exception.
 - **Reading K3 as "hide an input".** The unresolved motive can be capability, capacity, delegation or desire, not just knowledge, and a gap manufactured by crippling the tool fails K4 outright. Make the inputs easy; let the motive be what's unresolved.
 - **Waving a tool past the Fulfillment Split because "it's free per responder".** The tool is; **its gap-fill is not**. Run the volume math (expected positive replies × work-per-fill ≤ committed capacity) on the FILL, not the build. The build is the small cost; the fill grows with success, and it is the one that drowns you.
+- **Locking one offer and validating a single guess.** Aaron tests three or four (doctrine §5). Lock a primary plus one to three validation arms, and let the wave pick the winner: each arm flips on positive replies, then the PROVEN arm that does not lose on time-agreed replies per 1,000 scales.
+- **Leading with the service instead of an offer.** A service description, a stretch outcome promise, or a guarantee on the core service is a weak offer (doctrine §6); the front end is a free, inspectable unit of the paid work (doctrine §3).
+- **Naming the offer an "audit"**, or leaving out the word "free" (doctrine §3, examples §8).
+- **Farming interest.** An offer broad enough that anyone says yes collects replies from people who will never buy (doctrine §4). Run the farming-interest check, not only "why not?".
+- **Locking an offer whose four fulfillment artifacts cannot be written honestly** (doctrine §11), or one that hides a booking gate, a deposit or an access request until after the yes (doctrine §3: "Remove homework, not honesty").
 
 ## What To Do Next
 
-The offer locks here, and the rest of the chain is built to fit it. Once `offer.lead_magnet` is set in `client-profile.yaml` (by operator selection or auto_execute), the order is `/data-point-discovery` (step 3.3, where obtainability becomes a measurement against a locked offer rather than a guess), then `/tam-build` (which consumes `offer.offer_fit_disqualifiers` from this skill), then `/social-proof-bank` and `/lead-scoring`, then `/campaign-strategy`. `/cold-email-kickoff` orchestrates that sequence, so on a guided run hand back to it rather than jumping ahead.
+The offer locks here, and the rest of the chain is built to fit it. `offer.validation_arms` travels with it: `/campaign-strategy`'s Offer-Validation Wave runs the primary plus at least one arm on the same broad list. Once `offer.lead_magnet` is set in `client-profile.yaml` (by operator selection or auto_execute), the order is `/data-point-discovery` (step 3.3, where obtainability becomes a measurement against a locked offer rather than a guess), then `/tam-build` (which consumes `offer.offer_fit_disqualifiers` from this skill), then `/social-proof-bank` and `/lead-scoring`, then `/campaign-strategy`. `/cold-email-kickoff` orchestrates that sequence, so on a guided run hand back to it rather than jumping ahead.
 
 If you are already past the list build and strategy is the only missing piece, run `/campaign-strategy`.
 

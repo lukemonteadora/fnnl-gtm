@@ -28,7 +28,7 @@ The right response to a saturated market is a contrarian offer: the archetype th
 
 ## Offer Architecture gate (shared with copy)
 
-Both modes here feed the three-question Offer Architecture gate that `/campaign-copywriting` runs before Email 1: (1) SQL vs MQL framing, (2) the easy-to-say-yes-to test, (3) a named risk reversal. Evaluate the offer against these as you research. In discovery mode, prefer directions that can name a clean risk reversal and pass the easy-yes test. In validation mode, a Go decision requires all three to hold; a missing risk reversal or a failed easy-yes test is an Iterate or Swap signal, not just a copy problem. Full gate: `/campaign-copywriting` Offer Architecture.
+Both modes here feed the three-question Offer Architecture gate that `/campaign-copywriting` runs before Email 1: (1) SQL vs MQL framing, (2) the easy-to-say-yes-to test, (3) a named risk reversal. Evaluate the offer against these as you research. In discovery mode, prefer directions that can name a clean risk reversal and pass the easy-yes test. In validation mode, a Go decision requires all three to hold; a missing risk reversal or a failed easy-yes test is an Iterate or Swap signal, not just a copy problem. Full gate: `/campaign-copywriting` Offer Architecture. In Aaron's method the risk reversal is the free front end itself plus casual risk elimination, never a money-back guarantee or a performance guarantee on the core service (doctrine §3, §6; examples §5), and in validation mode a Go also needs the Step 1 diagnostic order to come back clean (doctrine §2).
 
 ## Material Decision Rule
 
@@ -325,7 +325,10 @@ The rows below are not a summary. They are the working input the next skill inve
 
 **Open archetypes still uncontested:** [letters + names from the Saturation Map's Open line]
 **Closed to candidates:** [saturated archetypes, which candidate generation may not build toward without an explicit reason]
+**Cross-client priors (optional; patterns only):** [offer patterns that flipped `offer_market_proven` or scaled as winners for OTHER clients in this workspace (their `portfolio-review.md` winners): the offer family, the deliverable's shape, the input asked for, and the next step. Or "none used".]
 ```
+
+**Cross-client priors are optional and low-confidence (operator-approved Aaron alignment, 2026-09-21; S13, demonstrated).** Aaron's September build reads other clients' winning angles before generating offers, which is a demonstration rather than a tested rule, so a prior is a hint about a shape worth trying and never outranks this client's own evidence. Carry patterns only: never another client's name, number, data or copy, and never a prior as copy.
 
 ### What to do next (discovery mode)
 
@@ -348,7 +351,7 @@ Nothing else in this brief is a prerequisite for that handoff. If `Candidate Gen
 
 ### When to trigger
 
-- Live campaign reply rate below 1% after 300+ sends, where the offer is still a plausible bottleneck after checking deliverability, bounce rate, list quality, and copy
+- Live campaign reply rate below 1% after 300+ sends, where the offer is still a plausible bottleneck once the deliverability triggers and list quality are clear (Vector 5 Key diagnostics). Copy sits below the offer in the diagnostic order (doctrine §2), so a copy check is not a precondition for suspecting the offer
 - Existing offer has live or prior campaign evidence and the client wants to keep it
 - User says "let's test a different offer" - run this before `/experiment-design` so the new offer is market-validated, not random
 - After `/lead-magnet-brainstorm` outputs an offer and you want a second opinion before locking. For a fast, hands-off second opinion - especially on a new or contrarian offer whose evidence is thin - run `/roast` on the offer: it returns a green-light / reshape / kill verdict plus the single cheapest test to run before committing copy build and list spend. Treat a thinly-evidenced offer's first small wave as that cheapest test rather than over-investing in a full build up front.
@@ -371,9 +374,18 @@ If validation mode is requested but the only offer fields are `offer.client_sugg
 
 ### Steps
 
-**Step 1: Pre-flight - spot obvious broken offers in 2 minutes**
+**Step 1: Pre-flight - walk the diagnostic order, then spot obvious broken offers in 2 minutes**
 
-Before any research, run the existing offer through four questions. This catches structurally broken offers without burning research time.
+**First, walk Aaron's diagnostic order top-down and stop at the highest broken item (doctrine §2; operator-approved Aaron alignment, 2026-09-21).** Do not work on a lower item while a higher one is broken. The highest broken item is the finding, and it names what Iterate or Swap must fix.
+
+0. **Is the buyer real and specific?** A named buyer type with a problem they already know they have, plus role, authority, current situation and exclusions. "Founders" or "B2B companies" is not a buyer.
+1. **Is the offer a concrete thing, or a description of the company?** It must say what they get, how fast, what they must do, and what risk they take.
+2. **Can the front-end owner deliver it, and what happens at twenty yeses?** Use `/lead-magnet-brainstorm`'s four-sentence test and Fulfillment Split (the twenty-buyer figure is this system's safeguard around his capacity gate, doctrine §13).
+3. **Does the copy lead with the offer, and is every word true?** Only now read the live draft.
+4. **Is the next step one easy action, and does each follow-up earn its place?**
+5. **Are we judging the right number?** Time-agreed replies per 1,000 first touches beside positive-reply rate, never reply count alone (doctrine §0, §2 step 5).
+
+Then run the existing offer through four quick questions. They are the fast check for items 1 and 2, and they catch structurally broken offers without burning research time.
 
 | Question | Red flag if... |
 |---|---|
@@ -407,18 +419,19 @@ Classify replies into five buckets:
 
 | Bucket | What it signals |
 |---|---|
-| Interested | Offer resonated - do not change it |
+| Interested | Offer resonated - do not change it, unless the interest never moves toward a time (farming interest, below) |
 | Not now / wrong timing | Offer is directionally right, timing problem |
 | Wrong person | List problem, not offer problem |
 | Not interested (no reason given) | Offer did not create desire - likely offer or copy |
 | "Already have something" / "we use X" | Offer is commoditized - strong signal to swap |
 
-Key diagnostics:
-- Open rate 30%+ but reply rate below 1% -> offer is a candidate bottleneck only after checking bounce rate, inbox placement or deliverability, list quality, and copy. The subject may have earned attention, but the ask is not proven to be the cause yet.
-- Open rate below 20% -> deliverability or subject line problem. Do not blame the offer. Run `/email-deliverability-audit` first.
+Key diagnostics, in this order:
+- **Deliverability first, but only on a trigger (operator-approved Aaron alignment, 2026-09-21).** Bounce above the house threshold, a placement test flagging it (a trigger to investigate, never decisive alone), a reply rate sitting near 0.1%, or contacts-per-positive jumping -> run `/email-deliverability-audit` first and do not blame the offer yet. **Open rate is never the trigger:** open tracking stays off on the sending platform, so open rate reads 0% and cannot diagnose anything (doctrine §9, "Don't track opens"; Eric agrees). The retired open-rate branches are archived at `outbound/_archive/aaron-alignment-2026-09-21/offer-intelligence--vector-5-open-rate-diagnostics.md`.
 - Bounce rate above accepted thresholds or repeated wrong-person replies -> list quality problem. Do not swap the offer until the list is fixed.
-- Copy that fails `/spam-word-checker` or `cold-email-copy-best-practices.md` -> copy problem. Fix copy before blaming the offer.
+- **No deliverability trigger fired and the list is clean -> the offer is a live candidate.** Walk the Step 1 diagnostic order (doctrine §2); the highest broken item is the finding.
+- Copy that fails `/spam-word-checker` or `cold-email-copy-best-practices.md` -> fix it before relaunch (a house QA gate). A clean copy pass never clears the offer: copy sits below the offer in the diagnostic order, and a rewrite cannot save a weak offer (doctrine §2, §9).
 - "Already have something" replies appearing more than once -> the archetype is saturated in their mind.
+- **Positive replies rising with no rise in time-agreed replies -> farming interest** (doctrine §4): the offer is easy to say yes to but not specific enough to filter out people who will never buy. Treat it as an Iterate signal, not a win and not a kill: reshape the offer so it is more specific and filters better. Time-agreed replies are positive replies whose thread moves toward a time, counted with `/campaign-strategy`'s magnet-inflation-guard proxy; they pick winners and gate scaling, and never move the offer-validation flip, which reads positive replies.
 
 Minimum threshold: do not call the offer broken before 300 sends. Below that, variance is too high to trust.
 
@@ -467,20 +480,20 @@ If the existing offer's archetype is SATURATED and the market alternative uses t
 | 5 | 6-7 | **Iterate** - refine framing using ICP language from Vector 3 |
 | 5 | 5 | **Iterate** - tighten CTA specificity, both are mid |
 | 3-4 | 6-7 | **Swap** - existing offer is weak, replace with market alternative |
-| 3-4 | 5 | **Swap + test** - neither dominant, run two variants via `/experiment-design` |
+| 3-4 | 5 | **Swap + test** - neither dominant, run both as offer-validation arms (`offer.validation_arms`, `/campaign-strategy` Offer-Validation Wave) via `/experiment-design`'s offer-only type |
 | 0-2 | Any | **Swap** - structurally broken, replace immediately |
 
 **Go:** Lock the offer in `client-profile.yaml`, proceed to `/campaign-strategy`.
 
 **Iterate:** Rewrite framing, CTA, and specificity. Common moves:
-- Make deliverable more specific ("a 5-minute audit" -> "a 3-bullet audit of your subject line sequence")
+- Make deliverable more specific ("a 5-minute audit" -> "your first three subject lines, rewritten": a done-for-you deliverable, never named an audit; doctrine §3, ledger R09)
 - Use ICP's own language from Vector 3
 - Eliminate friction (no form fill, reply-to-claim)
 - Sharpen competence proof ("I'll send you ideas" -> "I'll rewrite your first cold email subject line")
 
 Re-score until the offer hits 6+.
 
-**Swap:** Choose the market alternative or contrarian offer. Write the offer-only experiment hypothesis for `/experiment-design`.
+**Swap:** Choose the market alternative or contrarian offer. If `offer.validation_arms` already holds an active arm that passed every `/lead-magnet-brainstorm` gate, that arm is the first swap candidate. Write the offer-only experiment hypothesis for `/experiment-design`. Any new offer must pass `/lead-magnet-brainstorm`'s gates (the weak-offer screen, the four-sentence test, "why not?" and the farming check, the four fulfillment artifacts) before it runs.
 
 Keep the CTA at **direction-level** here — a plain-English ask direction, not exact send copy. Exact CTA wording is deferred to `/campaign-copywriting`, which writes it later under the verified-list gate (`verified-list-gate.md`) and runs it through `spam-word-checker.md` + `cold-email-copy-best-practices.md`. Do not write exact CTA send phrasing to the validation brief or `client-profile.yaml` — this skill runs before any list exists.
 
@@ -602,7 +615,7 @@ offer:
   offer_validation_path: profiles/<business-slug>/offer-validations/YYYY-MM-DD-offer-validation.md
 ```
 
-Only add `offer_validation_run` and `offer_validation_path` when validation mode runs. Keep the existing offer fields compatible for downstream skills.
+Only add `offer_validation_run` and `offer_validation_path` when validation mode runs. Keep the existing offer fields compatible for downstream skills. On **Swap + test**, record the second offer as an entry in `offer.validation_arms` (same fields as the primary block, `/lead-magnet-brainstorm` Save Output) once it has passed that skill's gates; never write a second offer anywhere else.
 
 ---
 
@@ -612,7 +625,8 @@ Only add `offer_validation_run` and `offer_validation_path` when validation mode
 - **Running the contrarian offer just because it's different.** Pattern interruption has value, but an offer disconnected from ICP pain is still a bad offer. The contrarian offer still needs to score well on pain relevance and competence proof - it just gets a pass on differentiation.
 - **Swapping offer and copy at the same time.** Combined experiment. You will learn nothing about which change drove the result. Swap the offer, freeze everything else, run `/experiment-design`.
 - **Calling the offer broken before 300 sends.** Variance is too high. Deliverability and list issues look identical to offer problems at low volumes.
-- **Treating reply rate alone as an offer problem.** Offer is only a candidate bottleneck after deliverability, bounce rate, list quality, and copy have been checked. If open rate is below 20%, run `/email-deliverability-audit` first.
+- **Treating reply rate alone as an offer problem, or a copy fix as clearing the offer.** Rule out deliverability when one of its triggers fires (bounce above the house threshold, a placement-test flag, reply rate near 0.1%, contacts-per-positive jumping) and rule out list quality; then walk the diagnostic order (doctrine §2), where the offer sits above the copy. Open rate is never the trigger: opens are not tracked in this system (operator-approved Aaron alignment, 2026-09-21).
+- **Calling an offer a winner on positive replies alone.** Report time-agreed replies per 1,000 first touches beside the positive-reply rate; a positive lift with no rise in time-agreed replies is farming interest (doctrine §0, §4).
 - **Iterating the offer without changing the language.** Iteration means rewriting toward the ICP's own words from Vector 3. Keeping your language gets the same result.
 - **Skipping discovery mode because "the client already has a strong offer."** Strong relative to what? Run discovery first so the brainstorm is informed, not assumed.
 - **Reconstructing every pain from public strangers while the client's call recordings sit unopened.** Public buyer voice is a proxy. The client's own won and lost sales calls are the buyer saying it directly, in the exact words the offer should use, about this exact category. Ask for the recordings before you mine forums. If the client genuinely has none, state that in the brief rather than letting the gap pass unnoticed.
@@ -632,10 +646,10 @@ Only add `offer_validation_run` and `offer_validation_path` when validation mode
 | `/campaign-strategy` | Reads the locked offer from `client-profile.yaml` and the data-point catalog. The front-end offer suggestions section should defer to this output. |
 | `/experiment-design` | If validation mode decision = Swap or Swap (Contrarian), this skill writes the offer-only experiment hypothesis that `/experiment-design` formalizes. |
 | `/roast` | Optional fast pre-lock stress test of a candidate offer (hands-off council → green-light / reshape / kill + the single cheapest 48-hour validation test). Useful for a new or contrarian offer before committing build and spend; complements this skill's evidence-based Go/Iterate/Swap rather than replacing it. |
-| `/ask-aaron` | Optional persona consult for pressure-testing a candidate offer against Aaron Shepherd's diagnostic (is the buyer real and specific, is it a concrete deliverable or a service description, can you deliver it at twenty yeses) or choosing between offer cards. Advisory only; complements the evidence-based Go/Iterate/Swap here rather than replacing it. |
+| `/ask-aaron` | Optional persona consult for pressure-testing a candidate offer against Aaron Shepherd's diagnostic (is the buyer real and specific, is it a concrete deliverable or a service description, can you deliver it at twenty yeses; the specific twenty-buyer figure is this system's safeguard built around his capacity gate, doctrine §13) or choosing between offer cards. Advisory only; complements the evidence-based Go/Iterate/Swap here rather than replacing it. |
 | `/cold-email-kickoff` | Invokes this discovery mode immediately after `/icp-onboarding`, then `/lead-magnet-brainstorm`, then `/data-point-discovery` once the offer is locked. |
 | `/cold-email-weekly-rhythm` | If reply rate drops below 1% on a running campaign, trigger validation mode before changing copy or list. |
-| `/email-deliverability-audit` | If open rate is below 20%, run that skill first. Do not diagnose the offer when deliverability may be the actual problem. |
+| `/email-deliverability-audit` | Run it first when a deliverability trigger fires: bounce above the house threshold, a placement-test flag (a trigger to investigate, never decisive alone), reply rate near 0.1%, or contacts-per-positive jumping. Open rate is never the trigger, because opens are not tracked in this system (open tracking stays off on the sending platform). Do not diagnose the offer while a trigger is open. |
 
 ## What to do next
 

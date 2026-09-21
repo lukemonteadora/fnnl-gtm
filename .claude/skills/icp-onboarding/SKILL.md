@@ -251,6 +251,7 @@ offer:
   lead_magnet: null
   lead_magnet_details: null
   lead_magnet_cta_direction: null
+  validation_arms: null   # set at offer lock by /lead-magnet-brainstorm: 1 to 3 ranked arms beside the primary; [] only with a stated reason
   value_prop: <why prospects should care>
 
 lead_sourcing:
