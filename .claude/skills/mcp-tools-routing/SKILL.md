@@ -1,6 +1,6 @@
 ---
 name: mcp-tools-routing
-description: Infra/sending-tool MCP routing for FNNL Agency cold outbound. Use before any domain, DNS, mailbox, campaign-upload, or deliverability/reporting step to decide MCP tool vs script vs raw API. The infra-layer sibling of ai-model-routing.md (which routes AI models) and lead-list-tech-stack-research.md (which routes data tools). CRITICAL: MCP tool calls are a new spend surface, so route every spend op through /api-cost-governance.
+description: "Infra/sending-tool MCP routing for FNNL Agency cold outbound. Use before any domain, DNS, mailbox, campaign-upload, or deliverability/reporting step to decide MCP tool vs script vs raw API. The infra-layer sibling of ai-model-routing.md (which routes AI models) and lead-list-tech-stack-research.md (which routes data tools). CRITICAL: MCP tool calls are a new spend surface, so route every spend op through /api-cost-governance."
 ---
 
 # MCP Tools Routing

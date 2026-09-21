@@ -1,6 +1,6 @@
 ---
 name: tam-build
-description: Build the company-level and contact-level TAMs up front and cheaply from /data-point-discovery. Classify the company universe against BOTH the ICP and the LOCKED offer before expensive enrichment: a company that cannot use, stock, deploy, or buy what the offer delivers is bad and is dropped before enrichment spend, while genuinely adjacent marketable companies stay maybe. Requires a locked offer, and reports per segment and per group how many companies each gate dropped. Discover every plausible buying role across good and maybe companies without revealing or verifying email. Runs after /data-point-discovery and before /lead-scoring; refreshes monthly. Gated by /api-cost-governance.
+description: "Build the company-level and contact-level TAMs up front and cheaply from /data-point-discovery. Classify the company universe against BOTH the ICP and the LOCKED offer before expensive enrichment: a company that cannot use, stock, deploy, or buy what the offer delivers is bad and is dropped before enrichment spend, while genuinely adjacent marketable companies stay maybe. Requires a locked offer, and reports per segment and per group how many companies each gate dropped. Discover every plausible buying role across good and maybe companies without revealing or verifying email. Runs after /data-point-discovery and before /lead-scoring; refreshes monthly. Gated by /api-cost-governance."
 ---
 
 # TAM Build (company-level, up front)

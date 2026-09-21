@@ -1,6 +1,6 @@
 ---
 name: client-intake-form
-description: Single-session client intake skill. Runs a pre-fill discovery pass (reads the stack contract for the tool in each capability slot, reads .env, scrapes website, checks existing profiles), produces a partially pre-populated intake form for the user to confirm or correct, then writes profiles/<business-slug>/intake-form.md and profiles/<business-slug>/client-profile.yaml. Use this before /cold-email-kickoff to eliminate back-and-forth questions. Supports execution_mode: auto_execute (system picks top recommendations without pausing) or review_gates (current behavior).
+description: "Single-session client intake skill. Runs a pre-fill discovery pass (reads the stack contract for the tool in each capability slot, reads .env, scrapes website, checks existing profiles), produces a partially pre-populated intake form for the user to confirm or correct, then writes profiles/<business-slug>/intake-form.md and profiles/<business-slug>/client-profile.yaml. Use this before /cold-email-kickoff to eliminate back-and-forth questions. Supports execution_mode: auto_execute (system picks top recommendations without pausing) or review_gates (current behavior)."
 ---
 
 # Client Intake Form
