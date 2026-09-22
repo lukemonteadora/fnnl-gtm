@@ -24,7 +24,7 @@ Artifacts carry no version stamp, so there is nothing to version-diff. The only 
 ## What this skill owns vs delegates
 
 - **Owns:** re-reading the current flow; classifying memory drift direction; the per-stage existence + conformance checks; the adversarial verification of every finding; the conformance report; the archive-after-regenerate cleanup; the activity-log write-after.
-- **Delegates (never reimplements):** every actual fix. Regeneration is handed to the owning skill (`/icp-onboarding`, `/offer-intelligence`, `/lead-magnet-brainstorm`, `/offer-test-slate`, `/lead-source-strategy`, `/data-point-discovery`, `/tam-build`, `/campaign-strategy`, `/email-waterfall`, `/list-quality-scorecard`, `/campaign-copywriting`, the platform spintax + upload skills) or to `/continue-client` for the multi-step tail. Remaining-step routing reads from `/cold-email-kickoff` Step 2.1 / Step 6 — the single routing table. Proceed-vs-stop, the spend ceiling, the no-re-ask rule, the hard-stop list, and the browser-fallback rule come from `/autonomous-execution-policy`.
+- **Delegates (never reimplements):** every actual fix. Regeneration is handed to the owning skill (`/icp-onboarding`, `/offer-intelligence`, `/lead-magnet-brainstorm`, `/offer-test-slate`, `/lead-source-strategy`, `/data-point-discovery`, `/tam-build`, `/campaign-strategy`, `/email-waterfall`, `/list-quality-scorecard`, `/campaign-copywriting`, `/lifecycle-copy`, the platform spintax + upload skills) or to `/continue-client` for the multi-step tail. Remaining-step routing reads from `/cold-email-kickoff` Step 2.1 / Step 6 — the single routing table. Proceed-vs-stop, the spend ceiling, the no-re-ask rule, the hard-stop list, and the browser-fallback rule come from `/autonomous-execution-policy`.
 
 ## Boundary — what this is NOT
 
@@ -76,7 +76,7 @@ Resolve every `profiles/<client>/...`, `scripts/...`, `memory/...`, `client-acti
 
 Re-read these on disk at the start — never audit from memory of how they work:
 
-1. **The chain skills' current `SKILL.md`** for every stage below — `/cold-email-kickoff`, `/icp-onboarding`, `/offer-intelligence`, `/lead-magnet-brainstorm`, `/offer-test-slate`, `/lead-source-strategy`, `/data-point-discovery`, `/social-proof-bank`, `/tam-build`, `/lead-scoring`, `/campaign-strategy`, `/icp-prompt-builder`, `/email-waterfall`, `/list-quality-scorecard`, `/campaign-copywriting`, the locked platform's spintax + upload + inbox-manager skills, `/cold-email-inbox-tracker`.
+1. **The chain skills' current `SKILL.md`** for every stage below — `/cold-email-kickoff`, `/icp-onboarding`, `/offer-intelligence`, `/lead-magnet-brainstorm`, `/offer-test-slate`, `/lead-source-strategy`, `/data-point-discovery`, `/social-proof-bank`, `/tam-build`, `/lead-scoring`, `/campaign-strategy`, `/icp-prompt-builder`, `/email-waterfall`, `/list-quality-scorecard`, `/campaign-copywriting`, `/lifecycle-copy`, the locked platform's spintax + upload + inbox-manager skills (plus its reply manager, if `/stack-setup` activated a pack that provides one), `/cold-email-inbox-tracker`.
 2. **Cross-cutting policy docs** — `/autonomous-execution-policy`, `/api-cost-governance`, `/ai-model-routing`, `cold-email-copy-best-practices.md`, `verified-list-gate.md`, `output-style-guide.md`, `coldoutbound-gotchas.md`, `spam-word-checker`.
 3. **Memory** — the operator `MEMORY.md` index + the relevant HARD-RULE topic files + this client's onboarding memory.
 4. **Repo + global `CLAUDE.md`** — the path-resolution rule, the Decision & Recommendation Style, the Communication & Output Style, the client-activity-log protocol.
@@ -122,10 +122,10 @@ Walk the stages in order. Each row names the **governing source(s) to re-read** 
 | C. Offer + lead magnet | `offer-intelligence.md`, `lead-magnets.md`, `offer.*` lock | `/offer-intelligence`, `/lead-magnet-brainstorm`, offer-architecture rules |
 | C2. Offer test slate | `offer-test-slate.md`, `offer.test_slate`, each offer's `lead_magnet_yes_honored_by` / `lead_magnet_client_ok` | `/offer-test-slate` (slate mode, client approval optional; scale review after the wave) |
 | D. Data-point catalog | `data-point-catalog.md` | `/data-point-discovery` (runs on the locked offer; carries obtainability plus the market source landscape, and is the file the client-facing approval deck reads its source section from) |
-| D2. Social proof + trigger bank | `social-proof-bank.md`, `run_state.status.proof_bank_stage` | `/social-proof-bank` (self-gather-first; proof mapped per segment × service line with copy-ready one-liner + a `poke_the_bear` line reserved for the labeled two-line test arm; data-backed triggers reuse canonical `/data-point-discovery` names; genuine raw-fact gaps routed via `/proof-asset-request` bank mode). Runs parallel with F |
-| F. TAM | `tam/tam.csv`, `tam/contacts.csv`, `run_state.status.tam_stage` | `/tam-build` (broad good/maybe universe, full_enriched gate) |
+| D2. Social proof + trigger bank | `social-proof-bank.md`, `run_state.status.proof_bank_stage` | `/social-proof-bank` (self-gather-first; proof mapped per segment × service line with copy-ready one-liner + a `poke_the_bear` line reserved for the labeled two-line test arm; data-backed triggers reuse canonical `/data-point-discovery` names; genuine raw-fact gaps routed via `/proof-asset-request` bank mode). Its seed set (the offer-fit seed companies) must exist before F builds, per the phase order in `/cold-email-kickoff` Flow order; the rest runs parallel with F |
+| F. TAM | `tam/tam.csv`, `tam/contacts.csv`, `run_state.status.tam_stage` | `/tam-build` (broad good/maybe universe; full_enriched gate: mapped, fit-scored and contacts discovered; signal columns optional) |
 | F2. Lead scoring | `lead-scoring-rubric.yaml`, `tam/tam.scored.csv`, `tam/contacts.scored.csv`, `tam/lead-scoring-report.md`, `run_state.status.scoring_stage` | `/lead-scoring` (10-point arithmetic, explicit exclusions, P1 to P5 survival, score-version gate) |
-| G. Campaign strategy | `campaign-strategy.md` | `/campaign-strategy` (volume-first; an Offer-Validation Wave run in flights while `offer_market_proven` is false; [FL] floor) |
+| G. Campaign strategy | `campaign-strategy.md`, `run_state.capacity_request` | `/campaign-strategy`, `/cold-email-kickoff` Step 4 |
 | H. Campaign plan | `campaign-plan.md` | `/cold-email-kickoff` Step 5 |
 | I. Lead source plan | `campaigns/<slug>/lead-source-plan.md` | `/lead-source-strategy` (Lead Source Plan Mode), `/lead-list-tech-stack-research` |
 | J. List build + verify | `campaigns/<slug>/leads.scored.csv`, `leads.verified.csv` | `/icp-prompt-builder`, `/lead-scoring` for external lists, `/email-waterfall`, `verified-list-gate.md` |
@@ -147,8 +147,9 @@ Walk the stages in order. Each row names the **governing source(s) to re-read** 
 | P1. Mailboxes | type (GMAIL/OUTLOOK, not SMTP), min time gap, rotation-batch halves, signatures | the inbox manager for the locked sending platform + the min-gap / rotation-batch / sender-identity memories |
 | P2. Warmup | maturity for the live-Start gate | locked inbox manager, `/cold-email-inbox-tracker` |
 | P3. Client access | per-client client-access entity + mailbox assignment | the locked platform's inbox manager (client-access SOP memory) |
-| P4. Pre-launch gates | warmup / placement+auth / final QA (Gates A/B/C) | `/cold-email-kickoff` Pre-launch gates, `/email-deliverability-audit` |
+| P4. Pre-launch gates | warmup / placement+auth / final QA / reply readiness (Gates A to D; Gate D is walked as its own stage, P6) | `/cold-email-kickoff` Pre-launch gates, `/email-deliverability-audit` |
 | P5. Platform draft | paused draft: senders attached, schedule, settings, signature on new-thread steps | locked platform's upload skill + that platform's API to read live state |
+| P6. Reply readiness (Gate D) | per campaign, the reply-machine files in `campaigns/<slug>/` (`interested-reply.md`, `pre-call.md`), the offer's `offer.qualification`, the named speed-to-lead owner and response target, and how interested replies actually reach that owner today | `/cold-email-kickoff` Pre-launch gates (Gate D), `/lifecycle-copy`, and the locked platform's reply manager if `/stack-setup` activated a pack that provides one. Added by the Aaron process alignment (operator directive 2026-09-22) so a client cannot certify conformant with no reply handling: once a draft exists this stage is never `N/A`. Its files and `run_state` fields are on disk, so it is judged from disk even when the sending platform cannot be read |
 
 Skip only provider-specific branches that do not apply, such as a step belonging to a sending platform other than the locked one. Do not skip the TAM or lead-scoring stages on the governed flow.
 
@@ -218,7 +219,7 @@ Optionally export to a Google Doc (`scripts/docx_to_gdoc.mjs` path, soft-skip if
 - **Changing a locked provider stack / sending platform**, or any source-of-truth change, without surfacing it.
 - **Overwriting an operator-directive memory** to match a skill — surface it and flag the skill instead.
 - **Deleting** anything — the audit archives (reversible move) only; deletion is manual.
-- **The pre-launch safety gates** (warmup ≥ 2 weeks, placement/auth, final QA) and the **verified-list gate** — these block the live send on fail; autonomy never relaxes them.
+- **The pre-launch safety gates** (warmup ≥ 2 weeks, placement/auth, final QA, reply readiness under Gate D) and the **verified-list gate** — these block the live send on fail; autonomy never relaxes them.
 - **Filling an empty capability slot.** A provider slot the stack contract leaves empty, or a locked value with no contract slot behind it, is reported as a finding and routed to `/stack-setup`. The audit never picks a vendor to close the gap, whatever the execution mode.
 - **Irreversible actions; legal / compliance risk; anything in the global safety rules.**
 
@@ -241,5 +242,5 @@ Optionally export to a Google Doc (`scripts/docx_to_gdoc.mjs` path, soft-skip if
 - `/autonomous-execution-policy` — proceed-vs-stop, the spend ceiling, the no-re-ask rule, the hard-stop list, the don't-idle-wait and browser-fallback rules.
 - `/session-distiller` — when a finding is "the SKILL is stale, not the artifact/memory," route the skill update here.
 - `/api-cost-governance` — gates any spend inside delegated remediation.
-- The chain skills (`/icp-onboarding`, `/offer-intelligence`, `/lead-magnet-brainstorm`, `/offer-test-slate`, `/lead-source-strategy`, `/data-point-discovery`, `/social-proof-bank`, `/tam-build`, `/lead-scoring`, `/campaign-strategy`, `/icp-prompt-builder`, `/email-waterfall`, `/list-quality-scorecard`, `/campaign-copywriting`, the platform spintax/upload/inbox-manager skills, `/cold-email-inbox-tracker`) — re-read for their current standard and delegated to for fixes.
+- The chain skills (`/icp-onboarding`, `/offer-intelligence`, `/lead-magnet-brainstorm`, `/offer-test-slate`, `/lead-source-strategy`, `/data-point-discovery`, `/social-proof-bank`, `/tam-build`, `/lead-scoring`, `/campaign-strategy`, `/icp-prompt-builder`, `/email-waterfall`, `/list-quality-scorecard`, `/campaign-copywriting`, `/lifecycle-copy`, the platform spintax/upload/inbox-manager skills, `/cold-email-inbox-tracker`) — re-read for their current standard and delegated to for fixes.
 - `client-activity-log.md`, `output-style-guide.md`, `verified-list-gate.md`, `cold-email-copy-best-practices.md`, `coldoutbound-gotchas.md` — the protocol + reference docs the audit reads.

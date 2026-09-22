@@ -136,7 +136,7 @@ Most of the confusion here comes from one word doing three jobs. Separate them a
 
 **1. The offer category.** The business you are in. "We help companies hire talent." This never varies by group. If two groups genuinely need different categories, that is not a segment, it is a second business line with its own ICP, its own proof, and its own pipeline.
 
-**2. The offer.** The specific front-end thing, with a defined deliverable, a timeframe, and a risk reversal. "Five pre-vetted candidates for one open role, delivered in 72 hours, free, you only pay if you hire one." **Several offers per wave, each in its own randomized cell** (operator directive 2026-09-22, following Aaron's three-to-four-offer test portfolio, doctrine §5). The Offer-Validation Wave splits one broad list evenly into one cell per offer, with the same copy skeleton, so the offer is the only variable (`/campaign-strategy` validation arms). This used to read "one offer per client per wave".
+**2. The offer.** The specific front-end thing, with a defined deliverable, a timeframe, and a risk reversal. "Five pre-vetted candidates for one open role, delivered in 72 hours, free, you only pay if you hire one." **Several offers per wave, each in its own randomized cell** (operator directive 2026-09-22, following Aaron's three-to-four-offer test portfolio, doctrine §5). The Offer-Validation Wave is the whole qualified TAM at full volume, with the offer test running inside it. First-wave offer count = `max(3, floor(qualified_contacts / 2000))`, where `qualified_contacts` is the wave's send-eligible contacts, capped at the number of qualifying candidates (fewer than 3 only when fewer qualify, and the report says so) (Aaron, Apr 6: about one front-end offer per 2,000 leads; May 4: always test three or four). Every first-wave segment's rows are split evenly into one cell per offer, all launched together with the same copy skeleton, so within a segment the offer is the only variable and the read is an offer x segment matrix. The desk-ranked primary gets no head start, and only arms beyond the count queue (`/campaign-strategy` validation arms; Aaron process alignment, operator directive 2026-09-22, supersedes sizing a validation list to the chosen offers). This used to read "one offer per client per wave".
 
 **3. The copy variable.** Everything that changes by group: which pain you lead with, which proof you show, the vocabulary, and the concrete noun that gets slotted into the offer sentence (which role the shortlist is for, which vertical the case study is in).
 
@@ -144,7 +144,7 @@ The resolution, for groups that share the same buying problem: **groups vary the
 
 ### Why the offer is tested first, and why each offer gets its own cell
 
-The four levers run in a fixed order of impact: **offer, then list, then personalization, then volume.** The offer is the biggest lever, which is why `/campaign-strategy` makes the Offer-Validation Wave a HARD RULE for any client whose offer is not yet market-proven.
+The four levers run in a fixed order of impact: **offer, then list, then personalization, then volume.** The order sets what is tested first, never how much is sent (Aaron process alignment, operator directive 2026-09-22; supersedes reading the order as a small first wave that holds volume back). The offer is the biggest lever, which is why `/campaign-strategy` makes the Offer-Validation Wave a HARD RULE for any client whose offer is not yet market-proven, and Aaron validates the offer *by* sending volume, so that wave is the whole qualified TAM at full volume with the offer test inside it (Sep 21: the whole mapped TAM of one vertical, about 96,000 sends in one week). What waits for a proven offer is the signal-slice fan-out, never the rest of the TAM.
 
 Running several offers across several groups inside one undifferentiated campaign means that when it underperforms you cannot tell whether the offer was weak or the group was wrong, because both varied simultaneously, and you burn freshly warmed sending capacity and first-touch reputation to learn nothing. The fix is structure, not fewer offers: give each offer its own randomized cell on the same list, so any difference between cells is the offer. Validate the offers broadly first, on the biggest and cleanest lists, differentiated by **message** rather than by a sparse timing signal. Once one shows life, fan out.
 
@@ -152,7 +152,7 @@ Running several offers across several groups inside one undifferentiated campaig
 
 **Objection:** if the client serves genuinely different buyer worlds, forcing one offer produces a lowest-common-denominator offer that is weak everywhere.
 
-**Ruling: fixable, not fatal, and the fix is per-group offer sets, not one broadened offer (operator decision 2026-09-22).** A sharp offer to a narrower list beats a generic offer to a wider one, and it produces a readable result. So a group whose buying problem genuinely differs gets its own offer set from the research (`offer.segments` in `/lead-magnet-brainstorm`), and each group's offers are tested in their own cells, in parallel when send capacity allows and the priority group first when it does not. Broadening one offer to cover every group is how you end up with an offer that validates nowhere.
+**Ruling: fixable, not fatal, and the fix is per-group offer sets, not one broadened offer (operator decision 2026-09-22).** A sharp offer to a narrower list beats a generic offer to a wider one, and it produces a readable result. So a group whose buying problem genuinely differs gets its own offer set from the research (`offer.segments` in `/lead-magnet-brainstorm`), and each group's offers are tested in their own cells, with the offer count from the first-wave formula run on that group's own qualified contacts. Every group launches: when sending capacity cannot carry every group's wave at the one-week pace, the runway stretches and the priority group goes first in send order, never a group held back or cut (Aaron process alignment, operator directive 2026-09-22; capacity is sized to the volume, never trimmed). Broadening one offer to cover every group is how you end up with an offer that validates nowhere.
 
 ### When a group genuinely earns its own offer
 
@@ -161,13 +161,13 @@ When the research shows a buying problem the current offer cannot address at all
 1. The group has a **buying problem the current offer cannot address at all**, not merely a different flavor of the same one.
 2. A message split has already run and shows a **persistent reply-rate gap that copy changes cannot close.**
 
-Those were the old preconditions. Now the group's own offer test runs in parallel with the others when send capacity allows, each on its own cells.
+Those were the old preconditions. Now the group's own offer test launches alongside the others, each on its own cells; thin capacity stretches the runway and sets send order, never holds a group back (Aaron process alignment, operator directive 2026-09-22).
 
 ### Where the offer sequence actually sits
 
 The offer comes first, and the list is built to fit it. The live order is:
 
-**ICP and buyer pain, then offer, then lead magnet, then data points, then TAM, then scoring, then campaign slices.**
+**ICP and buyer pain, then the front-end offer set (a lead magnet is one of Aaron's three offer buckets, not a separate step), then data points, then the 5 to 10 companies that best fit the locked offer as seeds, then the lookalike TAM, then scoring, then the campaign and test design with its capacity request, then copy, then the reply machine before launch** (Aaron process alignment, operator directive 2026-09-22).
 
 > **Superseded 2026-09-19.** This section used to read "ICP, then source-signal feasibility, then offer...", with a separate source-signal feasibility phase running before the offer. That phase is retired. There is no `/lead-source-strategy` Source-Signal Discovery Mode and no `source-signal-intelligence.md` any more. If you find a reference to either, it is stale.
 
@@ -234,7 +234,7 @@ Before any grouping becomes a campaign:
 ## Related
 
 - `signal-strategy-playbook.md` for which signals exist, what each proves, and how to acquire it
-- `/campaign-strategy` for the volume-first wave shape, the ≥500-company floor, and the Offer-Validation Wave
+- `/campaign-strategy` for the volume-first wave shape, the ≥500-company floor (applied per offer cell), and the Offer-Validation Wave (the whole qualified TAM at full volume, the offers as equal cells inside it)
 - `/tam-build` for case-study-anchored discovery and the lookalike expansion ladder
 - `/data-point-discovery` for deciding which data points to collect before any list is built
 - `/social-proof-bank` for seed sets and the per-group proof that copy draws on

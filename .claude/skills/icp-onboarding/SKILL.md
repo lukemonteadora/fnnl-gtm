@@ -58,7 +58,7 @@ Check `<outbound>/profiles/<business-slug>/client-profile.yaml`:
 
 Before asking any question, build a pre-fill map silently:
 
-1. If a business website URL is available from context or the caller, scrape it and infer: offer summary, likely buyer titles, apparent headcount range from pricing, industries from homepage imagery and case studies, geography from footer/currency/case study locations, client-suggested offer from services pages, tone from copy voice.
+1. If a business website URL is available from context or the caller, scrape it and infer: offer summary, likely buying function and seniority (plus any buyer titles the site names, kept as examples), apparent headcount range from pricing, industries from homepage imagery and case studies, geography from footer/currency/case study locations, client-suggested offer from services pages, tone from copy voice.
 2. Read `<outbound>/stack-contract.yaml` for the tool declared in each capability slot (registrar, mailbox provider, sending platform, email verification, lead sources), then check `.env` and `.env.local` for the matching credentials. A key is evidence that a credential exists, never a stack decision: no `run_state` provider field is filled from a key, from habit, or from another client's profile. If a slot is empty, leave the field `null` (it reads as deferred) and continue: ICP and offer work never need an infrastructure or sending-platform tool, so the empty slot becomes a stop only at the step that uses it (operator decision 2026-09-22). The never-guess rule holds under `auto_execute`, because provider routing is a hard stop rather than a rubric choice.
 3. Check any existing `client-profile.yaml` for prior values.
 
@@ -80,6 +80,12 @@ If a website is available, inspect it with the browser or normal web research. D
 Target location is a hard input for source planning. A campaign that works in the United States may fail in Denmark, Germany, Australia, or a smaller local market because the useful directories, registries, job boards, maps coverage, contact databases, and public signals are different.
 
 Do not treat geography as a minor ICP note. Store the target countries, states, regions, cities, and excluded markets clearly enough that `/lead-source-strategy` can research source availability before campaign strategy recommends list sources.
+
+## The Intake ICP Is A Starting Point, Not A Ceiling
+
+**Aaron process alignment, operator directive 2026-09-22.** The ICP captured here is where the list starts, not its final definition. The locked offer may widen or narrow it later: at offer lock, `/lead-magnet-brainstorm` writes the offer-derived list definition beside `offer.offer_fit_disqualifiers`, namely `offer.icp_inclusion` (the inclusion filters the offer implies) and `offer.title_stack` (the full job-title stack generated from the offer, every variation). Aaron let an offer that fit any business with an Instagram account set the list's breadth (Sep 14: "Whether it was e-commerce, SAS, agencies, didn't really matter"), and filtered for "has a free trial" because his offer sold trial sign-ups (Sep 21). `/tam-build` reads the offer fields over these intake fields wherever they differ.
+
+So capture the buyer as a **buying function and seniority**, not one job title (the offer generates every title variation at lock). Capture industries in **plain business language**: they reach the pull as a keyword stack Claude Code generates, never as a provider's industry taxonomy. Keep the exclusions (`industries_out`, excluded domains) as named lists.
 
 ## Output
 
@@ -130,12 +136,12 @@ If the user has no website, ask for a two-sentence description with `Custom answ
 Batch these into native multi-question confirm-or-correct prompts — group related items together rather than asking one per turn (per `/clarification-first`, which this skill defers to: bundle the genuinely-needed asks upfront so onboarding isn't 10+ sequential round-trips). Use each item below as a native choice-prompt topic, not as a raw typing prompt; where the runtime can't render a batch, fall back to sequential. When research or saved context gives a likely answer, pre-fill it as the recommended option so the user can click to accept instead of typing. Always keep `Custom answer` last.
 
 1. Offer summary
-2. Single best customer — and any other real case-study / customer wins. For each, capture the company's website/domain and which sub-industry / what-they-sell group it belongs to (plus the result, timeframe, and whether it can be named), because these companies become the lookalike **seeds** for `/tam-build`'s proven motion and `/social-proof-bank`'s Seed-and-Proof Readiness gate reads them before a proven-motion group's TAM is built. Just capture what the client volunteers here; `/social-proof-bank` structures the seed set and chases any gaps.
-3. Buying job title
+2. Single best customer — and any other real case-study / customer wins. For each, capture the company's website/domain and which sub-industry / what-they-sell group it belongs to (plus the result, timeframe, and whether it can be named), because these companies become the lookalike **seeds** for `/tam-build`'s proven motion (the ones that fit the locked offer lead its 5 to 10 seeds) and `/social-proof-bank`'s Seed-and-Proof Readiness gate reads them before a proven-motion group's TAM is built. Just capture what the client volunteers here; `/social-proof-bank` structures the seed set and chases any gaps.
+3. Buying function and seniority (for example "finance, Director and above" or "owner or managing partner"), plus any example titles the client names. Not one job title: the full title stack is generated from the locked offer at offer lock (`offer.title_stack`), every variation (Aaron, May 4: "every single variation of that"; Sep 21, on generating titles with Claude: "Claude's super familiar with my offer")
 4. Hard minimum and maximum headcount
-5. Industries, categories, or market segments in or out. Use plain business language now. Use a provider's exact taxonomy later only if `/lead-source-strategy` selects that provider.
+5. Industries, categories, or market segments in or out, in plain business language. The in-list is a starting point that `/tam-build` turns into a keyword stack for the pull (generated by Claude Code, never a provider's industry-taxonomy filter; Aaron, Apr 13: "we scrap the industry filters altogether"). The out-list stays a named exclusion list.
 6. Countries, states, regions, or cities in scope and out of scope. This is required because source coverage changes by market.
-7. Relevant buying triggers
+7. Relevant buying triggers. These are list-relevance signals (they make the list more relevant); using one in copy is optional
 8. Preferred sources, blocked sources, or custom scraping limits for lead sourcing
 9. Competitors, customers, partners, or domains that must be excluded
 10. Current offer or ask suggested by the client or form
@@ -192,10 +198,11 @@ D. Custom answer
 
 Rules:
 
-- Job title is usually hard.
-- Industry is hard only when the market is truly vertical.
+- Buying function and seniority are usually hard. Individual titles are not filters set here: the offer generates the full stack at lock.
+- Industry is hard only when the market is truly vertical, and even then it reaches the pull as a keyword stack plus `industries_out` exclusions, never a provider taxonomy filter.
 - Headcount edges are often soft.
-- Triggers are usually soft. They are personalization signals, not always filters.
+- Triggers are usually soft. They are list-relevance signals, not always filters, and using one in copy is optional (Aaron process alignment, operator directive 2026-09-22; supersedes "personalization signals").
+- Every hard filter here is a starting point the locked offer may widen or narrow (`offer.icp_inclusion`).
 
 ## Step 4: Write The Profile
 
@@ -253,6 +260,10 @@ offer:
   lead_magnet_cta_direction: null
   validation_arms: null   # set at offer lock by /lead-magnet-brainstorm: every qualifying candidate, ranked (uncapped), run in flights by /campaign-strategy; [] only with a stated reason
   segments: null   # per-buyer-type offer sets, written by /lead-magnet-brainstorm when /cold-email-kickoff Step 2.5 confirms 2+ segments whose pain or offer fit differ (operator decision 2026-09-22)
+  offer_fit_disqualifiers: null   # set at offer lock by /lead-magnet-brainstorm: company types the offer cannot serve; /tam-build's free pre-screen reads it (null before lock reads as absent)
+  icp_inclusion: null   # set at offer lock by /lead-magnet-brainstorm: offer-derived inclusion filters that widen or narrow icp_hard_filters below (Aaron process alignment, operator directive 2026-09-22)
+  title_stack: null   # set at offer lock by /lead-magnet-brainstorm: the full job-title stack generated from the offer, every variation; /tam-build Layer 1d pulls on it
+  qualification: null   # set at offer lock by /lead-magnet-brainstorm for a costly front end (trial, service, custom work): the disclosed criteria plus form fields that decide who gets the free unit; cheap assets have none
   value_prop: <why prospects should care>
 
 lead_sourcing:
@@ -269,12 +280,13 @@ capability_boundary:
   legal_or_compliance_limits: []
   fulfillment_notes: <what would be needed to deliver a source-backed micro-offer>
 
-icp_hard_filters:
-  job_titles:
-    - <exact title>
+icp_hard_filters:   # the starting point, not the ceiling: the locked offer's offer.icp_inclusion and offer.title_stack widen or narrow it
+  buying_function: <the function that buys, e.g. finance, revenue operations, practice ownership>
+  seniority: []      # levels that hold the decision, e.g. [director, vp, c_level] or [owner]
+  job_titles: []     # optional example titles the client named; a seed for offer.title_stack at offer lock, not the pull's title filter
   industries_in:
-    - <plain industry or market segment; provider taxonomy only after source selection>
-  industries_out: []
+    - <plain industry or market segment; /tam-build turns these into a keyword stack for the pull, never a provider taxonomy filter>
+  industries_out: []   # named exclusion list, applied as-is
   headcount_min: <int>
   headcount_max: <int>
   countries:
@@ -284,7 +296,7 @@ icp_hard_filters:
   excluded_domains: []
 
 icp_soft_preferences:
-  triggers: []
+  triggers: []   # list-relevance signals; copy use optional
   personas_to_prioritize: []
 
 legal:
@@ -304,9 +316,9 @@ Do not overwrite an existing `client-profile.yaml` without explicit confirmation
 
 - "SMBs" is not an ICP. Ask for headcount.
 - "Anyone who needs this" is not an ICP. Ask for the best customer.
-- Include title synonyms.
+- Do not settle for one title. Capture the buying function and seniority (and any example titles as seeds); the offer generates every title variation at lock (`offer.title_stack`).
 - A location like "Europe" or "Nordics" is too loose unless the client can explain which countries matter first. Source availability is country-specific.
-- Do not force a data provider's industry taxonomy during onboarding. Copy any provider's taxonomy exactly only after `/lead-source-strategy` selects that source.
+- Do not force a data provider's industry taxonomy, at onboarding or later. Industries-in reach the pull as a keyword stack Claude Code generates (`/tam-build`). Only where a tool needs a taxonomy value for an exclusion (a hard-no vertical) is `industries_out` mapped onto that tool's values.
 - Do not make every trigger a hard filter. That shrinks the list too far.
 
 ## What To Do Next

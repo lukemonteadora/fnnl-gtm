@@ -2,8 +2,8 @@
 // merge_gen.mjs
 // Merge /personalization-subagent-pattern part files (_gen/part_*.jsonl) back onto a
 // campaign's leads.verified.csv by idx (= 1-based row order from build_gen_input.mjs),
-// run the export-gate QA across all 6 email columns, and write:
-//   <campaignDir>/leads.generated.csv   (verified cols + 6 email cols + qa_flags) — ALL rows
+// run the export-gate QA across all 7 email columns, and write:
+//   <campaignDir>/leads.generated.csv   (verified cols + 7 email cols + qa_flags), ALL rows
 //   <campaignDir>/leads.send.csv         (rows that pass the hard gate) — upload-ready
 //   prints a QA summary + the flagged rows.
 //
@@ -32,8 +32,9 @@ for(const p of parts){
   }
 }
 
-const COLS=['email_1_a','email_1_b','email_2','email_3_a','email_3_b','email_4'];
-const E1E3=['email_1_a','email_1_b','email_3_a','email_3_b'];
+// email_1_c added 2026-09-23 (Aaron process alignment, operator directive 2026-09-22: three Email 1 variants by default).
+const COLS=['email_1_a','email_1_b','email_1_c','email_2','email_3_a','email_3_b','email_4'];
+const E1E3=['email_1_a','email_1_b','email_1_c','email_3_a','email_3_b'];
 const E2E4=['email_2','email_4'];
 // Generic copy gates only. Client-specific banned tokens (the client's own brand name, its
 // HQ city, client-internal job titles) get added to this list per engagement.
@@ -83,7 +84,7 @@ console.log('=== merge_gen: '+path.basename(campaignDir)+' ===');
 console.log('verified rows         : '+(lv.length-1));
 console.log('generated objects     : '+genCount+' (unique idx '+Object.keys(gen).length+')');
 console.log('leads.generated.csv   : '+(allRows.length-1)+' rows (all)');
-console.log('leads.send.csv        : '+(sendRows.length-1)+' rows (passed hard gate: all 6 cols, no banned token)');
+console.log('leads.send.csv        : '+(sendRows.length-1)+' rows (passed hard gate: all 7 cols, no banned token)');
 console.log('flagged rows          : '+flags.length);
 for(const fl of flags.slice(0,40)) console.log('   idx '+fl.idx+' ('+fl.company+'): '+fl.flags);
 if(flags.length>40) console.log('   ... +'+(flags.length-40)+' more');

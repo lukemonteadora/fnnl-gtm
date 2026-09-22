@@ -27,7 +27,7 @@ Paste this text at the top, then the example table below it:
 
 > **What this is.** A quick place to give us your real customer results so we can write outbound that names real clients and real numbers. We've already filled in everything we could find from your site and our calls. We just need you to confirm those and fill the blanks.
 >
-> **Why it matters.** Cold emails that name a real client and a real result get replies. Vague ones ("we helped a leading firm") get ignored. We'd rather use your real numbers than guess, so this is the highest-leverage 15 minutes you can give the campaign.
+> **Why it matters.** Your campaign goes out on the offer itself. A real client and a real result let us add one short proof line and test whether it helps, and we'd never write a vague claim ("we helped a leading firm") or guess at a number. So we'd rather use your real results than guess.
 >
 > **How to fill it.** Go to the "Your results" tab. Each row is one customer result. Fill the columns left to right. You only give us the facts. We write the actual emails. If you can't name a customer, just say so in the "Can we name them?" column and we'll describe them instead (e.g. "a 200-person logistics firm"). If a number is approximate, give your best real figure. Never invent one. The examples below show the shape. Delete them or leave them, either is fine.
 
@@ -106,10 +106,10 @@ What: I've put together a short sheet of your customer results here: {sheet link
 I've pre-filled everything I could find from your site and our calls. I just need
 you to confirm those and fill a few blanks.
 
-Why: the cold emails that get replies name a real client and a real number.
-The vague ones ("we helped a leading firm") get ignored. I'd rather use your real
-results than guess, so this is genuinely the highest-leverage 15 minutes you can
-give the campaign.
+Why: your campaign goes out on the offer itself. A real client and a real number
+let us add one short proof line and test whether it helps. We'd never write a vague
+claim ("we helped a leading firm") or guess at a number, so I'd rather use your real
+results.
 
 How: open the sheet, read the short "Start here" tab (it has examples), then fill the
 "Your results" tab. You only give me the facts - the customer, what you did, the
@@ -133,8 +133,8 @@ Hi {client first name} - quick one that really moves the needle on your outbound
 *What:* a short sheet of your customer results -> {sheet link}. I've pre-filled what
 I could find; just need you to confirm and fill a few blanks.
 
-*Why:* emails that name a real client + a real number get replies; vague ones get
-ignored. Real beats guessed, so this is the best 15 min you can give the campaign.
+*Why:* your campaign goes out on the offer itself; a real client + a real number
+let us add one short proof line and test whether it helps. Real beats guessed.
 
 *How:* open it, skim the "Start here" tab (has examples), fill the "Your results" tab.
 Facts only - customer, what you did, the result, the timeframe. I write the emails

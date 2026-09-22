@@ -8,7 +8,7 @@ const lastBlock=s=>{const b=String(s||'').trim().split(/\n\s*\n/);return b[b.len
 // Generic copy gates only. Client-specific banned tokens (the client's own brand name, its
 // HQ city, client-internal job titles) get added to this list per engagement.
 const BANNED=[/—/,/–/,/ - /,/\bi noticed\b/i,/\bi saw\b/i,/\bi came across\b/i,/\bfollowing up\b/i,/\bchecking in\b/i,/\bworth a look\b/i,/want me to (send|share)/i,/\breaching out\b/i,/\bquick question\b/i,/\{\{/,/\bcash\b/i];
-const E1E3=['email_1_a','email_1_b','email_3_a','email_3_b'],E2E4=['email_2','email_4'];
+const E1E3=['email_1_a','email_1_b','email_1_c','email_3_a','email_3_b'],E2E4=['email_2','email_4'];
 const rows=parseCsv(readFileSync(process.argv[2],'utf8'));const h=rows[0];const gi=n=>h.indexOf(n);
 let tally={qfirst:0,nocta:0,banned:0,greeting:0,words:0};const flaggedRows=new Set();
 rows.slice(1).forEach((r,k)=>{

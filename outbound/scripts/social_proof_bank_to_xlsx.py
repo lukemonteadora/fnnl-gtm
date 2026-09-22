@@ -246,9 +246,10 @@ INSTRUCTIONS = [
      "names real clients and real numbers. We've already filled in everything we could find "
      "from your site and our calls. We just need you to confirm those and fill the blanks."),
     ("Why it matters",
-     "Cold emails that name a real client and a real result get replies. Vague ones "
-     "(\"we helped a leading firm\") get ignored. We'd rather use your real numbers than "
-     "guess, so this is the highest-leverage 15 minutes you can give the campaign."),
+     "Your campaign goes out on the offer itself. A real client and a real result let us "
+     "add one short proof line and test whether it helps, and we'd never write a vague "
+     "claim (\"we helped a leading firm\") or guess at a number. So we'd rather use your "
+     "real results than guess."),
     ("How to fill it",
      "Go to the \"Your results\" tab. Each row is one customer result. Fill the columns "
      "left to right. You only give us the facts. We write the actual emails. If you can't "

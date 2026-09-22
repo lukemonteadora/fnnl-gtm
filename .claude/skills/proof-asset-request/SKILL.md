@@ -20,18 +20,18 @@ Don't write copy whose credibility needs hard proof you don't have. Be blunt abo
 2. **Check what's already on file** so you don't ask for what you have. Read `profiles/<client>/client-profile.yaml` (the `proof:` block and `best_customer`), `offer-intelligence.md`, and any approved artifact. Pre-fill those into the form as "confirm or correct", and ask only for the genuine gaps.
 
 3. **Decide the tier and say it plainly** (see the reference doc):
-   - BLOCK (the angle is hollow without this proof): copy for that angle is held until the proof returns. Say so.
+   - BLOCK (the angle is hollow without this proof): only the proof-led copy variant is held until the proof returns, never the slice. The slice ships now on its offer-led version, and the proof line joins later as an A/B arm against the no-proof version (Aaron, Sep 21, on a proof PS: "it puts up that sales friction ... try it, see which one works better"). Say so. (Aaron process alignment, operator directive 2026-09-22; supersedes "copy for that angle is held until the proof returns".)
    - FLAG (proof would only strengthen viable copy): copy proceeds now and gets upgraded when the proof returns. Say so.
 
 4. **Build the form** from the template in the reference doc. Keep it genuinely easy: three targeted fields at most, one or two examples per field, and a clear return path (a Google Doc via the google-docs MCP, or a paste-back markdown block). Trim every field the angle doesn't need.
 
 5. **Hand it off.** Output the finished form to the operator (and, if asked, create it as a Google Doc to send). Log the request in the client's `activity-log.md` as `PENDING`.
 
-6. **On return:** record the confirmed proof into `client-profile.yaml` (the `proof:` block) so the gate doesn't re-fire next campaign, update the activity log to `DONE`, and resume or upgrade the affected copy.
+6. **On return:** record the confirmed proof into `client-profile.yaml` (the `proof:` block) so the gate doesn't re-fire next campaign, update the activity log to `DONE`, and add the proof-led variant as an A/B arm (BLOCK) or upgrade the affected copy (FLAG).
 
 ## Autonomy
 
-Not relaxed by `auto_execute`. This is a missing-source-material input gate (modeled on the verified-List Gate), and the form is a data request to the client, not a pause that re-asks the operator. So generating and sending the form is fully compatible with hands-free execution. Shipping BLOCK-tier copy with hollow or invented proof is a hard-rule violation in any execution mode.
+Not relaxed by `auto_execute`. This is a missing-source-material input gate (modeled on the verified-List Gate), and the form is a data request to the client, not a pause that re-asks the operator. So generating and sending the form is fully compatible with hands-free execution. Shipping hollow or invented proof is a hard-rule violation in any execution mode; shipping the slice's offer-led version with no proof line is not.
 
 ## Related
 

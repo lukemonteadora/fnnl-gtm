@@ -1,6 +1,6 @@
 ---
 name: offer-test-slate
-description: "Client-facing offer test plan and results review, the two decks around an offer test. Slate mode runs right after /lead-magnet-brainstorm locks the test set and before any list work: it shows the client the buyer types we will reach, the problems the research found in the buyer's own words, every offer we want to test and why, who honors a prospect's yes during the test, and the test plan. Client approval is optional by default: offers the agency can honor start testing without it, the client can veto any offer, and only an offer whose yes the client alone can honor waits for the client's OK. Scale-review mode runs after the Offer-Validation Wave reads out: it reports what was tested and what won, asks the client what it takes to deliver the winner at full volume, and records the answer that sizes the coverage wave."
+description: "Client-facing offer test plan and results review, the two decks around an offer test. Slate mode runs right after /lead-magnet-brainstorm locks the test set and before any list work: it shows the client the buyer types we will reach, the problems the research found in the buyer's own words, every offer we want to test and why, who honors a qualified yes and how, and the whole first wave (every offer launched together as an equal cell, one offer per about 2,000 qualified contacts, at least three). Client approval is optional by default: offers the agency can honor start without it, the client can veto any offer, and only an offer whose yes the client alone can honor waits for the client's OK. Scale-review mode runs alongside the winner's scale-up, never ahead of it: it is a results report plus a review of the winner's offer.qualification rule, where the client's capacity answer sets how many qualified yeses get the free unit each week. It gates sending volume only where the client itself supplies the deliverable."
 ---
 
 # Offer Test Slate
@@ -36,18 +36,18 @@ Aaron Shepherd's offer method is: research the buyer, generate a lot of offers (
 
 1. **Ideate without client or capacity limits.** `/lead-magnet-brainstorm` generates and ranks the strongest offers for each buyer type, on buyer pull only.
 2. **Show the client the slate** (this skill, slate mode): the buyer types, the problems found, every offer and why. Approval is optional.
-3. **Test** the offers on a few thousand contacts each (`/campaign-strategy` Offer-Validation Wave).
-4. **Go back with the results** (this skill, scale-review mode): what was tested, what won, and what it takes to run the winner at full volume. The capacity question lives HERE, after the market has picked, not at ideation.
+3. **Test every first-wave offer together inside the full-volume send** (`/campaign-strategy` Offer-Validation Wave): `max(3, floor(qualified_contacts / 2000))` offers, capped at the qualifying candidates, as equal cells across the whole qualified list. The list is never sized to the offers; the offer count follows the list (Aaron, Apr 6: one offer per about 2,000 leads; May 4: always test three or four).
+4. **Report the results** (this skill, scale-review mode): what was tested and what won, while the winner already goes to the rest of the list. Deliverability at the scale of the emails being sent is checked at offer lock, not here: each offer shows a scale note that fits, or an `offer.qualification` rule that decides who gets the free unit (`/lead-magnet-brainstorm`, Deliverable at Send Scale). The scale review reviews that rule with the client. (Aaron process alignment, operator directive 2026-09-22; supersedes "test the offers on a few thousand contacts each" and "the capacity question lives HERE, after the market has picked".)
 
-## The one rule that stays: honor every yes
+## The one rule that stays: honor every qualified yes
 
 A cold email under the client's name is a promise to a stranger. Removing the ideation limits did not remove that. So:
 
-- **Every prospect who says yes during the test gets what the email promised, on time.** A test produces a handful to a few dozen yeses per offer, so the agency honors test yeses itself by default: research, lists, diagnostics, samples, mockups, videos, drafts, done-for-you units of work built with Claude Code and our own stack. That covers most front-end offers, which is why most offers need no client input to test.
+- **Every qualified yes gets what the email promised, on time.** A cheap asset stays ungated: every yes gets it. A costly front end (a trial, a free service or pilot, custom per-prospect work) carries a short, disclosed qualification step after the yes that decides who gets the free unit and who gets the client's standard offer (Aaron, Sep 21: "just because someone raises their hand doesn't mean you have to provide that free thing to them. You can now go through and cherry-pick"). Material eligibility is stated in the offer itself ("for teams that fit X"), never hidden until after the yes. The agency honors qualified yeses itself by default: research, lists, diagnostics, samples, mockups, videos, drafts, done-for-you units of work built with Claude Code and our own stack. That covers most front-end offers, which is why most offers need no client input to send. (Aaron process alignment, operator directive 2026-09-22; supersedes "every prospect who says yes during the test gets what the email promised" and "a test produces a handful to a few dozen yeses per offer".)
 - **An offer whose yes only the client can honor** (access to their product or a trial of it, a price, discount or guarantee term they would have to stand behind, their own people's time, their physical goods, anything licensed or regulated that only they may do) is generated, ranked and shown like any other. It is flagged **"needs your OK"** with the one specific thing we need, and it does not send until the client says yes. Silence is not a yes for these.
 - **A client veto on any offer is always honored.** It is their name on the email. Approval being optional means we do not wait for a yes on agency-honored offers; it never means we send something the client told us not to send.
 
-This is Aaron's own standard at test scale: "super low friction, easy for you to fulfill, but super valuable for them" and "Remove homework, not honesty" (doctrine §2 step 2, §3). What moved is WHEN full-volume capacity gets asked (after the test, in the scale review), not whether a prospect's yes gets honored.
+This is Aaron's own standard: "super low friction, easy for you to fulfill, but super valuable for them" and "Remove homework, not honesty" (doctrine §2 step 2, §3), applied "at the scale of the emails that you're sending" (Aaron, Sep 21). Ideation stays unfiltered; at lock, each offer shows it is deliverable at send scale with a scale note or an `offer.qualification` rule. That check is not asked of the client before the test, and the scale review is not a volume gate (Aaron process alignment, operator directive 2026-09-22).
 
 ## Material Decision Rule
 
@@ -55,7 +55,7 @@ When this skill reaches a material fork, name the realistic options, recommend t
 
 Ask before choices that affect spend beyond an approved budget, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
 
-Nothing is filtered out of the slate. Every candidate offer from `/lead-magnet-brainstorm` appears, with its rank and the plain reason it sits where it does. Offers not in the first test flight are shown as the queue and as "other ideas we considered", never deleted.
+Nothing is filtered out of the slate. Every candidate offer from `/lead-magnet-brainstorm` appears, with its rank and the plain reason it sits where it does. Offers beyond the first-wave count are shown as the queue, and candidates outside the test set as "other ideas we considered", never deleted.
 
 When asking the user, use the Claude Desktop native Interactive Inputs / Choice Prompts pattern from /clarification-first: recommended option first, short choices, and Custom answer last when a custom answer is plausible.
 
@@ -94,8 +94,8 @@ If `lead-magnets.md` has no ranked candidates, `/lead-magnet-brainstorm` has not
 ### Steps
 
 1. **Read the three inputs.** Pull the buyer types (segments and personas), the problems per persona with their evidence class (the client's own calls, N independent public sources, or a hypothesis), the saturation map and the gap competitors leave, and every candidate offer with its score and labels. When the client has per-buyer-type offer sets (`offer.segments`), group everything by buyer type: each buyer type gets its own "offers we want to test" group and its own line in the test plan, in `priority` order.
-2. **Label each offer for the client.** From its `lead_magnet_yes_honored_by` field: `agency` shows as "We handle this"; `client` shows as "Needs your OK" plus the one specific thing we need (`lead_magnet_client_dependency`). Also carry `lead_magnet_scale_needs` (what it would take at full volume), shown as information, never as a reason the offer is out.
-3. **Show the test plan honestly.** `/campaign-strategy` sizes how many offers run in the first flight from warmed send capacity, and each offer is planned at about 2,000 to 3,000 contacts (operator decision 2026-09-22: size the list to the offers, so 3 to 4 offers need about 8,000 to 12,000 contacts), with about 1,300 as the hard minimum below which no result can be called (the pooled flip criterion). If strategy has not run yet, show the planned first flight as the primary plus arm 1, and the remaining offers as the queue, with the contacts-per-offer figure. Never promise the client more simultaneous offers than send capacity can read.
+2. **Label each offer for the client.** From its `lead_magnet_yes_honored_by` field: `agency` shows as "We handle this"; `client` shows as "Needs your OK" plus the one specific thing we need (`lead_magnet_client_dependency`). Also carry `lead_magnet_scale_needs` (what delivering it at full sending volume takes) and, where one applies, `offer.qualification` in plain words (who gets the free unit, the short form, and the eligibility the offer states up front). An offer with neither a fitting scale note nor a qualification rule shows as ranked lower with the reason, never as out.
+3. **Show the whole first wave honestly.** The first wave launches `max(3, floor(qualified_contacts / 2000))` offers together, capped at the number of qualifying candidates, as equal cells across every first-wave campaign and segment: no offer gets a head start, and about 1,300 first-touch contacts per cell is the hard minimum below which no result can be called (the pooled flip criterion). The whole qualified list goes out; it is never shrunk to fit the offers. For per-buyer-type offer sets (`offer.segments`), the formula runs per buyer-type segment on that segment's qualified contacts, and each buyer type shows its own first wave. If `/campaign-strategy` has not run yet (no qualified-contact count), show the top three sendable offers as the first wave (the formula's floor), say the count rises by one offer per about 2,000 qualified contacts, and list the next offers in rank order as the ones that join the first wave if the list supports them, then the queue. Say "fewer than three" only when fewer candidates qualify. If the client's warmed sending fleet delivers less than the plan needs (`run_state.capacity_request`), say the runway stretches (days to cover the list); offers are never cut for it. (Aaron process alignment, operator directive 2026-09-22; supersedes "size the list to the offers, so 3 to 4 offers need about 8,000 to 12,000 contacts", "the primary plus arm 1, and the remaining offers as the queue" and "never promise more simultaneous offers than send capacity can read", operator decision 2026-09-22.)
 4. **Author the Markdown** at `profiles/<business-slug>/offer-test-slate.md` from the template below.
 5. **Client-facing QA** (all must pass before rendering):
    - Zero hits on the "Banned in client prose" list in `/campaign-approval-brief` (`docs/campaign-approval-brief-template.md`): no internal tool or vendor names, no merge braces or raw fields, no skill slugs, no credit counts, no "TAM".
@@ -147,17 +147,18 @@ We read <N> of your sales calls, <N> competitors' offers and ads, and <N> buyer 
 - **What they get:** <the deliverable in plain words, with its real quantity or turnaround>
 - **Why we think it will work:** <tied to a named problem above>
 - **What they have to do:** <the one small action>
-- **Who handles a yes during the test:** <We handle this / Needs your OK: the one specific thing we need>
-- **If it wins, what running it at full volume would take:** <plain line; we'll ask you about this after the test>
+- **Who handles a yes:** <We handle this / Needs your OK: the one specific thing we need>
+- **Who gets it free:** <everyone who says yes / people who fit <plain criteria>, after a short form; everyone else gets <your standard offer>>
+- **What delivering it at full sending volume takes:** <plain line>
 
 <repeat per offer in the test set, in rank order>
 
 ## How the test works
 
-- **First flight:** <offers in the first flight> run side by side on the same kind of list, with the same style of email, so the offer is the only thing that changes.
-- **Size:** each offer goes to about <N> people over about <N> weeks. Smaller than that and a result can't be told apart from luck.
+- **First wave:** <every first-wave offer> start the same day, side by side, across your whole list, with the same style of email, so the offer is the only thing that changes.
+- **Size:** each offer goes to about <N> people (never fewer than about 1,300, or a result can't be told apart from luck), and the whole list is covered in about <N> days.
 - **What we measure:** for every 1,000 people emailed, how many replied yes, and how many of those agreed a time to talk. The second number picks the winner, because a reply isn't a meeting.
-- **What happens next:** offers that don't get real responses are switched off. The queued offers below take their place in the next flight.
+- **What happens next:** offers that don't get real responses are switched off inside the live campaign. Once a winner is picked, it goes to the rest of your list straight away, and offers still undecided stop getting new contacts. The queued offers below take a freed place.
 - **Queued for the next flight:** <offers in rank order, or "none">
 
 ## Other ideas we considered
@@ -170,8 +171,8 @@ We read <N> of your sales calls, <N> competitors' offers and ads, and <N> buyer 
 
 1. **Nothing, to start.** We begin preparing the lists now and plan to start sending around <date>.
 2. **Optional:** tell us about any offer you don't want sent under your name.
-3. **Only for offers marked "Needs your OK":** <offer name>: <the one specific thing, for example "can we offer a free 14-day trial of your product to up to 20 people during the test?">
-4. **After the test** we'll come back with the results and ask what it would take to run the winner at full volume.
+3. **Only for offers marked "Needs your OK":** <offer name>: <the one specific thing, for example "can we offer a free 14-day trial of your product to up to 20 qualified people a week?">
+4. **Once we have a winner** we'll send you the results. The winner keeps going to the rest of your list while we check with you how many free <units> a week to give to people who qualify.
 ```
 
 ---
@@ -180,31 +181,33 @@ We read <N> of your sales calls, <N> competitors' offers and ads, and <N> buyer 
 
 ### When to run
 
-- `/campaign-strategy` has read out the Offer-Validation Wave: a winner is picked among the arms that proved out, or every arm has been switched off. Run it BEFORE the coverage wave fans out on the winner, because the coverage wave's volume is sized from the answer this review records. For a client with per-buyer-type offer sets, run it per segment as each segment's wave reads out, and record it in that segment's `offer.segments[].scale_review`.
+- `/campaign-strategy` has read out the Offer-Validation Wave: a winner is picked among the arms that proved out, or every arm has been switched off. **Run it alongside the winner's scale-up, never ahead of it:** the winner goes to the rest of the TAM as soon as it is picked, and this review is a results report to the client plus a review of the winner's `offer.qualification` rule. It is not a volume gate, with one carve-out: where the client literally supplies the deliverable (their trial seats, their people, their stock), a qualification step cannot create capacity the client does not have, so the client's confirmed capacity still caps sends for that offer. (Aaron process alignment, operator directive 2026-09-22; supersedes "run it BEFORE the coverage wave fans out on the winner, because the coverage wave's volume is sized from the answer this review records", operator directive 2026-09-22.) For a client with per-buyer-type offer sets, run it per segment as each segment's wave reads out, alongside that segment's own winner scale-up (a segment never borrows another segment's winner), and record it in that segment's `offer.segments[].scale_review`.
 - Also on demand, when the operator wants to show the client where a running test stands.
 
 ### Inputs
 
 - Per-offer campaign numbers from the locked `run_state.sending_platform`, read through the campaign skill its `/stack-setup` pack provides: first-touch contacts, sends, and dates per campaign and per arm.
 - Reply classification from the positive reply scoring skill for the locked sending platform, if `/stack-setup` activated a pack that provides one; otherwise hand-read and tag the reply threads: positive replies, and time-agreed replies (positive replies whose thread moves toward a time, `/campaign-strategy`'s reply-thread proxy).
-- `client-profile.yaml`: the offer block (primary, `validation_arms` with `status` and `flight`, `lead_magnet_yes_honored_by`, `lead_magnet_scale_needs`), `run_state.offer_market_proven`.
+- `client-profile.yaml`: the offer block (primary, `validation_arms` with `status` and `flight`, `lead_magnet_yes_honored_by`, `lead_magnet_scale_needs`, `qualification`), `run_state.offer_market_proven`, `run_state.capacity_request`.
 - `lead-magnets.md` and the previous `offer-test-slate.md`, for the queued offers and the client's earlier answers.
 
 ### Steps
 
 1. **Pull the numbers per offer**, pooled the way `/campaign-strategy` pools them (each arm's own cell; the primary's pool includes the campaigns that carried it). Compute positive replies and time-agreed replies per 1,000 first touches. Never read a raw reply count as a result.
 2. **Give each offer a plain verdict** that matches `/campaign-strategy`'s read: Winner; Works (proved out, not the winner); Still reading (not enough emails yet to call it); Gets interest, not meetings (farming interest); Switched off (no real responses).
-3. **Size the scale plan.** At the planned coverage-wave volume, estimate yeses per week and agreed times per week from the winner's own test rates. Say they are estimates from one test.
-4. **Write the scale ask**, specific to who honors a yes:
-   - **Agency-honored winner:** confirm our own fulfillment capacity for the estimated yeses per week, and ask the client one thing: can their team take about <N> conversations a week?
-   - **Client-honored winner:** ask for the exact capacity and terms: how many per week they can honor, and sign-off on any term (a trial length, a price, a guarantee). If they can do fewer than the plan needs, ask how many.
-5. **Name the fallbacks** so a "no" is not a dead end: the agency takes over fulfillment where it can, a lighter version of the winner, or the runner-up (a runner-up that already proved out needs no re-test; one still reading keeps testing).
+3. **Project the winner at its scale-up pace.** At the pace the rest of the list is being sent (`run_state.capacity_request`), estimate qualified yeses per week and agreed times per week from the winner's own rates. Say they are estimates from one test.
+4. **Review the qualification rule**, specific to who honors a yes:
+   - **Agency-honored winner:** confirm our own fulfillment capacity for the estimated qualified yeses per week and set `offer.qualification.free_unit_cap_per_week` to it (a cheap asset has no rule and needs no cap). Ask the client one thing: can their team take about <N> conversations a week?
+   - **Client-honored winner:** ask how many free units a week they can honor and for sign-off on any term (a trial length, a price, a guarantee). That answer sets `free_unit_cap_per_week`; qualified yeses beyond it get the standard offer. **Carve-out:** because the client supplies the deliverable, the answer also caps sends for this offer.
+   - Check the criteria and form fields against the real replies: do the people who qualify look like buyers of the paid service? Tighten or loosen the criteria with the client.
+5. **Name the fallbacks** for a cap of zero or a carve-out "no", so it is not a dead end: the agency takes over fulfillment where it can, a lighter version of the winner, or the runner-up (a runner-up that already proved out needs no re-test; one still reading keeps testing).
 6. **List the next flight:** queued offers from the slate, and any new candidates, in rank order.
 7. **Author** `profiles/<business-slug>/offer-scale-review-YYYY-MM-DD.md` from the template below, run the same client-facing QA as slate mode, render, record `offer.scale_review`, and log it.
-8. **Hand it to the operator.** When the client answers, record `client_answer` and `confirmed_capacity_per_week`, then route:
-   - `yes` or `partial`: `/campaign-strategy` sizes the coverage wave so expected yeses per week stay within the confirmed capacity.
-   - `no`: pick a fallback from step 5 with the operator. A client-honored winner never scales past what the client confirmed.
-   - `pending`: an agency-honored winner may scale within the agency's own confirmed capacity; a client-honored winner holds at the pace the client already handled during the test.
+8. **Hand it to the operator.** When the client answers, record `client_answer` and `confirmed_capacity_per_week`, and write the confirmed number into the winner's `offer.qualification.free_unit_cap_per_week` (the winner is promoted first, so its fields already sit in the primary block, `/lead-magnet-brainstorm` Save Output; for per-buyer-type sets, that segment's primary block in `offer.segments`). Sending volume does not wait on this answer: the winner is already scaling, and qualified yeses above the cap get the standard offer. Then route:
+   - `yes` or `partial`: the cap is set; nothing else changes. Carve-out only: `/campaign-strategy` keeps that offer's sends at the pace the confirmed capacity covers.
+   - `no`: pick a fallback from step 5 with the operator. A client-supplied deliverable never scales past what the client confirmed.
+   - `pending`: an agency-honored winner scales with its cap at the agency's own capacity; a client-supplied winner (carve-out) holds at the pace the client already handled until the client answers.
+   (Aaron process alignment, operator directive 2026-09-22; supersedes "`/campaign-strategy` sizes the coverage wave so expected yeses per week stay within the confirmed capacity", operator directive 2026-09-22.)
 
 ### Scale review template (client-facing Markdown)
 
@@ -216,7 +219,7 @@ We read <N> of your sales calls, <N> competitors' offers and ads, and <N> buyer 
 
 ## What this is
 
-We tested <N> offers with <N> people between <date> and <date>. This shows what we tested, what won, and what we'd like to scale. We need one answer from you at the end.
+We tested <N> offers with <N> people between <date> and <date>. This shows what we tested, what won, and how the winner is now going out to the rest of your list. We need one answer from you at the end.
 
 ## What we tested
 
@@ -236,22 +239,23 @@ We tested <N> offers with <N> people between <date> and <date>. This shows what 
 
 <Two or three sentences with the numbers. Optionally one or two real replies, with names and companies removed.>
 
-## What we'd like to scale
+## Where the winner goes now
 
-- **Planned volume:** about <N> people a week.
+- **Sending pace:** the winner is going to the rest of your list at about <N> people a week.
 - **What that should produce, at the test's rates:** about <N> yeses and <N> agreed times a week. These are estimates from one test, and we'll keep measuring.
+- **Who gets the free <thing>:** <everyone who says yes / people who fit <criteria>, up to <N> a week; everyone else gets your standard offer>.
 
 ## What we need from you
 
-<For an offer we handle: "We'll keep handling the free <thing> for everyone who says yes. Can your team take about <N> conversations a week?">
-<For an offer only you can provide: "To keep every yes honored at that pace we need <N> <units> a week of <the thing>, and your sign-off on <term>. Can you do that? If not, how many a week can you do?">
+<For an offer we handle: "We'll keep handling the free <thing> for everyone who qualifies. Can your team take about <N> conversations a week?">
+<For an offer only you can provide: "At this pace we expect about <N> qualified yeses a week. How many free <units> a week can you honor, and can you sign off on <term>? Everyone who qualifies beyond that gets your standard offer, and we'll keep sending at the pace your number covers.">
 
 **If that doesn't work for you:** <the fallback options in plain words: we take on more of the delivery, a lighter version, or the runner-up offer>.
 
 ## What's next
 
 - **Next offers to test:** <queued offers, or "none planned yet">
-- **Timeline:** <when scaling starts once we hear back>
+- **Timeline:** <when the winner will have reached the rest of your list at this pace>
 ```
 
 ---
@@ -268,11 +272,11 @@ The Markdown file is always the source of record. Render it one of two ways.
 | `threeCards` or `campaignGrid`: who we'll reach | `campaignGrid`: what we tested |
 | `twoColumn` or `changeList`: what we found, one problem per item in the buyer's words | `changeList`: what happened, one offer per item with its verdict |
 | `campaignGrid` (2 to 6 cards): the offers we want to test | `threeCards`: the winner and why |
-| `stepFlow`: how the test works | `stepFlow`: what we'd like to scale |
+| `stepFlow`: how the test works | `stepFlow`: where the winner goes now |
 | `changeList`: other ideas we considered | `decisions`: what we need from you |
 | `decisions`: what we need from you | |
 
-Build with `node "<outbound>/scripts/approval-brief-pptx/build.mjs" <client>-offer-slate "%TEMP%/<client>-offer-slate.pptx"`, QA by rendering every slide to an image with `scripts/approval-brief-pptx/export_png.ps1` and looking at each one, then copy the file to `profiles/<business-slug>/Offer Test Plan - <Client>.pptx` (or `Offer Test Results - <Client>.pptx`). More than six offers do not fit one `campaignGrid`: split them across two slides, first flight then queue.
+Build with `node "<outbound>/scripts/approval-brief-pptx/build.mjs" <client>-offer-slate "%TEMP%/<client>-offer-slate.pptx"`, QA by rendering every slide to an image with `scripts/approval-brief-pptx/export_png.ps1` and looking at each one, then copy the file to `profiles/<business-slug>/Offer Test Plan - <Client>.pptx` (or `Offer Test Results - <Client>.pptx`). More than six offers do not fit one `campaignGrid`: split them across two slides, first wave then queue.
 
 **Document or list (on request).** Render the same Markdown to a styled DOCX with the house renderer:
 
@@ -294,10 +298,14 @@ run_state:
 
 offer:
   # Per offer, on the primary block and on every validation_arms entry (written at lock by /lead-magnet-brainstorm):
-  lead_magnet_yes_honored_by: agency    # agency | client: who honors a prospect's yes during the test
+  lead_magnet_yes_honored_by: agency    # agency | client: who honors a qualified yes
   lead_magnet_client_dependency: none   # or the one specific thing only the client can provide
   lead_magnet_client_ok: not_needed     # not_needed (agency-honored) | pending | yes | no. Sends only at not_needed or yes
-  lead_magnet_scale_needs: <what running it at full volume would take; asked in the scale review, never a reason to drop the offer>
+  lead_magnet_scale_needs: <what delivering it at full sending volume takes, and whether it fits; the lock check, never a reason to drop the offer>
+  qualification:                        # costly front ends only (trial, service, custom work); written at lock by /lead-magnet-brainstorm (Aaron process alignment 2026-09-22)
+    criteria: [<plain fit test>, ...]
+    form_fields: [<question>, ...]
+    free_unit_cap_per_week: <n or null>  # set by the scale review from confirmed_capacity_per_week
 
   test_slate:
     path: profiles/<business-slug>/offer-test-slate.md
@@ -312,20 +320,21 @@ offer:
     date: YYYY-MM-DD
     winner: <offer name>
     client_answer: pending              # pending | yes | partial | no
-    confirmed_capacity_per_week: <yeses per week the party honoring them has confirmed, or unknown>
+    confirmed_capacity_per_week: <free units per week the party honoring them has confirmed, or unknown. Sets offer.qualification.free_unit_cap_per_week; caps sends only where the client supplies the deliverable (Aaron process alignment 2026-09-22)>
     notes: <one line>
 ```
 
-When the client OKs a "Needs your OK" offer, write exactly what they confirmed into `lead_magnet_client_dependency` (the term and its limits, for example "free 14-day trial, up to 20 accounts during the test") and set `lead_magnet_client_ok: yes`; `/campaign-strategy` can then schedule it into a flight. Copy may claim only what was confirmed (Capability Truth, `/campaign-copywriting` Hard Rule 28). When the client vetoes an offer, set its `validation_arms` status to `vetoed` (or, for the primary, promote the next sendable arm and record the swap in the activity log).
+When the client OKs a "Needs your OK" offer, write exactly what they confirmed into `lead_magnet_client_dependency` (the term and its limits, for example "free 14-day trial, up to 20 qualified accounts a week") and set `lead_magnet_client_ok: yes`; `/campaign-strategy` can then schedule it into a flight. Copy may claim only what was confirmed (Capability Truth, `/campaign-copywriting` Hard Rule 28). When the client vetoes an offer, set its `validation_arms` status to `vetoed` (or, for the primary, promote the next sendable arm and record the swap in the activity log).
 
 ## Common mistakes
 
-- **Dropping an offer because the client might not want it, or because it takes effort.** That is the limit this skill replaced. Show it, rank it, test it, and ask about scale after the market picks.
+- **Dropping an offer because the client might not want it, or because it takes effort.** That is the limit this skill replaced. Show it, rank it, test it. Deliverability at send scale is settled at lock with a scale note or an `offer.qualification` rule, not by dropping the offer.
 - **Sending a "Needs your OK" offer on silence.** Approval is optional for offers we honor ourselves. It is never optional for a yes only the client can honor.
 - **Ignoring a veto because approval is optional.** Optional approval means we don't wait. It never means we send what the client said not to.
-- **Promising more simultaneous offers than send capacity can read.** Plan about 2,000 to 3,000 contacts per offer (about 1,300 is the floor). Put the rest in the queue and say so.
+- **Sizing the list to the offers, or showing a primary plus one arm.** The first wave is `max(3, floor(qualified_contacts / 2000))` offers, capped at the qualifying candidates, launched together as equal cells; about 1,300 per cell is the floor; only offers beyond the count queue. Short sending capacity stretches the runway; it never cuts offers (Aaron process alignment, operator directive 2026-09-22; supersedes "promising more simultaneous offers than send capacity can read").
 - **Leading the results with raw reply counts.** Show replies and agreed times per 1,000 emailed, and let agreed times pick the winner.
-- **Asking the scale question before the test.** Capacity is asked once the winner is known, with its real numbers.
+- **Treating the scale review as a volume gate, or skipping the lock check.** Ideation stays unfiltered; at lock each offer shows it is deliverable at send scale (a fitting scale note or an `offer.qualification` rule). The scale review then reports results and reviews the qualification rule alongside the scale-up, never ahead of it; only a client-supplied deliverable caps sends (Aaron process alignment, operator directive 2026-09-22; supersedes "asking the scale question before the test" as a mistake).
+- **Promising every yes the free unit on a costly front end, or gating a cheap asset.** A trial, service or custom work goes to qualified yeses through a disclosed step; a cheap asset goes to everyone who says yes.
 - **Inventing findings or quotes to fill the page.** Write `Not captured in current artifacts.` instead.
 
 ## Integration
@@ -335,7 +344,7 @@ When the client OKs a "Needs your OK" offer, write exactly what they confirmed i
 | `/lead-magnet-brainstorm` | Produces every candidate, the ranked test set (primary plus validation arms) and the per-offer honoring fields this skill presents. |
 | `/offer-intelligence` | Produces the research the "What we found" section summarizes. |
 | `/cold-email-kickoff` | Runs slate mode at Step 3.2, between the offer lock and `/data-point-discovery`. |
-| `/campaign-strategy` | Sizes the first flight from send capacity, enforces the per-offer launch condition (`lead_magnet_client_ok`), reads out the wave, and triggers scale-review mode before the coverage wave. Sizes the coverage wave from `offer.scale_review.confirmed_capacity_per_week`. |
+| `/campaign-strategy` | Applies the first-wave offer count from the list, enforces the per-offer launch condition (`lead_magnet_client_ok`), files the capacity request (`run_state.capacity_request`) the client's sending fleet is sized to, reads out the wave, sends the winner to the rest of the TAM, and triggers scale-review mode as a report alongside that scale-up. Reads `offer.scale_review.confirmed_capacity_per_week` as a send cap only for a client-supplied deliverable. |
 | `/campaign-copywriting` | Writes copy only for offers whose yes can be honored today (its Confirmed Deliverable Gate reads the same fields). |
 | `/campaign-approval-brief` | The later, campaign-level deck (lists, sources, copy). This skill is the earlier, offer-level one. They share the design library and the client-prose rules. |
 | The sending platform's campaign and reply-scoring skills (activated by `/stack-setup`) | Supply the per-offer numbers for the scale review. |
@@ -343,4 +352,4 @@ When the client OKs a "Needs your OK" offer, write exactly what they confirmed i
 ## What to do next
 
 - **Slate done:** continue to `/data-point-discovery` (via `/cold-email-kickoff`), unless `run_state.offer_slate_approval = required`, in which case wait for the client's answer first.
-- **Scale review done:** hand back to `/campaign-strategy` for the coverage wave, sized to the confirmed capacity, and schedule the next flight of queued offers.
+- **Scale review done:** record the qualification cap. The winner is already scaling through `/campaign-strategy` (held to the confirmed capacity only for a client-supplied deliverable); schedule the next flight of queued offers.

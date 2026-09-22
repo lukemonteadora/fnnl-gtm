@@ -56,10 +56,10 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 
 ### D. Offer-only experiment (the offer-validation arms; operator-approved Aaron alignment, 2026-09-21)
 - **What varies:** the front-end offer (the free deliverable and what depends on it), nothing else
-- **What stays fixed:** the list (the same broad list, split evenly and at random), the copy skeleton, the sequence and timing, and the infrastructure split
+- **What stays fixed:** the list (each first-wave segment split evenly and at random across the offers, so every offer runs on every segment), the copy skeleton (including the same Email 1 variant set in every arm, so the offer stays the only difference between arms), the sequence and timing, and the infrastructure split
 - **What you learn:** which offer the market actually wants, the highest-leverage question in cold email (doctrine §3: "It is truly the 80/20")
-- **When to use:** first, before any copy test. `/campaign-strategy`'s Offer-Validation Wave runs the primary offer plus at least one arm from `offer.validation_arms` this way from the first wave, and `/offer-intelligence` hands its Swap hypotheses here. Aaron tests three or four offers (doctrine §5), one variable at a time (doctrine §5 step 9).
-- **How it is judged:** per arm, on `/campaign-strategy`'s pooled flip (PROVEN / DEAD / HOLD on raw positive replies, never pooled across arms), not on the sample table in Step 3. Among PROVEN arms the winner is the one that does not lose on time-agreed replies per 1,000 first touches; a PROVEN arm that farms interest is reshaped, not scaled.
+- **When to use:** first, before any copy test. `/campaign-strategy`'s Offer-Validation Wave is the first wave, and it runs this way over the whole qualified TAM at full volume (Aaron process alignment, operator directive 2026-09-22; supersedes "the primary offer plus at least one arm", 2026-09-21). First-wave offer count = `max(3, floor(qualified_contacts / 2000))`, where `qualified_contacts` is the wave's send-eligible contacts, capped at the number of qualifying candidates (fewer than 3 only when fewer qualify, and the report says so) (Aaron, Apr 6: about one front-end offer per 2,000 leads; May 4: always test three or four). Every offer is an equal split-test cell launched the same day, the desk-ranked primary gets no head start, and only arms beyond the count queue. The read is an offer x segment matrix (Aaron, Apr 6: "run them across all of your campaigns"; Apr 13). For a client with per-buyer-type offer sets (`offer.segments`), the formula runs per buyer-type segment on that segment's qualified contacts. `/offer-intelligence` hands its Swap hypotheses here. Aaron tests three or four offers (doctrine §5), one variable at a time (doctrine §5 step 9).
+- **How it is judged:** per arm, on `/campaign-strategy`'s pooled flip (PROVEN / DEAD / HOLD on raw positive replies, never pooled across arms), not on the sample table in Step 3, and read per Step 6. Among PROVEN arms the winner is the one that does not lose on time-agreed replies per 1,000 first touches, picked at matched cell counts; a PROVEN arm that farms interest is reshaped, not scaled. **Losers are switched off by two things only:** the absolute DEAD line, and the winner pick. At the winner pick (made on matched cell counts), arms still in HOLD stop receiving new first touches, their live sequences finish, the untouched TAM goes to the winner, and the parked arm's read is recorded as unresolved so it can return as a later test (Aaron process alignment, operator directive 2026-09-22; supersedes 'another arm's win never retires it'). Never cut an arm because it trails the leader by a ratio at the floor: at ~1,300 contacts an arm exactly as good as the leader shows 2 or fewer positives about 37% of the time (Poisson, mean 3.25). Aaron switches weak angles off by hand and gives no threshold (Mar 9). With `offer.segments`, each buyer-type segment flips, picks its own winner and scales it on its own; a segment never borrows another segment's winner.
 - **Confidence on learnings:** HIGH on the offer, once each arm's pooled read decides; LOW on copy and list.
 
 ## Generative Proposal Mode (propose experiments from the TAM)
@@ -67,14 +67,14 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 Use this mode when you do not have a hypothesis yet and want the system to **propose** the next round of experiments from data you already hold — the self-improving loop. It reads:
 
 - `profiles/<business-slug>/tam/tam.csv` (the company-level TAM from `/tam-build`)
-- `profiles/<business-slug>/data-point-catalog.md` (the `/data-point-discovery` catalog — since the full obtainable signal set is collected up front, next-wave tests come from untested **combinations** of the already-collected columns, plus any genuinely-new `in_reserve` point added at refresh)
+- `profiles/<business-slug>/data-point-catalog.md` (the `/data-point-discovery` catalog. Under the Collection Scope rule in `/data-point-discovery`, the build collects firmographics, fit and offer-relevance fields, contacts and the free fields that come with the rows, and pays for a why-now or intent signal only when the offer or a live test needs it (Aaron process alignment, operator directive 2026-09-22; supersedes "the full obtainable signal set is collected up front"). So next-wave tests come from untested **combinations** of the columns actually collected, plus catalogued `in_reserve` points, each collected first when an approved test needs it)
 - `profiles/<business-slug>/experiments/*.yaml` and `*.json` (prior experiment plans, results, decisions)
 - `profiles/<business-slug>/retrospectives/*.md` (quarterly patterns, if any)
 
 Then it outputs **ranked single-variable experiment candidates grounded in columns that already exist**:
 
 1. **Mine the TAM for untested slices — `enrichment_tier = enriched` rows only.** Each candidate is a list-only experiment defined by populated TAM columns with enough rows that have not been tested yet (e.g. `has_demo_cta = true AND sales_ic_count = 0`, row count N). **Slice only `enriched` rows: a blank `gate_role = enrich` column on an enriched row is a real negative, but a blank on a `qualified_out` row is a gate-skip (never collected), not data — never build a slice on it.** (If a legacy `tam.csv` has no `enrichment_tier` column, treat all rows as eligible.) Never propose a slice with too few rows for the sample-size table below. Also mine `data-point-catalog.md` for `in_reserve` rows (catalogued but not yet collected): proposing one means **collecting that column first**, which routes through `/tam-build`'s tiering + `/api-cost-governance` as new Layer-1 spend (gated), not an automatic crawl.
-2. **Mine results for copy/offer variables.** From `experiments/*.json` and reply-scoring history, surface copy or angle variables worth a copy-only test against the current baseline. **Propose the offer queue first:** every queued or still-reading arm in `offer.validation_arms` (and in each segment's set in `offer.segments`) (with `lead_magnet_client_ok` `not_needed` or `yes`) is an offer-only (type D) candidate against the current winner, ranked ahead of copy and list candidates (Aaron's test order: offer, then positioning, then CTA, doctrine §5 step 9).
+2. **Mine results for copy/offer variables.** From `experiments/*.json` and reply-scoring history, surface copy or angle variables worth a copy-only test against the current baseline. **Propose the offer queue first:** every queued arm (one beyond the first wave's offer count), still-reading arm, or arm parked at a winner pick with its read recorded as unresolved, in `offer.validation_arms` (and in each segment's set in `offer.segments`) (with `lead_magnet_client_ok` `not_needed` or `yes`), is an offer-only (type D) candidate against the current winner, ranked ahead of copy and list candidates. Then positioning variants of the current winner, then CTA, subject lines last (Aaron's test order, doctrine §5 step 9).
 3. **Rank by expected positive-reply lift × confidence × row availability.** Prefer candidates that isolate one variable and have the rows to reach significance.
 4. **One variable per candidate:** list-only, copy-only or offer-only, never two at once. Combined tests are only for genuinely new ICPs.
 5. **Human approval gate.** Present the ranked candidates (recommended first) and let the operator pick which to run. Do not auto-launch sends. Under `auto_execute`, you may auto-select the top candidate(s) for the next wave and write their plan files, but launching still goes through the upload skill's paused-draft + manual-start gate.
@@ -121,13 +121,13 @@ If ANY constant is actually changing, stop. Either lock it down, or reclassify a
 
 Before running any experiment, confirm your baseline is healthy: **overall reply rate >=1% after 200+ sends.** If your baseline is below 1% after 200 sends, the problem isn't your experiment - your infrastructure, list, offer or copy is already broken. Run `/email-deliverability-audit` first when a deliverability trigger fires (bounce above the house threshold, a placement-test flag, reply rate near 0.1%, contacts-per-positive jumping; `/offer-intelligence` Vector 5). Otherwise the offer is the live candidate, per Aaron's diagnostic order (doctrine §2). Open rate never decides this: opens are not tracked in this system (operator-approved Aaron alignment, 2026-09-21).
 
-Running an experiment on a broken baseline is wasted effort: you'll learn that "both arms are bad," not "which arm wins." **Offer-only (type D) tests are exempt (operator directive 2026-09-22):** when deliverability is ruled out and the offer is the broken thing, the fix IS a new offer test, so a sub-1% baseline routes to the next offer flight (`/campaign-strategy`), and only copy and list tests wait for a healthy baseline.
+Running an experiment on a broken baseline is wasted effort: you'll learn that "both arms are bad," not "which arm wins." **Offer-only (type D) tests are exempt (operator directive 2026-09-22):** when deliverability is ruled out and the offer is the broken thing, the fix IS a new offer test, so a sub-1% baseline routes straight to one (`/campaign-strategy`), and only copy and list tests wait for a healthy baseline.
 
 ### Step 3: Calculate minimum sample size
 
 The smaller your effect, the more leads you need. Use these rough rules for cold email:
 
-> **This is read-out, not launch eligibility.** These sends-per-arm minimums tell you how long to run a controlled A/B test before the result is trustworthy. Whether a signal slice is worth *launching* at all is a separate, upstream gate owned by `/campaign-strategy`: the **≥500-company signal floor** (≥500 enriched companies must carry the signal; HARD RULE, operator directive 2026-07-12, which retired the old ≥100-company and ≥100-contact floors). The floor is a company-level count; these minimums are contact-level sends. A near-floor slice is launch-eligible but thin to read, so give it full daily volume and the 21-day run to accumulate enough sends.
+> **This is read-out, not launch eligibility.** These sends-per-arm minimums tell you how long to run a controlled A/B test before the result is trustworthy. Whether a signal slice is worth *launching* at all is a separate, upstream gate owned by `/campaign-strategy`: the **≥500-company signal floor** (≥500 enriched companies must carry the signal; HARD RULE, operator directive 2026-07-12, which retired the old ≥100-company and ≥100-contact floors). The floor is a company-level count; these minimums are contact-level sends. A near-floor slice is launch-eligible but thin to read, so give it full daily volume and read it only once it reaches its sample minimum (Step 6: the floor first, then the sequence plus grace). The sample, not the calendar, is what takes time.
 
 | Current baseline | Expected lift | Minimum sends per arm |
 |---|---|---|
@@ -152,22 +152,24 @@ Success = positive reply rate > X% (our current baseline is Y%)
 Failure = positive reply rate < Z%
 Inconclusive = between X and Z
 Guard = time-agreed replies per 1,000 first touches not below the control's
-Required sample: at least N sends per arm, reported after day 21 of sequence
+Required sample: at least N sends per arm, read per Step 6 (floor met, then the sequence plus grace)
 ```
 
 For an offer-only test (type D), the success line is `/campaign-strategy`'s per-arm flip on positive replies, followed by its time-agreed winner pick, not a positive-reply target from this table.
 
 Decide now - not after seeing the data. This prevents "oh we learned something else instead" rationalization.
 
-### Step 5: Launch both arms simultaneously
+### Step 5: Launch every arm simultaneously
 
-Same day, same sending infrastructure split, same sequence. If your control arm sends Monday and your variant arm sends Thursday, day-of-week effects will confound the test.
+Same day, same sending infrastructure split, same sequence, same Monday-to-Friday send days. If your control arm sends Monday and your variant arm sends Thursday, day-of-week effects will confound the test.
 
-Best practice on most sending platforms: create two campaigns, assign each half of your inboxes, launch at the exact same time, same schedule.
+How the arms are built on the locked sending platform (`run_state.sending_platform`) depends on what they are (Aaron process alignment, operator directive 2026-09-22; supersedes "create two campaigns" as the only setup):
+- **Offer arms (type D) and list arms:** one campaign per arm. Split the active rotation half's senders evenly across the arm campaigns (with the inbox manager for the locked platform, if `/stack-setup` activated a pack that provides one; otherwise in that platform's own sender settings), and launch them all at the exact same time on the same schedule.
+- **Positioning and copy variants (type B):** run them inside one campaign as the platform's in-campaign variants, which hold the list, the senders and the schedule identical by construction. Change one variable per variant. Email 1 runs three variants by default: `email_1_a`, `email_1_b`, `email_1_c`, one variable changed per variant (A is the control), more letters allowed (Aaron, Sep 21: variant one, variant two, variant three; Mar 9: one variable at a time). If the locked platform has no in-campaign variant feature, say so and run one campaign per variant on an even sender split instead.
 
-### Step 6: Measure at day 21
+### Step 6: Read when the floor is met, then the sequence plus grace
 
-Wait until the full sequence (one thread of 2 to 3 steps, Hard Rule 18, plus the reply grace period) has finished for ALL leads. Measuring earlier biases toward the first email's reply rate.
+An arm (or an in-campaign copy variant) is read once it has reached its ~1,300 first-touch floor AND its last contacts have had the 2-email sequence plus a few days of grace (about 7 to 10 days from their first touch). Never read early because a window passed (Aaron process alignment, operator directive 2026-09-22; supersedes the fixed ~21-day window). For an offer arm the floor is `/campaign-strategy`'s pooled-flip minimum; for a copy or list test whose Step 3 minimum is higher than ~1,300, that higher minimum is the floor. Two emails is the default sequence; where a third runs, add its delay before the grace. Reading before the sequence finishes biases toward the first email's reply rate. When the client's warmed fleet delivers less than the one-week pace (`run_state.capacity_request`), the floor, not the window, is what takes time. Read daily for the first week after launch, but those daily reads are for bounce, deliverability and reply handling, never for an arm call.
 
 Pull metrics via the positive-reply scoring path for the locked `run_state.sending_platform`: the scoring skill from whichever pack `/stack-setup` activated, otherwise that platform's own reply export, otherwise a hand-classified reply read with the gap stated.
 
@@ -217,29 +219,30 @@ HIGH only if: experiment type isolates the variable AND sample size meets the mi
 
 ## What NOT to experiment on (at first)
 
-If you're just starting out, **don't run controlled copy experiments** until you have a baseline. You need a control before you can test a single variable. **The offer is the exception** (operator-approved Aaron alignment, 2026-09-21): the Offer-Validation Wave tests it from the first wave, as offer-only arms on the same broad list (type D above), because the offer is the highest-leverage lever and every later test sits on top of it (doctrine §3, §5).
+If you're just starting out, **don't run controlled copy experiments** until you have a baseline. You need a control before you can test a single variable. **The offer is the exception** (operator-approved Aaron alignment, 2026-09-21): the Offer-Validation Wave tests it in the first wave, as offer-only arms across every first-wave segment of the whole qualified TAM (type D above), because the offer is the highest-leverage lever and every later test sits on top of it (doctrine §3, §5). The Email 1 variant set each arm carries is identical across arms, so it never competes with the offer read.
 
-**Coverage waves are not controlled experiments, and they are how you build that baseline.** A TAM-driven Wave 1 (see `/campaign-strategy` → Launch waves) launches several **list-only** slices at once while holding the offer and copy approach **constant**, so positive-reply differences are attributable to the list/signal. That is a coverage portfolio, not a confounded multi-variable test: it is the right move once the offer is validated, and it produces the baseline. Reserve single-variable copy experiments, and positioning tests of the winning offer, for Wave 2+, once a slice's baseline exists.
+**Positioning tests of the winner start as soon as the winner is picked** (Aaron process alignment, operator directive 2026-09-22; supersedes "reserve positioning tests of the winning offer for Wave 2+, once a slice's baseline exists"). They run inside the big campaigns that carry the winner to the rest of the TAM, as in-campaign Email 1 variants with one variable changed per variant (Step 5), and losing variants are switched off in flight by the same two things as offer arms, never by a ratio at the floor: the absolute DEAD line on the variant's own count, and the pick of a winning variant (Step 8) at matched counts (Aaron, Apr 6: the second phase of testing is the value prop or pain of the winning offer). **Signal-test slices are the one place copy stays frozen:** a signal slice (the bounded testing allocation after the offer is proven, `/campaign-strategy`) holds the offer and copy approach constant so its reply difference attributes to the signal, which is the point of running it.
 
 **The test order (Aaron's; doctrine §5 step 9, §9; operator-approved Aaron alignment, 2026-09-21):**
 1. **The offer** (the offer-validation arms: which free deliverable the market wants)
 2. **The positioning of the offer** (how the same offer is framed; under Framework A the opener is the offer, so opener tests live here)
 3. **The CTA and delivery** (the ask, and what happens after the yes)
 
-**In parallel from launch, not in sequence:** data source and segment (list cuts). The coverage wave's list-only slices and the sold-to splits are this lever; they run alongside the rungs above instead of waiting behind them.
+**In parallel from launch, not in sequence:** data source and segment (list cuts). In the first wave this is the offer x segment matrix: every offer runs across every first-wave segment (the case-study lookalike core, the widened rows, the sold-to splits, and any split across two or three data sources, which carries disjoint rows tagged `source_arm`), so the read says which offer worked on which segment (Aaron, Apr 13; Aaron process alignment, operator directive 2026-09-22). Later list-only slices are this lever too; they run alongside the rungs above instead of waiting behind them.
 
 **After those:**
 4. **Sequence timing** (Day 3 vs Day 2 follow-up; live delays stay a house decision)
-5. **Sequence length** (2 steps vs 3, within the single-thread 2-to-3-step rule; the 4-step / two-thread structure was retired 2026-07-05)
+5. **Sequence length** (two emails by default at every TAM size; a third only in a genuinely small market, roughly under 3,000 qualified contacts (a house threshold), or as this tested arm; Aaron process alignment, operator directive 2026-09-22; the 4-step / two-thread structure was retired 2026-07-05)
 6. **Subject line, last.** Aaron calls it the lowest-leverage lever, *"never going to be the highest leverage thing to update"* (doctrine §9). Test it only once the offer, its positioning and the CTA are settled.
 
 Don't test a lower rung while a higher one is broken (doctrine §2): no CTA or subject-line test on an offer that has not won its arm. The earlier list-first order (which ranked subject lines third) is archived at `outbound/_archive/aaron-alignment-2026-09-21/experiment-design--hypothesis-example-and-priority-order.md`.
 
 ## Common mistakes
 
-- **A/B testing inside one campaign.** A sending platform's built-in A/B variant feature mixes the data - fine for small copy tweaks, terrible for hypothesis testing. Use TWO campaigns for real isolation.
-- **"I'll test 3 things at once."** You'll learn nothing.
-- **Calling it early.** Wait 21 days minimum. Cold email replies trickle in over weeks.
+- **Running offer arms as in-campaign variants.** A sending platform's in-campaign variants are the default for positioning and copy tests, one variable per variant (Aaron, Mar 9, Sep 21). Offer arms stay separate campaigns, one per offer, so each arm's pooled flip and cell count are clean (Aaron process alignment, operator directive 2026-09-22; supersedes "use TWO campaigns for real isolation" for copy tests, house).
+- **"I'll test 3 things at once."** You'll learn nothing. Three Email 1 variants are fine; three variables inside one variant are not.
+- **Calling it early.** Read an arm only once it has reached its sample floor and its last contacts have had the sequence plus grace (Step 6). Never read early because a window passed.
+- **Cutting an arm on a ratio at the floor.** An arm trailing the leader at ~1,300 contacts is usually noise. Losers go off at the absolute DEAD line or at the winner pick, nothing else (type D above).
 - **Changing infrastructure mid-test.** If one arm uses new domains and one uses old, deliverability skews everything.
 - **Ignoring bounce rate.** If variant's bounce rate is 2x control, the list is bad - not the copy. Disqualify the test.
 - **Declaring a winner on replies alone.** A positive-reply lift with no rise in time-agreed replies per 1,000 first touches is farming interest (doctrine §4). Report both, every time.
@@ -269,7 +272,7 @@ success_criteria:
   minimum_sends_per_arm: <int>
   measurement_date: <YYYY-MM-DD>
 
-arms:
+arms:    # one entry per arm or variant (offer arms = one campaign each; in-campaign variants = email_1_a / email_1_b / email_1_c in one campaign)
   control:
     campaign_id: <tbd until launch>
     description: <what's in the control>
@@ -277,7 +280,7 @@ arms:
     campaign_id: <tbd until launch>
     description: <what's in the variant>
 
-results: <empty until day 21>
+results: <empty until the Step 6 read: floor met, then sequence plus grace>
   control_positive_reply_rate: null
   variant_positive_reply_rate: null
   control_time_agreed_per_1000: null    # time-agreed replies per 1,000 first touches (added 2026-09-21)
@@ -285,6 +288,7 @@ results: <empty until day 21>
   winner: null
   confidence: null
   decision: null
+  parked: []    # arms or variants still in HOLD at the winner pick: no new first touches, read recorded as unresolved (2026-09-22)
 ```
 
 ## References
@@ -296,9 +300,9 @@ results: <empty until day 21>
 
 ## What to do next
 
-Launch the planned experiment through the campaign upload path for the locked `run_state.sending_platform`: the upload skill from whichever pack `/stack-setup` activated, otherwise that platform's native campaign create plus lead upload. If the slot is empty, stop and route the operator to `/stack-setup`. Use the `variants.yaml` from `/campaign-copywriting`.
+Launch the planned experiment through the campaign upload path for the locked `run_state.sending_platform`: the upload skill from whichever pack `/stack-setup` activated, otherwise that platform's native campaign create plus lead upload. If the slot is empty, stop and route the operator to `/stack-setup`. Build it as Step 5 says: paused drafts, one campaign per offer or list arm, and positioning or copy variants as in-campaign variants inside one campaign, with one variation wired per declared Email 1 column. Use the `variants.yaml` from `/campaign-copywriting`.
 
-Then wait 21 days before evaluating. Reply rate needs that long to stabilize. After 21 days, run the positive-reply scoring path for the locked `run_state.sending_platform` on each arm.
+Then read each arm per Step 6: once it reaches its sample floor and its last contacts have had the sequence plus grace (about 7 to 10 days from their first touch), run the positive-reply scoring path for the locked `run_state.sending_platform` on it. In the first week after launch, read daily for bounce, deliverability and reply handling only.
 
 If you do not have 2,000+ leads per experiment arm, you cannot detect normal-sized effects. (Offer arms may still launch below this and ride HOLD under `/campaign-strategy`'s pooled flip, which never kills an arm on a small sample.) Build a bigger list first through the source path `/lead-source-strategy` selects.
 

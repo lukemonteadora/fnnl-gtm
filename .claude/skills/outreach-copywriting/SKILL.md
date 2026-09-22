@@ -24,7 +24,8 @@ Confirm or derive (Aaron asks for the same kind of inputs before he writes: the 
 - audience and one real recipient example
 - specific free deliverable, and whether it is free (if it is, the copy says "free" or "no cost")
 - the real scope: the 3 to 4 tasks the sender genuinely handles and the one small action the prospect takes, or "not applicable" when the real process has no such split
-- the slice's case-study name, when the deliverable is aimed at a case study: a real, sourced value set per slice and written into the shared body, never a per-contact column (B5)
+- the deliverable's target, when it is aimed at a case study: the prospect's own best client (`own_best_client`, per contact) where the data holds it, or else the slice's real, sourced case-study name written into the shared body (B5)
+- any per-contact variables: at most two, already in the data or cheaply derived with an evidence URL (`sells_to_vertical`, `service_offered`, `own_best_client`), placed inside the offer sentence, never as an opener or a stacked line (B13; Aaron process alignment, operator directive 2026-09-22)
 - the optional P.S. job, if any (one of four, B1): the relevance line demoted from line one, one near-twin proof point, a casual risk-elimination or reason-it's-free line, or the deliverable's turnaround and the prospect's one small act
 - optional true proof claim, on file
 
@@ -38,16 +39,17 @@ Apply the Framework A contract from `outreach-copy-framework.md` without substit
 - no greeting word; the first name optional; it may open the email or sit later in the sentence (his first-name-second trick); no company-name variable by default (B1, B5)
 - 25 to 35 body words by default, with the optional P.S. excluded from the count (it stays short and does one job); a body a little under 25 words is acceptable whenever it still carries the whole offer (the one-liner is the common case, not the only one); longer only as a logged A/B arm (B4, B14) (operator-approved Aaron alignment, 2026-09-21)
 - 2 to 3 main-body sentences, or one for the one-liner; an optional declarative P.S. doing one of the four B1 jobs sits outside both the sentence count and the word count (B1, B2)
-- one primary ask: the soft permission CTA last, by default `Would that be worth sharing more?` (B1, B14)
+- one primary ask: the soft permission CTA last, by default `Would that be worth sharing more?`, or a whitelisted variant such as `Would that be worth a quick test?` (pilot, trial and pay-per-result offers), `Would that be useful?` or `Would that be helpful?` (B1, B14; the three added by Aaron process alignment, operator directive 2026-09-22)
 - the scope disclosure whenever it reflects the real process, as a parenthetical or in prose, never invented (B1, B14)
 - proof: none, or one near-twin point in the P.S. (B6)
-- shapes: the one-liner, or two lines plus a P.S. (B2); pain-first, soft-question, context-led, longer, and no-CTA versions only as labeled variants (B3)
+- shapes: the one-liner, or two lines plus a P.S. (B2); pain-first, relevance-question opener (any awareness level), context-led, longer, no-CTA, soft conditional statement close, no-number, and proof-P.S.-versus-no-P.S. versions only as labeled variants (B3; the last four and the wider question opener added by Aaron process alignment, operator directive 2026-09-22)
+- for cold email, three Email 1 variants by default (A, B, C), A the control and each of B and C changing one variable against it (B3); more letters when a test needs them
 - Aaron's kill-list (B9) and his rejection bank (`aaron-examples.md` §8)
 - shape, not sentences: never paste Aaron's lines into client copy (B12)
 
 (operator-approved Aaron alignment, 2026-09-21: "exactly 1 question" and the "mandatory parenthetical workload split" were relaxed to Aaron's stated positions, B14.)
 
-For email, include a compliant subject: 2 to 4 lowercase words, 0 to 2 variables, curiosity plus relevance, never deceptive. For subjectless channels, omit it. Obey tighter platform character limits with the one-liner shape: drop the P.S. first, then the scope disclosure, before touching the offer.
+For email, include a compliant subject: 2 to 4 lowercase words, 0 to 2 variables, curiosity plus relevance, never deceptive ("your [the offer's own object]" and `fyi {{first_name}}` pass). For subjectless channels, omit it. Obey tighter platform character limits with the one-liner shape: drop the P.S. first, then the scope disclosure, before touching the offer.
 
 ## Editing Order
 

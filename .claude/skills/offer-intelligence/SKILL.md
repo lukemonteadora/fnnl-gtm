@@ -18,13 +18,15 @@ Cold email operators default to two failure modes: (1) copying whatever offer th
 
 **In discovery mode**, it runs first on the offer path, immediately after `/icp-onboarding` and before the offer exists. It researches buyer pain and the market so that `/lead-magnet-brainstorm` invents from evidence, not from gut feel. The order of the whole chain is: buyer and pain, then the offer, then the list built to fit that offer, then the copy. Nothing in this mode waits on any list or data work.
 
+**Discovery mode is the research phase, and it does two jobs in order (Aaron process alignment, operator directive 2026-09-22).** First it **extends and clarifies what onboarding captured**: read what `/icp-onboarding` recorded, name what is thin, vague or missing (the buying function, the pain hypothesis, the competitors, the call library), and close those gaps from the client's site, the client, or the research itself. The intake ICP is a starting point, not a ceiling; the offer may later widen or narrow it. Then it **researches the vertical, the market and the ICP for real problems in the buyers' own words**: the client's won and lost sales calls first; then public opinion from the vertical on review sites, forums and public posts (Aaron, Sep 21: "mine demand, see what people are talking about ... the objections that people have"), with Reddit read only from an operator paste and X or LinkedIn posts only where WebSearch returns them, each gap logged (Vector 3); then competitor offers and what competitors fund in paid ads (the Meta Ad Library and LinkedIn ads, read with WebFetch and WebSearch). **Heavy competitor ad spend behind an offer is evidence of demand** (Aaron, Sep 21), never a reason to close an offer type. In an unfamiliar market, Claude sub-agents do the research (Aaron, Sep 21, reaches for Claude when the space is unfamiliar; here that is the `/deep-research` fan-out plus WebSearch and WebFetch in AI/API Routing, never another research provider). The output is a set of real, named problems with sources, which feeds the offer.
+
 **In validation mode**, it runs after an offer is live - evaluating whether the offer is strong, weak, or invisible due to saturation, and deciding whether to keep it or swap it.
 
 ## The saturation problem
 
-Market evidence cuts both ways. If competitors are leading with "free audit" and have been for 18 months, that is not evidence that "free audit" works today. It is evidence that it used to work - and that the ICP has now seen it 400 times and auto-deletes it. Following the market into a saturated offer makes you the fifth cold email this week saying the same thing.
+Market evidence cuts both ways. If competitors are leading with "free audit" and have been for 18 months, that is not evidence that "free audit" works today. The ICP may have seen it 400 times and auto-delete it, and following the market into a saturated offer makes you the fifth cold email this week saying the same thing. It is also evidence that buyers care about the problem: heavy competitor ad spend behind an offer shows demand (Aaron, Sep 21: when competitors put "a massive amount of spend behind something ... we know that that offer is something that people actually care about").
 
-The right response to a saturated market is a contrarian offer: the archetype the ICP has never been pitched in this context. Pattern interruption itself has conversion value that no rubric score can capture.
+So saturation **lowers an offer's rank and requires naming the gap competitors leave**; it never closes an archetype and never overrides a higher-scoring alternative (Aaron process alignment, operator directive 2026-09-22; supersedes "the right response to a saturated market is a contrarian offer" as the only answer). Two answers compete on the same rubric: the same archetype aimed at the gap the competitors leave, and a contrarian offer (the archetype the ICP has never been pitched in this context), whose pattern interruption has conversion value that no rubric score can capture.
 
 ## Offer Architecture gate (shared with copy)
 
@@ -159,7 +161,7 @@ Build the saturation table. Head it with the denominator:
 - Denominator 5 or more, 2 using it -> **CROWDED** (notable but not fatal)
 - Denominator 5 or more, 0-1 using it -> **OPEN** (uncontested)
 
-A saturated archetype is not evidence the offer works. It is evidence it used to work.
+A saturated archetype is not evidence the offer works for this client today; the ICP may be numb to the form. It is evidence that buyers care about the problem (competitor spend shows demand, Aaron, Sep 21). A SATURATED verdict therefore ranks the archetype lower and asks for the gap competitors leave; it never closes it (Aaron process alignment, operator directive 2026-09-22).
 
 ---
 
@@ -361,7 +363,7 @@ Angles only. The creative execution is not the finding. Ten to fifty variations 
 
 > **Don't confuse H and K.** **H** is scoped access to the client's *actual paid product* (a trial, a free account) — its risk is product friction. **K** is a *purpose-built standalone* calculator or audit that is not the product at all: the prospect drops in their own numbers and gets an instant computed result. K runs as its own arm in any wave and is judged on time-agreed replies rather than positives (K1), and the agency builds it for the test (K2); both in `/lead-magnet-brainstorm`, reworked 2026-09-22. Score its saturation on whether this ICP is already being sent free calculators, not on the client's product.
 
-**Saturated archetypes (avoid):** [list]
+**Saturated archetypes (rank lower, never closed):** [list, each with the gap competitors leave, or "no gap found"]
 **Crowded archetypes (proceed with caution):** [list]
 **Open archetypes (prioritize):** [list]
 **Unverdicted (INSUFFICIENT SAMPLE, denominator below 5):** [list, or "none, denominator is [N]"]
@@ -384,8 +386,8 @@ Angles only. The creative execution is not the finding. Ten to fifty variations 
 **Target persona:** [the persona from the Pain by persona table carrying the strongest, best-evidenced pain, and one line on why it beats the others]
 **Proven paid angle to borrow or avoid:** [from Paid Ads Angles. Name the angle, not the creative.]
 **Primary:** Focus invention on [open archetype(s)] - uncontested in this market, aligned with ICP pain #[X].
-**Secondary:** [another open archetype]. Delivery capacity is not a filter here (operator directive 2026-09-22): `/lead-magnet-brainstorm` records who honors a prospect's yes during the test, and `/offer-test-slate` asks about full volume after the test.
-**Avoid:** [saturated archetypes] - ICP has been overexposed, pattern interrupt value is gone.
+**Secondary:** [another open archetype]. Delivery capacity is not a filter at research or ideation (operator directive 2026-09-22). At lock, `/lead-magnet-brainstorm` checks each offer is deliverable at the planned send volume, with a scale note or an `offer.qualification` rule (Aaron process alignment, operator directive 2026-09-22; supersedes "`/offer-test-slate` asks about full volume after the test").
+**Rank lower:** [saturated archetypes] - the ICP has seen them often, so each needs the gap competitors leave (named, with its evidence) to earn a place. Saturation never closes an archetype or overrides a higher-scoring direction (Aaron process alignment, operator directive 2026-09-22; supersedes "Avoid").
 
 ### Contrarian opportunity (if applicable)
 [Only populate if all or most archetypes are saturated/crowded. Name the archetype furthest from the saturated ones and why it could break the pattern.]
@@ -401,7 +403,7 @@ The rows below are not a summary. They are the working input the next skill inve
 | 3 | | | | |
 
 **Open archetypes still uncontested:** [letters + names from the Saturation Map's Open line]
-**Closed to candidates:** [saturated archetypes, which candidate generation may not build toward without an explicit reason]
+**Saturated (ranked lower, never closed):** [saturated archetypes, each with the gap competitors leave and the paid-ad spend behind it, which counts as demand evidence. Candidate generation may build toward one when it names that gap; it ranks below an equal-scoring open direction and never displaces a higher-scoring one (Aaron process alignment, operator directive 2026-09-22; supersedes "Closed to candidates", which contradicted this file's own never-filtered rule)]
 **Cross-client priors (optional; patterns only):** [offer patterns that flipped `offer_market_proven` or scaled as winners for OTHER clients in this workspace (their `portfolio-review.md` winners): the offer family, the deliverable's shape, the input asked for, and the next step. Or "none used".]
 ```
 
@@ -428,10 +430,10 @@ Nothing else in this brief is a prerequisite for that handoff. If `Candidate Gen
 
 ### When to trigger
 
-- Live campaign reply rate below 1% after 300+ sends, where the offer is still a plausible bottleneck once the deliverability triggers and list quality are clear (Vector 5 Key diagnostics). Copy sits below the offer in the diagnostic order (doctrine §2), so a copy check is not a precondition for suspecting the offer
+- Live campaign reply rate below 1% after 300+ sends, where the offer is still a plausible bottleneck once the deliverability triggers and list quality are clear (Vector 5 Key diagnostics). Copy sits below the offer in the diagnostic order (doctrine §2), so a copy check is not a precondition for suspecting the offer. **300 sends only triggers a look, on raw reply rate; it never calls the offer broken.** Calling an offer broken needs about 1,300 first-touch contacts on the arm (Step 2, Minimum threshold; Aaron process alignment, operator directive 2026-09-22; supersedes "300 sends is enough to call an offer broken")
 - Existing offer has live or prior campaign evidence and the client wants to keep it
 - User says "let's test a different offer" - run this before `/experiment-design` so the new offer is market-validated, not random
-- After `/lead-magnet-brainstorm` outputs an offer and you want a second opinion before locking. For a fast, hands-off second opinion - especially on a new or contrarian offer whose evidence is thin - run `/roast` on the offer: it returns a green-light / reshape / kill verdict plus the single cheapest test to run before committing copy build and list spend. Treat a thinly-evidenced offer's first small wave as that cheapest test rather than over-investing in a full build up front.
+- After `/lead-magnet-brainstorm` outputs an offer and you want a second opinion before locking. For a fast, hands-off second opinion - especially on a new or contrarian offer whose evidence is thin - run `/roast` on the offer: it returns a green-light / reshape / kill verdict plus the single cheapest test to run before committing copy build and list spend. The cheapest honest market test of a thinly-evidenced offer is one arm at the normal per-arm size (about 2,000 first-touch contacts planned, about 1,300 minimum) inside the first wave, beside the other offers, not a separate small wave that cannot reach significance (Aaron, Mar 9: "the more volume you're able to send, the faster you're able to figure out an angle that works"; Aaron process alignment, operator directive 2026-09-22; supersedes "treat a thinly-evidenced offer's first small wave as that cheapest test").
 
 Do not use validation mode just because an onboarding form contains a suggested lead magnet or CTA. A form answer is a hypothesis. For new clients and new campaigns, run discovery mode here first (it follows `/icp-onboarding` directly), then `/lead-magnet-brainstorm`, with the client suggestion treated as Candidate A. No list-side or data-side work is a prerequisite for either, because all of it runs after the offer locks.
 
@@ -457,7 +459,7 @@ If validation mode is requested but the only offer fields are `offer.client_sugg
 
 0. **Is the buyer real and specific?** A named buyer type with a problem they already know they have, plus role, authority, current situation and exclusions. "Founders" or "B2B companies" is not a buyer.
 1. **Is the offer a concrete thing, or a description of the company?** It must say what they get, how fast, what they must do, and what risk they take.
-2. **Is every yes being honored?** Aaron's "easy for you to fulfill" (doctrine §2 step 2). For a live offer this is a fulfillment check: a yes that goes unhonored is a delivery problem to fix before the offer is judged, not evidence against the offer. Full-volume capacity is asked in `/offer-test-slate` scale review, never here (operator directive 2026-09-22; the twenty-buyer figure this item used to cite was this system's number, doctrine §13).
+2. **Is every qualified yes being honored, at the volume being sent?** Aaron's "easy for you to fulfill" (doctrine §2 step 2), at "the scale of the emails that you're sending" (Aaron, Sep 21). For a live offer this is a fulfillment check against its lock record: a scale note showing it fits the send volume, or an `offer.qualification` rule that decides who gets the free unit and who gets the standard offer (`/lead-magnet-brainstorm`, Deliverable at Send Scale). A qualified yes that goes unhonored is a delivery problem to fix before the offer is judged, not evidence against the offer. An offer locked with neither record gets one now through `/lead-magnet-brainstorm` (Aaron process alignment, operator directive 2026-09-22; supersedes "full-volume capacity is asked in `/offer-test-slate` scale review, never here"; the twenty-buyer figure this item used to cite was this system's number, doctrine §13).
 3. **Does the copy lead with the offer, and is every word true?** Only now read the live draft.
 4. **Is the next step one easy action, and does each follow-up earn its place?**
 5. **Are we judging the right number?** Time-agreed replies per 1,000 first touches beside positive-reply rate, never reply count alone (doctrine §0, §2 step 5).
@@ -475,7 +477,7 @@ Then run the existing offer through four quick questions. They are the fast chec
 - 1 red flag: note the flaw, proceed, factor into final score.
 - 2+ red flags: offer is broken structurally. Flag it. Research still runs, but recommendation will almost certainly be Swap.
 
-**Separately, check fulfillment (not a red flag against the offer).** Is every yes the live offer gets being honored as promised, on time? If not, fix delivery before judging the offer. Whether it can run at full volume is asked in `/offer-test-slate` scale review, never scored here (operator directive 2026-09-22; this used to be the question "can the front-end owner deliver it to 100 people this week without custom work per person?").
+**Separately, check fulfillment (not a red flag against the offer).** Is every qualified yes the live offer gets being honored as promised, on time, at the current send volume? If not, fix delivery (or add the missing `offer.qualification` rule) before judging the offer. Deliverability at send scale is checked, never scored here (Aaron process alignment, operator directive 2026-09-22; supersedes "asked in `/offer-test-slate` scale review"; this used to be the question "can the front-end owner deliver it to 100 people this week without custom work per person?").
 
 ---
 
@@ -512,7 +514,7 @@ Key diagnostics, in this order:
 - "Already have something" replies appearing more than once -> the archetype is saturated in their mind.
 - **Positive replies rising with no rise in time-agreed replies -> farming interest** (doctrine §4): the offer is easy to say yes to but not specific enough to filter out people who will never buy. Treat it as an Iterate signal, not a win and not a kill: reshape the offer so it is more specific and filters better. Time-agreed replies are positive replies whose thread moves toward a time, counted with `/campaign-strategy`'s magnet-inflation-guard proxy; they pick winners and gate scaling, and never move the offer-validation flip, which reads positive replies.
 
-Minimum threshold: do not call the offer broken before 300 sends. Below that, variance is too high to trust.
+Minimum threshold: do not call the offer broken before an arm has reached about 1,300 first-touch contacts (the flow's per-arm floor; about 2,000 are planned per offer) and its last contacts have had the sequence plus a few days of grace. Below that, variance is too high to trust (Aaron, May 4: every segment "was at least 1,000 prospects"; Aaron process alignment, operator directive 2026-09-22; supersedes "300 sends").
 
 ---
 
@@ -535,7 +537,7 @@ Answer four questions:
 | Criterion | Points | Existing offer | Market alternative |
 |---|---|---|---|
 | Directly addresses #1 ICP pain from signal | 0-2 (0=no, 1=partially, 2=yes) | | |
-| Perceived value: it sounds like something they would pay for, given free (doctrine §3), ideally anchored to a real price or cost. Delivery effort and scale do not score (operator directive 2026-09-22; `/offer-test-slate` scale review asks about capacity) | 0-1 | | |
+| Perceived value: it sounds like something they would pay for, given free (doctrine §3), ideally anchored to a real price or cost. Delivery effort and scale do not score (operator directive 2026-09-22); deliverability at send scale is a lock check in `/lead-magnet-brainstorm` (Aaron process alignment, operator directive 2026-09-22) | 0-1 | | |
 | Proves your specific competence in one step | 0-1 | | |
 | Requires <60 seconds from prospect to claim | 0-1 | | |
 | Differentiated from the field (not just one competitor) | 0-2 (0=same as 3+, 1=same as 1-2, 2=nobody else does this) | | |
@@ -547,9 +549,9 @@ Answer four questions:
 
 **Step 5: Decision framework**
 
-**Saturation override - check first**
+**Saturation check - run first**
 
-If the existing offer's archetype is SATURATED and the market alternative uses the same archetype: do not pick the market alternative. Go to Contrarian Offer analysis before running decision logic. A high-scoring offer in a saturated category will underperform a mid-scoring contrarian because the ICP has already learned to ignore the pattern.
+If the existing offer's archetype is SATURATED and the market alternative uses the same archetype, run Contrarian Offer analysis (Step 5B) before the decision logic and add its pick as a candidate beside the other two. Saturation already lowers rank through the Step 4 penalty; here it also requires naming the gap competitors leave for any saturated option that stays in play. It never closes the archetype and never overrides a higher-scoring alternative: heavy competitor ad spend behind the archetype is evidence of demand (Aaron, Sep 21), and the market, not the desk, settles whether the pattern is too tired (Aaron process alignment, operator directive 2026-09-22; supersedes "do not pick the market alternative" and "a high-scoring offer in a saturated category will underperform a mid-scoring contrarian"). If no gap can be named, say so in the Recommendation.
 
 **Normal decision logic**
 
@@ -562,7 +564,7 @@ If the existing offer's archetype is SATURATED and the market alternative uses t
 | 3-4 | 5 | **Swap + test** - neither dominant, run both as offer-validation arms (`offer.validation_arms`, `/campaign-strategy` Offer-Validation Wave) via `/experiment-design`'s offer-only type |
 | 0-2 | Any | **Swap** - structurally broken, replace immediately |
 
-**Go:** Lock the offer in `client-profile.yaml`, proceed to `/campaign-strategy`.
+**Go:** Lock the offer in `client-profile.yaml` as the primary. **New offer arms are optional for a Go offer** (Aaron, Apr 13: "If you're pretty sure you've got a good offer, running a bunch of variations of it isn't necessarily going to be the highest leverage thing"). The default first-wave test is segments and data sources plus positioning variants of this offer, so `offer.validation_arms` may be `[]` with the reason "validated Go offer"; add arms through `/lead-magnet-brainstorm` only when the operator wants them (Aaron process alignment, operator directive 2026-09-22; supersedes "run `/lead-magnet-brainstorm` for validation arms to test beside it"). Proceed to `/campaign-strategy`.
 
 **Iterate:** Rewrite framing, CTA, and specificity. Common moves:
 - Make deliverable more specific ("a 5-minute audit" -> "your first three subject lines, rewritten": a done-for-you deliverable, never named an audit; doctrine §3, ledger R09)
@@ -570,9 +572,9 @@ If the existing offer's archetype is SATURATED and the market alternative uses t
 - Eliminate friction (no form fill, reply-to-claim)
 - Sharpen competence proof ("I'll send you ideas" -> "I'll rewrite your first cold email subject line")
 
-Re-score until the offer hits 6+.
+Re-score once to check the rewrite answers the finding, then let the market read it, not the desk: the iterated offer goes to `/lead-magnet-brainstorm`, which runs it in a fresh multi-offer flight beside other qualifying candidates as simultaneous cells, with list and copy frozen so the offer is the only variable (Aaron, Apr 6: "you really want to test a ton of different offers first"; Mar 2: "Let the market tell you what you should do"; Aaron process alignment, operator directive 2026-09-22; supersedes "re-score until the offer hits 6+").
 
-**Swap:** Choose the market alternative or contrarian offer. If `offer.validation_arms` already holds an active arm that passed every `/lead-magnet-brainstorm` gate, that arm is the first swap candidate. Write the offer-only experiment hypothesis for `/experiment-design`. Any new offer goes through `/lead-magnet-brainstorm` (ranked with its labels and its honoring fields, with its four fulfillment artifacts written before it sends) and into the next `/offer-test-slate` flight.
+**Swap:** Choose the market alternative or contrarian offer. If `offer.validation_arms` already holds an active arm that passed every `/lead-magnet-brainstorm` gate, that arm is the first swap candidate. Write the offer-only experiment hypothesis for `/experiment-design`. Any new offer goes through `/lead-magnet-brainstorm` (ranked with its labels and its honoring fields, with its four fulfillment artifacts written before it sends) and into a fresh multi-offer flight run as simultaneous cells, list and copy frozen, shown on the next `/offer-test-slate` (Aaron process alignment, operator directive 2026-09-22; supersedes a one-offer swap).
 
 Keep the CTA at **direction-level** here — a plain-English ask direction, not exact send copy. Exact CTA wording is deferred to `/campaign-copywriting`, which writes it later under the verified-list gate (`verified-list-gate.md`) and runs it through `spam-word-checker.md` + `cold-email-copy-best-practices.md`. Do not write exact CTA send phrasing to the validation brief or `client-profile.yaml` — this skill runs before any list exists.
 
@@ -580,7 +582,7 @@ Keep the CTA at **direction-level** here — a plain-English ask direction, not 
 
 **Step 5B: Contrarian offer analysis**
 
-Trigger: saturation override fired, OR both existing and market alternative score below 5, OR user asks "what's the unexpected offer?"
+Trigger: the Step 5 saturation check fired (a SATURATED existing offer and a same-archetype market alternative), OR both existing and market alternative score below 5, OR user asks "what's the unexpected offer?"
 
 The contrarian offer is the archetype nobody (or almost nobody) in this market is currently using. Its advantage is not evidence it converts - it is the absence of evidence it has been ignored. The ICP has not been trained to delete it yet.
 
@@ -597,7 +599,7 @@ The contrarian offer is the archetype nobody (or almost nobody) in this market i
 - If templates/checklists (D) are saturated -> consider intro/connection (E) or benchmark (J)
 - If everyone offers meetings -> offer to send the value async, no call required
 
-Output a named contrarian offer. Flag it clearly as contrarian - it trades market validation for pattern interruption.
+Output a named contrarian offer. Flag it clearly as contrarian - it trades market validation for pattern interruption. It joins the candidates on its score; it does not replace a higher-scoring one (Aaron process alignment, operator directive 2026-09-22).
 
 ---
 
@@ -677,7 +679,7 @@ Save the CTA at **direction-level** only (`lead_magnet_cta_direction` — a plai
 
 "Leading with [new offer] will outperform [existing offer] for [ICP] because [reason from research]."
 
-Hand off to `/experiment-design` as an offer-only experiment. Keep list, copy, and infrastructure frozen. Only the offer changes.
+Route the new offer through `/lead-magnet-brainstorm` into a fresh multi-offer flight: the swap candidate plus the other qualifying candidates, run as simultaneous cells. Keep list, copy, and infrastructure frozen, so the offers are the only variable. `/experiment-design` formalizes the hypothesis as an offer-only experiment. (Aaron process alignment, operator directive 2026-09-22; supersedes a one-offer swap.)
 ```
 
 Update `client-profile.yaml`:
@@ -700,10 +702,11 @@ Only add `offer_validation_run` and `offer_validation_path` when validation mode
 
 ## Common mistakes
 
-- **Using competitor offers as confirmation without checking saturation.** Three competitors offering free audits is not validation. It is a warning. Count the field before following it.
+- **Using competitor offers as confirmation without checking saturation.** Three competitors offering free audits is not validation that yours will work. It is demand evidence and a fatigue warning at once. Count the field, then name the gap they leave before following it.
 - **Running the contrarian offer just because it's different.** Pattern interruption has value, but an offer disconnected from ICP pain is still a bad offer. The contrarian offer still needs to score well on pain relevance and competence proof - it just gets a pass on differentiation.
 - **Swapping offer and copy at the same time.** Combined experiment. You will learn nothing about which change drove the result. Swap the offer, freeze everything else, run `/experiment-design`.
-- **Calling the offer broken before 300 sends.** Variance is too high. Deliverability and list issues look identical to offer problems at low volumes.
+- **Calling the offer broken before an arm has reached about 1,300 first-touch contacts.** Variance is too high below the flow's per-arm floor, and deliverability and list issues look identical to offer problems at low volumes (Aaron process alignment, operator directive 2026-09-22; supersedes "before 300 sends").
+- **Letting saturation close an archetype.** Saturation lowers rank and asks for the gap competitors leave. Competitor ad spend behind an offer is evidence of demand (Aaron, Sep 21), so a saturated archetype with a real gap can still run as an arm.
 - **Treating reply rate alone as an offer problem, or a copy fix as clearing the offer.** Rule out deliverability when one of its triggers fires (bounce above the house threshold, a placement-test flag, reply rate near 0.1%, contacts-per-positive jumping) and rule out list quality; then walk the diagnostic order (doctrine §2), where the offer sits above the copy. Open rate is never the trigger: opens are not tracked in this system (operator-approved Aaron alignment, 2026-09-21).
 - **Calling an offer a winner on positive replies alone.** Report time-agreed replies per 1,000 first touches beside the positive-reply rate; a positive lift with no rise in time-agreed replies is farming interest (doctrine §0, §4).
 - **Iterating the offer without changing the language.** Iteration means rewriting toward the ICP's own words from Vector 3. Keeping your language gets the same result.
@@ -724,19 +727,19 @@ Only add `offer_validation_run` and `offer_validation_path` when validation mode
 | `/icp-onboarding` | Runs immediately before this skill. Produces the ICP, the value prop, `icp_soft_preferences.personas_to_prioritize` (the persona list every pain row maps against), `sales_call_library` (whether the client's won and lost recordings exist and where, which the First-Party Call Vector reads before asking the client for anything), and `buyer_pain_hypothesis` (the client's unverified belief about buyer pain, which this skill confirms or overturns). |
 | `/lead-source-strategy` | Runs in Lead Source Plan Mode AFTER campaign selection, far downstream of this skill. The chain is: buyer and pain, then the offer, then the list built to fit that offer, then the copy. Nothing it produces is a prerequisite here. |
 | `/lead-magnet-brainstorm` | Runs after discovery mode. Reads the offer-intelligence.md brief to anchor archetype selection, using the first-party buyer language, the pain-by-persona table, the paid-ads angles, and the ICP language from Vector 3. |
-| `/offer-test-slate` | Shows this brief's findings to the client (buyer types, problems in the buyer's words, the gap competitors leave) beside the offers `/lead-magnet-brainstorm` builds from them, before the test. Client approval is optional. After the test, its scale review asks what running the winner at full volume takes. |
+| `/offer-test-slate` | Shows this brief's findings to the client (buyer types, problems in the buyer's words, the gap competitors leave) beside the offers `/lead-magnet-brainstorm` builds from them, before the test. Client approval is optional. After the wave reads out, its scale review reports the results to the client and reviews the winner's `offer.qualification` rule alongside the winner's scale-up; it is not a volume gate (Aaron process alignment, operator directive 2026-09-22). |
 | `/campaign-strategy` | Reads the locked offer from `client-profile.yaml` and the data-point catalog. The front-end offer suggestions section should defer to this output. |
-| `/experiment-design` | If validation mode decision = Swap or Swap (Contrarian), this skill writes the offer-only experiment hypothesis that `/experiment-design` formalizes. |
+| `/experiment-design` | If validation mode decision = Iterate, Swap or Swap (Contrarian), this skill writes the offer-only experiment hypothesis that `/experiment-design` formalizes; the offers themselves run as a fresh multi-offer flight through `/lead-magnet-brainstorm`. |
 | `/roast` | Optional fast pre-lock stress test of a candidate offer (hands-off council → green-light / reshape / kill + the single cheapest 48-hour validation test). Useful for a new or contrarian offer before committing build and spend; complements this skill's evidence-based Go/Iterate/Swap rather than replacing it. |
-| `/ask-aaron` | Optional persona consult for pressure-testing a candidate offer against Aaron Shepherd's diagnostic (is the buyer real and specific, is it a concrete deliverable or a service description, can every yes in the test be honored, his "easy for you to fulfill" applied at test scale; the twenty-buyer figure was this system's safeguard, doctrine §13, and the full-volume capacity question moved to `/offer-test-slate` scale review on 2026-09-22) or choosing between offer cards. Advisory only; complements the evidence-based Go/Iterate/Swap here rather than replacing it. |
+| `/ask-aaron` | Optional persona consult for pressure-testing a candidate offer against Aaron Shepherd's diagnostic (is the buyer real and specific, is it a concrete deliverable or a service description, can every qualified yes be honored, his "easy for you to fulfill" applied at the planned send volume; the twenty-buyer figure was this system's safeguard, doctrine §13, and the deliverable-at-send-scale check sits at offer lock in `/lead-magnet-brainstorm`, Aaron process alignment, operator directive 2026-09-22) or choosing between offer cards. Advisory only; complements the evidence-based Go/Iterate/Swap here rather than replacing it. |
 | `/cold-email-kickoff` | Invokes this discovery mode immediately after `/icp-onboarding`, then `/lead-magnet-brainstorm`, then `/data-point-discovery` once the offer is locked. |
-| `/cold-email-weekly-rhythm` | If reply rate drops below 1% on a running campaign, trigger validation mode before changing copy or list. |
+| `/cold-email-weekly-rhythm` | If raw reply rate drops below 1% after 300+ sends on a running campaign, trigger validation mode (a look, not a verdict: calling the offer broken needs about 1,300 first-touch contacts per arm) before changing copy or list. |
 | `/email-deliverability-audit` | Run it first when a deliverability trigger fires: bounce above the house threshold, a placement-test flag (a trigger to investigate, never decisive alone), reply rate near 0.1%, or contacts-per-positive jumping. Open rate is never the trigger, because opens are not tracked in this system (open tracking stays off on the sending platform). Do not diagnose the offer while a trigger is open. |
 
 ## What to do next
 
 - **Discovery mode complete:** Hand off to `/lead-magnet-brainstorm`. It reads the brief at `profiles/<business-slug>/offer-intelligence.md`, starting from its `Candidate Generation Input` block. Nothing list-side or data-side has run at this point, and none of it is needed for the handoff.
-- **Validation - Go:** Proceed to `/campaign-strategy`. Offer is locked in `client-profile.yaml`.
-- **Validation - Iterate:** Stay here, rewrite using ICP language from Vector 3, re-score. Repeat until score hits 6+.
-- **Validation - Swap or Swap (Contrarian):** Take the experiment hypothesis to `/experiment-design`. Run as offer-only experiment. Keep everything else frozen.
+- **Validation - Go:** Proceed to `/campaign-strategy`. Offer is locked in `client-profile.yaml`. New offer arms are optional; the default test is segments and data sources plus positioning variants of this offer (Aaron, Apr 13).
+- **Validation - Iterate:** Rewrite using ICP language from Vector 3, re-score once, then route the rewrite to `/lead-magnet-brainstorm` as a cell in a fresh multi-offer flight. The market reads it, not the desk score (Aaron process alignment, operator directive 2026-09-22; supersedes "repeat until score hits 6+").
+- **Validation - Swap or Swap (Contrarian):** Route the new offer through `/lead-magnet-brainstorm` into a fresh multi-offer flight run as simultaneous cells, with list and copy frozen; `/experiment-design` formalizes the offer-only hypothesis (Aaron process alignment, operator directive 2026-09-22; supersedes a one-offer swap).
 

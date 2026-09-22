@@ -31,7 +31,7 @@ Stop and route back to `/campaign-copywriting` if the copy fails. Do not silentl
 
 This also inherits the **verified-list gate** (`verified-list-gate.md`): the `variants.yaml` it packages must have been produced by `/campaign-copywriting` under that gate (verified slice + list grade ≥ B + locked strategy). Confirm that upstream before packaging — do not package copy for a slice that never had a verified list.
 
-Hard-stop examples include em dashes, double hyphens, mid-sentence dash separators, colon-as-runway sentences, comma-wrapped company descriptors, weak CTAs, repeated generic new-thread CTA deliverables, unconfirmed CTA deliverables, broken two-thread 4-step structure, follow-up-reference openers, goodbye or fake wrap-up emails, or links and calendar links in emails 1-3 without explicit user override.
+Hard-stop examples include em dashes, double hyphens, mid-sentence dash separators, colon-as-runway sentences, comma-wrapped company descriptors, weak CTAs, repeated generic new-thread CTA deliverables, unconfirmed CTA deliverables, a broken sequence shape (two emails by default, a third only in a small market or as a logged arm, never more than three touches, and Email 1 missing any of its declared variants, three by default: A, B and C; Aaron process alignment, operator directive 2026-09-22, supersedes the two-thread 4-step structure), follow-up-reference openers, goodbye or fake wrap-up emails, or links and calendar links in emails 1-3 without explicit user override.
 
 ---
 

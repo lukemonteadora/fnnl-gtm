@@ -33,7 +33,7 @@ Autonomy never relaxes this gate. Under `/autonomous-execution-policy` `auto_exe
 
 ## Exceptions (inherit the gate; do not re-check)
 
-- **Post-reply / list-agnostic copy** — e.g. `interested-reply` and `pre-call` nurture in `/lifecycle-copy` run after a reply already exists. They assert the **parent** slice was gate-built, not a fresh `leads.verified.csv` check. A fresh check here would be a false block.
+- **Post-reply / list-agnostic copy**, e.g. `interested-reply` and `pre-call` nurture in `/lifecycle-copy`. They are written before Start (Gate D, reply readiness; Aaron process alignment, operator directive 2026-09-22) but only ever sent after a reply or a booking, so they assert the **parent** slice was gate-built, not a fresh `leads.verified.csv` check. A fresh check here would be a false block.
 - **Pre-enrichment planning** — `/campaign-approval-brief` is intentionally a *pre-list-build, pre-enrichment* gate and is allowed to run before a verified list exists. Only its finalized-**copy-preview** section is gated: skip or placeholder the preview when no verified slice exists yet. Brief generation itself stays on plan-level fields.
 - **Re-uploading an already-verified external list** — allowed only behind an explicit operator `verified_flag` override (a hard-stop-class action the operator takes deliberately), so a verified export named `leads.csv` is not false-blocked.
 

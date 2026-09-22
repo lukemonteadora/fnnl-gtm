@@ -1,6 +1,6 @@
 ---
 name: pre-call-nurture-docx-presentation
-description: Creates a compact client-facing DOCX presentation for pre-call nurture flows from approved Markdown files such as pre-call.md. Use when packaging what gets sent between booking and the sales call, using the same shared cold email DOCX formatting as the campaign sequence presentation.
+description: Creates a compact client-facing DOCX presentation for pre-call nurture flows from approved Markdown files such as pre-call.md, including the confirmation page and its FAQs. Use when packaging what the prospect sees at booking and what gets sent between booking and the sales call, using the same shared cold email DOCX formatting as the campaign sequence presentation.
 ---
 
 # Pre-Call Nurture DOCX Presentation Skill
@@ -27,11 +27,11 @@ Before packaging the DOCX, read the source Markdown and confirm the sendable cop
 1. `spam-word-checker.md`
 2. `cold-email-copy-best-practices.md`
 
-Stop and route back to `/campaign-copywriting` if the copy fails. Do not silently rewrite copy inside this DOCX skill.
+Stop and route back to `/lifecycle-copy` (the producer of `pre-call.md`) if the copy fails. Do not silently rewrite copy inside this DOCX skill.
 
-This is post-booking (a call is already booked), so it inherits the parent campaign's **verified-list gate** (`verified-list-gate.md`) rather than re-checking a verified list. Confirm the parent sequence was gate-built; do not run a fresh `leads.verified.csv` check here.
+This copy is written before the campaign's Start (Gate D, reply readiness) but only ever sent after a booking, so it inherits the parent campaign's **verified-list gate** (`verified-list-gate.md`) rather than re-checking a verified list. Confirm the parent sequence was gate-built; do not run a fresh `leads.verified.csv` check here.
 
-Hard-stop examples include em dashes, double hyphens, mid-sentence dash separators, weak CTAs, unconfirmed CTA deliverables, follow-up-reference openers, or unsafe link and calendar usage.
+Hard-stop examples include em dashes, double hyphens, mid-sentence dash separators, weak CTAs, unconfirmed CTA deliverables, follow-up-reference openers, or unsafe link and calendar usage. **Warm copy is judged by the warm rules** (Aaron process alignment, operator directive 2026-09-22; supersedes applying the cold-sequence link and calendar bans here). The cold-sequence bans, such as `cold-email-copy-best-practices.md`'s "Keep calendar links out of emails 1-3", apply to cold steps only. In `pre-call.md` the call link and the confirmation-page link are expected and must not be flagged; "unsafe" means a pile of links (more than the call link plus one resource per email, `/lifecycle-copy` Output 3) or a confirmation-page FAQ that answers an objection `/offer-intelligence` never found.
 
 ---
 
@@ -55,11 +55,12 @@ Keep the document simple:
 2. Short intro
 3. When to use
 4. Variables needed, if present in source
-5. Sequence
-6. Scheduled emails plus no-show email, if present
-7. Short notes only if already present in source
+5. Confirmation Page (`## Confirmation Page`: the page copy and its FAQs), rendered as its own section before the sequence
+6. Sequence
+7. Scheduled emails plus no-show email, if present
+8. Short notes only if already present in source (for `pre-call.md`, the FAQ sources)
 
-The parser should read `## Email...` headings, `## If They No-Show`, `**Subject:**`, fenced email body blocks, word count, purpose, variables, and notes.
+The parser reads `## Confirmation Page`, `## Email...` headings, `## If They No-Show`, `**Subject:**`, fenced email body blocks, word count, purpose, variables, and notes. `## Confirmation Page` renders under its own heading with one paragraph per line (so each FAQ question and answer keeps its own line) and no subject line (added to `scripts/lifecycle_docx_presentation.ps1` on 2026-09-23 for the Aaron process alignment). A section that comes before the first email renders before the sequence.
 
 ---
 
@@ -99,7 +100,7 @@ node scripts\docx_to_gdoc.mjs --in "profiles\<business-slug>\Pre-Call Nurture Fl
 
 ## QA
 
-After generation, open the DOCX with Word COM, confirm scheduled and no-show blocks are present, export a temporary PDF sanity check, delete the PDF, and scan for mojibake markers such as garbled accented characters or garbled quote sequences.
+After generation, open the DOCX with Word COM, confirm the Confirmation Page section and the scheduled and no-show blocks are present, export a temporary PDF sanity check, delete the PDF, and scan for mojibake markers such as garbled accented characters or garbled quote sequences.
 
 If a spam or best-practice issue is found, report it and route back to copy editing. Do not silently rewrite copy.
 
@@ -110,6 +111,7 @@ If a spam or best-practice issue is found, report it and route back to copy edit
 - `/cold-email-campaign-sequence-docx-presentation`
 - `/cold-email-followups-docx-presentation`
 - `/interested-replies-docx-presentation`
+- `/lifecycle-copy` (writes `pre-call.md`)
 - `/campaign-copywriting`
 
 ## Activity Log Protocol

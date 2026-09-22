@@ -51,7 +51,7 @@ Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURR
 Read the whole transcript and pull everything relevant to these field groups (the same shape `/icp-onboarding` and `/client-intake-form` collect). Capture only what was actually said or clearly implied — **never invent**. Mark anything uncertain.
 
 - **Business:** what they sell (one-liner), website, value prop, how they make money, tone / voice.
-- **Best customer / ICP:** the single best existing customer described, buying job titles, headcount range, industries in / out, target geography (countries / states / cities in and out of scope).
+- **Best customer / ICP:** the single best existing customer described, the buying function and seniority (plus any example job titles named; the full title stack comes from the locked offer, so never narrow to one title), headcount range, industries in / out, target geography (countries / states / cities in and out of scope).
 - **Pain & why-now:** the problems the ICP has *in their own words*, buying triggers, what makes outreach timely.
 - **Offer clues:** any front-end offer / lead magnet / CTA the client suggested (a **hypothesis**, never a locked offer), what they legally cannot offer or claim, and any delivery facts they mentioned (capacity remarks are context for the post-test scale review, never a limit on which offers get tested).
 - **Proof:** named customers, case studies, metrics, results mentioned.
@@ -87,7 +87,7 @@ Use this structure (note: **no action-item section**):
 |---|---|---|
 | business one-liner / website / tone | <value or —> | high / med / low |
 | best customer | | |
-| buying job title(s) | | |
+| buying function + seniority (example titles) | | |
 | headcount min / max | | |
 | industries in / out | | |
 | geography in / out | | |

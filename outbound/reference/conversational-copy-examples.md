@@ -7,9 +7,9 @@
 > | What the archived file showed | The current rule |
 > |---|---|
 > | Email 1 around 180 words, pain-led or observation-led | 25 to 35 body words by default, offer first, with no pain, observation, or preamble before the offer (`outreach-copy-framework.md`, B1 and B14) |
-> | A 4-step, two-thread sequence with an Email 4 | ONE thread, 2 to 3 steps, no second new thread, no Email 4 (`/campaign-copywriting` Hard Rule 18) |
+> | A 4-step, two-thread sequence with an Email 4 | ONE thread, two emails by default (a third only in a genuinely small market or as a tested arm), no Email 4, and no second new thread except a final follow-up run as the logged new-thread arm (`/campaign-copywriting` Hard Rule 18; Aaron process alignment, operator directive 2026-09-22) |
 > | `Just reply "Yes"` as the Email 1 CTA | Email 1 closes with one soft permission ask, by default `Would that be worth sharing more?`; the statement-only opt-in is reserved for later steps (B1, `/campaign-copywriting` Hard Rule 32) |
-> | Deep per-contact research written into a one-to-one diagnostic-mirror email | Retired. One shared body per campaign or offer-angle slice; the per-contact columns carry that shared text, varying only the first name and any variable that changes what is delivered (B13, which resolves the old Hard Rule 34 fork in favor of Hard Rule 34) |
+> | Deep per-contact research written into a one-to-one diagnostic-mirror email | Retired. One shared body per campaign or offer-angle slice; the per-contact columns carry that shared text, varying only the first name and at most two per-contact variable values inside the offer sentence, already in the data or cheaply derived (`sells_to_vertical`, `service_offered`, `own_best_client`; Aaron process alignment, operator directive 2026-09-22, supersedes first-name-only variation) (B13, which resolves the old Hard Rule 34 fork in favor of Hard Rule 34) |
 
 ## Where the worked examples live now
 

@@ -38,7 +38,9 @@ Open Google Calendar / Outlook / Apple Reminders / whatever you actually look at
 |---|---|
 | Cold email: Weekly Scheduled Review (automatable engine — see section below) | Every Monday, 8:30 am, before the manual tasks |
 | Cold email: Monday deliverability audit | Every Monday, 9:00 am |
-| Cold email: Wednesday positive-reply sweep | Every Wednesday, 10:00 am |
+| Cold email: interested-reply sweep (speed to lead, until the webhook receiver exists; see section below) | Several times a day, Monday to Friday |
+| Cold email: first-week daily read (after every launch) | Every sending day of the first week after a launch |
+| Cold email: Wednesday positive-reply catch-up sweep | Every Wednesday, 10:00 am |
 | Cold email: Friday campaign retrospectives | Every Friday, 3:00 pm |
 | Cold email: Inbox rotation | Every other Monday, 11:00 am |
 | Cold email: Monthly spam placement test | 1st of each month, 10:00 am |
@@ -76,13 +78,13 @@ It does **not** replace the manual cadence below — that stays the system of re
 
 ### The weekly run (per client)
 
-**Step 1 — Read state.** Load the activity-log CURRENT STATE, `run_state`, the prior `campaign-strategy.md`, `experiments/*.json`, `retrospectives/*.md`, and the client's `suppression-list.csv`. This is what prevents redoing finished work or re-proposing a killed slice.
+**Step 1: Read state.** Load the activity-log CURRENT STATE, `run_state`, the prior `campaign-strategy.md`, `experiments/*.json`, `retrospectives/*.md`, and the client's `suppression-list.csv`. This is what prevents redoing finished work or re-proposing a killed slice.
 
-**Step 2 — Inbox / reply check.** Run the reply scorer the stack contract names for the locked `run_state.sending_platform`, plus a master-inbox read. Classify everything that came in since the last run — `positive_interested` / `positive_soft` / `positive_referral` / `not_now` / `wrong_person` / `negative_hostile` / `bounce` — and **surface the ones that need a human**: every interested reply, every referral, every hostile. Also tag each positive reply whose thread moves toward a time as **time-agreed** (the magnet-inflation guard's sending-platform proxy, `/campaign-strategy`), because winner picks and scaling are judged on it (operator-approved Aaron alignment, 2026-09-21; doctrine §0, §2 step 5). It **never auto-replies** (replying is a human action). Negative/unsubscribe/bounce feed the suppression loop as usual.
+**Step 2: Inbox / reply check.** Run the reply-scoring skill for the locked `run_state.sending_platform`, if `/stack-setup` activated a pack that provides one, plus a master-inbox read. If no pack is active, read that platform's own reply export and master inbox directly and classify with `reply-scoring-core.md`; if neither can be read, say so and fail loud rather than reporting "no replies". Classify everything that came in since the last run (`positive_interested` / `positive_soft` / `positive_referral` / `not_now` / `wrong_person` / `negative_hostile` / `bounce`) and **surface the ones that need a human**: every interested reply, every referral, every hostile, and **every positive still unanswered** (all three positive classes with no human reply yet), time-agreed first, each with the minutes since it arrived. List all of them, never a top-N cut (Aaron process alignment, operator directive 2026-09-22). Also tag each positive reply whose thread moves toward a time as **time-agreed** (the magnet-inflation guard's sending-platform proxy, `/campaign-strategy`), because winner picks and scaling are judged on it (operator-approved Aaron alignment, 2026-09-21; doctrine §0, §2 step 5). Beside it, report **`meeting_book_rate`** exactly as `reply-scoring-core.md` defines it (meetings booked / positive replies), counting bookings from the client's booking calendar or CRM when one is readable, otherwise from the operator's reported count, and say which. When neither source exists, report it as "not measured" with the reason, never a count inferred from threads, because a thread cannot see a phone booking (Aaron process alignment, operator directive 2026-09-22). It measures reply handling, not offer demand, so it never replaces time-agreed replies per 1,000 first touches for picking arms. Then run the **speed-to-lead audit**: for every positive, the minutes from its reply to the first human reply (from the thread) and, on a direct, trial or service offer, to the first call (from the call log or CRM, or operator-reported), against the 5-minute target, with every miss listed. This audit checks the response path; it is not the response path (**Speed to lead**, below, is). It **never auto-replies** (replying is a human action). This step is the weekly catch-up, so any interested reply found here without a human touch is a speed-to-lead miss to report. Negative/unsubscribe/bounce feed the suppression loop as usual.
 
-**Step 3 — Deliverability flags.** Read the trailing 7-day fleet reply rate and bounce rate (the Monday-audit signal). Flag any campaign under the 1% reply-rate rule and any inbox bouncing above 2%. A deliverability flag **blocks** any launch-new or scale proposal for the affected senders until it's cleared via `/deliverability-incident-response` — you don't pour volume onto a leaking fleet.
+**Step 3: Deliverability flags.** Read the trailing 7-day fleet reply rate and bounce rate (the Monday-audit signal). Flag any campaign under the 1% reply-rate rule and any inbox bouncing above 2%. A deliverability flag **blocks** any launch-new or scale proposal for the affected senders until it's cleared via `/deliverability-incident-response`, because you don't pour volume onto a leaking fleet.
 
-**Step 3b — Catch-all reintroduction (HARD RULE — runs EVERY week for EVERY campaign that has a holdback; operator directive 2026-06-26).** Catch-alls are held OUT of campaigns on young domains and reintroduced once the sending domains mature (see `/email-waterfall` → *Catch-All Timing*). **This skill is the standing owner + scheduler of that reintroduction** — launching a campaign valid-only automatically creates this obligation, and this step discharges it. It is **not optional and not skippable**: every weekly run, scan every active campaign for a per-campaign **holdback** of catch-alls (a non-empty `leads.catchall-holdback.csv`, or paused catch-all leads in the live campaign — the `profiles/_catchall-removal/` registry lists them). For each one:
+**Step 3b: Catch-all reintroduction (HARD RULE — runs EVERY week for EVERY campaign that has a holdback; operator directive 2026-06-26).** Catch-alls are held OUT of campaigns on young domains and reintroduced once the sending domains mature (see `/email-waterfall` → *Catch-All Timing*). **This skill is the standing owner + scheduler of that reintroduction** — launching a campaign valid-only automatically creates this obligation, and this step discharges it. It is **not optional and not skippable**: every weekly run, scan every active campaign for a per-campaign **holdback** of catch-alls (a non-empty `leads.catchall-holdback.csv`, or paused catch-all leads in the live campaign — the `profiles/_catchall-removal/` registry lists them). For each one:
 
 1. **Compute maturity from real sending, not the draft date.** Read the campaign's **first-send date** + trailing reply and bounce stats from the locked platform's analytics. The gate clears when the campaign has **~2–3 weeks (≥14–21 days) of actual sending** AND **positive replies have come in** AND **bounce is healthy** (under the Step-3 threshold) AND there is **no open deliverability flag** for its senders.
 2. **Gate not clear → HOLD** (domains still young, no positive replies yet, bounce hot, or a deliverability flag open). Re-check next week. Never reintroduce onto an unproven or flagged campaign.
@@ -90,24 +92,24 @@ It does **not** replace the manual cadence below — that stays the system of re
 
 This is precautionary reputation hygiene for young domains, NOT a bounce-cause claim — diagnose any actual bounce spike from the SMTP DSN reasons, never from a catch-all correlation. **Fail loud:** if a campaign has held catch-alls but the maturity read fails, alert rather than silently skipping.
 
-**Step 4 — Capacity / "enough volume?" check.** See the capacity model below. Output one plain verdict per client: *room for N more leads/day → enough to launch one new campaign next week*, or *at capacity → scale a winner on the rested rotation half, or start a domain purchase (~2-week lead time)*.
+**Step 4: Capacity / "enough volume?" check.** See the capacity model below. Output one plain verdict per client: *room for N more leads/day → enough to launch one new campaign next week*, or *at capacity → scale a winner on the rested rotation half, or propose a domain purchase for the operator's approval (~2-week lead time)*. The first wave and the winner's scale-up are never trimmed to this verdict: they run at the allocated rate and the runway stretches (capacity model below).
 
-**Step 5 — Next-move decision.** Two gates, then the diagnosis:
+**Step 5: Next-move decision.** Two gates, then the diagnosis:
 - **Gate A — TAM signal freshness.** Were the TAM's signal columns refreshed within ~30 days? If stale, propose a `/tam-build` refresh first (cost-gated) — fresh signals are required before generating new why-now slices **and** before scaling a why-now winner (job-change/funding/new-exec signals decay fastest).
-- **Gate B — portfolio maturity (the "enough data to decide?" gate).** Count **mature** campaigns: live ≥21 days **and** ≥300 sends each. If **fewer than 3 mature campaigns across at least 2 distinct signals**, the portfolio is too thin to diagnose anything systemic — **skip the diagnosis and just propose the next new signal slice** (more coverage). This is the rule that stops a premature "the offer is dead" call when you've only launched a few campaigns.
+- **Gate B: portfolio maturity (the "enough data to decide?" gate).** Count **mature** campaigns: ≥300 first-touch sends each (the raw-reply readability floor, unchanged) **and** the sequence plus a few days of grace has run on those sends, about 7 to 10 days from the 300th contact's first touch (Aaron process alignment, operator directive 2026-09-22; supersedes "live ≥21 days", house). If **fewer than 3 mature campaigns across at least 2 distinct signals**, the portfolio is too thin to diagnose anything systemic, so **skip the diagnosis. The default next move is more volume on the current winner and its positioning variants** (the rest of its TAM rows, then a lookalike expansion through `/tam-build`) **before proposing a new signal slice** (Aaron process alignment, operator directive 2026-09-22; supersedes "just propose the next new signal slice"; Aaron, Feb 23: with replies low he pushed volume and kept iterating). With no winner picked yet, the move is to keep the offer test sending toward its floor. This is the rule that stops a premature "the offer is dead" call when you've only launched a few campaigns.
 - **Diagnosis (only when the portfolio is mature enough).** See the cross-campaign diagnosis below. It decides between **launch-new / scale / hold / diagnose-offer**, bounded by the Step-4 capacity verdict.
-- **Offer-Validation Wave read (while `run_state.offer_market_proven` is false; per segment when the client has per-buyer-type offer sets).** Read `/campaign-strategy`'s flip criterion per arm on pooled positive replies (PROVEN / DEAD / HOLD), never pooled across arms, and deactivate a dead arm. Report time-agreed replies per 1,000 first touches beside the positive-reply rate for every arm; among PROVEN arms, propose as winner the one that does not lose on it, and label a PROVEN arm whose time-agreed replies are zero or clearly lag the other arms as farming interest (judged against the other arms; the operator confirms): not scaled, routed to reshape the offer so it filters better, not killed. This read is not the Gate B maturity diagnosis, which is for coverage waves (operator-approved Aaron alignment, 2026-09-21).
-- **Scale review and next flight (operator directive 2026-09-22).** When the read proposes a winner, or every arm is switched off, run `/offer-test-slate` in scale-review mode before the coverage wave scales: it takes the results back to the client and records what running the winner at full volume takes, and the coverage wave is sized to that answer. When a cell frees up and a queued arm can send (`lead_magnet_client_ok` is `not_needed` or `yes`), propose **Start next offer flight** in Step 6.
+- **Offer-Validation Wave read (while `run_state.offer_market_proven` is false; per segment when the client has per-buyer-type offer sets).** Read `/campaign-strategy`'s flip criterion per arm on pooled positive replies (PROVEN / DEAD / HOLD), never pooled across arms, and report each arm's cells by segment (the offer x segment matrix: every offer runs across every first-wave segment). **Read timing:** an arm is read once it has reached its ~1,300 first-touch floor AND its last contacts have had the 2-email sequence plus a few days of grace (about 7 to 10 days from their first touch). Never read early because a window passed (Aaron process alignment, operator directive 2026-09-22; supersedes the fixed ~21-day window; `/experiment-design` Step 6). In the first week after a launch, read daily for bounce, deliverability and reply handling only, never for an arm call. Report time-agreed replies per 1,000 first touches beside the positive-reply rate for every arm, with `meeting_book_rate` (Step 2) beside them; among PROVEN arms, propose as winner the one that does not lose on time-agreed replies per 1,000, picked at matched cell counts, and label a PROVEN arm whose time-agreed replies are zero or clearly lag the other arms as farming interest (judged against the other arms; the operator confirms): not scaled, routed to reshape the offer so it filters better, not killed. **Losers go off two ways only:** propose deactivating a DEAD arm, and propose the winner-pick retirement: at the winner pick (made on matched cell counts), arms still in HOLD stop receiving new first touches, their live sequences finish, the untouched TAM goes to the winner, and the parked arm's read is recorded as unresolved (in `offer.validation_arms[].read`) so it can return as a later test (Aaron process alignment, operator directive 2026-09-22; supersedes 'another arm's win never retires it'). Never propose a cut because an arm trails the leader by a ratio at the floor. With per-buyer-type offer sets, each segment is read, picks its winner and is retired on its own; a segment never borrows another segment's winner. This read is not the Gate B maturity diagnosis, which is for coverage waves (operator-approved Aaron alignment, 2026-09-21).
+- **The winner scales at once; the scale review is a results report** (Aaron process alignment, operator directive 2026-09-22; supersedes the scale review as a volume gate and the coverage wave sized to the client's scale-review answer, operator directive 2026-09-22). When the read picks a winner, propose the retirement above and **Scale** in Step 6 the same week, with positioning variants of the winner starting inside the big campaigns (`/experiment-design`). Run `/offer-test-slate` in scale-review mode alongside it, never ahead of it: it reports the results to the client and reviews the offer's qualification rule (`offer.qualification`), and the client's capacity answer sets how many qualified yeses get the free unit each week while the rest get the standard offer. **Carve-out:** where the client literally supplies the deliverable (their trial seats, their people, their stock), a qualification step cannot create capacity the client does not have, so the client's confirmed capacity still caps sends for that offer. With per-buyer-type offer sets, each segment scales its own winner and gets its own results report (`offer.segments[].scale_review`). When every arm is switched off, the scale review still reports the results and the move is Diagnose-offer. Propose **Start next offer flight** in Step 6 only for queued arms beyond the first wave's offer count (`max(3, floor(qualified_contacts / 2000))`, per segment when the client has per-buyer-type offer sets) and parked arms brought back as a later test, when they can send (`lead_magnet_client_ok` is `not_needed` or `yes`).
 
-**Step 6 — Execute to paused drafts.**
+**Step 6: Execute to paused drafts.**
 - **Launch-new** routes through `/campaign-strategy` (next-wave signal slices, `[FL]` ≥500-company floor (HARD RULE, operator directive 2026-07-12), offer + copy held constant) → the per-slice pipeline (`/lead-source-strategy` → `/email-waterfall` verify → `/list-quality-scorecard` → `/campaign-copywriting` → spintax → paused upload).
-- **Start next offer flight** routes through `/campaign-strategy`: the queued validation arms that can send run as offer-only cells against the current winner as control, fed from uncontacted TAM rows first and a lookalike expansion (`/tam-build`) when none remain, then the per-slice pipeline as in Launch-new. Re-render the client slate (`/offer-test-slate`) when a flight starts.
-- **Scale** runs the Scale sub-routine below.
+- **Start next offer flight** routes through `/campaign-strategy`. The first wave already covers the whole qualified TAM, so a flight exists only for arms beyond the first wave's offer count, parked arms brought back, and later positioning tests (Aaron process alignment, operator directive 2026-09-22). Those arms that can send run as offer-only cells against the current winner as control, fed from uncontacted TAM rows first and a lookalike expansion (`/tam-build`) when none remain, then the per-slice pipeline as in Launch-new. Re-render the client slate (`/offer-test-slate`) when a flight starts.
+- **Scale** of the offer-test winner is the retirement in Step 5 (the untouched TAM goes to the winner in the big campaigns, with its positioning variants as in-campaign Email 1 variants, one variable each, `/experiment-design`). Scale of a winning signal slice runs the Scale sub-routine below.
 - **Diagnose-offer** routes to `/offer-intelligence` validation mode (Go / Iterate / Swap), and — because offer and copy are confounded under a constant-copy wave — also flags a copy re-check against `/campaign-copywriting` + `cold-email-copy-best-practices.md`.
 - **Reintroduce catch-alls** (per Step 3b) for every campaign whose domains have matured: auto-prepare the next controlled slice from `leads.catchall-holdback.csv` (or the paused catch-all leads) and **stage it for one-click approval** in the digest — re-rendered against the campaign's current copy, ready to add/resume on approval. Never auto-sent. Re-check bounce after each approved slice before staging the next. This is the discharge of the standing reintroduction obligation that every valid-only launch created.
 - **Hold** when capacity is full and nothing is a clear winner yet: keep running, re-read next week.
 
-**Step 7 — Emit.** Write the client's `profiles/<client>/portfolio-review.md` entry (newest first) and add the client's section to the Slack digest. Update the activity-log per the protocol.
+**Step 7: Emit.** Write the client's `profiles/<client>/portfolio-review.md` entry (newest first) and add the client's section to the Slack digest. Update the activity-log per the protocol.
 
 ### Capacity model (the "enough volume?" check)
 
@@ -118,49 +120,49 @@ Compute, from the inbox tracker and the locked platform's analytics:
 - **Headroom** = total warmed daily capacity − current consumption.
 - **Pool inventory** = ready-and-unassigned groups on the `/mailbox-pool-staging` DASHBOARD. Before recommending a domain purchase (the ~2-week wait), check whether a pre-warmed pool group already covers the need.
 
-**Verdict:** a new campaign is launchable only if headroom can give it enough daily volume to reach its sample-size minimum within ~3–4 weeks (the same capacity-trim logic `/campaign-strategy` and `/experiment-design` use — a near-floor slice needs full daily volume and the 21-day run to be readable). If headroom is too thin: **don't launch new** — either **scale onto the rested rotation half** (the cheap capacity already warmed) or **start a domain purchase cycle** through the setup skill for `run_state.infrastructure_stack` (~2-week lead, so flag it early). The verdict is what bounds Step 5 — the engine never proposes more campaigns than the warmed fleet can actually carry.
+**Verdict:** a new signal slice is launchable only if headroom can give it enough daily volume to reach its sample-size minimum within ~3–4 weeks (a near-floor slice needs full daily volume, and its read waits for the floor, then the sequence plus grace, `/experiment-design` Step 6). The first wave and the winner's scale-up are never trimmed to headroom. Capacity is sized to the volume, never trimmed (Aaron process alignment, operator directive 2026-09-22; supersedes the capacity trim at launch). If the fleet delivers less than `daily_sends_needed`, the wave still covers the whole TAM at the allocated rate and the runway stretches; report days to cover (in Monday-to-Friday sending days, against `run_state.capacity_request`: `daily_sends_needed` vs `allocated_daily_sends`). Offers and TAM rows are never cut to fit. Put any shortfall to the operator as a capacity request: size the fleet to the request through `/mailbox-mix-strategy`, or assign a ready pre-warmed group from `/mailbox-pool-staging`, and any mailbox purchase needs the operator's approval of the setup total (outside the $100 run budget). If headroom is too thin for a new slice: **don't launch new**. Either **scale onto the rested rotation half** (the cheap capacity already warmed) or **propose a domain purchase cycle** through the setup skill for `run_state.infrastructure_stack` for the operator's approval (~2-week lead, so flag it early). The verdict is what bounds Step 5: the engine never proposes more new signal slices than the warmed fleet can actually carry.
 
 ### Cross-campaign offer/copy-flop diagnosis
 
-This fires only when Gate B says the portfolio is mature enough. The inference is **licensed by Wave-1 design**: a coverage wave holds **offer and copy constant** while the **list/signal varies** across campaigns. So if **many campaigns across different signals are all below the client's established positive-reply baseline while deliverability is clean**, the failing factor is the **common** one — **offer or copy, not the list** (the lists differed).
+This fires only when Gate B says the portfolio is mature enough. The inference is **licensed by Wave-1 design**: a coverage wave holds **offer and copy constant** while the **list/signal varies** across campaigns (positioning variants of the winner, when running, are the same variant set in every big campaign, so they stay part of the common factor). So if **many campaigns across different signals are all below the client's established positive-reply baseline while deliverability is clean**, the failing factor is the **common** one: **offer or copy, not the list** (the lists differed).
 
 Walk the same rule-out ladder `/offer-intelligence` already enforces, applied **across** the portfolio — do not shortcut to "offer":
 
 1. **Deliverability, on a trigger only** (operator-approved Aaron alignment, 2026-09-21): bounce above the Step 3 threshold, a placement-test flag (a trigger to investigate, never decisive alone), a reply rate near 0.1%, or contacts-per-positive jumping → it's deliverability, not the offer → `/email-deliverability-audit` / `/deliverability-incident-response`. Open rate is never this trigger: opens are not tracked here (open tracking stays off on the sending platform), so it reads 0% (doctrine §9, "Don't track opens"; Eric agrees). With no trigger fired, the offer stays a live candidate (doctrine §2 order) and the ladder continues.
 2. **Bounce / wrong-person replies** high → list-quality problem, not the offer → fix lists first.
 3. **Copy** fails `/spam-word-checker` or `cold-email-copy-best-practices.md` → copy problem → re-check copy.
-4. **Only then, offer.** If deliverability, bounce, list, and copy are all clean and the flatness spans **≥3 mature campaigns over ≥2 distinct signals**, flag the **common factor = offer-or-copy** and route to `/offer-intelligence` validation **plus** a copy re-check (the constant-copy wave can't separate the two alone). Never call the offer broken below 300 sends per campaign.
+4. **Only then, offer.** If deliverability, bounce, list, and copy are all clean and the flatness spans **≥3 mature campaigns over ≥2 distinct signals**, flag the **common factor = offer-or-copy** and route to `/offer-intelligence` validation **plus** a copy re-check (the constant-copy wave can't separate the two alone; where positioning variants of the winner are running, their in-flight reads feed that re-check). Never flag the offer below 300 sends per campaign (the raw-reply floor), and never call an offer arm dead on this diagnosis: that call belongs to `/campaign-strategy`'s pooled flip at ~1,300+ first touches per arm (Aaron process alignment, operator directive 2026-09-22; supersedes "300 sends is enough to call an offer broken", house).
 
 A single individual dud campaign is **not** this trigger — that's the per-campaign Friday keep/iterate/kill path, and the existing per-campaign `/offer-intelligence` validation trigger (one campaign sub-1% after 300 sends). This cross-campaign diagnosis is specifically for *"the offer itself is flopping across the board."* Both the maturity floor and the distinct-signal count are sensible defaults — tune them in `client-profile.yaml` if a client's economics justify it.
 
 ### Scale sub-routine (owned here — the gap no other skill fills)
 
-For a **winner** (positive-reply rate ≥2× the client's baseline, HIGH confidence per `/experiment-design`, and not below the baseline on time-agreed replies per 1,000 first touches, because a positive lift with no rise in time-agreed replies is farming interest, not a winner; doctrine §4, operator-approved Aaron alignment, 2026-09-21), scale it **without confounding the result** — offer and copy stay frozen:
+This sub-routine scales a winning **signal slice**. The offer-test winner scales through the Step 5 retirement instead, with its positioning variants running in the big campaigns (Aaron process alignment, operator directive 2026-09-22). For a winning signal slice (positive-reply rate ≥2× the client's baseline, HIGH confidence per `/experiment-design`, and not below the baseline on time-agreed replies per 1,000 first touches, because a positive lift with no rise in time-agreed replies is farming interest, not a winner; doctrine §4, operator-approved Aaron alignment, 2026-09-21), scale it **without confounding the result**, so offer and copy stay frozen:
 
 1. **Re-check signal freshness** (Gate A) — a winner scaled a month later needs fresh signal rows, especially why-now signals.
 2. **Expand the slice's list** — pull more enriched-TAM rows carrying the **same signal** (the same `[FL]` predicate), deduped against the `suppression-list.csv` and everyone already contacted, then run them through `/email-waterfall` (Layer-2 reveal + email verification) and `/list-quality-scorecard`. Same signal, more rows — not a new angle.
 3. **Add sending capacity** — assign more warmed inboxes / raise daily volume within the Step-4 headroom, using the rested rotation half (the locked platform inbox manager's rotation tags) if the active half is maxed. Keep the 15-minute min-gap and warmup settings intact.
 4. **Land a paused draft** — the scaled-up campaign is built and paused for your Start. Offer and copy unchanged, so the lift stays attributable to volume, not a hidden variable.
 
-If there's no warmed headroom to scale into, the Scale move surfaces a **domain-purchase recommendation** instead (the ~2-week lead-time flag), rather than silently doing nothing.
+If there's no warmed headroom to scale into, the Scale move surfaces a **capacity request** (`run_state.capacity_request`, sized to the volume) and a **domain-purchase recommendation** for the operator's approval of the setup total (the ~2-week lead-time flag), rather than silently doing nothing.
 
 ### Outputs
 
 **Slack digest** (per the reporting-channel setup for the locked sending platform): one weekly post, one section per active client, written in the plain, scannable style of `output-style-guide.md`:
 
 - **What to launch next week** — the proposed new signal slice(s) or scale-ups, each with its signal, matching company count, and one-line rationale (or "hold — at capacity / not enough data yet").
-- **Replies to handle** — counts of interested / referral / hostile, with the ones needing a human this week.
+- **Replies to handle:** counts of interested / referral / hostile, with every positive still unanswered listed (no top-N cut), plus speed to lead: whether it ran on the platform's webhook alert or in sweep mode (sweep mode until the receiver exists, so the 5-minute call is a target, not yet a mechanism), the latency audit (time to first human reply, time to first call against the 5-minute target) and every miss.
 - **Deliverability flags** — any campaign under 1% or inbox over 2% bounce.
-- **Offer read:** per campaign, and per arm in an Offer-Validation Wave, the positive-reply rate beside time-agreed replies per 1,000 first touches, plus each validation arm's flip state (PROVEN / DEAD / HOLD) and any farming-interest label (operator-approved Aaron alignment, 2026-09-21).
-- **Capacity** — the plain "room for one more / at capacity" verdict.
+- **Offer read:** per campaign, and per arm in an Offer-Validation Wave (by segment, the offer x segment matrix), the positive-reply rate beside time-agreed replies per 1,000 first touches and `meeting_book_rate` (Step 2, with its source: calendar/CRM, operator-reported, or not measured), plus each validation arm's flip state (PROVEN / DEAD / HOLD), any farming-interest label, and any arm parked at a winner pick with its read unresolved (operator-approved Aaron alignment, 2026-09-21; `meeting_book_rate` and parked arms added by Aaron process alignment, operator directive 2026-09-22).
+- **Capacity:** the plain "room for one more / at capacity" verdict, plus days to cover the TAM against `run_state.capacity_request` and any capacity request put to the operator.
 
 **`profiles/<client>/portfolio-review.md`** — newest-first log, the audit trail behind the digest:
 
 ```markdown
 ## <YYYY-MM-DD> Weekly Review — <client>
 - Portfolio maturity: <N mature campaigns / M signals>  → diagnosis run? <yes/no>
-- Replies: <interested>/<referral>/<hostile>; needs-human: [...]
-- Offer read: positive-reply rate <x%> | time-agreed per 1,000 first touches <y> (per arm while validating; arm flip states)
+- Replies: <interested>/<referral>/<hostile>; unanswered positives (all): [...]; speed to lead: <webhook | sweep mode>, first human reply <median min>, calls within 5 min <n of m>, misses: [...]
+- Offer read: positive-reply rate <x%> | time-agreed per 1,000 first touches <y> | meeting_book_rate <z% (calendar/CRM | operator-reported | not measured)> (per arm and segment while validating; arm flip states; parked arms)
 - Deliverability: <clean | flags: ...>
 - Capacity: <headroom verdict>
 - TAM signal freshness: <fresh | refreshed this run | refresh proposed>
@@ -168,6 +170,21 @@ If there's no warmed headroom to scale into, the Scale move surfaces a **domain-
 - Routed to: <skills invoked> ; drafts created (paused): [...]
 - Reasoning: <one or two lines>
 ```
+
+---
+
+## Every send day: speed to lead on interested replies
+
+Interested replies are handled in real time, not in a weekly sweep (Aaron process alignment, operator directive 2026-09-22; supersedes "the Wednesday sweep is the system", house). Aaron's setter is on every interested reply within about 5 minutes (Sep 14, Sep 21). Where no active pack provides a reply manager for the locked sending platform, this section is the reply cadence; where one does, run this same cadence through it.
+
+- **Owner.** Read the named speed-to-lead owner from `run_state.speed_to_lead_owner` and the `Speed-to-lead owner:` header line of the campaign's `interested-reply.md`, both recorded at Gate D, reply readiness, before the operator's Start. If either is missing on a live campaign, that is a Gate D breach: say so in the digest and route to the operator, because only the operator names the owner.
+- **Target.** The owner gives every interested reply a human touch within 5 minutes during the send window. A yes to a direct, trial or service offer gets a short reply proposing two specific times plus the calendar, with no re-selling, and then a call from the `## Call Script` in `interested-reply.md` (Aaron, Sep 21). A costly front end (a trial, a service, custom work) routes the yes through the `offer.qualification` form before the free unit is promised. A promised asset is delivered first, with no times, and the next step goes one layer down (Jul 13, ledger R03); call timing there stays the house reading of Aaron's unresolved ledger R20 (`/lifecycle-copy`). No blanket booking link on every positive.
+- **Phone.** The number comes from the replier's own signature or reply first, then from the contact-enrichment slot's phone reveal where the stack contract declares one: one lookup per replier, inside the run's standing budget. If neither gives a number, the reply is the touch and the digest says so.
+- **Mechanism, target state.** The locked sending platform's interested-reply webhook, where the platform offers one, raises a human alert and the owner acts on it.
+- **Mechanism, today.** The always-on webhook receiver does **not** exist yet. Until it does, the reply sweep runs several times a day, Monday to Friday (for example at the start, middle and end of the send window), the 5-minute call is a target rather than a mechanism, and every weekly digest says speed to lead is running in sweep mode. Run the sweep with the inbox manager for the locked `run_state.sending_platform`, if `/stack-setup` activated a pack that provides one. If no pack is active, use that platform's own master inbox directly. If neither exists, say so and do the sweep by hand from whatever the platform exposes, rather than implying coverage.
+- **What each sweep surfaces.** Every positive still unanswered (`positive_interested`, `positive_soft` and `positive_referral` with no human reply yet), time-agreed first, each with the minutes since it arrived and the matching `interested-reply.md` template to reply from. List all of them, never a top-N cut. A human edits and sends every reply; this skill never sends.
+- **Meetings booked.** Keep meetings booked current from the client's booking calendar or CRM when one is readable, phone-booked and form-booked included, otherwise from the operator's reported count, and say which. That feeds `meeting_book_rate` (defined in `reply-scoring-core.md`) and the latency audit in Weekly Scheduled Review Step 2.
+- **Catch-up, not the system.** The Wednesday sweep and Weekly Scheduled Review Step 2 find any interested reply that slipped through and report it as a miss.
 
 ---
 
@@ -195,7 +212,9 @@ If there's no warmed headroom to scale into, the Scale move surfaces a **domain-
 
 ---
 
-## Wednesday — Positive-reply sweep (30-60 min depending on volume)
+## Wednesday: positive-reply catch-up sweep (30-60 min depending on volume)
+
+This is the catch-up behind real-time speed to lead (section above), not the system that handles interested replies (Aaron process alignment, operator directive 2026-09-22).
 
 **Run:**
 
@@ -205,6 +224,8 @@ If there's no warmed headroom to scale into, the Scale move surfaces a **domain-
 /<reply-scoring skill for the locked sending platform>
 ```
 
+If no pack provides a reply-scoring skill for the locked platform, read that platform's own reply export directly and classify with `reply-scoring-core.md`; if neither exists, say so rather than reporting a clean inbox.
+
 **Review:**
 
 - Any `positive_interested` or `positive_soft` replies — these are leads wanting to engage
@@ -213,17 +234,18 @@ If there's no warmed headroom to scale into, the Scale move surfaces a **domain-
 
 **Action:**
 
-- Respond to every `positive_interested` reply within 30 seconds of seeing it. Do not batch these — a reply feeling like it took minutes to return converts 3x better than one that took hours.
+- Any `positive_interested` or `positive_soft` reply still without a human touch: handle it now, the same way as in real time (section above), and log it as a speed-to-lead miss with how long it waited.
 - For referrals: reach out to the referred person within 24h, mention the referrer by name.
 - For hostile: apologize, remove from all lists, investigate why they were flagged for hostility (often signals bad targeting).
+- Update meetings booked from the client's booking calendar or CRM (phone-booked and form-booked included), or from the operator's reported count when neither is readable, and say which, so `meeting_book_rate` (Weekly Scheduled Review, Step 2) is current.
 
-**Time management:** if you have >50 positive replies per week, you're at the scale where you should hand off to a dedicated closer/AE. Do that handoff Wednesday morning so they can work replies by Wednesday afternoon.
+**Time management:** if you have >50 positive replies per week, you're at the scale where you should hand off to a dedicated closer/AE or setter, whom the operator then names as the speed-to-lead owner (`run_state.speed_to_lead_owner` and the `Speed-to-lead owner:` line of each campaign's `interested-reply.md`).
 
 ---
 
 ## Friday — Campaign retrospectives (20 min per campaign)
 
-**Identify campaigns hitting their 21-day mark this week.** (21 days is the minimum for reply-rate signal to stabilize.)
+**Identify campaigns that became readable this week:** past their sample floor (~300 first-touch sends for a campaign's raw-reply read, or the `/experiment-design` minimum for a controlled test), with the sequence plus a few days of grace run on those contacts, about 7 to 10 days from the last counted first touch. Never read early because a window passed (Aaron process alignment, operator directive 2026-09-22; supersedes the fixed 21-day mark, house). Offer arms are not judged here: they use the pooled flip and the winner pick in Weekly Scheduled Review Step 5.
 
 For each one:
 
@@ -232,10 +254,10 @@ For each one:
 3. Decide:
    - **Winner (positive reply rate >=2x-baseline, and not below baseline on time-agreed replies per 1,000 first touches; operator-approved Aaron alignment, 2026-09-21):** keep running, consider scaling (clone to more inboxes). A positive lift with no rise in time-agreed replies is farming interest (doctrine §4): treat it as Middling, not scaled, and reshape it so it filters better rather than killing it.
    - **Middling (near baseline):** iterate on copy or list — run `/experiment-design` Monday to plan the next variant
-   - **Loser (<50% of baseline):** kill it. Document why in the experiment log.
+   - **Loser (<50% of baseline), on an adequate sample only:** switch it off (no new first touches, live sequences finish) and document why in the experiment log. This cut may fire only once the campaign's expected positives at the baseline rate reach about 8 (first-touch contacts × baseline positive rate ≥ 8: about 3,200 contacts at a 1-per-400 baseline, about 5,300 at 1-per-660). Below that it reads as Middling and keeps sending. The ~300-send floor makes a campaign readable on raw reply; this cut judges the far rarer positive event, so it needs the larger sample. Why the gate (Aaron process alignment, operator directive 2026-09-22): positives are rare, so at the ~1,300 floor an arm exactly as good as the leader shows 2 or fewer positives about 37% of the time (Poisson, mean 3.25), and this rule would switch off a baseline-quality campaign about 16% of the time (1-per-400 baseline, k ≤ 1). At an expected 8 positives that false cut falls to about 4%. The 8-positive line is house Poisson arithmetic, not an Aaron or operator number (Aaron gives no threshold, Mar 9), so the operator may tune it. It never applies to offer arms, which go off only at the DEAD line or the winner pick.
 
 4. Log the result in `profiles/<business-slug>/experiments/<YYYY-MM-DD>-<campaign>.json`:
-   - `positive_reply_rate`, `reply_rate`, `bounce_rate`, `time_agreed_per_1000` (time-agreed replies per 1,000 first touches, added 2026-09-21)
+   - `positive_reply_rate`, `reply_rate`, `bounce_rate`, `time_agreed_per_1000` (time-agreed replies per 1,000 first touches, added 2026-09-21), `meeting_book_rate` (meetings booked / positive replies as `reply-scoring-core.md` defines it, with its source, added 2026-09-22)
    - Your decision (keep / iterate / kill) + reasoning
    - Hypothesis for next iteration (if iterating)
 
@@ -287,7 +309,7 @@ For each one:
 
 **Run:**
 
-- `/tam-build` refresh — re-collect the catalog's volatile `collect_now` signals (running ads, hiring, pricing changes, new case studies) and add new companies; cost-gated by `/api-cost-governance` (refresh re-crawls only the volatile signals, not the whole set — the full obtainable set was already collected at build time per the Collection Completeness rule). Collect any genuinely-new `in_reserve` point (a newly-obtainable signal, or one an approved experiment needs) when it appears. Stable firmographics refresh quarterly, not monthly.
+- `/tam-build` refresh: re-collect the catalog's volatile `collect_now` signals (running ads, hiring, pricing changes, new case studies) and add new companies; cost-gated by `/api-cost-governance` (refresh re-crawls only the volatile signals the build actually collected, per the Collection Scope rule in `/data-point-discovery`, which collects a why-now or intent signal only when the offer or a live test needs it; Aaron process alignment, operator directive 2026-09-22, supersedes the Collection Completeness rule). Collect any genuinely-new `in_reserve` point (a newly-obtainable signal, or one an approved experiment needs) when it appears. Stable firmographics refresh quarterly, not monthly.
 - `/experiment-design` Generative Proposal Mode — mine the refreshed `tam/tam.csv` plus `experiments/*.json` for ranked, data-grounded experiment candidates for the next wave.
 
 **Review:** the proposed experiment candidates (recommended first), with TAM row counts.
@@ -307,6 +329,8 @@ Read all `experiments/*.json` from the last quarter. Identify patterns:
 - Which list sources produced the best leads?
 - Which copy angles resonated (Observation → Implication? Pain? Social proof?)
 - Which ICP archetypes converted best?
+- What was the `meeting_book_rate` (meetings booked / positive replies, `reply-scoring-core.md`), and is it moving toward Aaron's self-reported ~25%, aiming for 30% (Sep 21)? If it sits well under that while positives are healthy, the gap is in the reply machine (speed to lead, the call script, the qualification step, the confirmation page), not the offer.
+- Which arms were parked unresolved at a winner pick, and is any worth bringing back as a later test?
 
 **Output:** a 1-page Q<N> retrospective saved to `profiles/<business-slug>/retrospectives/<YYYY>-Q<N>.md` with:
 
@@ -323,9 +347,10 @@ Use the retrospective as input to design next quarter's experiments via `/experi
 
 You do NOT need to:
 
-- Check the sending platform every day (Wednesday sweep catches everything important)
+- Check campaign stats every day once a launch is past its first week (the Monday and Friday reads catch the rest). In the first week after a launch, read daily for bounce, deliverability and reply handling, with no arm call before the floor.
 - Obsess over daily reply-rate fluctuations (wait for 7-day averages)
-- Read every positive reply in real time — set up notifications if you want immediacy, but the Wednesday sweep is the system
+
+Interested replies are the exception to this whole list: they are handled in real time (**Speed to lead**, above), and the Wednesday sweep is only the catch-up (Aaron process alignment, operator directive 2026-09-22; supersedes "the Wednesday sweep is the system", house).
 
 Daily pokes at your cold email stack are a procrastination pattern, not a performance pattern.
 
@@ -335,12 +360,15 @@ Daily pokes at your cold email stack are a procrastination pattern, not a perfor
 
 This skill IS the loop. Your next action is the next calendar event on your list — or, if the **Weekly Scheduled Review** routine is set up, read its Monday digest and approve (or decline) the paused drafts it proposed.
 
-**Or if you haven't run a campaign yet:** skip this skill entirely. Come back after your first campaign hits the 7-day mark.
+**Or if you haven't run a campaign yet:** skip this skill until launch day. The speed-to-lead sweep and the first-week daily read start with the first send.
 
 ## Related skills
 
 - `/email-deliverability-audit` — the Monday and Monthly tasks; the Weekly Scheduled Review's deliverability-flags step
 - The reply-scoring skill for the locked sending platform: the Wednesday and Friday tasks, and the Review's inbox/reply-check step
+- `reply-scoring-core.md`: the reply classes and the canonical `meeting_book_rate` definition this skill reports
+- `/lifecycle-copy`: writes each campaign's `interested-reply.md` (category templates, `## Call Script`, the `Speed-to-lead owner:` line) and `pre-call.md`, which the speed-to-lead sweep works from
+- `/offer-test-slate`: scale-review mode, the results report and `offer.qualification` review that runs alongside the winner's scale-up
 - The inbox manager for the locked sending platform: selected by locked `run_state.sending_platform` for biweekly sender rotation, the Review's capacity model, and the Scale sub-routine's added inboxes
 - `/deliverability-incident-response` — when the Monday audit (or the Review's deliverability flags) flags something
 - `/campaign-strategy` — the Weekly Scheduled Review's launch-new route; slices the enriched TAM into the next signal-first wave

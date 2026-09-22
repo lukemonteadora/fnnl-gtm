@@ -1,0 +1,433 @@
+---
+name: data-point-discovery
+description: "Catalog every data point worth collecting for THIS client before /tam-build runs. Maps where this market's data physically lives (directories, associations, marketplaces, job boards, public filings), exhaustively brainstorms conceivable company- and contact-level data points from the locked ICP/offer/industry, cross-checks each for obtainability against the capability roles the workspace's stack-contract.yaml actually names (/lead-list-tech-stack-research is the tool-fit backbone), classifies standard vs client-specific vs in-reserve, and ranks value-first (campaign value dominates over obtainability and cost). Outputs profiles/<slug>/data-point-catalog.md, the contract /tam-build collects against and /campaign-strategy slices on, and the file the client-facing approval deck reads its source section from. Discovery only: NO per-contact reveal, NO enrichment spend, only a small AI brainstorm gated by /api-cost-governance. Runs after the offer is locked (cold-email-kickoff Step 3.3) and before /tam-build."
+---
+
+# Data-Point Discovery (catalog, before the build)
+
+Answer one question before any collection money is spent: **given THIS client's ICP, offer, and industry — what is every data point a campaign could ever slice on, where does that data physically live in this market, which of those can we actually get with our stack, at what cost, and which are worth getting first?**
+
+This skill is the single home for obtainability. It absorbed the two questions the retired source-signal discovery step used to answer: **what the stack can actually obtain**, and **where this market's data physically lives**. There is no separate source-signal artifact any more, and nothing in this flow should wait on one.
+
+This is the **discover** half of "discover → build." It produces the per-client **data-point catalog** that `/tam-build` then collects against. It is pure cataloging — exhaustive and cheap. It spends nothing beyond a small AI brainstorm.
+
+It resolves a live contradiction the older flow carried: collecting "only the columns a planned campaign will slice on" clashed with "gather every conceivable data point, keep some in reserve." The resolution is the split this skill owns the front of:
+
+- **DISCOVERY (here) = exhaustive + cheap.** Catalog everything worth knowing; mark what is obtainable; rank it — but the rank now ORDERS the collection work and names the cut-order if the ceiling binds; it does NOT pick a subset to collect. No per-company or per-contact spend.
+- **COLLECTION (`/tam-build`) = complete + cost-gated (HARD RULE).** Collect **every obtainable** Layer-1 data point and signal on every good-fit survivor, up front, so the client's TAM carries the maximum set of slice-able signals. `collect_now` = the whole obtainable set, not a ranked subset. The spend ceiling is the only thing that may narrow it, and only by an explicit operator decision (see the Collection Completeness rule below); `in_reserve` is the narrow exception, not a default for lower-ranked-but-obtainable points.
+- **SOURCE-NATIVE fields are auto-captured, so don't bother cataloging them.** Everything the discovery spine (the company-discovery source's lookalike or filter query) returns in its own response is captured verbatim and free by `/tam-build` (its *source-native full capture* rule), so this catalog should focus on the data points that live BEYOND the source's native payload: multi-page crawl signals (pricing/proof/careers), demand (ad-library scrapes), org-depth (a headless crawl of the company's public people page, or per-title contact counts from a contact database), news (a web-search query), and derived flags. Listing a column the discovery source already returns is harmless but redundant; the value of this catalog is the beyond-source tier.
+  - **Discovery motion (context only, set by `/tam-build`, not decided here).** `/tam-build`'s DEFAULT discovery motion is a lookalike seeded from the client's case-study companies (one seeded lookalike per group, the `proven` motion), with a broad ICP filter as the `expansion` / net-new motion, and the company-data provider as the enrichment layer rather than the discovery spine. This catalog is motion-agnostic (the same data points apply either way); the two-motion routing lives in `/tam-build`'s "Case-Study-Anchored Discovery HARD RULE".
+
+## Canonical Profile Root
+
+All profiles/<business-slug> paths in this skill resolve under:
+
+```text
+<outbound>/profiles
+```
+
+Here `<outbound>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
+
+## Stack Resolution (read before any tool step)
+
+This skill names **capability roles**, never specific vendors. Resolve every role to the tool this workspace has actually chosen by reading:
+
+```text
+outbound/stack-contract.yaml
+```
+
+Roles this skill uses: company-discovery source, company-data provider, contact-discovery source, paid scraper, email finder, email verifier, waterfall enricher. Research, web search, web fetch and bulk classification are not stack roles to resolve (no-AI-API rule, operator directive 2026-09-22): research runs on the `/deep-research` harness, web search and web fetch are the harness's own WebSearch and WebFetch, and bulk classification runs as Claude Code sub-agents per `/personalization-subagent-pattern`.
+
+**If a role this step needs is empty or missing in the contract, STOP and route to `/stack-setup`.** Never substitute a guessed vendor, and never hardcode a tool name into an artifact this skill writes. Obtainability in this skill is judged against **whatever tools the contract names**, so a run against an empty contract can catalog candidates but cannot mark anything `obtainable = y`.
+
+
+## Purpose and non-goals
+
+Per-client **exhaustive data-point CATALOGING**, grounded in the *locked* offer. Hard scope-outs:
+
+- **NOT campaign ideas** — that is `/campaign-strategy`, which reads this catalog and slices `tam.csv` on it.
+- **NOT collection / enrichment spend** — company-level Layer-1 collection is `/tam-build`; per-contact Layer-2 reveal + verification is `/email-waterfall`. This skill reveals and verifies nothing.
+- **NOT offer selection.** The offer is locked upstream (`/offer-intelligence`, then `/lead-magnet-brainstorm`) before this runs.
+- **NOT the per-campaign source plan.** Naming the source of truth, the collection tool, and the QA path for one selected campaign is `/lead-source-strategy` (Lead Source Plan Mode), which runs much later, after `/campaign-strategy` and after the operator picks a campaign. This skill maps the market's source landscape as *context for which data points are realistically collectable*; it does not choose a campaign's source path.
+- The brainstorm carries no metered AI spend: it is one `/deep-research` primary pass, with optional targeted WebSearch/WebFetch gap-fill and Claude Code sub-agents, and no other AI provider (no-AI-API rule, operator directive 2026-09-22). Obtainability is judged by *reasoning against documented tool capabilities*, not by live API probing.
+
+## Collection Completeness — HARD RULE (collect every obtainable signal up front)
+
+The TAM is built once and is the asset every future campaign slices from, so the goal is **maximum slice optionality for the client**: the more signals and data points each company carries, the more campaigns can be created and launched for that client. Signal/data-point collection is therefore a MUST, not optional or "collect the top few." Concretely:
+
+- **Every OBTAINABLE Layer-1 data point and signal defaults to `collect_now`.** Do not defer an obtainable point to `in_reserve` because it ranked lower, costs a little more, or because no campaign has asked for it yet. The whole obtainable set is collected in the first full build (`/tam-build` Phase B) across the full qualified TAM (every good-fit survivor).
+- **`in_reserve` is the narrow exception**, only for: (a) `obtainable = n` in the current stack (revive when a tool is added), (b) coverage so low the column can power no usable slice, or (c) a point the operator **explicitly** cut because the previewed full-collection cost exceeded the approved ceiling. Lower rank alone never sends an obtainable point to `in_reserve`.
+- **`rank` and `worth_a_fight` survive only to ORDER the work and name the cut-order** if the operator chooses to trim to a ceiling — never as a reason to defer by default.
+- **The run ceiling (`run_state.spend_ceiling_usd`) is the valve on what gets collected, and it is operator-surfaced, never silent** (the research passes are Claude Code native and carry no metered AI spend, so this ceiling is about `/tam-build`'s enrichment collection). When `/tam-build`'s previewed cost to collect the full obtainable set exceeds the ceiling, STOP and surface it; the default recommendation is **raise the ceiling to cover full collection** (completeness is the point), with trim-by-rank only on the operator's explicit say-so. Never silently revert to a ranked subset.
+- **Still honest about coverage.** Completeness does not mean pretending a sparse column is solid. A low-coverage column is still collected, but still flagged (see the coverage rule in step d) so `/campaign-strategy` knows a slice on it will match few rows.
+- **The fit-gate stays.** "Across the whole TAM" means the full **qualified** universe — every good-fit survivor. The cheap qualify-then-enrich gate (drop `bad` fit before paying to enrich) is preserved: enriching out-of-ICP companies is waste, not completeness.
+
+Collection and launch are different layers: collect **all** obtainable signals up front, then *launch* the resulting campaign slices in sequenced waves (`/campaign-strategy`). Obtainability, the Layer-1/Layer-2 firewall, and the operator's ceiling are the only limits on what gets collected.
+
+## Material Decision Rule
+
+When this skill reaches a material fork, name the realistic options, recommend the strongest path, and explain why the main alternatives are weaker before committing.
+
+Ask before choices that affect spend beyond an approved budget, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
+
+Do not turn failed or unsafe paths into user-facing options. If this skill's QA rules or stop gates reject a path, filter it out and explain the blocker only when useful.
+
+When asking the user, use the Claude Desktop native Interactive Inputs / Choice Prompts pattern from /clarification-first: recommended option first, short choices, and Custom answer last when a custom answer is plausible.
+
+## Interaction Policy
+
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the operator's default), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue — never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. The brainstorm has no metered spend to confirm, and any paid data-vendor call it triggers runs against the standing budget in `run_state.spend_ceiling_usd` ($100 per client run, never asked, in either execution mode). Stop only for the policy's hard-stops (spend over the approved ceiling, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work — never idle.
+
+## Activity Log Protocol
+
+Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short — record status, not raw output. Full protocol: `client-activity-log.md`.
+
+## Inputs
+
+- `profiles/<business-slug>/client-profile.yaml` — ICP hard/soft filters, industries, geography, headcount, and the **locked** `offer.lead_magnet` / CTA direction (locked by `/lead-magnet-brainstorm`). The catalog must be grounded in the locked offer, not `offer.client_suggested_*` hypotheses.
+- `profiles/<business-slug>/offer-intelligence.md` — **the richest research artifact, a required input on new-offer paths** (the `/offer-intelligence` discovery brief, on disk by this point in the flow). Mine it directly for candidate data points: the verbatim **ICP Pain (in their words)** (Vectors 3-4), the **Saturation Map** archetypes, the **LinkedIn-ads** angles (Vector 2), and the **job-posting tool/outcome analysis** (Vector 4). Each pain, tool mention, and why-now hypothesis is a candidate data point. If absent on an evidence-backed existing-offer path, read the latest `offer-validations/*.md` brief instead.
+- `profiles/<business-slug>/lead-magnets.md` — the locked offer's full rationale (archetype, delivery, why-now), so `campaign_value` scores against the actual offer, not just the one-line `offer.lead_magnet`.
+- The confirmed segment list from `/cold-email-kickoff` Step 2.5 (one catalog covers all segments; split per segment like `data-point-catalog-<segment>.md` when segments differ meaningfully).
+
+**No source-signal input.** There is no upstream source-signal artifact to read. The market source landscape and the capability boundary are produced *here*, in steps (a) and (b) below, from the locked ICP and offer. If you find a reference anywhere to `source-signal-intelligence.md`, it is a stale pointer to a retired step: ignore it and do not wait for the file.
+- `run_state.spend_ceiling_usd` and `run_state.execution_mode`.
+
+**Research / routing dependencies (the external client research this layer uses):**
+
+- `/ai-model-routing` - routes the AI brainstorm on Claude Code alone: the Claude native `/deep-research` fan-out harness for the primary web-grounded company/market/industry discovery, a second targeted `/deep-research` or WebSearch/WebFetch pass as gap-fill, and Claude Code sub-agents for large-context crunch. No other AI provider is called, and the live X / social read no longer exists. (There is no standalone `client-research` skill; the research-routing dependency is `/ai-model-routing`.) Record `ai_research_provider` / `ai_analysis_provider` provenance.
+- `/lead-list-tech-stack-research` - the obtainability backbone (tool-fit map + Layer-1/Layer-2 cost split). Every candidate data point is cross-referenced here, against the roles the stack contract actually fills.
+- `/api-cost-governance` - gates the brainstorm spend and supplies the rough-cost reference used in the rank formula.
+
+## Research Procedure
+
+### (a) Exhaustive AI brainstorm — every conceivable data point for THIS client
+
+> **Research Routing. HARD RULE (Claude deep-research primary, enforced; no-AI-API rule, operator directive 2026-09-22).** This brainstorm is research. `run_state.research_routing` has exactly one value, **`claude_deep_research`**: set it if unset, and treat a retired `third_party_ai` or bare-WebSearch `claude_native` value as `claude_deep_research` (note the correction in the activity log). The primary research brain is the Claude native `/deep-research` fan-out harness. Do NOT stop to ask, and do NOT satisfy the primary pass with a bare inline WebSearch. The brainstorm's research pass MUST be an **actual `/deep-research` invocation** (inline WebSearch/WebFetch alone does NOT satisfy it): record `ai_research_provider = claude-deep-research` and append the run-log line to `api-balance-ledger.md` (a provenance record that `scripts/research/research_routing_check.mjs` reads, not an AI spend row). Finishing with **no `/deep-research` primary** is a **flagged violation**. No API key of any kind is needed, and no other AI provider is ever called. Full rule: `/ai-model-routing`.
+
+Route via `/ai-model-routing` (Claude native `/deep-research` fan-out harness as the primary brain, a second targeted `/deep-research` or WebSearch/WebFetch pass as gap-fill, and Claude Code sub-agents for large-context crunch). The brainstorm has no per-call AI spend to preview; any data-vendor call it triggers still goes through `/api-cost-governance`. Brainstorm **without obtainability filtering yet**: the point is breadth. Prompt from `client-profile.yaml` ICP/offer/industry AND the specific findings in `offer-intelligence.md`: its verbatim **ICP pain language** (Vectors 3-4), **saturation-map** archetypes, **LinkedIn-ads angles** (Vector 2), and **job-posting tool/outcome mentions** (Vector 4). Do not paraphrase the research back into generic firmographics; turn each concrete finding into a candidate data point. Generate company-level AND contact-level candidates.
+
+**Drive the brainstorm with explicit forcing angles, not an open "list everything, don't self-censor" prompt** — the open prompt regurgitates the stable core plus generic firmographics plus three obvious signals and calls it exhaustive. The brainstorm quality IS the value of this skill, so force it:
+
+1. **Work backwards from each locked offer's core claim (primary angle): every offer in the test set, and every buyer segment's set when the client has them (`offer.segments`, operator decision 2026-09-22).** For the exact pain the offer resolves — stated verbatim in `offer-intelligence.md`'s **ICP Pain (in their words)**, not an abstraction — ask: *what observable public fact would prove a company has this pain right now?* Every such fact is a candidate data point.
+2. **Pre-need signal (→ `change_timing` group).** Ask: *what does this buyer reveal publicly right before they need this offer?* — a hire, a launch, a page or pricing change, a funding event, a new exec, a job post. These are **change/timing** signals; file every one under the `change_timing` group (see Schema Contract) so a "why-now" candidate is never lost for lack of a home.
+3. **Category coverage sweep.** Walk firmographics, sales-motion, pricing, org-structure depth, demand/ads, proof, **sold-to (who the company sells to: their customers' vertical, the size of their customers, and the department they sell into; the highest-leverage message-differential axis per Eric doctrine, since "who they sell to almost always changes what you say" while what a company *is* rarely does)**, tech/hiring, **change/timing (the "why-now" triggers — funding recency, new-in-role execs, headcount growth, hiring, and pricing/tech/ads changes since last refresh)**, plus industry-idiosyncratic points (e.g. healthcare-AI: HIPAA page present, EHR vendor, payer mix; SaaS: ARR band, PLG-vs-sales-led, funding recency) so nothing standard is missed.
+4. **Market source landscape: where this market's data physically lives (absorbed from the retired source-signal step).** A data point is only a candidate if some real place in the world publishes it. So map the market before judging obtainability: which **directories, trade and professional associations, member registries, app and partner marketplaces, review platforms, job boards and ATS pages, public filings and licence registries, event and exhibitor rosters, and industry media** actually carry this client's buyers, and for each one, *what fields does it expose*. Each exposed field is a candidate data point, and this is where the non-obvious ones come from: an association member roster carries a licence number and a chapter; an exhibitor roster carries who the company sells to; a public filing carries a registration date and a jurisdiction. Also record the honest negatives: the target geography and what falls outside it, which sources are thin, missing, paywalled, login-walled, or legally awkward in this market, and which are plausibly blue-ocean because competitors are not mining them. Write the result as the catalog's `## Ranked Source Signals` table and its `- **Source risks:**` bullet (see Output below, and read the format warning there before touching either string). This is **context for what is realistically collectable**, not a per-campaign source plan: choosing the source of truth and the collection tool for one selected campaign stays in `/lead-source-strategy` Lead Source Plan Mode, much later in the flow.
+5. **Deep-research depth pass on the niche (gap-fill, optional).** A single broad brainstorm reliably surfaces the obvious points but goes thin on **non-obvious, industry-idiosyncratic, regulatory, and timing** data points, which is exactly where this catalog's edge lives. When the standard pass looks generic for the client's vertical, run ONE complementary **deep-research gap-fill** (`/ai-model-routing` Stage 2: a second, targeted Claude-native `/deep-research` pass, never another provider) scoped to a single question: *"what niche, regulatory, or pre-purchase data points signal this exact pain in <client vertical> that a generic firmographic list would miss?"* Fold any new candidates into the list. Gap-fill only, never a duplicate broad pass.
+
+Do not self-censor for "can we get it" — that is Step (b); breadth first. Seed the list with the STABLE CORE (see Schema Contract) so nothing standard is missed.
+
+### (b) Obtainability cross-check against the user's ACTUAL stack (the capability boundary)
+
+**This step IS the capability boundary.** It is the only place in the flow that rules on whether a candidate data point is inside or outside what the workspace can actually return, and it rules per data point rather than per source family. The boundary is drawn against the capability roles `stack-contract.yaml` actually names and the credentials that actually resolve, never against a tool that is merely plausible, merely `chosen`, merely `held`, or merely mentioned in an example. The boundary is also closed to tools outside the contract's `approved_stack`: a data point only an outside tool can return is marked out of stack, not obtainable, unless the operator has approved that tool as an exception. Everything the market publishes (step (a) angle 4) is a candidate; only what a named, keyed, plan-enabled tool can return crosses the boundary into `obtainable = y`.
+
+> **Obtainability is a hypothesis until a sample settles it (methodological shift).** The `obtainable` and `coverage` values below are a **reasoned starting hypothesis**, and prose is a weak instrument for a number. The stronger move, where the workspace has one, is to build the column on a **small sample in the list-building workspace** (the capability role for the table-based enrichment surface where list building happens) and **read the ACTUAL fill rate off the live table**. A predicted coverage of "high" that a 50-row sample disproves an hour later was never worth the words; the sample is the answer and the prediction was only the question. So: write the hypothesis, then let the first live sample overwrite `coverage` (and `obtainable`, where the sample shows the field simply does not come back) and record that the value is sample-measured rather than reasoned.
+>
+> **This is documentation of the method, not a tool dependency.** Do NOT gate this skill on a list-building workspace existing: if the stack contract names no such role, the reasoned hypothesis stands on its own and the catalog proceeds exactly as written below. Do not wire a call to any such tool from this skill, and do not name a specific vendor for the role anywhere in the catalog. When the role is filled, the sample happens at first collection in `/tam-build`, and the measured fill rate flows back into this catalog at the next refresh.
+
+For each candidate, first decide HOW it would be filled, then cross-reference `/lead-list-tech-stack-research` and the stack contract, and mark:
+
+- `fill_method`: **scraped** | **derived**. Decide this first — it routes everything below.
+  - **scraped** = a tool actually pulls the value (a web crawl, the company-data provider, the company-discovery source, and so on). It carries a `source_tool`, a `rough_cost`, and, at collection time, a per-row `evidence_url`. **Only scraped cells ever cost a credit.**
+  - **derived** = computed for free from columns already in the row: a flag off a count, a band off a number, a ratio of two columns, or a classification from several. No tool, no credit, no `rough_cost`; it carries `derived_from` instead.
+  - A point that is **neither** cleanly scraped from a named tool **nor** cleanly derived from named in-row columns is a **guess** — it does not belong in `collect_now` (see Stop Gate).
+- `derived_from` (**derived only — required**): the exact in-row column names the value is computed from — e.g. `has_sales_team` from `sales_ic_count`; `headcount_range` from `headcount`; `sales_motion` from `has_public_pricing` + `has_enterprise_tier` + `has_contact_sales_cta`. Every column named here must itself be a collected column (scraped, or derived from columns that bottom out in scraped facts), so any derived value is traceable back to a real scrape. A derived column with no named inputs is a guess and is rejected.
+- `obtainable` (**scraped only**): **y / n / partial**. (Derived columns are not "obtained" — their availability follows their `derived_from` inputs.)
+- `coverage`: **high / med / low** — reasoned estimate of *what fraction of THIS TAM the field is actually populated for*, NOT whether the tool can return it. `obtainable = y` ("the tool returns this field") is not "the tool returns it for most of my companies." A field obtainable but populated for ~15% of the TAM is useless for slicing. Reason from tool docs + how universal the underlying fact is (e.g. `headcount` ≈ high; `running_meta_ads` only for companies that advertise ≈ med; a niche compliance page ≈ low). This is the "obtainable but secretly sparse" twin of the per-record cost trap — neither is caught by `obtainable` alone. Reasoned, not probed (no per-company spend here). For a **derived** column, `coverage` is inherited from its `derived_from` inputs — it can be no more populated than the sparsest column it is computed from.
+- `source_tool` (**scraped only; blank for derived**): the specific in-stack tool that yields it, named from the stack contract's filled slots (company-discovery source, company-data provider, paid scraper, contact-discovery source, and so on) or from the harness's own tools (WebSearch, WebFetch, a Claude Code sub-agent extraction). For a Layer-2 verified-email / mobile data point, the default `source_tool` is **the email finder (find) plus the email verifier (verify + catch-all)**, the mandatory first pass per `/email-waterfall`'s HARD RULE, with **the waterfall enricher as the residue fallback**; but remember Layer-2 points never enter `collect_now`, they route to `/email-waterfall` on a live slice. **This workspace's stack only**: never propose a tool there are no keys for (cross-check the stack contract and the credential registry / `/preflight-credentials`). **Verify keys, never assume them.** Check the contract's filled slots against the live credential registry and connectors at the start of a run; a key can be added or lapse between runs, so re-verify rather than trusting a previous run's list. **Tool features are also plan-gated, not just key-gated:** before tagging a point to a tool, check what that tool's current plan actually exposes. Tech-stack/vendor filters, query inclusion/exclusion, AI segmentation and bulk name-matching are commonly gated to higher tiers, so do not catalog `tech_stack` / `key_vendors` (or any vendor/tech signal) as obtainable from a source whose plan cannot return it; route those to a tech-stack-capable tool per `/lead-list-tech-stack-research`. **When several in-stack tools can yield a point, assign the cheapest capable one per the `/lead-list-tech-stack-research` Collection Routing Priority ladder: prefer the active light stack (the already-paid discovery spine, then free public/official datasets, then a WebFetch read, then a WebSearch, then a Claude Code sub-agent extraction) over paid scrapers; tag a paid scraper only when no lighter active tool returns the field (e.g. running-ads, maps review text).** A point obtainable only via a paid scraper still gets catalogued (flagged): the routing preference shapes `source_tool`, never whether the point is discovered.
+- `layer`: **1 (company-level) or 2 (per-contact)**, a load-bearing routing firewall. Without a `layer` tag the catalog can mis-route a per-contact point into `tam.csv` and break it. The company-search-vs-people-search hard stop on whichever tools fill those slots, and `/tam-build`'s Stop Gate, enforce this firewall.
+- `rough_cost` (**scraped only; derived columns are free, leave blank**): `flat/per-page` (e.g. a page crawl) | `per-record (per-company)` | `per-credit cheap` | `per-credit expensive` | `n/a`. **A company-search source that bills per record returned must be marked `per-record (per-company)`, never flat/per-page; confirm the chosen source's billing model before tagging.** Use `/api-cost-governance` cost notes.
+- `gate_role` (**scraped Layer-1 only; `n/a` for core + derived**): `qualify` | `enrich` | `n/a`. Mark a column `qualify` when it is cheap **and** genuinely helps judge ICP fit from the homepage plus firmographics alone (what the company does, obvious sales-motion, clear disqualifiers). `/tam-build` collects every `qualify` column across the whole TAM and scores `fit_status` from them. **For lookalike-sourced lists, the `qualify` signal comes from the discovery source's already-returned text (description / industry / business model / keywords) plus any free homepage-text extraction it offers, classified on-disk, NOT a crawl on every company; the crawl is reserved for the ambiguous rows `/tam-build` escalates (its Tier 2). So a `qualify` column that is only obtainable via a full multi-page crawl should be rare: prefer ones the discovery payload or free homepage already covers.** Mark it `enrich` when it is an expensive or per-record signal worth collecting **only on companies that already passed the fit gate** (org-depth via a people-page crawl, ads via a paid ad-library scraper, the multi-page proof/pricing/careers crawl, company-provider detail pulls). Core identity/firmographics and free derived columns are `n/a`. This tag is what drives `/tam-build`'s qualify-then-enrich sequencing, so the per-record money is spent only on good-fit rows.
+
+Points marked `obtainable = n` stay in the catalog (flagged) so a future tool addition can revive them — never silently dropped.
+
+### (c) Classify: standard vs client-specific vs in-reserve
+
+- **standard → STABLE CORE** — always-present columns (identity, firmographics, provenance). `class = standard`, `collection_status = core`.
+- **client-specific → EXTENSION, collect this wave** — **every obtainable** Layer-1 point for THIS client (per the Collection Completeness rule), not just the high-value ones. `class = client_specific`, `collection_status = collect_now`.
+- **in-reserve → the narrow exception: catalogued but NOT collected this build.** `class = in_reserve`, `collection_status = in_reserve`. Reserved for the three cases only — not-obtainable now (`obtainable = n`), coverage too low to power any slice, or an explicit operator ceiling-trim — never a lower-ranked-but-obtainable point. A genuinely-deferred point is still *catalogued* (cheap) so a future tool addition, monthly refresh, or new signal can collect it later; this residue is what `/tam-build`'s refresh and `/experiment-design` draw on.
+
+### (d) Rank — value-first (campaign value dominates, then obtainability × cost)
+
+Score each obtainable point:
+
+- `campaign_value` (1–5): how directly it powers a slice the **locked offer set** needs (score each point at its best value across the set's offers and segments) (a point that proves the offer's core pain scores high; a nice-to-have scores low).
+- `obtainability` (1–5): y=5, partial=3, n=0. **Layer is NOT scored here** — a Layer-2 point is not penalized on obtainability (that double-counted cost, since Layer-2 is per-contact). Layer routing is carried by the `layer` column; `collect_now` eligibility requires `layer = 1` (see ranking rule below).
+- `cost_inverted` (1–5): `flat/per-page`=5, `per-record (per-company)` and cheap per-credit=3, expensive per-credit=1. **A per-record-metered company-search pull is scored as metered Layer-1 (per-company), not free; confirm the chosen source's billing model before scoring it.** A **derived** column has no fetch cost, so score `cost_inverted = 5`; being free, it sorts to the top of its value tier and is never deferred to `in_reserve` for budget.
+- `rank = (campaign_value × 100) + (obtainability × cost_inverted)` — value-tier-major. campaign_value dominates absolutely (a value-5 point always outranks a value-4 point); `obtainability × cost_inverted` (max 25, always < 100) only orders points *within* the same value tier, cheapest/most-obtainable first. Invariant: keep the effort product's max below the 100 multiplier so value tiers never overlap.
+
+Sort descending — but the sort now ORDERS the collection work, it does not pick a subset. **Every obtainable client-specific Layer-1 point becomes `collect_now`** (Collection Completeness rule); a point goes to `in_reserve` only in the three exception cases (not-obtainable, coverage-too-low-to-slice, or an explicit operator ceiling-trim), never for ranking lower. Layer-2 points never enter `collect_now` (they route to `/email-waterfall` on a live slice); STABLE CORE is always `core` regardless of rank. A **derived** Layer-1 point becomes `collect_now` whenever all its `derived_from` inputs are themselves collected — being free, it is never deferred; but if any input is missing, the derived column is deferred with it.
+
+A high-value point that is expensive or only partially obtainable (`campaign_value ≥ 4` **and** `obtainability × cost_inverted ≤ 5`) is flagged `worth_a_fight = y`. Under the Collection Completeness rule these are collected by default like everything obtainable; the flag now marks the points to **protect last** if the operator must trim to a ceiling (when trimming for budget, cut the lowest value-per-dollar points first — low `campaign_value`, especially if also costly — and protect the `worth_a_fight` high-value differentiators), and names them in the catalog header so a differentiating signal is never the one silently dropped.
+
+A `coverage = low` field may enter `collect_now` only **flagged**: carry its `coverage` value into the catalog row and name it in the header's "what to collect this wave" note as low-coverage, so `/campaign-strategy` and the operator know a slice built on it will match few rows. Flag, not block — under `auto_execute` this does not halt the run; it makes the thin column visible instead of silently collected.
+
+## Schema Contract — STABLE CORE vs CLIENT-SPECIFIC EXTENSION
+
+Downstream skills (`/campaign-strategy`, `/email-waterfall`, `/list-quality-scorecard`, `/icp-prompt-builder`) never break **only if the catalog reuses the EXACT existing canonical column names and never introduces a parallel vocabulary.**
+
+**STABLE CORE — always present, exact existing names, never renamed or made optional:**
+
+> **This STABLE CORE name list is authoritative for the whole flow.** `/tam-build` mirrors it byte-for-byte into `tam.csv`, and the downstream slicers (`/campaign-strategy`, `/list-quality-scorecard`, `/icp-prompt-builder`) read these exact names — so a core column is added, renamed, or dropped **here first**, never in `/tam-build` alone. (The vocabulary for these columns — enums/buckets — is likewise owned below in this Schema Contract, not redeclared in `/tam-build`.) The two skills carry the same list by design; this note names which copy wins so it cannot silently drift into a broken slice three skills downstream.
+
+- **Identity:** `company_name`, `company_domain`, `company_linkedin`, `segment`, `group`, `discovery_motion`
+  - **`segment`** is the confirmed segment this row belongs to (from `/cold-email-kickoff` Step 2.5). **`group`** is the case-study group (the sub-industry / what-they-sell cluster) whose seed set produced this row's TAM; each proven-motion group is one seeded lookalike → one group-TAM → its own campaign(s). **`discovery_motion`** (enum: `proven` | `expansion`) records how the row was discovered: `proven` = a lookalike seeded from the client's case-study companies for that `group`; `expansion` = a broad ICP filter for a net-new segment or a no-proof new offer. `group` is blank on `expansion` rows (no case-study seed). Both are set by `/tam-build` per its "Case-Study-Anchored Discovery HARD RULE"; downstream slicers read them verbatim.
+  - **`company_linkedin` is a MUST-HAVE, actively-filled field (operator directive 2026-06-20)**, not "collect if the source happens to return it." Take it wherever discovery returns it (discovery and company-database rows normally carry a company LinkedIn URL) and carry it through every transform so column-mapping never drops it. **If the source leaves it blank for a company, backfill it** before the TAM is considered complete: a web-search query, then an AI confirmation that the `linkedin.com/company/...` page matches the company name + domain → write only on a confident match, else leave blank (a wrong company page is worse than blank). **This same "primary source first, then a verified search-plus-AI-confirmation backup, never guess" rule is the default for ANY must-have field a source leaves empty** (it mirrors the personal-`linkedin_url` rule in `/email-waterfall`).
+- **Firmographics:** `industry`, `headcount`, `headcount_range`, `location_country`, `location_state`, `location_city`, `founded_year`, `revenue_range`, `funding_stage`, `last_funding_date`, `arr_range`
+  - The `_range` bands here (`headcount_range`, `revenue_range`, `arr_range`) are **derived** for free from their raw numbers (`headcount`, revenue, ARR) — compute them, never fetch a separate "range" field; their `derived_from` basis is the raw column.
+- **Provenance / QA (narrow, company-level — what `/tam-build` actually writes):** `source`, `evidence_url`, `signal_date`, `ai_research_provider`, `ai_analysis_provider`, `tam_confidence`, `last_refreshed`
+- **Fit gate (company-level — written by `/tam-build`'s qualify pass *before* any extension enrichment):** `fit_status` (enum: `good` | `maybe` | `bad`), `fit_confidence` (0.0–1.0), `fit_reason` (one sentence), `enrichment_tier` (enum: `enriched` | `qualified_out`). These exist so downstream skills can tell a **gate-skipped** blank from a **genuinely-absent** value: **`gate_role = enrich` extension columns** are populated only on `enriched` rows, so a blank such cell on an `enriched` row is a real negative — while `gate_role = qualify` columns (e.g. homepage CTAs) are present on all rows, and any blank `enrich` cell on a `qualified_out` row just means "not collected." Tune the fit judgement with `/icp-prompt-builder` on a cheap-layer sample; `/tam-build` then scores the whole TAM and sets these.
+
+The wider source-evidence vocabulary (`source_type`, `source_url`, `signal`, `fit_reason`, `source_confidence`) is **`/lead-source-strategy` Lead Source Plan Mode-owned per-slice / Layer-2 provenance** — it appears on the per-campaign list, documented in the catalog's extension/provenance mapping, NOT promised as always-present company-level core.
+
+**CLIENT-SPECIFIC EXTENSION — variable per client/segment; the catalog decides which columns exist AND which get collected:** sales-motion (`has_demo_cta`, `has_contact_sales_cta`, `has_book_meeting_cta`, `sales_motion`), pricing (`has_public_pricing`, `has_free_trial`, `has_enterprise_tier`, `lowest_price`, `highest_price`), org-depth (`sales_leader_count`, `sales_ic_count`, `marketing_leader_count`, `has_cro`, `has_vp_sales`, `has_cmo`, `eng_count`, `it_count`, `cs_count`, `revops_count`, `eng_to_sales_ratio`), demand (`running_meta_ads`, `running_google_ads`, `sponsors_trade_shows`, `event_names`, `event_audience_vertical`, `event_sponsor_tier`, `next_event_date`), proof (`has_case_studies`, `named_customers`), sold-to (`sells_to_vertical`, `sells_to_customer_size`, `sells_to_department`, `sells_to_motion`, who the company sells to; **classification, not a scrape**: derived free by an on-disk AI read of the already-captured `description`/`keywords`/`company_description` + free homepage text, the same pass that scores `fit_status`), tech/hiring (`tech_stack`, `key_vendors`, `hiring_roles`, `hiring_velocity`, `jd_pain_language`), change/timing (`funded_last_90d`, `days_since_funding`, `funding_stage_changed`, `new_sales_leader_90d`, `new_marketing_leader_90d`, `sales_headcount_growth_6mo`, `headcount_trend`, `is_hiring_now`, `hiring_sales_roles`, `hiring_velocity_change`, `pricing_changed_90d`, `added_tech_90d`, `dropped_tech_90d`, `started_ads_90d`, `recent_news_trigger`), plus any industry-idiosyncratic points the brainstorm surfaced. **Reuse these canonical names verbatim** so `/campaign-strategy` slices by exact name. Each extension row declares the `canonical_name` it maps onto, if any. Each extension row also declares its `fill_method`: many of these are **derived, not scraped** — `sales_motion` is a classification (from the pricing + enterprise-tier + sales-CTA columns), `has_cro`/`has_vp_sales`/`has_cmo` are reads off the org-depth counts, a sales-intensity signal is the ratio of `sales_ic_count` to `headcount`. Scrape the raw facts once; derive these for free and name their `derived_from` inputs. Mark a column `scraped` only when no in-row column can yield it.
+
+**Event sponsorship (`demand` group) is the one cheap source of near-certain `sold_to` ground truth.** `sponsors_trade_shows` (bool), `event_names` (text, e.g. `MedTech Nordic 2026; DACH Fintech Summit`), `event_audience_vertical` (text, who the show is *for*), `event_sponsor_tier` (enum: `platinum` | `gold` | `silver` | `bronze` | `exhibitor` | `unknown`, a budget proxy where the show publishes tiers), `next_event_date` (date, the dated why-now). All `layer = 1`, `gate_role = enrich`, `fill_method = scraped`, `source_tool` = WebSearch to find the show, plus a WebFetch read of its sponsor/exhibitor page, plus a Claude Code sub-agent extraction of the roster (no per-page vendor cost, so it never needs a paid scraper). `coverage` is honestly `low` in most verticals (many good-fit companies sponsor nothing, and that is a real negative, not a miss), which is exactly why it is an `enrich` column and not a gate. **Its real value is as evidence for the `sold_to` classification, not as a slice of its own.** A company that paid to stand in a room full of one specific buyer has told you who it sells to far more reliably than a homepage classifier can infer it, so where `event_audience_vertical` is populated, feed it into the `sells_to_vertical` read as high-confidence evidence and let it override a low-confidence text classification. Where a client's ICP genuinely revolves around a show circuit, promote these to Tier 3 `industry_specific` with the specific circuit named. Source rule (niche shows only, never Dreamforce-scale) and the three-signals-in-one rationale live in `/lead-source-strategy` Quality Rules.
+
+**The change/timing group is mostly derived, and that is the point**: it manufactures "why-now" signals for near-zero cost. `funded_last_90d` / `days_since_funding` derive from `last_funding_date`; `is_hiring_now` / `hiring_sales_roles` derive from `hiring_roles`; and the refresh deltas (`funding_stage_changed`, `headcount_trend`, `hiring_velocity_change`, `pricing_changed_90d`, `added_tech_90d`, `dropped_tech_90d`, `started_ads_90d`) derive for free from `/tam-build`'s Monthly Refresh diffing this build against the prior one. Only `new_sales_leader_90d`, `new_marketing_leader_90d`, `sales_headcount_growth_6mo`, and `recent_news_trigger` are **scraped** (org-depth tenure / company growth field / a news search); `new_sales_leader_90d` / `new_marketing_leader_90d` are company-level flags (Layer 1; the actual new person is Layer 2 in `/email-waterfall`), and `sales_headcount_growth_6mo` depends on the company endpoint returning growth as a field (verify; set `coverage` accordingly). Common in-reserve change/timing rows the brainstorm may add but that stay off by default (sparse, negative, or news-dependent): `layoff_signal_90d`, `exec_departure_90d`, `ma_activity_90d`, `recent_product_launch_90d`, `new_integration_90d`, `expansion_signal_90d`.
+
+Core is fixed; extension varies; the catalog is the single place documenting how every extension column maps back.
+
+### Derived prioritization column — `deal_value_tier` (free, optional)
+
+`deal_value_tier` (enum: `high` | `mid` | `low`) is a **derived** column estimating what an account would likely spend if it converted — the "contract value" dimension that complements the fit gate (`fit_status`) and the why-now signals (`change_timing` group). It is `fill_method = derived`, `gate_role = n/a`, `cost_inverted = 5`, `derived_from` the firmographic bands already in the row (`revenue_range` / `arr_range` / `headcount_range`) plus `segment` — so it costs nothing and is computed in `/tam-build`'s free derived pass, never scraped. Define the band cut-offs per client in the catalog's `allowed_values` (e.g. for a SaaS ICP: `high` = enterprise/large-revenue segment, `low` = SMB), since "high value" is relative to each client's deal-size spread.
+
+Its only job is **prioritization, not gating**: `/campaign-strategy` and `/personalization-subagent-pattern` use it to decide which accounts justify heavier personalization effort (match the personalization rung to the deal value). It is an estimate from firmographics, not live deal data, so treat it as a light steer. **Honest caveat — it only earns its keep when the TAM has real spread in likely deal value.** If the client's ICP is uniform (every account is roughly the same size and segment), `deal_value_tier` will be nearly constant and adds little; in that case compute it but don't lean on it. Skip it entirely when no firmographic band is populated enough to derive it.
+
+### Tier 3 — client/segment/market/offer-specific columns (beyond the defaults)
+
+The STABLE CORE and the EXTENSION list above are the **defaults** — the floor that guarantees nothing standard is missed. They are not the ceiling. The real edge for THIS client is the bespoke columns the brainstorm surfaces from its market, segment, geography, and the locked offer — filed under `industry_specific` (or `market_specific` for geography-bound columns). They are invented per run and are never the same twice. **Attempting at least one bespoke why-now trigger is GATED, not optional** (see the custom-trigger Stop Gate below). Every run must try, and must record either the trigger it found or a reasoned note naming what was considered and why this client honestly has none.
+
+A bespoke column is not ad-hoc: it travels the same contract as any other — it declares its `group`, `fill_method` (+ `derived_from` if derived), `output_type`, `allowed_values` (if enum/range), `obtainable`, `coverage`, `source_tool`, `layer`, `rough_cost`, `campaign_value`, and `rank`, and maps onto a `canonical_name` if one fits. Bounded variety, one fixed contract.
+
+Worked examples (illustrative — generate the actual set from THIS client's research; do not copy these verbatim):
+
+- **Healthcare-AI SaaS** (`industry_specific`): `has_hipaa_page` (bool), `hitrust_certified` (bool), `ehr_integrations` (text, e.g. `Epic; Athenahealth`), `fda_status` (enum: `none`|`510k`|`de_novo`|`pma`|`cleared`), `care_setting` (enum: `provider`|`payer`|`pharma`|`digital_health`), `clinical_staff_count` (count), `new_compliance_hire_90d` (bool, change_timing).
+- **Local SMB / home services** (`industry_specific`): `google_rating` (number), `review_count` (count), `review_velocity_90d` (count, change_timing — derived from review-count deltas), `has_online_booking` (bool), `has_contact_form` (bool), `num_locations` (count), `responds_to_reviews` (bool).
+- **Ecommerce / Shopify** (`industry_specific`): `platform` (enum: `shopify`|`shopify_plus`|`woocommerce`|`bigcommerce`|`custom`), `product_count_band` (range), `monthly_traffic_band` (range), `uses_klaviyo` (bool), `subscription_offered` (bool), `apps_installed_count` (count), `added_klaviyo_90d` (bool, change_timing).
+- **Dev tools / API-first** (`industry_specific`): `has_public_api` (bool), `has_docs_portal` (bool), `has_status_page` (bool), `github_stars_band` (range), `open_source` (bool), `sdk_languages` (text), `changelog_active_90d` (bool, change_timing).
+- **Non-US market, e.g. DACH** (`market_specific`): `registry_id` (text, e.g. `HRB 84213`), `vat_id_present` (bool), `impressum_present` (bool), `site_language` (enum), `gdpr_dpo_listed` (bool). These exist only because the market does — a US TAM would not carry them.
+- **Offer-driven** (the offer dictates the column; same companies, different lens — e.g. an outbound / meeting-booking offer): `uses_outbound_tool` (text, e.g. `Outreach; Salesloft`), `sdr_team_size` (count), `books_meetings_on_site` (bool), `outbound_job_posts_90d` (bool, change_timing), `has_sdr_leader` (bool).
+
+Every Tier-3 enum/range still declares its `allowed_values` in the catalog table before collection (the Stop Gate below).
+
+### Controlled vocabulary — `output_type` + `allowed_values` (the contract for the messy columns)
+
+Booleans and counts are self-evident; the value is in the enums and ranges, where an undefined or drifting vocabulary causes **silent failures**: `/campaign-strategy` filters `sales_motion = 'product-led'`, the data says `'plg'`, the slice returns zero rows with no error, and you act on a lie. Buckets that differ between segments (`51-200` vs `50-250`) break cross-segment merge/compare the same silent way. So the catalog — the contract — owns the allowed values; the as-built `/tam-build` does **not** redeclare them.
+
+**Fixed core vocabulary (always built, identical across all clients/segments — never re-bucket per client, or cross-segment compare breaks). These are recommended canonical defaults; if you change a boundary, change it here once and it stays fixed for every client:**
+
+- `sales_motion` (enum): `plg` | `sales_led` | `hybrid` | `unknown`
+- `funding_stage` (enum): `pre_seed` | `seed` | `series_a` | `series_b` | `series_c` | `series_d_plus` | `bootstrapped` | `public` | `acquired` | `unknown`
+- `headcount_range` (range): `1-10` | `11-50` | `51-200` | `201-500` | `501-1000` | `1001-5000` | `5001-10000` | `10001+`
+- `revenue_range` (range, annual USD): `<1M` | `1M-10M` | `10M-50M` | `50M-100M` | `100M-500M` | `500M-1B` | `1B+`
+- `arr_range` (range, USD): `<1M` | `1M-5M` | `5M-10M` | `10M-50M` | `50M-100M` | `100M+`
+- `fit_status` (enum): `good` | `maybe` | `bad`
+- `enrichment_tier` (enum): `enriched` | `qualified_out`
+
+**Fixed `change_timing` buckets (canonical when collected — not always-built, but use these exact values so cross-segment compare holds):**
+
+- `headcount_trend` (enum): `growing` | `flat` | `shrinking`
+- `sales_headcount_growth_6mo` (range): `decline` | `<10%` | `10-25%` | `25-50%` | `50%+` | `unknown`
+- `hiring_velocity_change` (enum): `accelerating` | `steady` | `slowing`
+
+**Fixed `sold_to` buckets (canonical when collected, the sold-to axis; use these exact values so cross-segment compare holds). `sells_to_vertical` is intentionally free text, not an enum:**
+
+- `sells_to_customer_size` (enum): `smb` | `mid_market` | `enterprise` | `consumer` | `mixed` | `unknown`
+- `sells_to_department` (enum): `sales` | `marketing` | `finance` | `legal` | `hr` | `it_eng` | `operations` | `procurement` | `product` | `executive` | `customer_facing` | `other` | `unknown`
+- `sells_to_motion` (enum): `b2b` | `b2c` | `b2b2c` | `b2g` | `unknown`
+
+**Per-client extension vocabulary:** any other `collect_now` enum or range (including industry-idiosyncratic ones the brainstorm surfaced) declares its `output_type` and `allowed_values` in the catalog table before it is collected (see the Stop Gate below). Booleans (`has_*`), counts (`*_count`), money (`lowest_price`, `highest_price`), and free text (`tech_stack`, `named_customers`) need only `output_type`. Scope: define vocabulary for what is actually collected (core + `collect_now`); do not bloat the catalog with bucket defs for `in_reserve` columns you may never collect.
+
+### Signal extension columns (the eight timing/context signals)
+
+`signal-strategy-playbook.md` is the catalog companion for the eight timing/context signals (job change, department headcount, headcount growth, founded year, ads, job-change detection, jobs/JD content, profile/work-history). Their slices live in `/campaign-strategy` (Signal-Driven Slice Library) and their copy in `/campaign-copywriting` (Signal Angle Library). Most are already collected via the core + extension columns above (`founded_year`, `running_meta_ads`/`running_google_ads`, `sales_headcount_growth_6mo`, `headcount_trend`, `hiring_roles`/`hiring_velocity`, `new_sales_leader_90d`). Three are genuinely additional; reuse these canonical names so the slicers read them verbatim:
+
+- **Department headcount + ratios (Layer 1, org-depth).** `eng_count`, `it_count`, `cs_count`, `revops_count` (counts; scraped from the company's public people page via a headless crawl plus a Claude Code sub-agent extraction, or inferred from per-title contact counts on the contact-discovery source), and `eng_to_sales_ratio` (derived from `eng_count` / `sales_ic_count`). Department SIZE and the cross-department RATIO say more than total headcount (a 100-person company with 3 salespeople is a different buyer than one with 40). **Caveat (targeting filter, not a copy variable):** reciting a raw count in an email ("you have 14 people in Sales") reads as surveillance, so use it to select the slice and the lead pain, never as a copy line. Enforced in `/campaign-copywriting` Signal Angle Library.
+- **JD pain-language (Layer 1, tech_hiring).** `jd_pain_language` (text, scraped): the specific problem a live job posting names in the buyer's own words, extracted from the ATS page (WebSearch finds the posting URL, WebFetch reads it, and a Claude Code sub-agent pulls the pain phrase from the job-description body). This is a **copy variable**, distinct from `hiring_roles`, which only records that a role is open. **Caveat (source truth):** quote only live, publicly accessible JD content; never fabricate.
+- **Contact job-change window + type (Layer 2, per-contact).** `job_change_recency` (enum: `0-90d` | `90-180d` | `180-270d` | `270-365d` | `>365d` | `unknown`) and `job_change_type` (enum: `new_company` | `promotion` | `unknown`). One of the highest-intent timing signals. These are **per-contact (Layer 2)**: the company-level `new_sales_leader_90d` flag sits in the change/timing group above, but the actual person, their recency window, and whether it was a move or a promotion are revealed per slice at launch (`/email-waterfall`). In-stack this needs either a true "changed jobs / promoted" feed, or the contact-discovery source's role-tenure field as a free proxy.
+
+### Sold-to axis: who the company sells to (highest-leverage message-differential signal; Eric doctrine 2026-07-04)
+
+**The idea (Eric Nowoslawski, "the list is the message").** Segmenting on what a company *is* (industry, size, tech stack) rarely changes the message on its own. What changes the message is **who the company sells to**. A company selling into legal teams lives in a different world than one selling to restaurant owners: different buyers, different pain, different proof. So the customers a company sells to are a real segmentation axis, and per the message-differential rule ("split only when a data point changes what you say") this is the axis that almost always earns a split. Catalog it as its own `sold_to` group so `/campaign-strategy` can slice on it and `/campaign-copywriting` can lead the copy with the target's own buyer world.
+
+**Group `sold_to`: Layer 1, company-level (joins onto contacts as `co_*`). All four are `fill_method = derived` classifications (like `sales_motion`), `gate_role = n/a`, `rough_cost = n/a` (free), `campaign_value = 5`, `coverage = med`:**
+
+| Column | `output_type` | `derived_from` (the free captured text) | Role |
+|---|---|---|---|
+| `sells_to_vertical` | `text` | the discovery payload's description / keywords / business-model fields, the company-data provider's company description, and any free homepage-text extraction | The end-customer vertical(s) in their own words (e.g. `legal firms`, `restaurants`, `dev teams`). Free text so it is a **copy variable** and a **grouping** key, never a raw enum predicate; `/campaign-strategy` groups observed values into ≥500-company launch buckets. |
+| `sells_to_customer_size` | `enum` | same captured text | The **size** of their customers. Clean enum → hard slice predicate. |
+| `sells_to_department` | `enum` | same captured text | The buyer **department/function** they sell into. Enum → slice predicate. |
+| `sells_to_motion` | `enum` | same captured text | Coarse GTM split (`b2b`/`b2c`/…); cheap first cut. |
+
+**Why it is free, not a scrape (the obtainability point).** The inputs are text `/tam-build` already holds on disk (the discovery payload's description, keywords and business-model fields, the company-data provider's company description, and any free homepage-text extraction). The value is an **AI classification of that text** in the same Claude Code sub-agent pass (fanned out over disjoint batches) that scores `fit_status`, with no new per-company crawl and no credit. This is exactly the `sales_motion` precedent (a classification, marked `derived`), not a new source. Some people-database providers expose these as native search-time filters; treat that as an optional premium shortcut if the contract ever names such a tool, never as an assumed capability.
+
+**Coverage is honestly `med`, not `high`.** "Industries we serve" pages and vertical case studies make the sold-to clear for many B2B firms, but many state their end customer only implicitly. Carry `coverage = med` into the catalog row and the "what to collect this wave" note so `/campaign-strategy` knows a sold-to slice will match a real but partial subset.
+
+**Silent-zero guard.** The three enums declare `allowed_values` in the controlled-vocabulary section below (so the Stop Gate passes and a slice predicate never returns zero silently). `sells_to_vertical` is free text by design (needs no `allowed_values`) and is used for grouping + copy, not as a raw enum predicate.
+
+### Contact-discovery signal tier, Layer-1 contact signals built up front with no email reveal
+
+**Current floor and sequencing correction:** all older 100-company or 100-contact references in this section are retired. Contact-signal launch eligibility is measured across at least 500 target companies. The contact TAM is built before `/lead-scoring`, and `/campaign-strategy` runs only after scoring is complete.
+
+Contact-level signals are **higher-intent than company-level signals** and the flow must build them, but they do NOT break the Layer-1/Layer-2 cost firewall. Contact discovery runs on the **contact-discovery source** the stack contract names; if that slot is empty, stop and route to `/stack-setup`. A domain-scoped contact search returns **contact-DISCOVERY** rows (name, exact title, LinkedIn, location) and lets you **filter** on job-title keywords, role tenure and location, with **no email reveal and no per-contact credit**. So contact-discovery signals are **Layer 1**; only the email REVEAL and verify stay Layer 2 (`/email-waterfall`, winning slice only). Catalog these as their own tier so `/tam-build` and `/email-waterfall` know to collect them, and `/campaign-strategy` can slice on them.
+
+> **Field availability differs by tool, so verify before you catalog.** The Tier-1 table below names the *signal*, not a vendor field. For the chosen contact-discovery source, confirm which of these it actually returns or filters on, and mark anything it cannot supply `obtainable = n` (or leave the column blank) rather than carrying a field name over from a different tool. A phone-available flag and an email-indexed flag in particular exist on some contact sources and not others.
+
+**Built up front as the contact-level TAM.** Collect contact-discovery signals across every `good` and `maybe` company, not per campaign. `/tam-build` writes `contacts.csv` with all plausible buying roles, Tier-1 signals, and the `co_*` company-signal join. It reveals no email and carries no assumed email-exists flag. Build this file before `/lead-scoring`; `/campaign-strategy` runs only after scoring is complete. Use the bulk fan-out pattern in `/tam-build` Layer 1d rather than looping one company at a time.
+
+**High-volume default: discover the BUYING COMMITTEE, not one decision-maker (operator directive 2026-07-07).** Contacts-per-company is the primary volume multiplier toward the high-volume target (1,000 up to 20,000 leads per campaign). Going from 1 to 3 to 5 buy/influence roles per company multiplies leads 3-5x off the SAME company universe, which is how a lookalike that saturates at ~2,700 companies still feeds a 1,000-to-20,000-lead campaign. So the default persona set to discover per good-fit company is the **buying committee**: the roles that genuinely buy or influence THIS offer (economic buyer, function owner, influencers), widened to every ICP title the client's ICP lists for that segment per the 2026-07-12 directive in `/tam-build`, NOT a single decision-maker. The per-company *simultaneity* cap that keeps this from reading as spray (never email 5+ people at one company at once) is enforced downstream in `/email-waterfall` with `/campaign-strategy`; here the job is only to catalog the committee's roles as the contact-discovery target. Full doctrine:.
+
+**Cost guard (bound, don't skip):** a domain-scoped contact search returns a limited result budget per call (a handful of domains per call is typical; confirm the chosen tool's cap), and a company has several contacts, so **bound the up-front pull to good-fit companies and ICP-relevant personas/seniority** (e.g. the buyer titles at Director+, not every employee). Preview the company count and expected call volume via `/api-cost-governance` like any Layer-1 collection. The bound keeps the contact-TAM relevant and the pull tractable; it does NOT defer the build to per-slice. **The expensive layer is still gated:** no per-contact EMAIL reveal, verification, or waterfall enrichment happens here, because those wait for a confirmed campaign (`/email-waterfall`). No email signal of any kind is captured up front, not even a flag.
+
+**Tier 1, the default contact-discovery signal set (built on every contact-signal slice; live-proven on a client build 2026-06-29):**
+
+| Contact signal | What the source must expose | Layer | Why it matters |
+|---|---|---|---|
+| **`contact_new_in_seat`** (flagship contact why-now) | a role-tenure range filter (e.g. current role under 12 months); membership in the filtered pull IS the signal | 1 | New exec's first 6-12mo = audit-and-rebuild buying window. Highest-intent timing signal. |
+| `contact_seniority` | a management-level field, returned and filterable | 1 | Targets the budget holder, not an IC. |
+| `contact_function` / exact role | exact job title returned, plus a mapped job-function filter | 1 | Precision: e.g. billing lead vs treasury vs FP&A. |
+| `contact_career_stage` | a total-experience duration filter | 1 | First-time vs veteran in the title, so a different message. |
+| `contact_geo` | the person's own country / address, returned | 1 | The person is not the HQ; drives localization + timezone. |
+| `contact_phone_available` | a phone-available boolean, returned | 1 | Multichannel enabler; completeness signal. Blank where the source does not expose it. |
+| `contact_certifications` | a certifications filter | 1 | Niche relevance (e.g. CPA/ACCA for finance personas). |
+
+> **An email-indexed flag is deliberately NOT in the default set. Do not re-add it.** Kept visible so the column is not silently reintroduced: capturing any email signal up front contradicts the rule above (no email signal of any kind, not even a flag), and contact-discovery sources frequently do not return one anyway. Revive only if a returned email-indexed flag is specifically verified on the chosen source AND the operator reopens the up-front-email-signal rule.
+
+**Tier 2, per-slice research escalation (opt-in, run on the winning slice only, gated by `/api-cost-governance`):** `contact_prev_company` (work history, via a persona web-research pass or a search-plus-crawl on the profile), `contact_job_change_type` (promotion vs move; role tenure says new-in-seat but not which), `contact_recent_posts` (social activity, via a paid social scraper or a persona research pass). **Tier 3, high-intent, expensive/platform-risk (per-campaign, flagged):** engagement on a competitor or thought-leader post (`/competitor-engagers`), personal triggers (podcast/speaking/press/awards via a persona web-research pass).
+
+**Great-but-NOT-on-our-stack (catalogue as `obtainable = n`, name the missing capability, never silently drop):** real-time B2B intent data, meaning someone actively researching the category right now, needs a dedicated intent provider and is the biggest contact-signal gap; a clean "changed jobs under 90 days" feed (a role-tenure field only **proxies** it and lags the underlying profile); website-visitor de-anonymization (a pixel-based identification product); true buying-committee reporting lines.
+
+**Search-time filtering on growth, tenure, department size and sold-to is a real capability gap when no tool in the contract offers it.** Some people-database providers expose all four as native search-time filters, and those four underpin most of the signals in `signal-strategy-playbook.md`. Where the contract names no such tool, this is a genuine gap, not a missing nice-to-have: without it you cannot filter on these at search time, so you reconstruct each one AFTER the pull and pay for the wider pull. The working fallback paths: a role-tenure field proxies tenure, a people-page crawl or per-title contact counts give department size, `/tam-build`'s refresh diff gives growth, and the free on-disk AI text classification gives `sold_to` (see the sold-to section above). Treat a search-time-filter provider as an **optional premium shortcut, never assumed live** (operator decision 2026-06-18, recorded in `signal-strategy-playbook.md`). Before tagging any tool as the source for these, confirm it is actually in the contract and keyed: a documentation-search MCP for a vendor's website is not a data API, and mistaking one for the other silently produces an uncollectable column.
+
+## Output: `data-point-catalog.md`
+
+```text
+profiles/<business-slug>/data-point-catalog.md
+```
+
+At the **profile root** (it is an *input to* `/tam-build`, not a product of it). Split per segment when segments differ, as `data-point-catalog-<segment>.md`. Markdown with structured ranked tables: human-reviewable and diff-friendly.
+
+This catalog is the **exhaustive pre-collection menu** (the contract / superset). It is distinct from `/tam-build`'s `tam/tam-data-dictionary.md`, which is the **as-built subset** recording which catalog entries actually became `tam.csv` columns. Two artifacts, no collision.
+
+**This file also feeds the client-facing approval deck.** Since the retired source-signal artifact went away, `data-point-catalog.md` is the file `/campaign-approval-brief` reads the deck's source section from. That makes two of its strings machine-parsed and therefore not free-form (see the format warning below).
+
+**Catalog table columns:**
+
+| Column | Meaning |
+|---|---|
+| `data_point` | human name |
+| `group` | identity / firmographics / sales_motion / pricing / org_depth / demand / proof / sold_to / tech_hiring / change_timing / provenance / industry_specific / market_specific |
+| `class` | `standard` \| `client_specific` \| `in_reserve` |
+| `layer` | `1` (company-level) \| `2` (per-contact) — routing firewall |
+| `fill_method` | `scraped` (a tool pulls it; carries `source_tool` + `rough_cost` + per-row `evidence_url`) \| `derived` (computed free from in-row columns; carries `derived_from`, no cost) — **required for every `collect_now` row** |
+| `derived_from` | for `fill_method = derived`: the exact in-row column names the value is computed from (e.g. `headcount_range` from `headcount`). **Required for every derived `collect_now` row;** blank for scraped. Every named column must itself be collected, so the value is traceable to a real scrape |
+| `obtainable` | `y` \| `n` \| `partial` (scraped columns; derived availability follows `derived_from` inputs) |
+| `coverage` | `high` \| `med` \| `low` — reasoned fraction of THIS TAM the field is populated for (not "can the tool return it"); a derived column inherits the sparsest of its `derived_from` inputs |
+| `source_tool` | the in-stack tool that yields it, named from the stack contract's filled slots (scraped only; blank for derived) |
+| `rough_cost` | `flat/per-page` \| `per-record (per-company)` \| `per-credit cheap` \| `per-credit expensive` \| `n/a` (scraped only; derived columns are free) |
+| `gate_role` | `qualify` (cheap, feeds the fit gate — firmographics + homepage) \| `enrich` (expensive/per-record, collected only on good-fit survivors) \| `n/a` (core or derived). Drives `/tam-build`'s qualify-then-enrich sequencing |
+| `scoring_use` | `market` \| `offer` \| `size` \| `geo` \| `role` \| `authority` \| `timing` \| `none`. Tells `/lead-scoring` which component may use the field as evidence. It never assigns points by itself. |
+| `campaign_value` | 1–5 (vs the locked offer) |
+| `rank` | `(campaign_value × 100) + (obtainability × cost_inverted)` — value-tier-major sort key |
+| `worth_a_fight` | `y` when campaign_value ≥ 4 and obtainability × cost_inverted ≤ 5 (high-value but costly/partial); else blank |
+| `collection_status` | `core` \| `collect_now` \| `in_reserve` |
+| `canonical_name` | exact existing column name (CORE) or the canonical field this extension maps onto, else blank |
+| `output_type` | `bool` \| `count` \| `enum` \| `range` \| `money` \| `text` \| `date` \| `url` — **required for every `collect_now` row** |
+| `allowed_values` | for `enum`/`range`: the exact allowed values or bucket boundaries (e.g. `sales_motion`: {plg, sales_led, hybrid, unknown}); for `bool`: `true`/`false`. **Required for every `collect_now` enum/range.** Core enums/ranges use the fixed buckets in the Schema Contract; extensions declare their own here |
+| `evidence_notes` | which market-source, offer-research, or ICP fact justifies it; example value |
+
+Plus a prose header: client, date, segments covered, AI provenance + brainstorm spend (from `/api-cost-governance`), and a one-paragraph "what `/tam-build` should collect this wave" summary (the `collect_now` set) — naming which `collect_now` columns are **scraped** (the only ones that cost a credit) versus **derived** (free, computed from the scraped ones), so the cost of the wave is visibly the scraped set alone.
+
+### Required file skeleton (two strings are machine-parsed: copy them byte-for-byte)
+
+Write the catalog in this shape. `## Market Source Landscape` and `## Ranked Source Signals` carry step (a) angle 4's findings; the big catalog table follows them.
+
+```markdown
+# Data-Point Catalog - <Client> [- <Segment>]
+
+Client: <name> | Date: <YYYY-MM-DD> | Segments covered: <list>
+AI provenance: ai_research_provider=<...>, ai_analysis_provider=<...> | Data-vendor spend: $<...>
+
+**What `/tam-build` should collect this wave:** <one paragraph: the `collect_now` set, which columns are scraped versus derived, any `coverage = low` columns, and the `worth_a_fight` columns to protect last if the ceiling binds.>
+
+## Market Source Landscape
+- Target geography:
+- Out-of-scope geography:
+- Where this market's data physically lives:
+- Strong market-specific sources:
+- Weak, thin, paywalled or login-walled sources:
+- Blue-ocean source candidates:
+- Directory / registry / association fit:
+- Marketplace / partner-directory fit:
+- Job-board / ATS fit:
+- Public-filing / licence-registry fit:
+- Event / exhibitor-roster fit:
+- **Source risks:** <the real risks in this market's source landscape, in one or two plain sentences. NEVER leave this blank.>
+
+<!-- FORMAT WARNING. The bold "Source risks" label above and the "Ranked Source Signals"
+     heading below are parsed by outbound/scripts/campaign_approval_brief.ps1 to build the
+     CLIENT-FACING approval deck. Rename either, drop the bold, or leave the risks value
+     empty, and the deck silently loses a section while the script still exits 0. Keep the
+     first table column headed exactly "Rank", and keep exactly one table in that section. -->
+
+## Ranked Source Signals
+| Rank | Source family | Exact observable data point | Where it lives | Obtainable on our stack | Coverage | Why-now hypothesis | Risks |
+|---:|---|---|---|---|---|---|---|
+| 1 | <source family, e.g. state licence registry> | <the exact observable data point, e.g. licence renewal due in 90 days> | <URL or named source> | y / partial / n | high / med / low | <why a company showing this is in-market now> | <the honest risk> |
+
+## Catalog
+<the full ranked catalog table, columns per the list above>
+```
+
+**Format warning: two strings in this file are parsed by a script, so they are not yours to reword.** `outbound/scripts/campaign_approval_brief.ps1` builds the client-facing approval deck by reading two literal strings out of `data-point-catalog.md`:
+
+- the heading `## Ranked Source Signals`, matched by `^##\s+Ranked Source Signals\s*$` (exact words, level-2, nothing appended)
+- the bullet `- **Source risks:** <value>`, matched by `^\-\s+\*\*Source risks:\*\*\s*(.+)$` (a top-level bullet, bold intact, and a **non-empty** value after the colon)
+
+**How this fails, and why it is worse than a crash.** The script's file reader returns empty on a missing file with no error, and the script still exits 0. So a renamed heading, an unbolded `- Source risks:`, or a bullet with nothing after the colon does not fail anything: the deck just quietly ships to a paying client with a section missing, and no log, exit code, or QA step anywhere reports it. Treat a silent pass as the failure mode you are guarding against.
+
+**Rules for anyone editing this template:**
+
+- **Do not rename the heading to match internal vocabulary.** It is a client-facing deck section meaning "here is where we will find your leads." The content under it is now data-point-and-source shaped, and tidying the wording to say "data points" buys nothing and breaks a client deliverable.
+- **Keep the first column headed exactly `Rank`.** This is load-bearing, not cosmetic. The script's table reader skips a row only when its first cell is literally one of `Campaign Name`, `Rank`, `Archetype`, `File`, so `Rank` is the only thing stopping the header row being read as data and printed in the client's deck as a bullet reading "Source family: Exact observable data point". Verified against the live script: renaming that column to `#` makes the header leak into the deck. Anyone pruning that skip-list in the script breaks this catalog.
+- **The deck prints columns 2 and 3 of each row** (source family, then the exact observable data point), so keep something real in both on every row. Extra columns to the right are free.
+- **Keep exactly one table under that heading.** The parser takes every pipe-shaped line in the section until the next `##`, so a second table there leaks its rows into the deck.
+- **Never leave `Source risks` blank** to mean "no risks." Write the honest risk, or write that the market's sources are unusually clean and why.
+- If either string ever does need to change, change the regex in the script in the same commit and re-run it against a real catalog. Never one without the other.
+
+## Stop Gates
+
+- **No per-contact reveal or verification here.** If a step would reveal or verify a person's email/phone, stop — that is Layer 2, `/email-waterfall` on a live slice.
+- **Missing client-facing source section (definition-of-done).** The catalog is not done until it carries a populated `## Market Source Landscape`, a `## Ranked Source Signals` table with at least one real row, and a non-empty `- **Source risks:**` value, all byte-exact per the format warning above. These are read straight into a client-facing deck by a script that fails silently, so an absent or reworded section is REJECTED here rather than discovered by a client. **There is no route-back on this gate**: the landscape is produced in step (a) angle 4 of this very skill, so a missing one means finish the step, never wait on another skill.
+- **Missing offer research (new-offer path).** If `offer-intelligence.md` does not exist on a new-offer path, the brainstorm would ignore the richest market/ICP evidence — route back to `/offer-intelligence` discovery mode before cataloging. On an evidence-backed existing-offer path, read the latest `offer-validations/*.md` brief instead.
+- **Brainstorm spend over ceiling.** The brainstorm itself carries no metered AI spend (no-AI-API rule, operator directive 2026-09-22). If it triggers a paid data-vendor call whose `/api-cost-governance` estimate meets or exceeds `run_state.spend_ceiling_usd`, stop and confirm.
+- **No offer lock.** If no offer set is locked (neither `offer.lead_magnet` / CTA direction nor any `offer.segments` entry), `campaign_value` cannot be scored — route back to `/lead-magnet-brainstorm` / `/offer-intelligence` first.
+- **No `output_type` / `allowed_values` on a `collect_now` column (definition-of-done).** Nothing enters `collect_now` without `output_type` defined, and — for any `enum` or `range` — `allowed_values` defined (core columns use the fixed vocabulary in the Schema Contract; extensions declare their own in the table). A `collect_now` enum/range with no `allowed_values` is the silent-zero trap — stop and define it before collection.
+- **No `fill_method` (or no `derived_from` on a derived column) on a `collect_now` column (definition-of-done).** Nothing enters `collect_now` without `fill_method` declared. A `derived` column must name its `derived_from` inputs, and every named input must itself be a collected column (bottoming out in scraped facts). A column that is neither cleanly **scraped** from a named `source_tool` nor cleanly **derived** from named in-row columns is a **guess** — it does not belong in `collect_now`. A derived column with no recorded basis is rejected, not collected.
+- **No `gate_role` on a scraped `collect_now` column (definition-of-done).** Every `fill_method = scraped` `collect_now` column must declare `gate_role` = `qualify` or `enrich` — it is the tag `/tam-build` sequences qualify-vs-enrich on, so an untagged scraped column would have no home in either pass. A scraped `collect_now` column with no `gate_role` is rejected until tagged. (Core identity/firmographics and free `derived` columns are `n/a` and need no tag.)
+- **No `scoring_use` value (definition-of-done).** Every core and `collect_now` field must declare whether it can support one score component or `none`. A source confidence, similarity, legacy score, or deal-value field must use `none` unless it supplies factual evidence for a named component. The field itself never grants points.
+- **No custom-trigger attempt (definition-of-done).** Every run must ATTEMPT at least one **proprietary trigger** unique to THIS client's business: a bespoke `industry_specific` / `market_specific` column (Tier 3 above) that is a why-now trigger, not just a firmographic descriptor. The brainstorm's forcing angles 1 and 2 in step (a) already ask the question that produces one; this gate makes the answer non-optional. The catalog must record EITHER the trigger(s) found OR an explicit, reasoned "no honest trigger found" note naming what was considered and why it was rejected. Silent omission is exactly what this gate exists to catch, so a catalog carrying neither is REJECTED until one is written.
+  - **The gate forces the ATTEMPT, never the invention.** An honest, reasoned blank PASSES. A fabricated trigger FAILS, a generic signal dressed up as bespoke FAILS, and a standard column wearing a new name FAILS. A static bespoke fact does not discharge the attempt either (`has_hipaa_page` is a descriptor; a breach notification filed in the last 90 days is a trigger), because a trigger carries a time dimension. Its job is to say why NOW.
+  - **Value is client-conditional, not a promise.** A HIPAA breach-notification trigger is genuinely high-value for a healthcare-AI client. A generic B2B SaaS client may have no proprietary trigger worth the tokens, and recording that honestly is a PASS, not a miss.
+  - **Why it earns a gate.** A custom trigger is Eric Nowoslawski's only S-tier signal, ranked above every off-the-shelf signal, because it is the one signal that cannot be commoditised. His example: a Google-reputation-management firm watching for a new negative review, where the "customer complaints" signal he ranks A/B tier generically is S-tier for that one business.
+  - **Runnable in-stack today.** Define the trigger as a search and run it as one batched research pass across the survivor domains: Claude Code sub-agents over disjoint domain batches, each using WebSearch/WebFetch and writing its own output file per `/personalization-subagent-pattern`. There is no per-domain AI spend (no-AI-API rule, operator directive 2026-09-22); the real limit is session time, so size the batches before committing to a very large survivor set.
+
+## What to do next
+
+Run `/tam-build`. It collects the catalog across the broad marketable universe, writes the company and contact TAMs, and preserves the fields marked by `scoring_use`. Then run `/lead-scoring` to build the governed P1 through P5 queue. `/campaign-strategy` may run only after scoring is complete. Its launch floor remains at least 500 target companies, while lower-scored eligible contacts remain queued rather than deleted.
+
+## Related Skills
+
+- `/ask-eric` - the live home of the Eric doctrine this skill cites inline ("the list is the message" / the sold-to axis, and the custom trigger as his only S-tier signal). Full tier list in `eric-doctrine.md` section 8. Advisory only.
+
+- `/cold-email-kickoff` - invokes this skill at Step 3.3 (after offer lock, before TAM build)
+- `/lead-source-strategy` - Lead Source Plan Mode, which runs much later (after `/campaign-strategy` and campaign selection) and owns the per-campaign source path plus the per-slice provenance fields. It is not an input to this skill and this skill does not wait on it
+- `/campaign-approval-brief` - builds the client-facing deck; reads `## Ranked Source Signals` and `- **Source risks:**` out of this skill's catalog (see the format warning in Output)
+- `/lead-list-tech-stack-research` - obtainability backbone (tool-fit map, Layer-1/Layer-2 cost split)
+- `/stack-setup` - fills `stack-contract.yaml`; obtainability cannot be judged against an empty contract
+- `/ai-model-routing` - routes the brainstorm on Claude Code alone (`/deep-research` primary, WebSearch/WebFetch gap-fill, sub-agent crunch); records `ai_*_provider` provenance
+- `/api-cost-governance` - gates the brainstorm spend
+- `/tam-build` - consumes the catalog and collects the `collect_now` tier (runs next)
+- `/lead-scoring` - maps the collected evidence into the fixed 10-point priority score
+- `/campaign-strategy` - slices the scored TAM per data point after scoring is complete
+- `/experiment-design` - mines untested slices: combinations of the fully-collected columns, plus any genuinely-new `in_reserve` points added at refresh

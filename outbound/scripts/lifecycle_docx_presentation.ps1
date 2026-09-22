@@ -190,6 +190,7 @@ function Read-SequenceYaml {
         Name = $name
         Summary = $summary
         Steps = $steps
+        Sections = @()
         Notes = @()
     }
 }
@@ -207,6 +208,20 @@ function Get-MarkdownBodyParagraphs {
     return $paragraphs
 }
 
+# Non-email sections (## Call Script, ## Confirmation Page) keep one paragraph per source line,
+# so script labels and FAQ Q/A lines stay on their own lines in the DOCX.
+function Get-SectionParagraphs {
+    param([string] $Body)
+    $paragraphs = New-Object System.Collections.Generic.List[string]
+    foreach ($part in ($Body -split "`r?`n")) {
+        $clean = $part.Trim()
+        if ($clean.Length -gt 0) {
+            $paragraphs.Add((Convert-DocText $clean))
+        }
+    }
+    return $paragraphs
+}
+
 function Read-LifecycleMarkdown {
     param([Parameter(Mandatory=$true)] [string] $Path)
 
@@ -215,6 +230,7 @@ function Read-LifecycleMarkdown {
     $when = New-Object System.Collections.Generic.List[string]
     $notes = New-Object System.Collections.Generic.List[string]
     $steps = New-Object System.Collections.Generic.List[object]
+    $sections = New-Object System.Collections.Generic.List[object]
     $mode = ""
     $current = $null
     $inFence = $false
@@ -251,6 +267,22 @@ function Read-LifecycleMarkdown {
             Finish-Current
             $current = $null
             $mode = "notes"
+            continue
+        }
+
+        # Call script (interested-reply.md) and confirmation page (pre-call.md) are not emails:
+        # render them as their own headed sections, before the sequence if they come first.
+        if ($line -match '^##\s+(Call Script|Confirmation Page)\s*$') {
+            Finish-Current
+            $mode = "section"
+            $current = [pscustomobject]@{
+                Header = $Matches[1].Trim()
+                Subject = ""
+                Body = ""
+                Meta = New-Object System.Collections.Generic.List[string]
+                BeforeSequence = ($steps.Count -eq 0)
+            }
+            $sections.Add($current)
             continue
         }
 
@@ -303,6 +335,12 @@ function Read-LifecycleMarkdown {
             continue
         }
 
+        # Sections keep unfenced lines too, so a call script written as plain lines is not dropped.
+        if ($mode -eq "section" -and $current) {
+            $bodyLines.Add($line)
+            continue
+        }
+
         if ($mode -eq "when" -and $line.Trim().Length -gt 0 -and $line.Trim() -ne "---") {
             $when.Add($line.Trim().TrimStart("-").Trim())
             continue
@@ -328,6 +366,7 @@ function Read-LifecycleMarkdown {
         Name = $title
         Summary = $when
         Steps = $steps
+        Sections = $sections
         Notes = $notes
     }
 }
@@ -404,6 +443,22 @@ function Add-EmailBlock {
     }
 }
 
+function Add-SectionBlock {
+    param(
+        [Parameter(Mandatory=$true)] $Doc,
+        [Parameter(Mandatory=$true)] $Section
+    )
+    Add-Heading -Doc $Doc -Text ([string]$Section.Header) -Level 1 | Out-Null
+    foreach ($item in $Section.Meta) {
+        if (-not [string]::IsNullOrWhiteSpace([string]$item)) {
+            Add-Paragraph -Doc $Doc -Text ([string]$item) -FontSize 9.5 -SpaceAfter 2 | Out-Null
+        }
+    }
+    foreach ($paragraph in (Get-SectionParagraphs -Body ([string]$Section.Body))) {
+        Add-Paragraph -Doc $Doc -Text $paragraph -Style "List Paragraph" -FontSize 10 -SpaceAfter 6 | Out-Null
+    }
+}
+
 switch ($FlowType) {
     "followups" {
         $flow = Read-SequenceYaml -Path $resolvedSource
@@ -413,12 +468,12 @@ switch ($FlowType) {
     "interested-reply" {
         $flow = Read-LifecycleMarkdown -Path $resolvedSource
         if ([string]::IsNullOrWhiteSpace($DocTitle)) { $DocTitle = "Interested-Replies Sequence" }
-        if ([string]::IsNullOrWhiteSpace($Intro)) { $Intro = "What gets sent when someone replies with interest and then goes quiet." }
+        if ([string]::IsNullOrWhiteSpace($Intro)) { $Intro = "What gets sent, and said on the call, when someone replies with interest, including the follow-ups if they have not booked yet." }
     }
     "pre-call" {
         $flow = Read-LifecycleMarkdown -Path $resolvedSource
         if ([string]::IsNullOrWhiteSpace($DocTitle)) { $DocTitle = "Pre-Call Nurture Flow" }
-        if ([string]::IsNullOrWhiteSpace($Intro)) { $Intro = "What gets sent between booking and the call." }
+        if ([string]::IsNullOrWhiteSpace($Intro)) { $Intro = "The confirmation page the prospect sees at booking, and what gets sent between booking and the call." }
     }
     default {
         throw "Unsupported FlowType '$FlowType'. Use followups, interested-reply, or pre-call."
@@ -457,11 +512,19 @@ try {
         }
     }
 
+    foreach ($section in $flow.Sections) {
+        if ($section.BeforeSequence) { Add-SectionBlock -Doc $doc -Section $section }
+    }
+
     Add-Heading -Doc $doc -Text "Sequence" -Level 1 | Out-Null
     foreach ($step in $flow.Steps) {
         foreach ($variant in $step.Variants) {
             Add-EmailBlock -Doc $doc -Header $step.Header -Label $variant.Label -Subject $variant.Subject -Body $variant.Body -Meta $variant.Meta
         }
+    }
+
+    foreach ($section in $flow.Sections) {
+        if (-not $section.BeforeSequence) { Add-SectionBlock -Doc $doc -Section $section }
     }
 
     if ($flow.Notes.Count -gt 0) {

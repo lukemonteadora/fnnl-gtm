@@ -1,11 +1,13 @@
 ---
 name: list-quality-scorecard
-description: Pre-send quality scorecard for a scored and verified lead list. Blocks hard-no leakage, missing governed scores, bad identities, weak provenance, and unsafe emails. Reports the P1 through P5 mix without penalizing adjacent lower-score leads. Run after /email-waterfall and before upload.
+description: Pre-send quality scorecard for a scored and verified lead list. Row-level first, it drops or quarantines failing rows (suppressed, duplicate, broken-name, bad-title, domain-mismatch) and grades the remainder, and it blocks the whole list only on a systemic failure (unverified rows, SERP-sourced or pattern-named contacts, exclusion or scoring leakage). Reports the P1 through P5 mix without penalizing adjacent lower-score leads. Run after /email-waterfall and before upload.
 ---
 
 # List Quality Scorecard
 
 A CSV of 5,000 leads is not the same as a good list of 5,000 leads. This skill grades your list across 9 dimensions BEFORE you send, catching preventable waste.
+
+**Row-level first (Aaron process alignment, operator directive 2026-09-22; supersedes the house rule that one whole-list letter grade decides the list, with "rebuild the list" at F).** Failing rows are dropped or quarantined, then the 9 dimensions and the letter grade are computed on the remainder, and the grade B upload gate applies to that remainder. Only a systemic failure blocks the whole list. Aaron's Sep 21 scorecard works this way: he removed 151 already-suppressed rows and 150 rows with broken name fields, then shipped the rest.
 
 ## Material Decision Rule
 
@@ -53,11 +55,15 @@ A CSV with at minimum these columns:
 ## Output
 
 A markdown scorecard saved to `profiles/<business-slug>/campaigns/<campaign-slug>/list-quality-scorecard.md` (the canonical campaign directory; matches `email-waterfall`'s `email-waterfall-report.md`). If no campaign slug is set yet, save to `profiles/<business-slug>/list-quality-scorecard.md`. The scorecard contains:
-- **Letter grade** (A+ to F)
-- **9 dimension scores** (each 0-100)
+- **Systemic check result** (pass, or the systemic failure that blocks the whole list)
+- **Row-level cleanup summary** (rows dropped, quarantined, or moved back to the stagger queue, per check, and the share of the list each check removed)
+- **Letter grade** (A+ to F), computed on the remainder
+- **9 dimension scores** (each 0-100; Dimension 5 may read N/A)
 - **Top 5 issues to fix**
 - **Pre-send checklist**
 - **P1 through P5 distribution**, median score, and low-confidence count
+
+It also rewrites the send file. The clean remainder is written back as `leads.verified.csv` (the file every downstream gate and the upload read), after the pre-scorecard file is kept as `leads.verified.pre-scorecard.csv` so every removal stays auditable. Quarantined rows go to `leads.review.csv` with `review_reason = scorecard_<check>` (add the `review_reason` column when the file does not carry one yet). Same-wave overflow rows go back to the stagger queue in the scored source file. Dropped rows (suppression matches, duplicate emails) leave the send file but stay in the pre-scorecard copy, so nothing is deleted. The list workbench's send-list table still holds the pre-scorecard rows, because a webhook push appends and cannot remove, so the scorecard states the removed count and the operator filters those rows there; the upload reads the local file either way.
 
 ## AI/API Routing
 
@@ -67,15 +73,26 @@ Grading this list is a structured-output / classification job, so when a model i
 
 Create the scorecard by reading the CSV directly or using the user's available spreadsheet/script tooling. Optional `client-profile.yaml` context lets the scorecard compare your list against declared ICP filters from `/icp-onboarding`.
 
-## Lead-scoring integrity gate
+## Step 1: systemic blocks (the whole list fails)
 
-Run this binary gate before calculating the 9 dimensions. Fail the list and route it back to `/lead-scoring` or `/email-waterfall` when any send-file row has:
+Run these binary checks before any row-level cleanup. Each one means an upstream gate failed, so no row in the file can be trusted and dropping the bad rows would hide the fault. Fail the list and route it back:
 
-- `send_eligible != true`, an exclusion reason, an explicit hard-no, a suppression match, or `fit_status = bad` / `co_fit_status = bad`.
-- A blank or invalid `lead_score`, `priority_tier`, `score_reason`, `score_version`, or `scored_at`.
-- A score outside 2.0 to 10.0 or a tier that does not match the numeric score.
-- `same_wave_eligible != true` for the current active wave.
-- A score version that differs from the active client-and-offer rubric.
+- **Unverified rows.** Any send-file row whose email did not pass the email verifier to the `/email-waterfall` standard. Route back to `/email-waterfall`.
+- **SERP-sourced or pattern-named contacts.** Any contact discovered from a LinkedIn or Google search with an AI title-picker, or a list whose names were pattern- or index-constructed by its discovery source (Dimension 9's provenance check). Route back to contact discovery.
+- **Exclusion or scoring leakage (the `/lead-scoring` gate failed).** Any row with `send_eligible != true`, an exclusion reason, an explicit hard-no, or `fit_status = bad` / `co_fit_status = bad`; a blank or invalid `lead_score`, `priority_tier`, `score_reason`, `score_version`, or `scored_at`; a score outside 2.0 to 10.0 or a tier that does not match the numeric score; or a score version that differs from the active client-and-offer rubric. Route back to `/lead-scoring`.
+
+## Step 2: row-level cleanup (drop or quarantine, then grade the rest)
+
+When no systemic block fires, clean the file row by row, then compute the 9 dimensions on the remainder:
+
+- **Suppression match:** drop. `/email-waterfall` already stops before any paid spend on a suppressed row, so a match here is one added after that check (new unsubscribes and negative replies from live campaigns). It is removed, not a list failure.
+- **Duplicate email:** drop all but the highest-scored row.
+- **`same_wave_eligible != true`:** move back to the stagger queue (a later wave), never deleted.
+- **Broken name fields on individual rows** (blank last name, all-caps, email-as-name, "Admin", "Info"): quarantine.
+- **Bad title** (Dimension 6 patterns) and **domain mismatch** (Dimension 8's domain-relevance check): quarantine. Role or generic mailboxes are not removed here; Dimension 7 grades their share.
+- **A row whose copy states a row-level signal it has no evidence for** (only when Dimension 5 applies): move it to the offer-led variant with no signal line, or quarantine it.
+
+Report the count and share each check removed. A large share is a source-quality finding for `/lead-source-strategy` and the next build, not a block on the clean remainder.
 
 Report the score distribution. Do not lower the grade because the list contains P3, P4, or P5 rows. Those are marketable adjacent leads by design. Grade identity, provenance, suppression safety, verification, and evidence integrity instead.
 
@@ -90,7 +107,7 @@ Report the score distribution. Do not lower the grade because the list contains 
 ### 2. Duplicate email rate
 
 - **What:** % of duplicate emails in the list
-- **Rule:** <1% acceptable, >5% is a problem
+- **Rule:** <1% acceptable, >5% is a problem. Duplicates are dropped in Step 2, so the remainder normally reads 100 here; the pre-cleanup rate goes in the cleanup summary as a source-quality finding.
 - **Score:** 100 at 0%, drops linearly
 
 ### 3. Duplicate domain rate
@@ -103,19 +120,20 @@ Report the score distribution. Do not lower the grade because the list contains 
 
 - **What:** % of rows with a plausible buying role under the approved lead-scoring rubric
 - **Rule:** On governed lists, `contact_role_points > 0` and `send_eligible = true` pass. Exact titles should score higher, but approved influencers and adjacent stakeholders do not reduce quality merely because their title is not exact. On legacy unscored lists only, fall back to the old exact-title and synonym check.
-- **Score:** 100 when every row has a plausible buying role. Force the integrity gate to fail if an unrelated role leaked into the send file.
+- **Score:** 100 when every row has a plausible buying role. An unrelated role in the send file is scoring leakage: force the Step 1 systemic block.
 
-### 5. Source signal integrity
+### 5. Source signal integrity (scored only when the copy references a row-level signal)
 
-- **What:** % of rows with a clear source, signal, fit reason, and evidence when required
-- **Rule:** If the campaign references a source signal, each referenced row needs `evidence_url` or a strong provider/source note. Weak source proof makes personalization unsafe.
+- **When it applies (Aaron process alignment, operator directive 2026-09-22; supersedes scoring it on every list):** only when the copy references, or the campaign plan says the copy will reference, a row-level signal, meaning a per-row fact stated about that prospect (a job post, a funding round, an event appearance, a tech install). Otherwise mark it **N/A** and drop it from the weighting, so a broad offer-first list is never marked down for a signal it never claimed. Aaron's own scorecard checks relevance (titles, ICP alignment, domain relevance, bad filtering), not signal provenance (Sep 21), and his lists often carry no signal (Sep 14). If copy written after this scorecard adds a row-level signal line, re-score this dimension before upload.
+- **What:** % of the signal-referencing rows with a clear source, signal, fit reason, and evidence
+- **Rule:** Each referenced row needs `evidence_url` or a strong provider/source note. Weak source proof makes personalization unsafe.
 - **Score:** 100 if >=90% have usable source proof, 50 if 60-90%, 0 if <60%
 
 ### 6. Bad-title detection
 
 - **What:** % of titles matching known-bad patterns
 - **Bad patterns:** `intern`, `assistant`, `coordinator`, `student`, `part-time`, `retired`, non-English titles when targeting US
-- **Rule:** <2% is normal, >10% means your source or title filter is too loose
+- **Rule:** <2% is normal, >10% means your source or title filter is too loose. Bad-title rows are quarantined in Step 2, so the remainder normally reads 100 here; the pre-cleanup share goes in the cleanup summary as a source-quality finding.
 - **Score:** 100 if <2%, drops sharply after
 
 ### 7. Role / generic mailbox density
@@ -129,14 +147,15 @@ Report the score distribution. Do not lower the grade because the list contains 
 - **What:** % of rows with a plausible customer relationship and current governed score
 - **Requires:** the active rubric and scored fields on governed lists
 - **Rule:** `company_market_points + company_offer_points > 0`, `send_eligible = true`, and no explicit exclusion pass. Ideal firmographics score higher for ordering, but an approved adjacent industry, serviceable size, or expansion geography does not lower the QA grade. On legacy unscored lists only, fall back to direct profile filters.
+- **Domain relevance (folded in here, Aaron process alignment, operator directive 2026-09-22):** each row's email domain matches its `company_domain`, and that `company_domain` is the company that was scored as the ICP match. A mismatch (a free-mail address, a different company's domain, a stale parent or acquired-company domain) is quarantined in Step 2 with `review_reason = scorecard_domain_mismatch`, since some mismatches are legitimate (a separate corporate email domain) and a person can confirm them. Aaron names "domain relevance" as one of his Sep 21 scorecard checks without defining it, so this reading is the house's.
 
 ### 9. Name quality (gate — fabricated/pattern names fail the list)
 
 - **What:** % with both first_name AND last_name populated AND looking like a **real, verifiable** human
 - **Checks:** Not all-caps, not fake names ("Admin", "Info"), not email-as-name, and **not pattern/index-constructed** (e.g. a name back-derived from a `{first_initial}{last_name}@domain` email, or a DiscoLike `search-contacts` index-mode row). A real first + last name is the `/email-waterfall` finder key — a list missing it, or carrying fabricated names, is not Layer-2-valid and must be re-discovered via `generate-contacts`/a people-DB before it can be enriched or sent.
 - **⛔ PROVENANCE CHECK — how were these people discovered? (hard gate, operator directive 2026-07-17.)** Read the list's `source` / discovery provenance. **Any contact discovered from a LinkedIn/Google search (Serper `site:linkedin.com/in` + an AI title-picker) FAILS the list** — that method is banned in `/email-waterfall` because Google's cached snippets carry no employment-currency signal, so it returns people who have **retired or left the company**. ⚠ **This dimension is the ONLY gate that can catch it, so it cannot be skipped.** Every other check goes green on these rows: the name is a real human, the LinkedIn URL is real, and a departed person's old mailbox often still verifies `valid`. Staleness is invisible to every test except "where did this person come from?" — so ask that question here. Contacts must come from a database with a **current-employer field** (Clay `search-contacts`, A-Leads `advanced_search`, ContaGen, Prospeo / LeadMagic). A list that cannot state its contact-discovery source does not pass. (This does not penalize the sanctioned Serper+OpenAI *backfill* of a `linkedin_url` onto a contact discovered from a real DB — that is a field fill, not a discovery source.)
-- **Rule:** 95%+ real first+last names acceptable; any meaningful share of pattern/fabricated names is a hard fail (route back to contact discovery, do not send). **A SERP-discovered contact set is likewise a hard fail regardless of name quality** — re-discover from a current-employer database before sending.
-- **Score:** 100 if 95%+ real-named, drops linearly; force to fail if pattern/fabricated names are detected.
+- **Rule:** Broken name fields on individual rows are quarantined in Step 2 and the remainder is graded (Aaron removed 150 broken-name rows and shipped, Sep 21). Pattern- or index-constructed names produced by a discovery source are a Step 1 systemic block (route back to contact discovery, do not send), because the source itself fabricates people. **A SERP-discovered contact set is likewise a systemic block regardless of name quality:** re-discover from a current-employer database before sending.
+- **Score:** on the remainder, 100 if 95%+ real-named, drops linearly; force the Step 1 block if pattern/fabricated names from a discovery source are detected.
 
 ### LinkedIn coverage (B2B completeness — reported, not weighted into the grade)
 
@@ -147,7 +166,7 @@ Report the score distribution. Do not lower the grade because the list contains 
 
 ## Letter grade mapping
 
-Weighted average across 9 dimensions. Verification, source signal integrity, and ICP fit are weighted 2x:
+Weighted average across the 9 dimensions, computed on the remainder after Step 2. Verification, source signal integrity, and ICP fit are weighted 2x. When Dimension 5 is N/A it is removed from both the numerator and the denominator, so the total weight drops from 12 to 10 (the 8 dimensions present, with verification and ICP fit still 2x):
 
 | Average | Grade | Action |
 |---|---|---|
@@ -155,41 +174,49 @@ Weighted average across 9 dimensions. Verification, source signal integrity, and
 | 80-89 | B | Minor fixes, then ship |
 | 70-79 | C | Fix top 3 issues first |
 | 60-69 | D | Serious cleanup required |
-| <60 | F | Don't send. Rebuild the list. |
+| <60 | F | Don't send this remainder. Row-level issues were already removed, so a low grade here means a cause Step 2 cannot fix row by row: find it, fix it upstream, and re-run. |
 
 ## Example output
 
 ```
 === List Quality Scorecard ===
 
-File: leads.csv (2,147 rows)
-Grade: B (84/100)
+File: leads.verified.csv (2,147 rows)
+Systemic check: PASS (100% verified, contacts from a current-employer contact database, no exclusion or scoring leakage)
 
-Dimensions:
-1. Email verification:    100/100  (100% verified, good)
-2. Duplicate emails:       95/100  (1.1% duplicates - trim before send)
-3. Duplicate domains:      78/100  (avg 2.4 per domain - some over-concentration)
-4. Title relevance:        82/100  (85% titles match "VP Sales" / "Head of Sales")
-5. Source signal integrity: 76/100  (18% missing evidence_url for signal-based copy)
-6. Bad-title detection:    92/100  (3% Coordinators slipped in - filter)
-7. Catch-all density:      80/100  (8% catch-all - hold back for young domains; reintroduce after maturity)
-8. ICP fit:                88/100  (88% match declared industry filter)
-9. Name quality:           97/100  (good)
+Row-level cleanup (2,147 -> 1,991 rows):
+- 23 duplicate emails dropped (1.1%)
+- 31 suppression matches dropped (1.4%)
+- 64 Coordinators quarantined as bad titles (3.0%)
+- 12 broken name fields quarantined (0.6%)
+- 18 email/company domain mismatches quarantined (0.8%)
+- 8 same-wave overflow rows moved back to the stagger queue
 
-Top 5 issues to fix:
-1. 23 emails are duplicates (1.1%) - deduplicate before upload
-2. 386 rows are missing evidence_url for the campaign signal - add evidence or remove signal-based copy
-3. 64 leads are on catch-all addresses (3.0%) - hold in the catch-all holdback (reintroduce after domain maturity), not the initial send
-4. 64 Coordinators in the list - filter by seniority >= Manager
-5. 147 leads cluster on 12 domains (>5 each) - cap at 3 per domain
+Grade on the remainder: A (95/100 = weighted sum 950 / total weight 10, since Dimension 5 is N/A)
+
+Dimensions (on 1,991 rows):
+1. Email verification:     100/100  (100% verified)
+2. Duplicate emails:       100/100  (duplicates dropped in cleanup)
+3. Duplicate domains:      100/100  (avg 1.6 per domain)
+4. Title relevance:        100/100  (every row a plausible buyer; 61% exact titles)
+5. Source signal integrity:   N/A   (offer-led copy, no row-level signal line; removed from the weighting)
+6. Bad-title detection:    100/100  (bad titles quarantined in cleanup)
+7. Role mailbox density:    50/100  (6.0% role mailboxes)
+8. ICP fit:                100/100  (every row a plausible customer; 88% ideal firmographics, the rest approved adjacent)
+9. Name quality:           100/100  (97% real-named after cleanup)
+
+Top issues found:
+1. 119 role mailboxes (6.0%) remain - above Dimension 7's 5% band, so it scores 50; graded, not removed; tighten the source filter for the next build
+2. 64 Coordinators came through the title filter - tighten the seniority filter at the source for the next build
+3. 18 rows carry a different domain than the scored company - review leads.review.csv before any reintroduction
 
 Pre-send checklist:
-[ ] Deduplicate by email
+[x] Deduplicate by email
+[x] Drop suppression matches
+[x] Quarantine bad titles, broken names, and domain mismatches
+[x] Move same-wave overflow back to the stagger queue
 [ ] Hold back ALL catch-alls on a young domain (Catch-All Timing gate, /email-waterfall) - reintroduce after ~2-3 weeks of positive sending, not a permanent drop
-[ ] Filter out bad titles
-[ ] Cap per-domain concentration
-[ ] Remove or rewrite rows where the claimed signal lacks evidence
-[ ] Re-run verifier if list shrunk >10%
+[ ] If copy later adds a row-level signal line, re-score Dimension 5 before upload
 ```
 
 ## When to use
@@ -217,9 +244,11 @@ No bundled scorecard script is currently required for this skill. If the user ad
 
 Only show the upload path matching the locked `run_state.sending_platform`.
 
-**If grade < C:** fix the top 3 issues (from scorecard output), re-run this skill until grade >= B. Don't upload a C-grade list - bounces and low reply rates will damage domain reputation.
+**If the remainder grades below B:** fix the top 3 issues (from scorecard output), then re-run this skill: quarantine what can be removed row by row, regrade, and upload once the remainder reaches B. Don't upload a remainder that grades C or lower: bounces and low reply rates will damage domain reputation.
 
-**Or wait:** if large fixes are needed (missing email verification, 30%+ bad titles), address those BEFORE spending more on email-finding or enrichment.
+**If a systemic block fired** (unverified rows, SERP-sourced or pattern-named contacts, exclusion or scoring leakage): route the list back to the owning skill named in Step 1. Nothing ships until it is fixed.
+
+**If Step 2 removed a large share** (for example 30%+ bad titles): the clean remainder can still ship, but the source filter is loose. Fix it before spending more on email finding or enrichment for the next batch.
 
 ## Related skills
 

@@ -1,6 +1,6 @@
 ---
 name: interested-replies-docx-presentation
-description: Creates a compact client-facing DOCX presentation for interested-reply handling sequences from approved Markdown files such as interested-reply.md. Use when packaging what gets sent after a prospect replies positively, using the same shared cold email DOCX formatting as the campaign sequence presentation.
+description: Creates a compact client-facing DOCX presentation for interested-reply handling sequences from approved Markdown files such as interested-reply.md, including the per-category reply templates and the call script. Use when packaging what gets sent, and said on the 5-minute call, after a prospect replies positively, using the same shared cold email DOCX formatting as the campaign sequence presentation.
 ---
 
 # Interested-Replies DOCX Presentation Skill
@@ -27,11 +27,11 @@ Before packaging the DOCX, read the source Markdown and confirm the sendable cop
 1. `spam-word-checker.md`
 2. `cold-email-copy-best-practices.md`
 
-Stop and route back to `/campaign-copywriting` if the copy fails. Do not silently rewrite copy inside this DOCX skill.
+Stop and route back to `/lifecycle-copy` (the producer of `interested-reply.md`) if the copy fails. Do not silently rewrite copy inside this DOCX skill.
 
-This is post-reply (a positive reply already exists), so it inherits the parent campaign's **verified-list gate** (`verified-list-gate.md`) rather than re-checking a verified list. Confirm the parent sequence was gate-built; do not run a fresh `leads.verified.csv` check here.
+This copy is written before the campaign's Start (Gate D, reply readiness) but only ever sent after a positive reply, so it inherits the parent campaign's **verified-list gate** (`verified-list-gate.md`) rather than re-checking a verified list. Confirm the parent sequence was gate-built; do not run a fresh `leads.verified.csv` check here.
 
-Hard-stop examples include em dashes, double hyphens, mid-sentence dash separators, weak CTAs, unconfirmed CTA deliverables, follow-up-reference openers, or unsafe link and calendar usage.
+Hard-stop examples include em dashes, double hyphens, mid-sentence dash separators, weak CTAs, unconfirmed CTA deliverables, follow-up-reference openers, or unsafe link and calendar usage. **Warm copy is judged by the warm rules** (Aaron process alignment, operator directive 2026-09-22; supersedes applying the cold-sequence link and calendar bans here). The cold-sequence bans, such as `cold-email-copy-best-practices.md`'s "Keep calendar links out of emails 1-3", apply to cold steps only. In this file, "unsafe" means breaking `/lifecycle-copy`'s reply rules: a calendar link or proposed times in an asset delivery reply is a hard stop, while two specific times plus a booking link on a direct, trial or service yes or on booking intent is correct and must not be flagged. The `## Call Script` is spoken, so the email formatting rules apply only to its text-message fallback.
 
 ---
 
@@ -55,10 +55,11 @@ Keep the document simple:
 2. Short intro
 3. When to use
 4. Sequence
-5. Every email block from the Markdown file
-6. Short notes only if already present in the source
+5. Every email block from the Markdown file, including each `## Email 1: <category>` reply template
+6. Call Script (`## Call Script`: opener, two slots, prequalification questions, voicemail and text fallback), rendered as its own section after the sequence
+7. Short notes only if already present in the source
 
-The parser should read `## Email...` headings, `**Trigger:**`, `**Send as:**`, fenced email body blocks, optional subject lines, word count, and notes.
+The parser reads `## Email...` headings, `## Call Script`, `**Trigger:**`, `**Send as:**`, fenced email body blocks, optional subject lines, word count, and notes. `## Call Script` renders under its own heading with one paragraph per line and no subject line (added to `scripts/lifecycle_docx_presentation.ps1` on 2026-09-23 for the Aaron process alignment). A section that comes before the first email renders before the sequence.
 
 ---
 
@@ -98,7 +99,7 @@ node scripts\docx_to_gdoc.mjs --in "profiles\<business-slug>\Interested-Replies 
 
 ## QA
 
-After generation, open the DOCX with Word COM, confirm expected email blocks are present, export a temporary PDF sanity check, delete the PDF, and scan for mojibake markers such as garbled accented characters or garbled quote sequences.
+After generation, open the DOCX with Word COM, confirm expected email blocks and the Call Script section are present, export a temporary PDF sanity check, delete the PDF, and scan for mojibake markers such as garbled accented characters or garbled quote sequences.
 
 If a spam or best-practice issue is found, report it and route back to copy editing. Do not silently rewrite copy.
 
@@ -109,6 +110,7 @@ If a spam or best-practice issue is found, report it and route back to copy edit
 - `/cold-email-campaign-sequence-docx-presentation`
 - `/cold-email-followups-docx-presentation`
 - `/pre-call-nurture-docx-presentation`
+- `/lifecycle-copy` (writes `interested-reply.md`)
 - `/campaign-copywriting`
 
 ## Activity Log Protocol

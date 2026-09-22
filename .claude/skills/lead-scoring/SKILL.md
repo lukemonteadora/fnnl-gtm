@@ -133,7 +133,7 @@ Do not start from a generic title list. Read the real inputs first.
 
 Start from `<outbound>/reference/lead-scoring-rubric-template.yaml`, then replace every sample mapping and evidence column with client-specific values. A sample value left in place merely to satisfy validation is a failed rubric.
 
-The rubric scope is the client plus its locked offer set, with per-segment mappings: the `offer` component scores each row against its own segment's primary (`offer.segments[<segment>]` when the client has per-buyer-type offer sets, otherwise the top-level `offer` block; operator decision 2026-09-22). Do not rebuild it per campaign or per scrape. Rebuild only when the ICP or offer changes.
+The rubric scope is the client plus its locked offer set, with per-segment mappings: the `offer` component scores each row against its own segment's primary (`offer.segments[<segment>]` when the client has per-buyer-type offer sets, otherwise the top-level `offer` block; operator decision 2026-09-22). Do not rebuild it per campaign or per scrape. Rebuild only when the ICP or offer changes (an offer arm added to a live wave is a background rescore of the offer component, see Refresh).
 
 ## Normalize evidence before arithmetic
 
@@ -237,7 +237,14 @@ Priority tiers:
 - `P4`: 3.0 to 4.9
 - `P5`: 2.0 to 2.9
 
-All eligible tiers remain in the queue. Reveal and verify P1 first, then P2 through P5 as capacity becomes available. Within a company, the highest-scoring two contacts may enter the same active wave by default. Rank 3+ stays marked for a later staggered wave.
+**Every eligible contact goes out in the first wave, in score order. P1 to P5 is the send order inside the wave, never a hold (Aaron process alignment, operator directive 2026-09-22; supersedes "reveal and verify P1 first, then P2 through P5 as capacity becomes available").** `/email-waterfall` reveals and verifies the whole eligible TAM in one pass in score order, and the sequence receives it in the same order. Within a company, the highest-scoring two contacts may enter the same active wave by default. Rank 3+ stays marked for a later staggered wave. That per-company cap is a send-simultaneity guard, not a tier hold, so it survives this rule unchanged.
+
+**"Capacity" means two named limits, and neither one holds a tier back.**
+
+- **Send capacity:** the daily sends the client's warmed, active sending fleet delivers, recorded as `run_state.capacity_request.allocated_daily_sends`. `/campaign-strategy` writes the capacity request with the wave (`daily_sends_needed` = qualified contacts x sequence steps / ~5 Monday-to-Friday sending days, Aaron's one-week pace), and `/mailbox-mix-strategy` sizes the fleet to the request (or `/mailbox-pool-staging` assigns a pre-warmed pool group). A fleet that delivers less stretches the runway: the wave still covers the whole TAM, only over more days.
+- **Run budget:** `run_state.spend_ceiling_usd`, the standing $100 per client run, which caps reveal and verification spend. A whole-TAM reveal that would cross it stops and asks in `/email-waterfall`.
+
+**Coverage line (required at the end of `lead-scoring-report.md`, appended by the session after the script runs, because `scripts/lead_score.py` has no capacity input).** State: eligible contacts; days to cover at the allocated rate (eligible contacts x sequence steps / `allocated_daily_sends`, two steps by default, counted in Monday-to-Friday sending days); the estimated reveal and verification cost for the whole eligible TAM (rates from `/api-cost-governance`) against `spend_ceiling_usd`; and which limit binds. The run budget binds when the reveal estimate exceeds it. Send capacity binds when days to cover runs past about 5 sending days. Name both when both apply. `/lead-scoring` usually runs before `/campaign-strategy` writes the request, so when `capacity_request` or its `allocated_daily_sends` is absent, write "send allocation not yet filed (`/campaign-strategy` writes the capacity request)" in place of days to cover, still report the eligible count and the reveal cost against the budget, and name the budget as the binding limit whenever the estimate exceeds it. This skill never writes or edits `capacity_request` itself.
 
 Once the contact output (`contacts.scored.csv`, or `leads.scored.csv` on the external-campaign path) is written, push it to the list workbench's `scored` table as described above, and put the "pushed N/N rows to scored (list_stage=scored)" count, or the CSV-only fallback note, in the scoring report.
 
@@ -263,8 +270,8 @@ Use a stratified sample that includes exact fits, adjacent fits, weak fits, miss
 ## Refresh
 
 - Rebuild stable company and contact components only when the offer, ICP, segment mapping, or underlying firmographics change.
-- When the offer or ICP changes, immediately set `run_state.status.scoring_stage: none`, increment `score_version`, and block downstream work until the stable components are rebuilt. Promoting a winning arm inside a segment's already-scored offer set, or locking a new segment's set, is a `score_version` bump for that offer component only, never a downstream block (operator decision 2026-09-22).
-- Recalculate timing tiers and total scores during the monthly TAM refresh.
+- When the ICP changes or the locked offer set is replaced by a new lock, immediately set `run_state.status.scoring_stage: none`, increment `score_version`, and block downstream work until the stable components are rebuilt. Promoting a winning arm inside a segment's already-scored offer set, or locking a new segment's set, is a `score_version` bump for that offer component only, never a downstream block (operator decision 2026-09-22). **The same carve-out covers a new offer arm or variant added to a live wave: it triggers a background rescore of the `offer` component only, never a downstream block (Aaron process alignment, operator directive 2026-09-22).** Live cells keep sending in their current order while the rescore runs, and the new `score_version` orders only rows not yet first-touched. Aaron swaps angles inside the live campaign rather than pausing it (Mar 9).
+- Recalculate timing tiers and total scores during the monthly TAM refresh, and the same way when `/tam-build` fills a conditional signal column after `full_enriched` was set (signal columns are optional for that flag, so they can join later; Aaron process alignment, operator directive 2026-09-22). That rescore is a background `score_version` bump: rows already first-touched keep their order and nothing downstream blocks.
 - Preserve `score_version` so downstream files can prove which rubric produced them.
 - A re-score pushes the new scored file to the `scored` table as a new push (the push script refuses a duplicate of the same file). Pushes append rows rather than update them, so tell the operator to filter or clear the old rows in the table, using `score_version` or `scored_at` to tell them apart.
 
@@ -285,7 +292,7 @@ Stop and fail loud when:
 - An eligible row has no score, priority tier, confidence, or reason.
 - An ineligible row has no exclusion reason.
 - Any hard-no or suppression row is marked eligible.
-- A downstream step tries to filter out P4 or P5 merely because the score is low.
+- A downstream step tries to filter out P4 or P5 merely because the score is low, or holds any eligible tier out of the first wave.
 - A paid email step is attempted before scoring completes.
 - The list workbench push reported fewer rows than the scored CSV holds, and one retry also fell short.
 

@@ -57,7 +57,7 @@ Before presenting any questions, run the following discovery pass and build a pr
 
 5. **Business website:** If a website URL is available from context, the user's message, or an existing profile, scrape it and infer:
    - `offer_one_sentence` — from homepage headline or hero copy
-   - `buying_job_title` — from "who it's for" sections, case study job titles, or testimonial bylines
+   - `buying_function` and `seniority` (plus any example titles as `buying_job_title`) — from "who it's for" sections, case study job titles, or testimonial bylines
    - `headcount_min` / `headcount_max` — from pricing tiers ("teams of X+", "up to X seats"), case study company sizes
    - `industries_in` — from homepage imagery, case study industry labels, or category language
    - `geography` — from pricing currency, footer timezone, case study client locations, "we serve X" language
@@ -129,9 +129,16 @@ offer_one_sentence: [REQUIRED]
 best_customer: [REQUIRED]
 # Describe your single best existing customer. Who are they, what problem did they have, what result did they get?
 
-buying_job_title: [REQUIRED]
-# The job title(s) that typically make the buying decision. E.g.: "VP of Customer Success, Head of Onboarding"
+buying_function: [REQUIRED]
+# The function that makes the buying decision, not one job title. E.g.: "customer success" or "practice ownership"
 # source: inferred from case studies — confirm or correct
+
+seniority: [REQUIRED]
+# The levels that hold the decision. E.g.: "Director and above" or "owner / managing partner"
+# This is a starting point, not a ceiling: the full job-title stack is generated from the locked offer (offer.title_stack), so we never target just one title (Aaron process alignment, operator directive 2026-09-22; supersedes the single buying_job_title question).
+
+buying_job_title: [optional]
+# Any example titles you already know buy. E.g.: "VP of Customer Success, Head of Onboarding". Used as seeds for the title stack, not as the only titles we target.
 
 headcount_min: [REQUIRED]
 # Hard minimum employee count for target companies. E.g.: 50
@@ -182,13 +189,13 @@ tone: [REQUIRED]
 
 referenceable_clients: [leave blank if none yet]
 # Named customers we are ALLOWED to name in a cold email, ideally similar to who you'll target.
-# Naming a real client is what separates copy that gets replies from copy that gets ignored.
+# A real, nameable client lets us write a proof-led version of the email and keeps every claim true. It never holds up the campaign: the offer-led version sends either way.
 # E.g.: "Acme Logistics, Globex (both OK to name)." If naming is off-limits, say so and describe them instead.
 
 case_studies: [leave blank if none yet]
 # Real result stories with a before/after you will stand behind. One line each.
 # For EACH company named here, add its website/domain and which sub-industry / what-they-sell group it belongs to.
-# These case-study/customer companies become the lookalike SEEDS that /tam-build uses to build the proven-motion TAM (one group -> one seed set -> one group-TAM), so the domain and grouping matter as much as the story.
+# The ones that fit the offer we lock become the first lookalike SEEDS: /social-proof-bank picks the 5 to 10 companies that best fit the locked offer (your fitting case studies and customers first, researched lookalike exemplars to top up), and /tam-build builds each group's TAM from them. So the domain and grouping matter as much as the story (Aaron process alignment, operator directive 2026-09-22).
 # E.g.: "Cut Acme's (acme.com, group: 3PL logistics) monthly billing reconciliation from 12 hours to under 2."
 
 hard_numbers: [leave blank if none yet]
@@ -250,7 +257,7 @@ When the user returns the completed form, run validation before writing any file
 - `geography` includes markets known to have weak database coverage (e.g., Southeast Asia, sub-Saharan Africa): note that `/lead-source-strategy` will need to research local sources carefully.
 - `credentials_ready = partial` or `no`: warn that setup phases will stall without credentials.
 - `execution_mode = auto_execute`: the user has opted into hands-off auto-selection of offer and campaign. Confirm once that they intend the system to choose without pausing at those gates.
-- All three proof fields (`referenceable_clients`, `case_studies`, `hard_numbers`) blank: warn that the proof-asset gate will fire at strategy/copy time and a proof-asset-request form (proof-asset-request.md) will go to the client to collect real evidence before copy that needs it is written. Collecting it now avoids that round-trip. (These three fields plus `triggers` are the **first self-gather source** for `/social-proof-bank`, which builds the full copy-ready Social Proof + Trigger Bank later in the flow — anything captured here is one less thing that skill has to ask the client for.) The named case-study/customer companies (with their domains, grouped by sub-industry / what-they-sell) are also the lookalike **seeds** for `/tam-build`'s proven motion, and the result/timeframe/named-client facts are exactly what `/social-proof-bank`'s **Seed-and-Proof Readiness** gate checks before a proven-motion group's TAM is built, so capturing them up front is worth the extra minute.
+- All three proof fields (`referenceable_clients`, `case_studies`, `hard_numbers`) blank: warn that the proof-asset gate will fire at strategy/copy time and a proof-asset-request form (proof-asset-request.md) will go to the client to collect real evidence before copy that needs it is written. Collecting it now avoids that round-trip. (These three fields plus `triggers` are the **first self-gather source** for `/social-proof-bank`, which builds the full copy-ready Social Proof + Trigger Bank later in the flow — anything captured here is one less thing that skill has to ask the client for.) The named case-study/customer companies (with their domains, grouped by sub-industry / what-they-sell) are also the first candidates for the lookalike **seeds**, the 5 to 10 companies that best fit the locked offer, topped up with researched exemplars when the client has fewer (Aaron process alignment, operator directive 2026-09-22), and the result/timeframe/named-client facts are exactly what `/social-proof-bank`'s **Seed-and-Proof Readiness** gate checks before a proven-motion group's TAM is built, so capturing them up front is worth the extra minute.
 
 ## Step 4: Write Profile Files
 
@@ -279,7 +286,9 @@ icp:
   source: intake_form
   offer_one_sentence: <value>
   best_customer: <value>
-  buying_job_title: <value>
+  buying_function: <value>
+  seniority: <value>
+  buying_job_title: <value or null>   # example titles only; offer.title_stack is the full stack, written at offer lock
   headcount_min: <value>
   headcount_max: <value>
   industries_in: <value>

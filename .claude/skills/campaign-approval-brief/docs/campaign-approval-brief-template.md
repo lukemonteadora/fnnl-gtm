@@ -60,13 +60,13 @@ Author in exactly this order. Headings must match verbatim. Do **not** hardcode 
 3. **`## 2. The Campaigns At A Glance`**: a table with the **fixed columns** `# | Campaign | Reaches | Offer | Role | Status`; emoji status (✅ Ready / ⚠️ / ⛔), **plain role labels** (see vocabulary below), then a short "why these" paragraph or bullet list and the no-overlap line.
 4. **`## 3. Campaign Details`**: one `### Campaign N: <Name> (<count>)` block per campaign. Each block is a two-column table with the **fixed rows** `Who we email / Why they're on this list / What we offer / How we build it / Expected volume / Copy`, followed by **2–3 bullets**: *why the signal matters*, *why this role (<plain label>)*, and *the main risk and how we handle it*, all in plain words, no vendor names, no filter syntax.
 5. **`## 4. How We Write & Personalize The Emails`**: **Step 1–4**, written once for all campaigns and placed **after** the campaigns:
-   - **Step 1: The sequence.** Describe the short single-thread sequence of 2 to 3 emails over ~two weeks per contact, two versions of the first email to test, reply stops the sequence.
+   - **Step 1: The sequence.** Describe the short single-thread sequence: two emails per contact, three days apart, sent Monday to Friday (a third only for a small market or as a tested arm), three versions of the first email to test, reply stops the sequence (Aaron process alignment, operator directive 2026-09-22).
    - **Step 2: What gets personalized.** A plain table with columns `What we mention | Example | Where it comes from`, with **no `{{braces}}`**.
    - **Step 3: Per-company build (before send).** What the per-company research names, in plain words.
    - A **quality-rule blockquote** (`>`): every personalized claim must point to something real; if we can't see it, we don't say it.
    - **Step 4: Load and send.** Light per-recipient variation (with the deliverability gloss), loaded as a **paused draft**, one consistent sender across the warmed mailboxes, nothing sends until the client starts it.
 6. **`## 5. Copy Preview`**: every saved variant from `variants.yaml` as blockquotes (one per email variant), **or** the standard pre-list-build placeholder when the brief is written before the list exists (its normal timing). Never invent copy here.
-7. **`## 6. What We Need From You`**: **strategic, client-facing decisions only** (approve offers/order, suppression list, proof/claims they're comfortable using, any asset-gate or budget decision). Open with "Mark any you want changed; silence means approved." **Exclude** all technical/internal setup (API keys, workspace IDs, verifier/mailbox/registrar/warmup setup, source-workflow build steps).
+7. **`## 6. What We Need From You`**: **strategic, client-facing decisions only** (approve offers/order, suppression list, proof/claims they're comfortable using, any asset-gate or budget decision, and the reply-readiness items only they can supply: who on their team calls an interested reply and the booking calendar, when their team takes those calls, plus the qualifying questions for a trial, service or custom-work offer they deliver). Open with "Mark any you want changed; silence means approved." **Exclude** all technical/internal setup (API keys, workspace IDs, verifier/mailbox/registrar/warmup setup, source-workflow build steps).
 8. **`## 7. What Happens Next`**: the operational sequence in plain language (no skill slugs, no vendor names) + a "Things we won't skip" line with the per-campaign stop gates.
 9. **`## 8. How We Protect Your Reputation`**: the deliverability and compliance guardrails in plain words.
 10. **`## Appendix A: Other Options We Considered`**: alternatives + rejected offers, listed **once** (never repeat an alternatives list inside campaign sections). If alternatives are not explicit in artifacts, write `Not captured in current artifacts.`
@@ -138,7 +138,7 @@ Copy everything between the rules below into `profiles/<business-slug>/campaign-
 
 **Who we're reaching.** <The audience and the decision-makers we target, in plain words.>
 
-**What we'll offer them.** <The offer in one plain sentence: what each prospect actually gets, and why it's useful on its own. If one offer across all lists, say so. When several offers are under test, list the first flight and the queue exactly as the offer slate (`offer-test-slate.md`) showed them, each with its buyer type; offers still in the test are never filed under "not selected".>
+**What we'll offer them.** <The offer in one plain sentence: what each prospect actually gets, and why it's useful on its own. If one offer across all lists, say so. When several offers are under test, say plainly that every company that fits is loaded in the first send, split evenly between the offers on every list so each offer gets a fair, equal share, and that as soon as one offer clearly wins, everyone not yet emailed gets the winning offer. List the offers in that first send, and any queued behind them, exactly as the offer slate (`offer-test-slate.md`) showed them, each with its buyer type; offers still in the test are never filed under "not selected".>
 
 **<The unifying idea>.** <e.g. "Why three lists, one offer" or "One list, three offers, one winner": what's held constant and what that lets us learn.>
 
@@ -173,7 +173,7 @@ No company appears in more than one list, so the campaigns never compete for the
 | **Why they're on this list** | <the exact signal, in plain words> |
 | **What we offer** | <the offer for this list, one sentence> |
 | **How we build it** | <plain: take the list companies showing the signal, then look up + verify the right contact, with no tool names> |
-| **Expected volume** | <N companies → 1–2 verified decision-makers each> |
+| **Expected volume** | <N companies → every matching decision-maker at each, about <n> verified contacts> |
 | **Copy** | Drafted after the list is built |
 
 - **Why the signal matters:** <why the opener's premise is true and lands as expertise, not a pitch>.
@@ -186,19 +186,19 @@ No company appears in more than one list, so the campaigns never compete for the
 
 ## 4. How We Write & Personalize The Emails
 
-**Step 1: The sequence.** A short sequence of 2 to 3 emails over about two weeks per contact, all in one thread (the follow-ups build on the first email rather than repeating the same ask). We write two versions of the first email to test, and a reply always stops the sequence.
+**Step 1: The sequence.** Two short emails per contact, three days apart and sent Monday to Friday, in one thread (the follow-up builds on the first email rather than repeating the same ask). A third email is added only for a small market or as a test. We write three versions of the first email to test against each other, and a reply always stops the sequence.
 
-**Step 2: What gets personalized.** Every email is filled in from facts we already hold about each company, so it reads like a person who looked, not a mass mail-merge:
+**Step 2: What gets personalized.** Each campaign sends one shared message, and at most two facts about each company are filled in inside the offer itself, so the offer names the right thing for them without guessing:
 
 | What we mention | Example | Where it comes from |
 |---|---|---|
-| The company's name | "<Example>" | The list we built |
-| What they do, in a line | "<a one-line descriptor>" | Their website (already read) |
-| Why they're on this list | <the signal, plain> | The signals we checked on each site |
-| One specific, public detail about them | <example> | Our AI reads the site as we build each email |
-| The contact's first name | "<Example>" | The contact look-up step |
+| The contact's first name (optional) | "<Example>" | The contact look-up step |
+| What they sell, in a short phrase | "<example>" | Their own website, with the page saved as the source |
+| Who they sell to | "<example>" | Their own website, with the page saved as the source |
+| Their own best client, as the one our offer is for | "<example>" | Their own case studies or client list, with the page saved |
+| Why they're on this list, only when it is true of every company on it | <the shared reason, plain> | The list itself, so it is the same for everyone |
 
-**Step 3: Per-company build (before send).** <What the per-company research names (that company's own site, portal or setup) so the opener reads like a specialist who looked.>
+**Step 3: Per-company build (before send).** <What the per-company research fills in from that company's own site (what they sell, who they sell to, or their own best client), so the offer names the right thing for that company. A company we can't confirm a fact for gets the version of the email without it.>
 
 > Quality rule: every personalised claim must point to something real on the company's own site. If we can't see it, we don't say it.
 
@@ -221,6 +221,8 @@ Mark any you want changed; silence means approved.
 1. **<Approve the offers / order>**: <the core strategic approval>.
 2. **Suppression list**: any existing customers, active deals, or partners you do **not** want contacted.
 3. **Proof you're comfortable using**: confirm which named clients, results, or claims we may reference, and flag anything off-limits.
+4. **Who calls back a yes** <only when your team takes the calls>: the person on your team who calls anyone who replies with interest, ideally within about 5 minutes, and the booking calendar we offer two times from.
+5. **Who gets the free <thing we offer>** <only for a trial, service or custom-work offer you deliver>: the few short questions that decide who gets it and who gets your standard offer instead.
 <Add any asset-gate or budget decision here, with a clear recommendation.>
 
 If none of these companies are existing relationships, just tell us and we proceed.
@@ -230,12 +232,12 @@ If none of these companies are existing relationships, just tell us and we proce
 ## 7. What Happens Next
 
 1. You approve this brief (<the decisions above>).
-2. We build and verify the decision-maker contact lists.
+2. We build and verify the decision-maker contact lists. Every contact is checked on its own, any that fail are removed, and then the list as a whole is graded.
 3. We write the copy and run it through our quality gates, then share it for your approval.
-4. We load the campaigns as **paused drafts** in your sending platform.
-5. Once your mailboxes finish warming and pass deliverability checks, **you** start sending.
+4. We set up reply handling before anything sends (a reply for each kind of answer, a short call script, and the page someone sees after booking), then load the campaigns as **paused drafts** in your sending platform.
+5. Once your mailboxes finish warming and pass deliverability checks, **you** start sending. Every company on the list goes into that first send on weekdays, we read the results daily in the first week, and the winning offer then goes to everyone not yet emailed.
 
-**Things we won't skip:** verified contacts only; copy passes our spam, best-practice and call-to-action checks; the list graded B or higher; mailboxes confirmed warmed and authenticated before any real send.
+**Things we won't skip:** verified contacts only; copy passes our spam, best-practice and call-to-action checks; every contact checked and failing ones removed before the list is graded B or higher; reply handling ready before the first send; mailboxes confirmed warmed and authenticated before any real send.
 
 ---
 
