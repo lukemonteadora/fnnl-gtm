@@ -19,7 +19,7 @@ A skill that does any of the following MUST NOT proceed past its first generativ
 
    If `lead_data.email_verification` is still `not_chosen` or `held`, this condition cannot be satisfied at all: there is no verifier of record, so no slice is verified. Route to `/stack-setup` rather than accepting a finder's internal check in its place.
 2. **LIST GRADE.** That slice has passed `/list-quality-scorecard` with grade **B or better**.
-3. **LOCKED STRATEGY.** The campaign is a selected row in the client's `campaign-strategy.md`; its `lead-source-plan.md` exists; `client-profile.yaml` `offer.lead_magnet` and CTA direction are locked (not only `offer.client_suggested_*` hypotheses), or, for a validation-arm cell, the cell's offer is a locked entry in `offer.validation_arms` whose `lead_magnet_client_ok` is `not_needed` or `yes`; and `run_state.sending_platform` is locked.
+3. **LOCKED STRATEGY.** The campaign is a selected row in the client's `campaign-strategy.md`; its `lead-source-plan.md` exists; `client-profile.yaml` `offer.lead_magnet` and CTA direction are locked (not only `offer.client_suggested_*` hypotheses), or, for a validation-arm cell or a per-segment cell, the cell's offer is a locked entry in `offer.validation_arms` or in its segment's set in `offer.segments`, with `lead_magnet_client_ok` `not_needed` or `yes`; and `run_state.sending_platform` is locked.
 
 ## On failure
 

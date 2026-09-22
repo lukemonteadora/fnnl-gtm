@@ -86,14 +86,14 @@ Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURR
 ```text
 profiles/<business-slug>/offer-intelligence.md   # research: buyer voice, pain by persona, saturation, paid-ad angles, intersection
 profiles/<business-slug>/lead-magnets.md         # every candidate, ranked, with labels and the fulfillment plan
-profiles/<business-slug>/client-profile.yaml     # ICP, segments, personas_to_prioritize, the offer block (primary + validation_arms)
+profiles/<business-slug>/client-profile.yaml     # ICP, segments, personas_to_prioritize, the offer block (primary + validation_arms), and `offer.segments` when each buyer type has its own offer set
 ```
 
 If `lead-magnets.md` has no ranked candidates, `/lead-magnet-brainstorm` has not finished: route back to it. If `offer-intelligence.md` is missing, say the slate rests on self-reported context and mark the "What we found" section low confidence rather than inventing findings.
 
 ### Steps
 
-1. **Read the three inputs.** Pull the buyer types (segments and personas), the problems per persona with their evidence class (the client's own calls, N independent public sources, or a hypothesis), the saturation map and the gap competitors leave, and every candidate offer with its score and labels.
+1. **Read the three inputs.** Pull the buyer types (segments and personas), the problems per persona with their evidence class (the client's own calls, N independent public sources, or a hypothesis), the saturation map and the gap competitors leave, and every candidate offer with its score and labels. When the client has per-buyer-type offer sets (`offer.segments`), group everything by buyer type: each buyer type gets its own "offers we want to test" group and its own line in the test plan, in `priority` order.
 2. **Label each offer for the client.** From its `lead_magnet_yes_honored_by` field: `agency` shows as "We handle this"; `client` shows as "Needs your OK" plus the one specific thing we need (`lead_magnet_client_dependency`). Also carry `lead_magnet_scale_needs` (what it would take at full volume), shown as information, never as a reason the offer is out.
 3. **Show the test plan honestly.** `/campaign-strategy` sizes how many offers run in the first flight from warmed send capacity, and each offer is planned at about 2,000 to 3,000 contacts (operator decision 2026-09-22: size the list to the offers, so 3 to 4 offers need about 8,000 to 12,000 contacts), with about 1,300 as the hard minimum below which no result can be called (the pooled flip criterion). If strategy has not run yet, show the planned first flight as the primary plus arm 1, and the remaining offers as the queue, with the contacts-per-offer figure. Never promise the client more simultaneous offers than send capacity can read.
 4. **Author the Markdown** at `profiles/<business-slug>/offer-test-slate.md` from the template below.
@@ -180,7 +180,7 @@ We read <N> of your sales calls, <N> competitors' offers and ads, and <N> buyer 
 
 ### When to run
 
-- `/campaign-strategy` has read out the Offer-Validation Wave: a winner is picked among the arms that proved out, or every arm has been switched off. Run it BEFORE the coverage wave fans out on the winner, because the coverage wave's volume is sized from the answer this review records.
+- `/campaign-strategy` has read out the Offer-Validation Wave: a winner is picked among the arms that proved out, or every arm has been switched off. Run it BEFORE the coverage wave fans out on the winner, because the coverage wave's volume is sized from the answer this review records. For a client with per-buyer-type offer sets, run it per segment as each segment's wave reads out, and record it in that segment's `offer.segments[].scale_review`.
 - Also on demand, when the operator wants to show the client where a running test stands.
 
 ### Inputs

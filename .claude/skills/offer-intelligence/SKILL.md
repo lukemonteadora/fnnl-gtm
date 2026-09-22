@@ -392,7 +392,7 @@ Angles only. The creative execution is not the finding. Ten to fifty variations 
 
 ### Candidate Generation Input (the handoff `/lead-magnet-brainstorm` consumes)
 
-The rows below are not a summary. They are the working input the next skill invents from, so each one must be filled from the sections above rather than restated loosely. Row 1 is the Intersection section's pain.
+The rows below are not a summary. They are the working input the next skill invents from, so each one must be filled from the sections above rather than restated loosely. Row 1 is the Intersection section's pain. For a multi-segment client (kickoff Step 2.5 confirmed two or more segments whose pain or offer fit differ), write one `Candidate Generation Input` block per segment, headed with the segment slug, so `/lead-magnet-brainstorm` builds each segment's own offer set (`offer.segments`, operator decision 2026-09-22).
 
 | # | Persona | Pain, in their words | Open archetype(s) to build for | Why this pairing |
 |---|---|---|---|---|

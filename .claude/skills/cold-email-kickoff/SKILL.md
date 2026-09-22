@@ -188,7 +188,7 @@ If a profile already exists, do not restart from the top. Resume from the earlie
 | No `client-profile.yaml` | Step 2 (create via `/icp-onboarding`) |
 | Profile exists but neither `offer.lead_magnet` nor `offer.offer_validation_path` exists | Step 3A, offer work: `/offer-intelligence` discovery, then `/lead-magnet-brainstorm` |
 | Profile contains only `offer.client_suggested_*` fields | Step 3A, `/offer-intelligence` discovery, then `/lead-magnet-brainstorm` with the form idea as Candidate A |
-| Test set locked but no `offer.test_slate` | Step 3.2, `/offer-test-slate` slate mode (the flow does not wait for the client unless `offer_slate_approval = required`) |
+| Test set locked (for every confirmed segment) but no `offer.test_slate` | Step 3.2, `/offer-test-slate` slate mode (the flow does not wait for the client unless `offer_slate_approval = required`) |
 | Offer locked but no `data-point-catalog.md` | Step 3.3 — `/data-point-discovery` |
 | `data-point-catalog.md` exists but `proof_bank_stage` not complete (no `social-proof-bank.md`) | Step 3.5 — `/social-proof-bank` (runs in parallel with TAM build; does not block Step 4) |
 | Offer locked but `tam_stage` is `none` (no `tam/tam.csv`) | Step 3.4 — `/tam-build` (Phase A sample) |
@@ -273,15 +273,15 @@ B. Evidence-backed existing offer validation
 C. Custom answer
 ```
 
-Do not run both paths as competing sources of truth. One record holds the offer: `offer.lead_magnet` plus `offer.validation_arms`. An evidence-backed existing offer can still be the control in a multi-offer test: after validation returns Go, run `/lead-magnet-brainstorm` for validation arms to test beside it (operator directive 2026-09-22).
+Do not run both paths as competing sources of truth. One record holds the offer: `offer.lead_magnet` plus `offer.validation_arms` (for per-buyer-type offer sets, each segment's entry in `offer.segments`, with the priority-1 segment mirrored in that top-level block). An evidence-backed existing offer can still be the control in a multi-offer test: after validation returns Go, run `/lead-magnet-brainstorm` for validation arms to test beside it (operator directive 2026-09-22).
 
 Choose A for new clients, new campaigns, and any onboarding form suggestion that has not already been used in a campaign.
 
 ### Step 3A: New-offer path
 
-**Run once per distinct segment confirmed in Step 2.5.** For each segment, pass the segment's ICP parameters (industry, titles, headcount, geography) and any relevant case studies or proof points specific to that vertical.
+**Run once per distinct segment confirmed in Step 2.5.** For each segment, pass the segment's ICP parameters (industry, titles, headcount, geography) and any relevant case studies or proof points specific to that vertical. `/lead-magnet-brainstorm` then locks each segment's own offer set into `offer.segments` (the priority-1 segment mirrored in the top-level `offer` block; operator decision 2026-09-22), and Step 3.2 shows every segment's offers in one client slate.
 
-If all confirmed segments share the same buyer pain and offer fit, one combined discovery run is acceptable - explicitly note it covers all segments.
+If all confirmed segments share the same buyer pain and offer fit, one combined discovery run is acceptable - explicitly note it covers all segments. In that case one offer set covers them all and `offer.segments` is not written.
 
 **Research-routing gate (first research step of the run).** *(Wired enforcement: after the offer-research sub-skills run, execute `node scripts/research/research_routing_check.mjs --skill <skill> --client <business-slug> --json` per research skill — or the no-`--skill` full audit once per client — and treat `violation:true` / exit 1 as a flagged routing violation that blocks declaring research done.)* `run_state.research_routing` has one value, **`claude_deep_research`** (no-AI-API rule, operator directive 2026-09-22: the old `third_party_ai` and `claude_native` values are retired). If it is **unset** or holds a retired value, treat it as `claude_deep_research` and proceed, do NOT stop to ask. The primary pass MUST be an actual **`/deep-research` invocation** (hand it the assembled brief so its sub-agents cover every category in parallel), not a single inline WebSearch or a per-row pass. A thin sub-topic is filled by a second targeted `/deep-research` run or a WebSearch/WebFetch pass, never by another provider. Record `ai_research_provider = claude-deep-research` + an `api-balance-ledger.md` provenance line (an audit line, no dollar decrement); a research step finishing with **no recorded `/deep-research` primary** is a **flagged violation**. No key is needed. Full rule: `/ai-model-routing`.
 

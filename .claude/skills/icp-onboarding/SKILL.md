@@ -252,6 +252,7 @@ offer:
   lead_magnet_details: null
   lead_magnet_cta_direction: null
   validation_arms: null   # set at offer lock by /lead-magnet-brainstorm: every qualifying candidate, ranked (uncapped), run in flights by /campaign-strategy; [] only with a stated reason
+  segments: null   # per-buyer-type offer sets, written by /lead-magnet-brainstorm when /cold-email-kickoff Step 2.5 confirms 2+ segments whose pain or offer fit differ (operator decision 2026-09-22)
   value_prop: <why prospects should care>
 
 lead_sourcing:

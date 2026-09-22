@@ -429,6 +429,16 @@ Aaron tests three or four offers and lets the market pick (doctrine §5; *"Let t
 
 **After the wave, the market decides.** The winning arm becomes, or stays, `offer.lead_magnet` for scale, and arms that do not get proper responses are deactivated (doctrine §5 step 9: *"deactivat[e] the angles that don't get proper responses"*). `/campaign-strategy`'s flip criterion owns that read: each arm flips on its own pooled positive replies, and among PROVEN arms the winner is the one that does not lose on time-agreed replies per 1,000 first touches; a PROVEN arm that farms interest is reshaped to filter better, not scaled and not killed. Promotion re-uses a candidate that already passed every gate here, so it does not reopen offer work. Before the winner scales, `/offer-test-slate` scale review takes the results back to the client and records what running it at full volume takes; `/campaign-strategy` sizes the coverage wave to that answer.
 
+## Offer sets per buyer type (operator decision 2026-09-22)
+
+When `/cold-email-kickoff` Step 2.5 confirms two or more buyer segments whose pain or offer fit genuinely differ, **each segment gets its own offer set**: its own primary, validation arms, disqualifiers, client-OK state, proven flag and scale review, generated from that segment's own `Candidate Generation Input` rows. One offer stretched across buyer worlds is urgent to nobody (Aaron defines one buyer per offer, doctrine §5 step 1). A single-segment client, or one whose segments share the same pain and offer fit, is unchanged: the top-level `offer` block is its one set and `offer.segments` is not written.
+
+- **Where the sets live:** `offer.segments` in `client-profile.yaml`, one entry per segment, keyed by the slug from the confirmed segment list (the same value `/tam-build` writes in each row's `segment` column). Each entry carries every field of the primary block (Save Output), plus `label` (the plain buyer-type name the client slate shows), `priority` (1 is first), `offer_market_proven` and `scale_review`.
+- **The top-level block mirrors the priority-1 segment's set,** so every reader that only knows `offer.lead_magnet` keeps working. When that segment's winner changes, update both places.
+- **The resolution rule every consumer uses:** for a company, contact, cell or campaign that belongs to a segment, read `offer.segments[<segment>]` when the client has per-buyer-type offer sets, otherwise the top-level `offer` block.
+- **Every gate in this skill runs per segment:** each set gets its own ranked candidates, its own validation arms (no cap), its own Signal-Capability Check and its own disqualifier list. `lead-magnets.md` gets one `## Segment: <label>` section per set, and `## Every candidate` lists each segment's candidates under its label.
+- **Testing and scale are per segment too:** `/campaign-strategy` runs one Offer-Validation Wave per segment on that segment's own list, and a segment never borrows another segment's winner. `/offer-test-slate` shows every segment's offers in one client deck, and runs a scale review per segment as each wave reads out.
+
 ## Output
 
 For each idea:
@@ -557,6 +567,15 @@ offer:
       lead_magnet_client_ok: not_needed    # not_needed | pending | yes | no. The arm sends only at not_needed or yes
       lead_magnet_scale_needs: <what running it at full volume would take, and from whom>
       offer_fit_disqualifiers: []   # same shape as the primary's; ideally adds nothing the primary's list keeps, and /campaign-strategy applies the union to the validation list
+  segments:                     # operator decision 2026-09-22. Only when kickoff Step 2.5 confirmed 2+ segments whose pain or offer fit differ; absent otherwise
+    - segment: <slug from the confirmed segment list; matches the `segment` column in tam.csv>
+      label: <plain buyer-type name, as the client slate shows it>
+      priority: 1                 # 1 = the segment the top-level offer block mirrors
+      lead_magnet: <this segment's primary>   # plus every other field of the primary block above
+      offer_fit_disqualifiers: []
+      validation_arms: []         # same shape as the top-level validation_arms
+      offer_market_proven: false  # this segment's own flip (/campaign-strategy)
+      scale_review: null          # this segment's own scale review (/offer-test-slate)
 ```
 
 **Write the fulfillment plan and the arms into `lead-magnets.md` as well**, since the four fulfillment artifacts live there rather than in the YAML: a `## Fulfillment plan` heading with one block per locked offer (primary first, then each arm) carrying `Delivery reply:`, `Input needed after yes:`, `If they don't qualify:` and `Paid next step, explained:`, and a `## Validation arms` heading listing each arm, its bucket, its score, and why it was chosen (or, when `validation_arms: []`, why no second candidate survived). Also write an `## Every candidate` heading: the full ranked list with each candidate's score, labels, who honors a yes, and scale note, including the ones not in the test set, because `/offer-test-slate` shows all of them to the client. The reply-agent setup skill for the locked sending platform and `/campaign-copywriting` read the fulfillment plan from there.

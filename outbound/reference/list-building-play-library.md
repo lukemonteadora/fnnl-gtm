@@ -140,7 +140,7 @@ Most of the confusion here comes from one word doing three jobs. Separate them a
 
 **3. The copy variable.** Everything that changes by group: which pain you lead with, which proof you show, the vocabulary, and the concrete noun that gets slotted into the offer sentence (which role the shortlist is for, which vertical the case study is in).
 
-The resolution: **groups vary the copy variable, not the offer.** A shortlist of five candidates is one offer whether the role is a controller or a warehouse supervisor. Which role it is, is a variable inside the offer.
+The resolution, for groups that share the same buying problem: **groups vary the copy variable, not the offer.** A shortlist of five candidates is one offer whether the role is a controller or a warehouse supervisor. Which role it is, is a variable inside the offer. A group whose buying problem genuinely differs gets its own offer set instead (the ruling below, `offer.segments`, operator decision 2026-09-22).
 
 ### Why the offer is tested first, and why each offer gets its own cell
 
@@ -152,16 +152,16 @@ Running several offers across several groups inside one undifferentiated campaig
 
 **Objection:** if the client serves genuinely different buyer worlds, forcing one offer produces a lowest-common-denominator offer that is weak everywhere.
 
-**Ruling: fixable, not fatal, but the fix is the opposite of what it looks like.** The correct move is to **narrow the ICP, not broaden the offer.** Pick the single highest-conviction group, build the offer specifically for that group, and let the other groups wait for a later wave. A sharp offer to a narrower list beats a generic offer to a wider one, and it also produces a readable result. Broadening the offer to cover every group is how you end up with an offer that validates nowhere.
+**Ruling: fixable, not fatal, and the fix is per-group offer sets, not one broadened offer (operator decision 2026-09-22).** A sharp offer to a narrower list beats a generic offer to a wider one, and it produces a readable result. So a group whose buying problem genuinely differs gets its own offer set from the research (`offer.segments` in `/lead-magnet-brainstorm`), and each group's offers are tested in their own cells, in parallel when send capacity allows and the priority group first when it does not. Broadening one offer to cover every group is how you end up with an offer that validates nowhere.
 
 ### When a group genuinely earns its own offer
 
-Two conditions, and only these two:
+When the research shows a buying problem the current offer cannot address at all (a different pain, a different buyer, different proof), the group gets its own offer set from the start (operator decision 2026-09-22). A failed message split is no longer a precondition. For the record, the old rule needed both of these:
 
 1. The group has a **buying problem the current offer cannot address at all**, not merely a different flavor of the same one.
 2. A message split has already run and shows a **persistent reply-rate gap that copy changes cannot close.**
 
-Even then it becomes a **second wave** with its own validation, never a parallel launch alongside the first.
+Those were the old preconditions. Now the group's own offer test runs in parallel with the others when send capacity allows, each on its own cells.
 
 ### Where the offer sequence actually sits
 

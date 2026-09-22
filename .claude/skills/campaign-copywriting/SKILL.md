@@ -361,7 +361,7 @@ If any condition fails, **STOP** — name the failed condition and route to its 
 
 Before writing any CTA, confirm the prospect can receive exactly what the CTA offers after a positive reply.
 
-**Whose yes this is (operator directive 2026-09-22).** This gate governs the **front-end** deliverable: the lead magnet, the free asset, the front-end promise. It asks one question: *can every yes this campaign will actually produce be honored as promised, on time?* Read the offer's honoring fields (`/lead-magnet-brainstorm` Save Output):
+**Whose yes this is (operator directive 2026-09-22).** This gate governs the **front-end** deliverable: the lead magnet, the free asset, the front-end promise. It asks one question: *can every yes this campaign will actually produce be honored as promised, on time?* Read the offer's honoring fields (`/lead-magnet-brainstorm` Save Output; for a client with per-buyer-type offer sets, the campaign's offer comes from its segment's entry in `offer.segments`):
 
 - `lead_magnet_yes_honored_by: agency` (the default: the agency owns inboxes, sending, replies and front-end delivery; the client receives qualified conversations and delivers the paid service). The agency honors the yeses itself, including custom per-prospect work, at the volume this campaign will send. A test flight produces a handful to a few dozen yeses per offer, so this passes once the delivery path below is known. It needs no client approval.
 - `lead_magnet_yes_honored_by: client`: passes only when `lead_magnet_client_ok: yes`. At `pending` or `no`, do not write send-ready copy for that offer; write the other offers in the flight. Never write copy for an offer the client vetoed.

@@ -122,7 +122,7 @@ Do not start from a generic title list. Read the real inputs first.
 
 Start from `<outbound>/reference/lead-scoring-rubric-template.yaml`, then replace every sample mapping and evidence column with client-specific values. A sample value left in place merely to satisfy validation is a failed rubric.
 
-The rubric scope is the client plus locked offer, with per-segment mappings. Do not rebuild it per campaign or per scrape. Rebuild only when the ICP or offer changes.
+The rubric scope is the client plus its locked offer set, with per-segment mappings: the `offer` component scores each row against its own segment's primary (`offer.segments[<segment>]` when the client has per-buyer-type offer sets, otherwise the top-level `offer` block; operator decision 2026-09-22). Do not rebuild it per campaign or per scrape. Rebuild only when the ICP or offer changes.
 
 ## Normalize evidence before arithmetic
 
@@ -250,7 +250,7 @@ Use a stratified sample that includes exact fits, adjacent fits, weak fits, miss
 ## Refresh
 
 - Rebuild stable company and contact components only when the offer, ICP, segment mapping, or underlying firmographics change.
-- When the offer or ICP changes, immediately set `run_state.status.scoring_stage: none`, increment `score_version`, and block downstream work until the stable components are rebuilt.
+- When the offer or ICP changes, immediately set `run_state.status.scoring_stage: none`, increment `score_version`, and block downstream work until the stable components are rebuilt. Promoting a winning arm inside a segment's already-scored offer set, or locking a new segment's set, is a `score_version` bump for that offer component only, never a downstream block (operator decision 2026-09-22).
 - Recalculate timing tiers and total scores during the monthly TAM refresh.
 - Preserve `score_version` so downstream files can prove which rubric produced them.
 
