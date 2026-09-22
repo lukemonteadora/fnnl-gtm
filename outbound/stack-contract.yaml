@@ -4,15 +4,22 @@
 #
 # WHAT THIS IS
 # This is the single source of truth for which tool fills which job in FNNL
-# Agency's cold outbound system. It ships EMPTY on purpose. The system has no
-# default tech stack and will not guess one.
+# Agency's cold outbound system. It shipped EMPTY on purpose, because the
+# system has no default tech stack and will not guess one.
+#
+# FNNL'S APPROVED STACK (operator directive 2026-09-22)
+# FNNL runs on SIX tools: GetLeads, AI Ark, Prospeo, MillionVerifier, Clay and
+# PlusVibe. The `approved_stack` block directly below is the rule every future
+# tool choice follows. Read it before recommending, activating, credentialing
+# or spending on ANY tool, including ones a skill's worked example names.
 #
 # HOW THE SYSTEM USES IT
 # Every skill in .claude/skills/ is written against a CAPABILITY ROLE ("the
 # sending platform", "the contact enrichment tool"), never against a brand.
 # When a skill needs a tool it reads the matching slot below. If the slot is
 # still empty, the skill stops and tells you to run /stack-setup rather than
-# assuming a vendor.
+# assuming a vendor. The exception is a slot at status `retired` (see STATUS
+# VALUES): it is not a gap, so no skill routes to /stack-setup to fill it.
 #
 # HOW TO FILL IT
 # Run /stack-setup. It interviews you about FNNL's actual tools, writes the
@@ -30,8 +37,28 @@
 #
 # STATUS VALUES
 #   not_chosen: FNNL has not picked a tool for this job yet (the default)
-#   chosen: a tool is named but not yet credentialed or tested
+#   chosen: a tool is named but not yet credentialed or tested. On a POLICY
+#         slot (tool: null, for example research_routing) it means the policy
+#         is decided and recorded in `value`, but not yet proven on a real run.
 #   live: credentialed and verified working against a real call
+#   held: named earlier but OUTSIDE the approved six (added 2026-09-22).
+#         Treat it exactly like not_chosen: it declares no capability, and it
+#         is not credentialed, built against or spent on until the operator
+#         approves it as an exception or clears the slot. A held slot's `tool`
+#         is null, so every "slot is empty, stop" check fires as designed; the
+#         tool's name is kept in `held_tool` for reference only.
+#   retired: the job is no longer a purchasable slot at all (added 2026-09-22
+#         by the no-AI-API rule, operator directive 2026-09-22). Claude Code
+#         does the job natively (its session, sub-agents, the /deep-research
+#         harness, and its built-in WebSearch and WebFetch). `tool` stays null
+#         and `credentials` stays empty; nothing is credentialed, bought or
+#         called for it. A retired slot is NOT a gap: a skill must not route
+#         the operator to /stack-setup to fill it. The slot's notes say what
+#         does the job now and keep the earlier research as history. If a
+#         tool was recorded there before, its name stays in `held_tool` as
+#         history only. An approved_exceptions entry cannot bring a tool
+#         back into a retired slot; only a new operator directive changing
+#         the no-AI-API rule can.
 #   n/a: FNNL does not need this capability at all
 #
 # =============================================================================
@@ -39,12 +66,113 @@
 meta:
   company: FNNL Agency
   slug: fnnl
-  contract_version: 1
+  contract_version: 2
   created: 2026-09-18
-  last_reviewed: 2026-09-18
+  last_reviewed: 2026-09-22
   # Set to true only once every required slot is `live`. Skills may check this
   # before an expensive or outward-facing run.
   stack_locked: false
+
+# =============================================================================
+# 0. APPROVED STACK: THE SIX TOOLS, AND THE RULE FOR EVERY FUTURE CHOICE
+#    Operator directive 2026-09-22 (paraphrased): these six are FNNL's only
+#    tech stack, and they govern every future choice of which tool to use.
+#    This block OUTRANKS every slot below. If a slot and this block disagree,
+#    this block wins and the slot is the thing that is stale.
+# =============================================================================
+
+approved_stack:
+  set_by: operator directive 2026-09-22
+  tools:
+    - tool: GetLeads
+      fills: [lead_data.intent_signals]
+      also_covers: >
+        Deliberate SECOND source for company and contact discovery (402M
+        contacts, free exact counts via count_contacts). The gap-fill to try
+        when an AI Ark universe comes back thin.
+      access: hosted MCP (no .env key)
+    - tool: AI Ark
+      fills: [lead_data.company_discovery, lead_data.contact_discovery, "lead_data.contact_enrichment (step 1)"]
+      access: hosted MCP + REST, AI_ARK_API_KEY
+    - tool: Prospeo
+      fills: ["lead_data.contact_enrichment (gap-fill, runs only on rows AI Ark left blank)"]
+      also_covers: >
+        Search-time person and company filters, usable as a secondary
+        discovery source when a filter AI Ark lacks decides the slice.
+      access: MCP connector + REST, PROSPEO_API_KEY
+    - tool: MillionVerifier
+      fills: [lead_data.email_verification]
+      access: local MCP (outbound/scripts/mcp/millionverifier_mcp.mjs) + REST, MILLIONVERIFIER_API_KEY
+    - tool: Clay
+      fills: [lead_data.list_workbench]
+      access: REST + inbound webhook + MCP, CLAY_API_KEY
+      constraint: >
+        ZERO CLAY CREDITS, EVER, and every tool inside Clay runs on FNNL's own
+        API key (HARD RULE 2026-09-22, lead_data.list_workbench.credit_policy_rule).
+    - tool: PlusVibe
+      fills: [infrastructure.sending_platform]
+      also_covers: >
+        Warmup, the reply inbox (unibox), placement tests, and a done-for-you
+        domain and mailbox offering visible in its MCP tool list. That DFY
+        offering is UNEVALUATED: it is the first place to look if the deferred
+        infrastructure slots are ever filled from inside the six.
+      access: hosted MCP + REST, PLUSVIBE_API_KEY + PLUSVIBE_WORKSPACE_ID
+  rule: >
+    1. SIX FIRST, ALWAYS. Any capability need, in any skill, is met by one of
+       the six before anything else is considered. Before declaring a gap,
+       check each tool's FULL surface (its MCP tool list and API docs), not
+       only the slot it was chosen for. Several of the six cover more than
+       their headline slot (see also_covers above).
+    2. NOTHING OUTSIDE THE SIX WITHOUT EXPLICIT OPERATOR APPROVAL. A tool
+       outside the six is never recommended as the path, activated from
+       _vendor-library/, credentialed, or spent on unless the operator
+       approves it by name in chat. The approval is recorded under
+       approved_exceptions below, with the date and the need it fills, BEFORE
+       the tool is used. A tool that appears in a worked example, in the
+       credential-registry catalogue, in _vendor-library/, or as a connected
+       MCP server in a session is NOT approved by that fact.
+    3. LABEL OUT-OF-STACK IDEAS AS SUCH. If a skill genuinely cannot meet a
+       need from the six, say so plainly, name the missing capability, and if
+       an outside tool is worth raising, present it labelled "OUT OF STACK,
+       needs operator approval", never as the default path.
+    4. OVERLAPS RUN CHEAPEST-CAPABLE FIRST. Where two of the six can return
+       the same data point, run the cheaper one across the whole set, then
+       send only the still-empty cells to the next. The recorded order for
+       emails is in lead_data.contact_enrichment.notes.
+    5. CHANGING THE SIX takes an operator directive. Update this block first,
+       then the slots, then scripts/.env.example and credential-registry.json.
+    6. APPROVED IS NOT LIVE. All six are `chosen`. Each moves to `live` in its
+       slot only after one real call against FNNL's own account succeeds.
+  approved_exceptions:   # {tool, need, approved_on, approved_by} per entry
+    - tool: OpenAI
+      need: "sender headshots only (ai.image_generation)"
+      approved_on: 2026-09-22
+      approved_by: "operator (Luke)"
+      note: >
+        The one AI exception to the no-AI-API rule (operator directive
+        2026-09-22). Image generation for sender persona headshots only, run
+        by /mailbox-profile-generator through scripts/generate_inbox_profiles.py.
+        Nothing else (research, crunch, critique, copy, other images) may use
+        it. Its key is requested ONLY when the headshot step actually runs, or
+        when the operator says to start setting up cold-email infrastructure.
+        It is never requested or flagged as missing at onboarding, intake,
+        kickoff, preflight, stack setup or workspace creation.
+  held_outside_the_six: >
+    Tools recorded 2026-09-18 that the operator did NOT name on 2026-09-22,
+    now at status `held` in their slots, with `tool: null` and the name kept
+    in `held_tool`:
+    Dynadot (registrar), ScaledMail (mailbox_provider) and HeyReach
+    (linkedin_outreach). They are HELD, not deleted: their slots and notes are
+    kept so the research is not lost, but under rule 2 none of them is
+    credentialed, built against or spent on until the operator either
+    approves it as an exception or clears the slot. LeadMagic, the previous
+    verifier, is REPLACED by MillionVerifier and kept only as a catalogue
+    alternative in credential-registry.json.
+    Parallel.ai, held the same day for research_provider, web.search and
+    web.crawl, is no longer held: it is RETIRED by the no-AI-API rule
+    (operator directive 2026-09-22), together with those three slots, whose
+    jobs Claude Code now does natively. Its research is kept as history in
+    those slots' notes.
 
 # =============================================================================
 # 1. SENDING INFRASTRUCTURE
@@ -54,8 +182,9 @@ meta:
 infrastructure:
 
   registrar:
-    tool: Dynadot
-    status: chosen
+    tool: null
+    held_tool: Dynadot
+    status: held
     capability: >
       Buys and holds the cold outbound domains, and manages their DNS records
       (SPF, DKIM, DMARC, MX, tracking CNAME).
@@ -63,6 +192,10 @@ infrastructure:
     credentials: [DYNADOT_API_KEY, DYNADOT_API_SECRET]
     vendor_pack: null        # set by /stack-setup if a pack in _vendor-library/ matches
     notes: >
+      HELD OUTSIDE THE APPROVED SIX (2026-09-22): not named in the operator's
+      approved stack. Do not credential, build against or spend on this tool
+      until the operator approves it as an exception or clears the slot. See
+      approved_stack.held_outside_the_six. Research below kept for reference.
       DNS record writes ARE available via API, so domain setup is automatable.
       Current surface is REST v2, base https://api.dynadot.com/restful/v2/ .
       Register is POST /domains/{domain}/register, DNS is POST|GET|DELETE
@@ -81,8 +214,9 @@ infrastructure:
       the endpoints. Neither pairs with ScaledMail.
 
   mailbox_provider:
-    tool: ScaledMail
-    status: chosen
+    tool: null
+    held_tool: ScaledMail
+    status: held
     capability: >
       Provisions the sending mailboxes on those domains, handles the Google
       Workspace / Microsoft 365 purchase, and exports them into the sending
@@ -91,6 +225,10 @@ infrastructure:
     credentials: [SCALEDMAIL_API_KEY]
     vendor_pack: null
     notes: >
+      HELD OUTSIDE THE APPROVED SIX (2026-09-22): not named in the operator's
+      approved stack. Do not credential, build against or spend on this tool
+      until the operator approves it as an exception or clears the slot. See
+      approved_stack.held_outside_the_six. Research below kept for reference.
       Yes, they resell PRE-WARMED inboxes (POST /buy-pre-warm-inboxes), so a new
       client can launch in days rather than waiting roughly six weeks on warmup.
       That makes /mailbox-pool-staging worth standing up.
@@ -121,6 +259,7 @@ infrastructure:
     credentials: [PLUSVIBE_API_KEY, PLUSVIBE_WORKSPACE_ID]
     vendor_pack: null
     notes: >
+      IN THE APPROVED SIX (operator directive 2026-09-22).
       All three gates PASS on documentation review. None is yet proven on a live call.
       1. REST API for campaign create plus lead upload: YES, two-step. POST
          /campaign/add/campaign creates an empty shell taking only workspace_id and
@@ -146,8 +285,9 @@ infrastructure:
       key as a URL QUERY PARAMETER. The REST API is the real automation surface.
 
   infrastructure_stack:
-    tool: dynadot_scaledmail
-    status: chosen
+    tool: null
+    held_tool: dynadot_scaledmail
+    status: held
     capability: >
       The named combination of registrar plus mailbox provider that a given
       client's domains run on, recorded as one value so later steps can branch
@@ -156,6 +296,10 @@ infrastructure:
     credentials: []
     vendor_pack: null
     notes: >
+      HELD OUTSIDE THE APPROVED SIX (2026-09-22): not named in the operator's
+      approved stack. Do not credential, build against or spend on this tool
+      until the operator approves it as an exception or clears the slot. See
+      approved_stack.held_outside_the_six. Research below kept for reference.
       Derived from Dynadot plus ScaledMail. This pairing is NEW to this workspace.
       The credential registry's stack_map ships only dynadot_zapmail,
       spaceship_zapmail, dynadot_primeforge, spaceship_primeforge and
@@ -200,8 +344,9 @@ infrastructure:
 channels:
 
   linkedin_outreach:
-    tool: HeyReach
-    status: chosen
+    tool: null
+    held_tool: HeyReach
+    status: held
     capability: >
       Runs LinkedIn connection requests and message sequences across multiple
       sender accounts, as a second outbound channel alongside email.
@@ -209,6 +354,10 @@ channels:
     credentials: [HEYREACH_API_KEY]
     vendor_pack: null
     notes: >
+      HELD OUTSIDE THE APPROVED SIX (2026-09-22): not named in the operator's
+      approved stack. Do not credential, build against or spend on this tool
+      until the operator approves it as an exception or clears the slot. See
+      approved_stack.held_outside_the_six. Research below kept for reference.
       Built for agencies and multi-account sending: connection requests,
       message sequences with conditional branching, and sender rotation across
       accounts are all confirmed.
@@ -254,6 +403,7 @@ lead_data:
     credentials: [AI_ARK_API_KEY]
     vendor_pack: null
     notes: >
+      IN THE APPROVED SIX (operator directive 2026-09-22).
       AI Ark is the source-of-truth company universe: 70M+ companies with
       firmographic, technographic, funding, headcount-growth and geo filters.
       company_search is the primary call.
@@ -280,6 +430,7 @@ lead_data:
     credentials: [AI_ARK_API_KEY]
     vendor_pack: null
     notes: >
+      IN THE APPROVED SIX (operator directive 2026-09-22).
       people_search covers 400M to 500M profiles (vendor claim, unaudited) and
       returns titles, seniority, function and company linkage WITHOUT revealing
       email, which is exactly the cheap-qualify-before-reveal split this slot wants.
@@ -299,29 +450,32 @@ lead_data:
     credentials: [AI_ARK_API_KEY, PROSPEO_API_KEY]
     vendor_pack: prospeo
     notes: >
+      IN THE APPROVED SIX (AI Ark and Prospeo, operator directive 2026-09-22).
       WATERFALL ORDER, with verification interleaved per operator directive
-      2026-09-18. Mirror this into /email-waterfall:
+      2026-09-18, verifier updated to MillionVerifier 2026-09-22. Mirror this
+      into /email-waterfall:
         STEP 0. VERIFY FIRST any email the row already carries. Never pay a finder to
-                re-discover an address you can verify for 0.25 credits.
+                re-discover an address one verification credit can rule on.
         STEP 1. AI Ark reveal, across the whole survivor set.
-        STEP 2. LeadMagic verify on everything step 1 returned.
-        STEP 3. Prospeo, ONLY on rows AI Ark left blank or LeadMagic rejected.
-        STEP 4. LeadMagic verify on everything step 3 returned.
+        STEP 2. MillionVerifier verify on everything step 1 returned.
+        STEP 3. Prospeo, ONLY on rows AI Ark left blank or MillionVerifier rejected
+                (invalid, unknown, error, disposable). A catch_all verdict is NOT
+                a rejection: it goes to the holdback, not to Prospeo.
+        STEP 4. MillionVerifier verify on everything step 3 returned.
       Never open Prospeo on a row AI Ark has not already attempted.
       NO SOURCE IS EXEMPT FROM RE-VERIFICATION. Both AI Ark and Prospeo verify at
       reveal time using the same third-party engine (BounceBan), and that is EXPLICITLY
       NOT the send-gate. /email-waterfall's Verification Doctrine states a finding
       tool's own internal verification is never a substitute. Every address they
-      return is re-verified by LeadMagic regardless.
+      return is re-verified by MillionVerifier regardless.
       WHY AI ARK IS PRIMARY: it labels CATCH_ALL as a distinct email type alongside
       SMTP. Prospeo's status field is binary (VERIFIED / UNAVAILABLE) and therefore
       COLLAPSES catch-all into valid; its verification_method field (SMTP / BOUNCEBAN)
       recovers the signal, so any pipeline reading Prospeo output MUST read
       verification_method, not status alone.
-      NOTE THE IRONY, it matters for list QA: AI Ark's own CATCH_ALL label is more
-      informative than what LeadMagic returns, because LeadMagic folds catch-all into
-      `unknown`. So AI Ark's reveal-time type is worth PRESERVING as a column even
-      though it is not the send-gate. It is the only catch-all signal in the stack.
+      KEEP AI ARK'S CATCH_ALL LABEL AS A COLUMN. It is not the send-gate
+      (MillionVerifier's catch_all result is), but it is an independent second
+      catch-all signal from reveal time, useful when the two disagree.
       USE THE RIGHT AI ARK ENDPOINT: route gap-fill through /v1/people/email-finder,
       which charges 0 credits when no valid email is found. The bulk
       /v1/people/export path bills 0.5 credits PER PROFILE EVEN ON A MISS (vendor's
@@ -337,71 +491,58 @@ lead_data:
       company identifier, so LinkedIn-URL-alone is UNPROVEN.
 
   email_verification:
-    tool: LeadMagic
+    tool: MillionVerifier
     status: chosen
     capability: >
       Confirms a revealed address will actually accept mail, and flags
       catch-all domains, before that address ever enters a campaign.
     run_state_field: null
-    credentials: [LEADMAGIC_API_KEY]
+    credentials: [MILLIONVERIFIER_API_KEY]
     vendor_pack: null
     notes: >
-      Operator directive 2026-09-18: LeadMagic is FNNL's verifier of record, run
-      BETWEEN each stage of the enrichment waterfall. That pattern is already law in
-      /email-waterfall's Verification Doctrine ("the email verifier is the UNIVERSAL
-      VERIFIER OF RECORD; there are NO source exemptions"), so this fills an existing
-      rule rather than creating a new one.
-      RAW API: POST https://api.leadmagic.io/v1/people/email-validation , auth header
-      X-API-Key, body {"email": "..."}. Official hosted MCP at
-      https://mcp.leadmagic.io/mcp (OAuth, no key). 0.25 credits per validation:
-      INVALID BILLS, UNKNOWN IS FREE. Plans 49.99 to 849 USD/mo. Async bulk via POST
-      /bulk/submit with /v1/batch/preview-cost and /v1/batch/budgets for hard credit
-      ceilings. Rate limit 600 req/min. Free tier 100 credits, no card.
-      ### CATCH-ALL: CONTESTED, NOT SETTLED. RESOLVE BY TEST, NOT BY ARGUMENT.
-      The operator's position (2026-09-19): LeadMagic already includes catch-all
-      verification. The evidence genuinely splits by SURFACE, and since FNNL works
-      inside Clay, the operator's position is the operationally relevant one.
-        EVIDENCE FOR CATCH-ALL BEING AVAILABLE (the Clay surface, which is where FNNL
-        actually works): Clay's own community and waterfall documentation reference
-        the statuses `valid_catch_all` and `catch_all`, plus an "Only mark 'Safe to
-        Send' emails as valid" toggle that EXCLUDES both. Clay's Email Waterfall
-        therefore does carry a catch-all discriminator, and by DEFAULT returns
-        catch-alls AS VALID unless that toggle is set.
-        EVIDENCE AGAINST IT BEING IN LEADMAGIC'S RAW API: LeadMagic's official
-        OpenAPI 3.1 spec was downloaded and all 323,658 bytes grepped for "catch",
-        returning ZERO matches. Current documented email_status values are only
-        valid | invalid | unknown, and LeadMagic's docs state accept-all domains
-        return `unknown` and are free. The legacy API (/email-validate, with
-        email_status valid|valid_catch_all|catch_all AND an is_domain_catch_all
-        boolean) is gone; LeadMagic's own deprecated MCP repo still declares that
-        field, which is why stale references persist.
-        Clay's LeadMagic "Validate Email" action page lists outputs as Contact Email
-        Work, Contact Email Personal, and Email Validity Status, with data strength
-        "Non Catch-all Emails" and NO dedicated catch-all output field.
-      LIKELY RECONCILIATION, labelled as inference not fact: the `valid_catch_all` /
-      `catch_all` statuses and the Safe-to-Send toggle belong to CLAY'S waterfall and
-      validation layer, which classifies across providers, rather than to LeadMagic's
-      own API response. If so, FNNL gets the catch-all discriminator BECAUSE it works
-      in Clay, not because LeadMagic returns it. That would make both positions true
-      about different surfaces.
-      WHY IT MATTERS EITHER WAY. /email-waterfall's Catch-All Timing gate holds
-      verified catch-alls out of the send file and reintroduces them once sending
-      domains have 2-3 weeks of healthy sending. That gate NEEDS a catch-all
-      discriminator. If Clay supplies it, the gate works and FNNL must make sure the
-      Safe-to-Send toggle is OFF at verification time so catch-alls are LABELLED
-      rather than silently dropped, then held by FNNL's own gate. If only the raw API
-      is used, catch-alls arrive as `unknown` (a three-way overload with dead-server
-      and inconclusive) and get dropped, costing addressable VOLUME.
-      THE TEST THAT SETTLES IT, cheap and decisive: run a control set of known
-      catch-all domains through the ACTUAL surface FNNL will use (a Clay LeadMagic
-      validation column), and read the returned status values. LeadMagic's free tier
-      is 100 credits with no card. Record the real values here and delete this block.
-      ALSO UNRESOLVED, vendor docs contradict each other on cost: Clay's integrations
-      page lists LeadMagic Validate Email as a "Free Action" while Clay University
-      says "1 credit per enriched cell". Bring-your-own-key sidesteps the credit but
-      still consumes a Clay Action.
-      NOTE regardless of outcome: AI Ark's reveal-time CATCH_ALL label is an
-      independent catch-all signal already in the stack. Preserve it as a column.
+      IN THE APPROVED SIX. Operator directive 2026-09-22: MillionVerifier is
+      FNNL's verifier of record, REPLACING LeadMagic (chosen 2026-09-18). It runs
+      BETWEEN each stage of the enrichment waterfall, which is already law in
+      /email-waterfall's Verification Doctrine ("the email verifier is the
+      UNIVERSAL VERIFIER OF RECORD; there are NO source exemptions").
+      CATCH-ALL: RESOLVED BY THE SWAP. The previous verifier's current API had no
+      catch-all status (accept-all domains came back as `unknown`), which left
+      /email-waterfall's Catch-All Timing gate without a discriminator and
+      needed a control test to settle. MillionVerifier returns catch-all as its
+      OWN result: resultcode 1=ok, 2=catch_all, 3=unknown, 4=error,
+      5=disposable, 6=invalid. So one call gives both deliverability and the
+      catch-all flag, which is exactly the two-in-one verifier /email-waterfall
+      asks for. Gate mapping: ok goes to `valid` (the send file); catch_all goes
+      to the holdback (leads.catchall-holdback.csv, reintroduced after domain
+      maturity); unknown, error, disposable and invalid go to the review queue
+      or the gap-fill step. NEVER collapse catch_all into ok or into unknown.
+      WHAT IT DOES NOT DO: it labels a catch-all domain, it cannot tell you
+      whether that specific mailbox exists. That is the nature of accept-all
+      domains, not a MillionVerifier defect. AI Ark's reveal-time CATCH_ALL
+      label stays a preserved second signal; keep it as its own column.
+      ACCESS: MillionVerifier publishes no MCP server, so this workspace wraps
+      its REST API in a local, dependency-free MCP server at
+      outbound/scripts/mcp/millionverifier_mcp.mjs (registered in .mcp.json).
+      It reads MILLIONVERIFIER_API_KEY from outbound/scripts/.env itself, so no
+      key ever lands in a tracked file. Set the key with
+      outbound/scripts/setup-millionverifier-key.ps1. Tools: real-time verify,
+      credits, and bulk upload / status / download / stop. The vendor's API
+      takes the key as a URL query parameter (their design).
+      PROVEN SO FAR (2026-09-22): only the plumbing and a real-time round trip
+      using the vendor's public TEST key. Credits and every bulk call have NOT
+      yet succeeded on a real FNNL account, which is why the status is `chosen`.
+      First live proof: millionverifier_get_credits (free) on FNNL's own key.
+      COST: credits per verification, deducted per real-time call. The bulk
+      per-email rate is NOT confirmed, so /api-cost-governance prices a bulk
+      job before it runs. Paid calls auto-approve only inside the standing $100
+      client budget (spend_ceiling_usd); anything over it is confirmed first.
+      UNVERIFIED, check before building the Clay path: whether Clay offers
+      MillionVerifier as a NATIVE column (with bring-your-own-key) or whether it
+      has to be reached through an HTTP API column or pushed in by webhook. Do
+      not assume either until it is looked up in FNNL's Clay workspace.
+      RETIRED: LeadMagic. Its research (billing, OpenAPI findings, the
+      Clay-layer catch-all theory) stays in credential-registry.json's
+      leadmagic entry and in git history. It is not in the stack.
 
   intent_signals:
     tool: GetLeads
@@ -413,6 +554,7 @@ lead_data:
     credentials: []
     vendor_pack: null
     notes: >
+      IN THE APPROVED SIX (operator directive 2026-09-22).
       Credentials are empty ON PURPOSE: GetLeads authenticates by OAuth through its
       MCP server at https://app.getleads.io/api/mcp , roughly 45 tools, so there is
       no .env key. A REST API exists but has NO public documentation
@@ -442,7 +584,7 @@ lead_data:
       acquisition signals are UNKNOWN; only tool existence is established.
 
   list_workbench:
-    tool: Clay (CANONICAL working list)
+    tool: Clay
     status: chosen
     capability: >
       The visible, human-editable surface the working lead list lives on:
@@ -451,29 +593,150 @@ lead_data:
     run_state_field: run_state.list_workbench
     credentials: [CLAY_API_KEY]
     vendor_pack: null
+    credit_policy: zero_clay_credits   # HARD RULE, operator directive 2026-09-22. Full text below.
+    credit_policy_rule: >
+      HARD RULE, operator directive 2026-09-22. FNNL NEVER runs anything in Clay
+      that consumes Clay credits. Clay is where lead lists are BUILT AND WATCHED,
+      never a data vendor FNNL pays through Clay's own balance.
+      1. BUILD LEAD LISTS IN CLAY BY DEFAULT. Whenever a lead list is built, it
+         lives in a Clay table so the operator watches it fill live, instead of a
+         CSV assembled blind in Claude Code. The session pushes each stage's rows
+         into the client's tables by inbound webhook (build_protocol below). The
+         local CSVs stay the working copy the downstream skills read, because
+         Clay's API cannot read a table back below its top plan tier; operator
+         edits made in the table come back by manual export before upload. A
+         CSV-only build is the fallback only while the client's table and webhook
+         are not ready, and the session says so.
+      2. ZERO CLAY DATA CREDITS, EVER. Banned outright: Clay's own enrichments and
+         data providers running on Clay's account instead of FNNL's key, Clay's
+         own email and phone waterfalls on Clay credits, Claygent and AI columns
+         on Clay's AI credits, Clay's built-in people and company search wherever
+         it bills credits, and the Clay MCP's search, enrich and subroutine tools
+         (whichever generation the connector exposes: search-companies,
+         search-contacts, search-contacts-by-name, find-and-enrich-company,
+         find-and-enrich-contacts-at-company, find-and-enrich-list-of-contacts,
+         add-company-data-points, add-contact-data-points, run_subroutine,
+         run_subroutine_direct). A non-zero spend_ceiling_usd, auto_execute, or an
+         approved_exceptions entry NEVER authorizes Clay credits. Only a new,
+         explicit operator directive that changes this rule can.
+      3. EVERY TOOL INSIDE CLAY RUNS ON FNNL'S OWN API KEY. Any enrichment column
+         (native integration or HTTP API column) is connected with FNNL's own key
+         for a tool in the approved six (for example GetLeads or Prospeo). A tool
+         outside the six (for example BlitzAPI) first needs operator approval
+         under approved_stack rule 2, and then also runs on FNNL's own key. If a
+         tool cannot be keyed inside Clay (no bring-your-own-key option, or the
+         HTTP API column is plan-gated), call it OUTSIDE Clay with FNNL's key and
+         push the finished rows in by webhook. Never fall back to Clay credits
+         because a key is missing, rate-limited or failing: stop and report.
+      4. DEFAULT-DENY WHAT IS UNPROVEN. Any Clay action, column or MCP tool whose
+         billing has not been verified as zero-credit is treated as
+         credit-consuming and is not run. Before a keyed column runs on a full
+         table: confirm its account setting shows FNNL's own key, run it on 1 to 5
+         rows, and read the Clay credit balance before and after. Any drop means
+         stop and report.
+      5. THE SECOND METER, ACTIONS. Bring-your-own-key removes Clay DATA CREDITS
+         but still consumes Clay ACTIONS, the plan's platform-usage allowance (see
+         TWO METERS in the notes). The operator's directive allows keyed tools
+         inside Clay, so Actions are allowed, but they are still spend and route
+         through /api-cost-governance like any paid call. Prefer the zero-meter
+         path whenever it gives the same result: enrich outside Clay with FNNL's
+         keys and push rows in by inbound webhook. Webhook import, viewing, manual
+         edits, formulas, filters and CSV export cost zero Actions and zero
+         credits.
+      6. WHAT THE SESSION MAY CALL ON THE CLAY MCP: only free metadata and read
+         calls (get-current-workspace, list_subroutines, get-task,
+         get-task-context). Everything else on that connector falls under rule 4.
+         The session cannot create tables or columns in Clay, so the operator
+         builds or duplicates the client's table in the Clay UI with an
+         inbound-webhook source and records the webhook URL in the client's
+         gitignored profile, never in a tracked file.
+    build_protocol: >
+      HOW A LIST BUILD USES CLAY (operator directive 2026-09-22; wired into
+      /tam-build, /lead-scoring and /email-waterfall; tool scripts/workbench_push.mjs).
+      TABLES, one per row version so no table ever holds two versions of a row:
+      companies (list_stage sample, then company_tam), contacts (contact_tam),
+      scored (scored), and one send list per campaign (verified). The operator
+      creates each in the Clay UI with an inbound-webhook source, TURNS AUTO-RUN OFF,
+      and records it in the client's gitignored client-profile.yaml:
+        list_workbench_tables:
+          companies: { webhook_url: "", ready: false, auto_run_off: false }
+          contacts:  { webhook_url: "", ready: false, auto_run_off: false }
+          scored:    { webhook_url: "", ready: false, auto_run_off: false }
+          send_lists:
+            <campaign-slug>: { webhook_url: "", ready: false, auto_run_off: false }
+      Optional per table: auth_header (the header name exactly as Clay's cURL
+      example shows it; Clay's docs do not name it) and auth_token_env (the
+      scripts/.env variable holding the token).
+      READY means ready: true AND auto_run_off: true AND an https webhook_url. The
+      script checks all three and exits 3 otherwise; the skill then builds CSV-only
+      and says "list workbench not ready: built CSV-only" at the top of its report.
+      WHY AUTO-RUN MUST BE OFF (verified in Clay's docs, 2026-09-22): the webhook
+      import itself costs zero credits and zero Actions, but auto-run is ON by
+      default and fires every enrichment column on each arriving row, which spends
+      credits. Keyed columns are run deliberately after an /api-cost-governance
+      preview and the 1-to-5-row credit test, never by auto-run.
+      HOW PUSHING BEHAVES (Clay docs, 2026-09-22): one POST makes one row (arrays are
+      not split); Content-Type must be application/json or the row lands empty;
+      about 10 requests per second per WORKSPACE (the script paces at 8); 100 KB per
+      row; a 429 drops the row (the script retries); 50,000 lifetime submissions
+      per webhook source, then 403 and a new webhook source is needed; there is NO
+      upsert, so a re-push appends duplicates. The script refuses to re-push the
+      same CSV to the same table (exit 4, --force overrides), writes rows that did
+      not land to profiles/<slug>/workbench/failed-*.csv so a retry pushes only
+      those, and logs every push to profiles/<slug>/workbench/push-log.jsonl
+      (never the webhook URL). Every row gets list_stage, pushed_at, push_id and
+      push_row columns.
+      PLAN GATE, UNVERIFIED FOR FNNL: Clay's docs say inbound webhooks need the
+      Growth plan or higher. FNNL's Clay plan tier is not recorded. If webhooks are
+      unavailable, the fallback is a manual CSV import into the table (also free),
+      which gives the view but not the live fill.
+      THE CSV STAYS THE WORKING COPY. Downstream skills read the local CSVs, because
+      the Clay API cannot read a table back below Enterprise. Operator edits made in
+      Clay come back only by manual export, which replaces the local file; an edited
+      send list is treated as a new send file (unverified emails re-verified,
+      /list-quality-scorecard re-run) before upload.
+      VERIFY every push: report "pushed N/N rows to <table> (list_stage=<x>)". A
+      shortfall goes at the top of the report and is retried once with the
+      failed-rows CSV, never with a full --force re-push.
     notes: >
+      IN THE APPROVED SIX (operator directive 2026-09-22).
       Operator directive 2026-09-18/19: FNNL already uses Clay this way, and as of
-      2026-09-19 CLAY IS THE CANONICAL WORKING LEAD LIST, not a mirror. Clay is the
-      frame, not the data vendor: FNNL's own tools (LeadMagic, Prospeo, AI Ark) do the
-      enrichment through Clay columns.
-      WHAT CANONICAL MEANS HERE, and what it costs. The CSV paths the skill library
-      assumes (tam/tam.csv, contacts.csv, leads.verified.csv) become EXPORTS of Clay,
-      not the source of truth. Roughly 50 skills read those paths, so /tam-build,
-      /email-waterfall, /lead-scoring and /list-quality-scorecard need rework to treat
-      Clay as upstream. That rework is NOT done yet and is the largest open item in
-      this contract.
-      WORKSPACE IS WRONG TODAY. The connected Clay MCP is pinned to workspace
-      a-sales.co (ID 161971), the PREVIOUS company's workspace, matching the
-      sequence.a-sales.co instance URL in the machine-level MCP config. Operator
-      confirmed FNNL NEEDS ITS OWN WORKSPACE. Do NOT build any client list in 161971.
+      2026-09-19 Clay is where the operator WORKS the lead list. Because nothing
+      below Enterprise can read a Clay table back, the local CSV is the machine
+      working copy and Clay is the live view and editing surface (see
+      build_protocol and WHAT CANONICAL MEANS HERE). Clay is the frame, not the
+      data vendor: FNNL's own tools (AI Ark, Prospeo, MillionVerifier,
+      GetLeads) do the enrichment through Clay columns or are pushed in by webhook.
+      Clay's OWN data enrichments (its credits, its waterfall providers) are
+      PROHIBITED OUTRIGHT by credit_policy_rule above. An approved_exceptions entry
+      cannot authorize them.
+      WHAT CANONICAL MEANS HERE, and what it costs. Because an agent cannot read a
+      Clay table back below Enterprise (READ-BACK CONSTRAINT below), the CSV paths
+      the skill library reads (tam/tam.csv, contacts.csv, leads.verified.csv) stay
+      the machine working copy, and Clay is the operator's live view and editing
+      surface. WIRED 2026-09-22: /tam-build, /lead-scoring and /email-waterfall push
+      every stage into the client's tables per build_protocol above. Operator edits
+      in Clay flow back only by a manual CSV export that replaces the local file
+      before upload; that boundary is the one step not automated.
+      WORKSPACE: Dorsia Labs, ID 651677, operator-confirmed as FNNL's workspace on
+      2026-09-22 and re-checked live with get-current-workspace the same day. Before
+      that the connector was pinned to a-sales.co (ID 161971), the PREVIOUS company's
+      workspace. Never build a client list in 161971. The connector is a claude.ai
+      account-level connection, so the workspace is whichever one the operator
+      authorizes at sign-in: run get-current-workspace (free) before any Clay work
+      and stop if it does not return 651677.
       THE MCP IS THE WRONG SURFACE FOR TABLE WORK, verified against the live tool
-      manifest in session. The Clay MCP exposes search-companies, search-contacts,
-      add-company-data-points, add-contact-data-points and run_subroutine. There is NO
-      create-table, NO add-column, NO read-rows and NO update-cell. Everything hangs
-      off an ephemeral search taskId, not a Clay table. Its five subroutines are
-      Clay's OWN enrichments, which spend Clay credits, so pointing an agent at the
-      MCP is more likely to SPEND credits than to save them. Its result widget also
-      does not render in Claude Code, only in claude.ai, ChatGPT and Cursor.
+      manifest in session. The connector has exposed two tool generations
+      (search-companies / search-contacts / add-*-data-points / run_subroutine, and
+      after a 2026-09-22 reconnect find-and-enrich-*). Neither has create-table,
+      add-column, read-rows or update-cell. Everything hangs off an ephemeral search
+      taskId, not a Clay table. Its five subroutines are Clay's OWN enrichments,
+      which spend Clay credits, so pointing an agent at the MCP is more likely to
+      SPEND credits than to save them. ENFORCED IN CODE since 2026-09-22: the project
+      hook .claude/hooks/clay-credit-guard.mjs (wired in .claude/settings.json)
+      blocks every connector tool except the four free read calls, plus the known
+      credit-spending tool names on any server. It is a backstop for Claude Code
+      only; it cannot see columns run inside the Clay web app.
       THE SURFACES THAT DO WORK: an INBOUND WEBHOOK to push rows into a table
       (consumes ZERO Actions), and the Routines API (POST /routines/{id}/run) to
       invoke saved logic. Public REST base https://api.clay.com/public/v0 , header
@@ -485,8 +748,9 @@ lead_data:
       and "an Action will still be consumed." Nothing inside Clay enriches for free,
       including the HTTP API column. Webhook import, viewing, manual editing,
       formulas, filters and CSV export DO cost zero Actions.
-      NATIVE vs HTTP COLUMN: LeadMagic and Prospeo are NATIVE Clay integrations and
-      both support bring-your-own-key. AI ARK IS NOT NATIVE, so reaching it from Clay
+      NATIVE vs HTTP COLUMN: Prospeo is a NATIVE Clay integration with
+      bring-your-own-key. Whether MillionVerifier is native is UNVERIFIED (see
+      email_verification.notes). AI ARK IS NOT NATIVE, so reaching it from Clay
       needs an HTTP API column, which requires Clay's GROWTH plan (~446 USD/mo). With
       Clay canonical that cost is now on the critical path, not optional. The
       alternative is calling AI Ark from a script and pushing results in by webhook,
@@ -505,34 +769,51 @@ lead_data:
 
 # =============================================================================
 # 4. AI AND RESEARCH
-#    The models that research, classify, and write. Splitting these slots is
-#    deliberate: the cheapest model that can do bulk classification is almost
-#    never the model you want writing final copy.
+#    NO-AI-API RULE (operator directive 2026-09-22): the only AI in FNNL's
+#    cold outbound flow is Claude Code itself (the running session, its
+#    sub-agents, the /deep-research fan-out harness, and its built-in
+#    WebSearch and WebFetch). No third-party AI API is called, and no Claude
+#    API call is made with a key. So research_provider, bulk_classification
+#    and copywriting are RETIRED slots, not gaps. image_generation survives
+#    for sender headshots only, as the one approved exception recorded in
+#    approved_stack.approved_exceptions. /ai-model-routing holds the doctrine.
 # =============================================================================
 
 ai:
 
   research_provider:
-    tool: Parallel.ai
-    status: chosen
+    tool: null
+    held_tool: Parallel.ai   # history only: retired 2026-09-22 (no-AI-API rule)
+    status: retired
     capability: >
       Primary web research engine for ICP, offer, and account research. Should
       return sourced, citable answers rather than unattributed prose.
+    # run_state.ai_research_provider is a PROVENANCE field that 50+ skills
+    # read. It keeps its name and now records what Claude Code ran, for
+    # example claude-deep-research (+ claude-websearch gap passes).
     run_state_field: run_state.ai_research_provider
-    credentials: [PARALLEL_API_KEY]
+    credentials: []
     vendor_pack: null
     notes: >
-      Purpose-built for agent web research and returns source-attributed results with
-      calibrated confidence, which is what this slot asks for over unattributed prose.
-      Relevant products: Search API for real-time retrieval, Task API for deep
-      research in a single call, FindAll for entity discovery, Monitor for continuous
-      tracking, plus an OpenAI-compatible Responses API.
-      This is a RESEARCH engine, not a general-purpose LLM. It does not fill
-      bulk_classification or copywriting, both of which remain open.
+      RETIRED BY THE NO-AI-API RULE (operator directive 2026-09-22). Claude
+      Code does this job natively: the primary research pass is the Claude
+      native /deep-research fan-out harness (logged, and audited by
+      scripts/research/research_routing_check.mjs), and thin spots are filled
+      by a second targeted /deep-research run or a WebSearch/WebFetch pass.
+      The live X / social read it used to cover no longer exists; skills use
+      WebSearch where it returns public posts and log the gap. No third-party
+      research tool fills this slot, and /stack-setup does not ask for one.
+      Its former key (PARALLEL_API_KEY) is retired and is not requested.
+      HISTORY, kept for reference (2026-09-18, then held 2026-09-22):
+      Parallel.ai was recorded here as a purpose-built agent web-research
+      engine returning source-attributed results with calibrated confidence
+      (Search API, Task API for deep research, FindAll for entity discovery,
+      Monitor for continuous tracking). It was a research engine only and did
+      not fill bulk_classification or copywriting.
 
   bulk_classification:
     tool: null
-    status: not_chosen
+    status: retired
     capability: >
       Cheap, high-volume classification and extraction at TAM scale (ICP fit
       scoring, hard-no filtering, field extraction across thousands of rows).
@@ -540,49 +821,68 @@ ai:
     credentials: []
     vendor_pack: null
     notes: >
-      GAP. Operator confirmed 2026-09-18 that FNNL has no LLM API key yet.
-      Cost per token dominates here, not quality. This is the slot that decides
-      whether qualifying a 40k-company TAM costs single-digit dollars or hundreds.
-      WHAT THIS BLOCKS: there is no credentialed, scriptable path for TAM-scale ICP
-      fit scoring, hard-no filtering or bulk field extraction. /lead-scoring and the
-      classification passes in /tam-build have to run manually or inside an
-      interactive Claude Code session, which does not scale to tens of thousands of
-      rows and cannot be cost-governed by /api-cost-governance.
-      Parallel.ai does NOT fill this. It is a research engine, not a cheap bulk
-      classifier.
+      RETIRED BY THE NO-AI-API RULE (operator directive 2026-09-22). Claude
+      Code does this job natively: Claude sub-agents fanned out with the
+      Task/Agent tool per /personalization-subagent-pattern (disjoint batches,
+      one output file per agent, merge by a stable id, post-merge dedupe).
+      Deterministic filters (hard-no rules, firmographic cuts) stay in plain
+      code with no AI. /lead-scoring and the classification passes in
+      /tam-build run this way; there is no scripted provider path and none is
+      to be added.
+      HONEST LIMIT: sub-agent fan-out is bounded by session time and context,
+      not by a per-token bill, so a tens-of-thousands-row TAM runs in waves of
+      batches, and the fit prompt is tuned on a sample before the full set.
+      Claude Code usage is not a per-call metered API spend in these skills,
+      so /api-cost-governance has no AI preview to run for it.
+      HISTORY (2026-09-18): recorded as a GAP because FNNL had no LLM API key.
 
   copywriting:
     tool: null
-    status: not_chosen
+    status: retired
     capability: >
       Final campaign copy and nuanced analysis, where quality beats cost.
     run_state_field: null
     credentials: []
     vendor_pack: null
     notes: >
-      GAP. Operator confirmed 2026-09-18 that FNNL has no LLM API key yet.
-      WHAT THIS BLOCKS: /campaign-copywriting and /outreach-copywriting have no
-      credentialed model to generate final copy or the per-lead personalization that
-      /personalization-subagent-pattern fans out. Copy can still be written inside an
-      interactive session, but it cannot be scripted, batched or cost-governed.
-      Keep this slot separate from bulk_classification on purpose. The cheap model
-      that scores 40k companies is not the model that should write final copy.
+      RETIRED BY THE NO-AI-API RULE (operator directive 2026-09-22). Final
+      copy, phone scripts and per-lead personalization are written in the
+      native Claude Code session from the clean research packet (a
+      clean-packet sub-agent is fine, and /personalization-subagent-pattern
+      fans per-lead work out across sub-agents). This supersedes the
+      2026-06-17 directive that generated copy through a Claude API call by
+      default: there is no API copy path and no notify-then-fall-back branch.
+      The Copy QA Gate in /ai-model-routing still runs on every piece of copy.
+      HISTORY (2026-09-18): recorded as a GAP because FNNL had no LLM API key.
 
   image_generation:
-    tool: null
-    status: not_chosen
+    tool: OpenAI
+    status: chosen
     capability: >
-      Sender persona headshots and light campaign visual assets.
+      Sender persona headshots only. No other image or visual generation
+      (no-AI-API rule, operator directive 2026-09-22).
     run_state_field: null
+    # Deliberately empty. The headshot key is requested only when the
+    # headshot step runs or cold-email infrastructure setup starts, so it must
+    # never appear here, where stack setup or preflight could flag it missing.
     credentials: []
     vendor_pack: null
     notes: >
-      Not chosen, and genuinely optional. Mark n/a if FNNL supplies real photos for
-      sender personas instead of generating them.
+      THE ONE AI EXCEPTION to the no-AI-API rule: OpenAI, headshots only,
+      asked for at infrastructure setup. Approved by the operator on
+      2026-09-22 and recorded in approved_stack.approved_exceptions.
+      /mailbox-profile-generator runs it through
+      scripts/generate_inbox_profiles.py. The key is requested ONLY when that
+      headshot step actually runs, or when the operator says to start setting
+      up cold-email infrastructure; until then preflight treats it as "not
+      needed yet". Status is `chosen`, not `live`, until one real headshot
+      call succeeds on FNNL's own key. Mark n/a instead if FNNL supplies real
+      photos for sender personas.
 
   research_routing:
     tool: null
-    status: not_chosen
+    value: claude_deep_research   # the only valid value (no-AI-API rule, 2026-09-22)
+    status: chosen
     capability: >
       The policy (not a tool) for which AI slot handles which research layer,
       and what each is allowed to spend.
@@ -590,46 +890,67 @@ ai:
     credentials: []
     vendor_pack: null
     notes: >
-      BLOCKED until bulk_classification and copywriting are filled. A routing policy
-      that can only route to one provider is not a policy.
-      What IS decided: Parallel.ai handles web research (ICP, offer, account, signal
-      discovery). What is undecided is which model handles cheap bulk work and which
-      handles final copy, because neither is credentialed.
-      Revisit with /ai-model-routing once an LLM key exists.
+      DECIDED BY THE NO-AI-API RULE (operator directive 2026-09-22). The only
+      valid run_state.research_routing value is claude_deep_research: the
+      Claude native /deep-research harness runs the primary pass, and each run
+      is logged in scripts/api-balance-ledger.md so
+      scripts/research/research_routing_check.mjs can audit it. The former
+      values third_party_ai and claude_native are retired; a profile still
+      carrying one is run as claude_deep_research and the normalization is
+      noted in the activity log. Status stays `chosen` until one FNNL client
+      run has logged a real /deep-research primary.
+      HISTORY (2026-09-18): this slot was BLOCKED waiting on LLM keys for
+      bulk_classification and copywriting, with web research assigned to
+      Parallel.ai. All three are retired, so nothing blocks it now.
 
 # =============================================================================
 # 5. WEB ACCESS
+#    NO-AI-API RULE (operator directive 2026-09-22): web search and page
+#    reads are the Claude Code harness's own built-in WebSearch and WebFetch
+#    tools. Neither is a third-party slot any more, so both are RETIRED.
 # =============================================================================
 
 web:
 
   search:
-    tool: Parallel.ai
-    status: chosen
+    tool: null
+    held_tool: Parallel.ai   # history only: retired 2026-09-22 (no-AI-API rule)
+    status: retired
     capability: Programmatic search results (web, news, places) for research and discovery.
     run_state_field: null
-    credentials: [PARALLEL_API_KEY]
+    credentials: []
     vendor_pack: null
     notes: >
-      Parallel's Search API. MAPPING INFERRED, NOT STATED: the operator named
-      Parallel.ai once, as part of the stack. Assigning it to web.search follows from
-      its product surface (it runs its own web-scale index built for LLM use), not
-      from an explicit instruction. Same key as research_provider, so this costs
-      nothing extra to adopt. Reassign freely if FNNL prefers a separate search tool.
+      RETIRED AS A THIRD-PARTY SLOT BY THE NO-AI-API RULE (operator directive
+      2026-09-22). Web search is the Claude Code harness's built-in WebSearch
+      tool, which needs no key and no purchase. /ai-model-routing routes it
+      (URL discovery, gap passes, VOC URL finding). Its former key
+      (PARALLEL_API_KEY) is retired and is not requested.
+      HISTORY (2026-09-18, then held 2026-09-22): Parallel's Search API was
+      mapped here by inference from its product surface, not by an explicit
+      operator instruction, sharing research_provider's key.
 
   crawl:
-    tool: Parallel.ai
-    status: chosen
+    tool: null
+    held_tool: Parallel.ai   # history only: retired 2026-09-22 (no-AI-API rule)
+    status: retired
     capability: Website crawling and content extraction for company research and signal detection.
     run_state_field: null
-    credentials: [PARALLEL_API_KEY]
+    credentials: []
     vendor_pack: null
     notes: >
-      Parallel's Extract API. MAPPING INFERRED, NOT STATED, on the same basis as
-      web.search above. Covers page content extraction for company research and
-      signal detection. If FNNL later needs deep multi-page site crawls rather than
-      targeted extraction, re-evaluate: the parked spider MCP connector in
-      _vendor-library/mcp-connectors.json is the alternative already catalogued.
+      RETIRED AS A THIRD-PARTY SLOT BY THE NO-AI-API RULE (operator directive
+      2026-09-22). Page reads are the Claude Code harness's built-in WebFetch
+      tool; at scale, Claude sub-agents fetch and digest disjoint URL batches
+      (scale mode in /ai-model-routing). Where WebFetch is blocked (Reddit,
+      G2), the route is operator paste, and an unread source is logged as
+      unread. Its former key (PARALLEL_API_KEY) is retired and is not requested.
+      HISTORY (2026-09-18, then held 2026-09-22): Parallel's Extract API was
+      mapped here by inference on the same basis as web.search. A parked
+      spider MCP connector in _vendor-library/mcp-connectors.json was the
+      catalogued alternative for deep multi-page crawls; it is a data
+      scraper, not an AI provider, and stays parked unless the operator
+      approves it under approved_stack rule 2.
 
 # =============================================================================
 # 6. OPERATIONS
@@ -711,28 +1032,35 @@ operations:
 
 # =============================================================================
 # 7. EXECUTION DEFAULTS
-#    Not tools. These are the workspace-level safety settings a new client's
-#    run_state inherits. The defaults below are deliberately conservative:
-#    nothing spends and nothing runs unattended until you say otherwise.
+#    Not tools. These are the workspace-level settings a new client's
+#    run_state inherits. The mode default is conservative (review_gates).
+#    Spend runs on a standing budget per client run that is never asked.
 # =============================================================================
 
 execution_defaults:
 
   execution_mode: review_gates      # review_gates | auto_execute
   run_state_field_execution_mode: run_state.execution_mode
-  spend_ceiling_usd: 0              # 0 means confirm before every paid call
+  spend_ceiling_usd: 100            # standing budget per client run, never asked (operator directive 2026-09-22)
   run_state_field_spend_ceiling: run_state.spend_ceiling_usd
   notes: >
-    Raise these only on an explicit instruction from the operator, never
-    silently. auto_execute with a non-zero ceiling lets the system spend money
-    without asking, so it should be a deliberate decision per client.
-    CONFIRMED BY OPERATOR 2026-09-18: hold the ceiling at 0 and stay on
-    review_gates until each tool has made one verified call from this
-    workspace. Reason given: none of the eight chosen tools is proven here yet,
-    and several bill per record (AI Ark per credit, Prospeo per reveal,
-    GetLeads wallet cash per scrape), so an unattended misconfigured query
-    could burn real money before anyone sees it. Revisit per tool as each one
-    reaches status: live, not as a single blanket change.
+    STANDING SPEND BUDGET (operator directive 2026-09-22): every client run
+    gets spend_ceiling_usd = 100, written automatically and never asked at
+    onboarding, intake, kickoff or run start. Paid data steps inside it run
+    without a confirmation, a purchase that would push the run over it stops
+    and asks, and each new wave starts a fresh $100. Mailbox infrastructure
+    (domains, mailbox capacity) is outside the budget and still needs the
+    operator's approval of the setup total. Change a client's figure, or the
+    execution_mode, only on an explicit operator instruction, never silently.
+    HISTORY, CONFIRMED BY OPERATOR 2026-09-18 (the spend half was superseded on
+    2026-09-22 by the standing budget above; the review_gates half stands):
+    hold the ceiling at 0 and stay on review_gates until each tool has made
+    one verified call from this workspace. Reason given: none of the eight
+    chosen tools is proven here yet, and several bill per record (AI Ark per
+    credit, Prospeo per reveal, GetLeads wallet cash per scrape), so an
+    unattended misconfigured query could burn real money before anyone sees
+    it. Revisit per tool as each one reaches status: live, not as a single
+    blanket change.
 
 # =============================================================================
 # 8. FNNL AGENCY PROCESS OVERRIDES
@@ -783,6 +1111,17 @@ process_overrides:
 #     vendor_pack: null
 #     notes: >
 #       Verified 2026-09-20 against a real campaign-create call.
+#
+# A decided POLICY slot (not a tool) keeps `tool: null` and records the
+# decision in `value`, for example:
+#
+#   research_routing:
+#     tool: null
+#     value: claude_deep_research
+#     status: chosen
+#
+# A RETIRED slot keeps `tool: null`, `status: retired`, `credentials: []`,
+# and says in its notes what Claude Code does instead.
 #
 # After editing by hand:
 #   1. Add any new credential names to scripts/.env.example (names only, never

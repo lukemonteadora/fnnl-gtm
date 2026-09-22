@@ -22,7 +22,7 @@ The computed columns are spilling `ARRAYFORMULA`s, so when you add or update row
 
 Goal: warmed disposable inventory so a future client launches instantly. **Size to near-term pipeline only.**
 
-1. Decide how many groups (1 group = 6 `.co` domains / 12 mailboxes). Confirm spend against `spend_ceiling_usd`.
+1. Decide how many groups (1 group = 6 `.co` domains / 12 mailboxes). Get the operator's approval of the purchase total: pool purchases are infrastructure, so the standing $100 data budget in `spend_ceiling_usd` never covers them.
 2. For each group, orchestrate the existing flow — do NOT hand-roll any of it:
    - `/mailbox-mix-strategy` is for signed clients; for the pool, use the fixed **70/30 Google/Microsoft** pre-warm mix (≈4 Google + 2 Microsoft domains, whole domains on one provider).
    - **Domains and mailboxes:** use the domain-setup skill for the registrar and mailbox provider locked in `run_state.registrar` and `run_state.mailbox_provider` (recorded jointly as `run_state.infrastructure_stack`), if `/stack-setup` activated a pack that provides one. The `domain-infra` pack ships one skill per registrar-and-provider *pairing* rather than per tool, so the route is the pairing FNNL actually buys on (`/spaceship-zapmail-domain-setup` is one such pairing). If no pack is active, buy and configure on the registrar's and the provider's own surfaces. Either way the outcome is the same: 6 `.co` domains with **`autoRenew: false`** plus 12 mailboxes (one persona). If neither slot is filled yet, stop and run `/stack-setup`. Do not pick a registrar.

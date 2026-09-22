@@ -63,13 +63,13 @@ whichever skill `/stack-setup` activated for that slot.
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute`, proceed without pausing: apply the rubric, record the decision, continue, and confirm spend once against `run_state.spend_ceiling_usd` then auto-approve within it. Stop only for the hard-stop list (funding a wallet, paying by card, accepting OAuth or terms, anything that authenticates, or pressing a campaign **Start**). On a long async wait (warmup maturity is ~3 weeks), background-poll and move to other productive work, never holding the session idle on a clock. UI-only steps are finished in the browser yourself, hands-free, under the same boundaries (see Automated vs Manual).
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute`, proceed without pausing: apply the rubric, record the decision, and continue. Pool purchases are infrastructure, so they run against the setup total the operator approved once (the standing $100 data budget in `run_state.spend_ceiling_usd` never covers them), auto-approved within that total. Stop only for the hard-stop list (funding a wallet, paying by card, accepting OAuth or terms, anything that authenticates, or pressing a campaign **Start**). On a long async wait (warmup maturity is ~3 weeks), background-poll and move to other productive work, never holding the session idle on a clock. UI-only steps are finished in the browser yourself, hands-free, under the same boundaries (see Automated vs Manual).
 
 ## Material Decision Rule
 
 When this skill reaches a material fork, name the realistic options, recommend the strongest path, and explain why the main alternatives are weaker before committing.
 
-Ask before choices that affect spend, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed. When asking, use the native Interactive Inputs / Choice Prompts pattern: recommended option first and labelled, short choices, custom answer last.
+Ask before choices that affect spend beyond an approved budget, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed. When asking, use the native Interactive Inputs / Choice Prompts pattern: recommended option first and labelled, short choices, custom answer last.
 
 ## Activity Log Protocol
 

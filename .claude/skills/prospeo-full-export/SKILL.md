@@ -9,7 +9,7 @@ description: Export your entire Prospeo people search to CSV. Build filters in P
 
 When this skill reaches a material fork, name the realistic options, recommend the strongest path, and explain why the main alternatives are weaker before committing.
 
-Ask before choices that affect spend, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
+Ask before choices that affect spend beyond an approved budget, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
 
 Do not turn failed or unsafe paths into user-facing options. If this skill's QA rules or stop gates reject a path, filter it out and explain the blocker only when useful.
 
@@ -91,7 +91,7 @@ Just describe what you filtered for. Examples:
 ### Step 3: Claude Runs the Export
 
 Claude will:
-1. Confirm the filters and estimated credit cost
+1. Show the filters and estimated credit cost (inside the client's standing $100 run budget it proceeds; an export that would push the run over it waits for your OK)
 2. Create a TypeScript script
 3. Run it to paginate through all results
 4. Export everything to a CSV file in your current directory
@@ -487,7 +487,7 @@ Before running, Claude will estimate the credit cost:
 | 25,000 | 1,000 | 1,000 | ~$50 |
 | 100,000 (state split) | ~4,000 | ~4,000 | ~$200 |
 
-Claude will always tell you the estimated cost and ask for confirmation before running the full export.
+Claude will always tell you the estimated cost before running the full export. Inside the client's standing $100 run budget (`run_state.spend_ceiling_usd`) it runs without asking; an export that would push the run over the budget, like the 100,000-row state split above, waits for your confirmation.
 
 ---
 

@@ -1,39 +1,50 @@
 ---
 name: ai-model-routing
-description: "AI/model-fit map AND research-pipeline doctrine for FNNL Agency cold outbound. Use before any research, crawl, crunch, or copy step routes to an AI provider. Defines the brief-first, premium-by-default non-redundant, source-registered, VOC-aware, validation-gated pipeline; separates discovery, gap-fill deep research, extraction, VOC mining, analysis, validation, and final-copy layers so the premium copy model is not the default for bulk crunching and the cheap bulk model is not the default for final copy. The PRIMARY research pass is Claude native multi-agent deep research (the /deep-research fan-out harness), which runs all the research categories in parallel and adversarially verifies its own claims; any third-party research provider is a grounding + gap-fill complement that fills only what the deep-research pass leaves thin. Names NO default vendor: which tool fills each AI capability slot comes from the workspace stack contract. Pairs with lead-list-tech-stack-research.md, which routes the data/scraping/enrichment tools."
+description: "AI routing AND research-pipeline doctrine for FNNL Agency cold outbound, under the no-AI-API rule (operator directive 2026-09-22): the only AI is Claude Code itself (the session, its sub-agents, the /deep-research fan-out harness, and its built-in WebSearch and WebFetch). Use before any research, page-read, crunch, critique, or copy step. Defines the brief-first, non-redundant, source-registered, VOC-aware, validation-gated pipeline and separates discovery, gap-fill, extraction, VOC mining, bulk crunch, analysis, validation, and final-copy layers. The PRIMARY research pass is the Claude native /deep-research harness; thin spots are filled by a second targeted /deep-research or WebSearch/WebFetch pass, bulk crunch is Claude sub-agent fan-out, critique is differentiated Claude sub-agents, and final copy is written in the native session. The third-party research, bulk-classification, copywriting, search, and crawl slots are retired; the one surviving AI slot is image generation for sender headshots only. Pairs with lead-list-tech-stack-research.md, which routes the data/scraping/enrichment tools."
 ---
 
 # AI Model Routing
 
-This is the model-selection reference AND the research-pipeline doctrine for every research, analysis, and copy step in the cold-outbound flow. It is the AI-layer sibling of `lead-list-tech-stack-research.md`: that file decides which **data tool** collects a signal; this file decides which **AI capability** researches, crunches, validates, or writes from it, and in what order.
+This is the routing reference AND the research-pipeline doctrine for every research, analysis, and copy step in the cold-outbound flow. It is the AI-layer sibling of `lead-list-tech-stack-research.md`: that file decides which **data tool** collects a signal; this file decides which **Claude Code capability** researches, crunches, validates, or writes from it, and in what order.
 
-A weak workflow asks "can Claude Code just do this?" and pours every step through one model. A strong workflow asks "what decision is this serving, how fresh and how confident must it be, which capability fits, and is this step discovery, extraction, VOC, analysis, validation, or final copy?"
+A weak workflow pours every step through one undifferentiated pass. A strong workflow asks "what decision is this serving, how fresh and how confident must it be, and is this step discovery, extraction, VOC, analysis, validation, or final copy?" and then gives each step the right Claude Code tool: the fan-out harness, a targeted web pass, a batch of sub-agents, or the session itself.
 
-Claude Code stays the execution cockpit: it inspects files, routes the workflow, runs scripts, and orchestrates. It does **not** have to personally perform every AI-heavy step. Route the specialized work to the best-fit capability; keep orchestration local.
+Claude Code is the execution cockpit and the only AI in the flow. It inspects files, routes the workflow, runs scripts, and orchestrates, and it also does the research, crunch, critique, and writing through its own tools.
 
-## There is no default AI vendor
+## There is no AI vendor: Claude Code is the only AI (no-AI-API rule, operator directive 2026-09-22)
 
-FNNL Agency has not chosen its tools. This file describes **capability slots** and the reasoning for routing work between them. It never declares which vendor FNNL uses.
+The operator's rule: this workflow makes **no third-party AI API calls and no Claude API calls made with a key**. The only AI is Claude Code itself:
 
-**The chosen tool for each slot comes from the workspace stack contract at `outbound/stack-contract.yaml`.** It ships empty. The AI and web slots this file routes against are:
+- the running session,
+- its sub-agents (the Task/Agent tool),
+- the Claude native `/deep-research` fan-out harness,
+- its built-in WebSearch and WebFetch tools.
 
-| Slot | Capability role |
-|---|---|
-| `ai.research_provider` | Third-party research engine: grounded web research, deep multi-step reasoning, live social reads |
-| `ai.research_routing` | The routing **policy** (which engine leads the primary pass), not a tool |
-| `ai.bulk_classification` | Cheap, high-volume crunch: clustering, classification, frequency counts, compressing raw dumps |
-| `ai.copywriting` | Premium final-copy generation from a clean research packet |
-| `ai.image_generation` | Image and GIF generation (for example mailbox profile headshots) |
-| `web.search` | Search API for raw URL and news discovery |
-| `web.crawl` | Page extraction: a raw URL to clean markdown or structured text |
+There is no "gap-fill engine", no "complement engine", no "model panel of other families", and no "cheap model pass" any more. Where earlier versions of this file routed work to a third-party AI slot, the Claude-native tool in the table below now does that job.
 
-Slot names are written here group-qualified (`ai.research_provider`, `web.crawl`) because that is the path into the contract file. Other skills, and `/stack-setup` itself, often use the bare key (`research_provider`, `crawl`). They are the same slot; the prefix is just the contract group it sits under.
+**The one exception is sender headshots.** `ai.image_generation` survives for persona headshots only: OpenAI, headshots only, asked for at infrastructure setup. It is recorded as an operator-approved exception in `approved_stack.approved_exceptions` of `outbound/stack-contract.yaml` (2026-09-22). Its key is **never** requested or flagged as missing at onboarding, intake, kickoff, preflight, stack setup, or workspace creation. `/mailbox-profile-generator` asks for it only when the headshot step actually runs, or when the operator says to start setting up cold-email infrastructure.
 
-**If a slot this run needs is unset, stop and route the operator to `/stack-setup` rather than substituting a vendor.** Do not pick a plausible tool, and do not infer the stack from a vendor named in a worked example or parked in `_vendor-library/`.
+> **Approved-stack rule (operator directive 2026-09-22).** FNNL's tools are the closed list in the `approved_stack` block of `outbound/stack-contract.yaml`. Meet every need from that list first, and check each listed tool's full surface (its MCP tool list and API docs) before declaring a gap. Any other tool named in this file is a catalogue example: raise it only as "OUT OF STACK, needs operator approval", never as the path, and never credential or spend on it until the operator approves it by name and it is recorded in `approved_stack.approved_exceptions`. A slot at status `held` declares nothing, exactly like `not_chosen`.
 
-**A named tool is not a working tool.** A slot with status `chosen` has only been recorded. Only status `live` means a real call against FNNL's own account has succeeded. Never tell the operator a step can be automated on the strength of `chosen` alone.
+The AI and web slots in the contract, and what does each job now:
 
-Where this file names real vendors, it is illustrating what could fill a slot, never declaring what FNNL uses.
+| Slot | Status (2026-09-22) | What does the job now |
+|---|---|---|
+| `ai.research_provider` (every role it used to cover: grounded search, deep reasoning, live social, premium pinpoint) | **retired** | Primary: the `/deep-research` harness. Gaps: a second targeted `/deep-research` run or a WebSearch/WebFetch pass. Live X read: not available (see Stage 5). |
+| `ai.research_routing` | a policy, not a tool | One valid value: `claude_deep_research` |
+| `ai.bulk_classification` | **retired** | Claude sub-agents fanned out per `/personalization-subagent-pattern`; deterministic filters stay in plain code |
+| `ai.copywriting` | **retired** | The native Claude Code session (a clean-packet sub-agent is fine) |
+| `ai.image_generation` | kept, headshots only | The approved exception above, run by `/mailbox-profile-generator` |
+| `web.search` | **retired as a third-party slot** | The harness's built-in WebSearch |
+| `web.crawl` | **retired as a third-party slot** | The harness's built-in WebFetch |
+
+Slot names are written here group-qualified (`ai.research_provider`, `web.crawl`) because that is the path into the contract file. Other skills, and `/stack-setup` itself, often use the bare key (`research_provider`, `bulk_classification`, `copywriting`, `search`, `crawl`). They are the same slots.
+
+**A retired slot is not a gap.** Its `tool` is null by design. If a skill, an old profile, or a worked example routes work to one, do that job with the Claude-native tool in the table and do **not** send the operator to `/stack-setup` to fill it. Never credential, buy, or call a third-party AI tool to fill it either.
+
+**Do not confuse the retired contract slot `ai.research_provider` with the provenance field `run_state.ai_research_provider`** (and its packet twins `ai_analysis_provider`, `ai_copy_provider`, `validation_provider`). The provenance fields keep their names, because 50+ skills read them. Only their values change, for example `claude-deep-research`, `claude-websearch`, `claude-subagents`, `claude-native`.
+
+The data slots this file does not govern (discovery, enrichment, verification, the list workbench) keep the full stack-contract discipline: if a data slot a run needs is unset, stop and route the operator to `/stack-setup`, and a `chosen` tool is not a `live` tool.
 
 ## When To Use This
 
@@ -46,46 +57,51 @@ Use this before:
 - `/lead-magnet-brainstorm` crunches the offer brief.
 - `/campaign-copywriting` writes final copy or phone scripts.
 - `/list-quality-scorecard` or `/icp-prompt-builder` validate at scale.
+- `/consultant` or `/roast` run a critic or second-opinion panel.
 
-Do not add an AI call to a step that does not need one. See [Don't Add AI Just Because It Exists](#dont-add-ai-just-because-it-exists).
+Do not add an AI step to a step that does not need one. See [Don't Add AI Just Because It Exists](#dont-add-ai-just-because-it-exists).
 
 ## Research Routing: HARD RULE (Claude native deep research primary)
 
 This is the authority for the rule; every research skill points here. **The primary research pass is Claude native multi-agent deep research, the `/deep-research` fan-out harness.** It spawns multiple sub-agents that research every category the brief needs in parallel (market, competitor, ICP pain, social, VOC discovery), fetches and reads real sources, adversarially verifies each claim against those sources, and synthesizes one cited report.
 
-This deeper, self-verifying, multi-agent pass is the default research brain. It is a **runtime capability of the Claude Code session itself, not a purchased slot**, which is exactly why it can be the default in a workspace that has chosen no vendors yet. `run_state.research_routing` picks the primary engine:
+It is a **runtime capability of the Claude Code session itself, not a purchased slot**, and it needs no API key. `run_state.research_routing` has **one valid value** (no-AI-API rule, operator directive 2026-09-22):
 
-- **A. [Default] `claude_deep_research`.** The Claude native `/deep-research` skill runs the primary broad pass (fan-out sub-agents across all needed categories, adversarial verification, cited synthesis). **This is CLAUDE NATIVE, not the Claude API.** It runs inside this Claude Code session on native session inference, invoked directly as the `/deep-research` skill. It does **NOT** consume an API key and is **NOT** run through a provider router. A Claude API path, where one is configured, is scoped ONLY to final COPY generation (see the Copy Generation HARD RULE), never to this research pass. So "Claude research" means the native `/deep-research` skill; a Claude API key is a copy-step concern only.
-- **B. `third_party_ai`.** A third-party-led primary pass, run by whatever tool fills `ai.research_provider`. Use only on an **explicit operator opt-out back to it**, for example when a run must keep all research spend on a third-party credit dashboard. This path requires that slot to be filled and its key present; if the slot is empty, this is not a valid routing choice.
-- **C. `claude_native`.** Claude's inline WebSearch/WebFetch with no fan-out. This is the WEAK path (one shallow pass, no adversarial verify); it is **never** the default and is not the same thing as `claude_deep_research`. Reserve it for a tiny, throwaway lookup where firing the full `/deep-research` harness would be overkill, and say so.
+- **`claude_deep_research` (the only value).** The Claude native `/deep-research` skill runs the primary broad pass (fan-out sub-agents across all needed categories, adversarial verification, cited synthesis). **This is CLAUDE NATIVE, not the Claude API.** It runs inside this Claude Code session on native session inference, invoked directly as the `/deep-research` skill. It does **NOT** use an API key and is **NOT** run through a provider router.
+- **Retired values.** `third_party_ai` (a primary pass led by a third-party research tool) is retired together with the third-party research slot. `claude_native` is no longer a routing value either. If a profile still carries either one, run the `/deep-research` primary as `claude_deep_research` and note the normalization in the activity log. Do not ask the operator to pick between them.
 
-**Default = `claude_deep_research`.** If `run_state.research_routing` is **unset**, treat it as `claude_deep_research` and run the `/deep-research` primary pass. Do **not** stop to ask. Move to `third_party_ai` or `claude_native` only when the operator explicitly says so; record the choice, honor it for the whole run, and never re-ask. If it is already set, honor it silently. **Do not confuse `claude_deep_research` (the multi-agent harness, the default) with `claude_native` (bare inline WebSearch, the weak path):** a bare inline WebSearch answer never satisfies the primary pass.
+**Unset means `claude_deep_research`.** If `run_state.research_routing` is unset, run the `/deep-research` primary pass. Do **not** stop to ask.
 
-**Execution proof: the primary pass is satisfied by a RECORDED deep-research run, not by intent.** In `claude_deep_research` mode the Stage-1 primary pass MUST be an actual `/deep-research` invocation (the fan-out harness), not a single inline WebSearch answer and not a per-row enrichment pass. Then **record proof**: set `run_state.ai_research_provider = claude-deep-research` (append, do not overwrite, if complement engines also ran) AND append a one-line run to the API balance ledger at `scripts/api-balance-ledger.md` (date, skill, `Claude /deep-research (primary), <n> sub-agents / categories`, client). Create that ledger file on first use if it does not exist yet.
+**A bare inline WebSearch is never the primary pass.** Inline WebSearch/WebFetch (one shallow pass, no fan-out, no adversarial verify) is the right tool for a tiny throwaway lookup and for the targeted gap passes in Stages 2 and 8. It never satisfies the Stage-1 primary.
 
-**Self-check before you declare any research step done:** if the run produced no recorded `/deep-research` primary while `research_routing = claude_deep_research`, that is a **FLAGGED VIOLATION**. Stop and either run the deep-research primary now, or get a fresh explicit operator OK to proceed without it. Until a deterministic audit script ships with an activated research pack, run this as a structured self-check rather than describing it as automatic.
+**Execution proof: the primary pass is satisfied by a RECORDED deep-research run, not by intent.** The Stage-1 primary pass MUST be an actual `/deep-research` invocation (the fan-out harness), not a single inline WebSearch answer and not a per-row enrichment pass. Then **record proof**: set `run_state.ai_research_provider = claude-deep-research` (append, do not overwrite, when gap passes also ran, for example `claude-deep-research + claude-websearch`) AND append a one-line run record to the ledger at `scripts/api-balance-ledger.md` (date, skill, `Claude /deep-research (primary), <n> sub-agents / categories`, client). That line is an audit record, not a spend row: it carries no cost. Create the ledger file on first use if it does not exist yet.
 
-**Auditability note.** Claude native `/deep-research` is Anthropic-billed, so it does not show on a third-party credit dashboard the way a third-party research provider would. The ledger line plus the activity-log entry are therefore mandatory, so the run stays auditable in-repo (which primary ran, how many categories and sub-agents), even though the dollars sit on a different bill.
+**Self-check before you declare any research step done:** if the run produced no recorded `/deep-research` primary, that is a **FLAGGED VIOLATION**. Stop and either run the deep-research primary now, or get a fresh explicit operator OK to proceed without it. Where the ledger line exists, `scripts/research/research_routing_check.mjs --skill <skill> --client <client> --json` audits it. The script can only see runs that left a ledger line, so the line itself is mandatory.
 
-**Complement engines (declared, not a fallback).** After the deep-research primary produces its report plus a gap list, route each remaining gap to the engine that is structurally best for it: a **cheap grounded web pass** for a thin sub-topic, a **deep multi-step reasoning agent** for technical gaps, a **live social read** for current X/LinkedIn signal. All three are roles the `ai.research_provider` slot can fill, and a stack may fill them with one tool or several. These are a DECLARED, gap-targeted stage (Stages 2 and 8), recorded in `ai_research_provider`. They fill only what the deep-research pass left thin, and never repeat the broad pass.
+**Auditability note.** Claude Code usage is not a per-call metered API spend in these skills, so no credit dashboard shows the run. The ledger line plus the activity-log entry are what keep it auditable in-repo (which primary ran, how many categories and sub-agents).
 
-No third-party research key is required for the primary pass, because the primary is the native harness. An empty or unkeyed `ai.research_provider` slot therefore degrades only the optional complement stage; it is not a credential hard-stop on primary research. (It IS a hard-stop if the operator explicitly set `research_routing = third_party_ai`, because then the chosen third-party primary must be present and working.)
+**Gap-fill passes (declared, not a fallback).** After the deep-research primary produces its report plus a gap list, fill each remaining gap with a Claude-native tool:
 
-This governs **research** (discovery, grounding, social, VOC, pain-mining). Extraction, crunch, validation, final copy, and image generation still route per the map regardless of this choice.
+- **A thin sub-topic:** a targeted WebSearch/WebFetch pass on that one narrow question.
+- **A deep, technical, niche, or multi-step gap:** a second, narrowly scoped `/deep-research` run on the named gap question.
+- **What a person said on X or LinkedIn right now:** the live X read no longer exists. Use WebSearch where it returns public posts, and log the gap. LinkedIn engagers and post signals come from the data tool in `lead_data.intent_signals`, which is a data vendor, not an AI provider.
 
-## Copy Generation: HARD RULE (premium copy slot, native session fallback)
+These are DECLARED stages (Stages 2 and 8), recorded in `ai_research_provider`. They fill only what the primary pass flagged and never repeat the broad pass. No third-party provider fills a gap.
 
-Final cold-email copy and phone scripts are generated by the **`ai.copywriting` slot**: a premium model working from the clean research packet. **There is no default vendor for this slot.** It must be set during `/stack-setup`.
+This governs **research** (discovery, grounding, social, VOC, pain-mining). Extraction, crunch, validation, and final copy route per the map below.
 
-- **Primary: the configured copywriting model.** Generate the copy through whatever fills `ai.copywriting`, as a billed, logged model call from the clean research packet. Record `ai_copy_provider` with the provider actually used. Spend logs through `/api-cost-governance` like any paid call.
-- **Slot unset, no key, or no credits: NOTIFY the operator, then fall back to the native session.** If `ai.copywriting` is unset, its key is absent, or the provider returns a credit or billing error, tell the operator explicitly ("Configured copy model unavailable: <reason>. Generating copy in the native Claude Code session as the approved backup."), then generate the copy in the native Claude Code session and set `ai_copy_provider = claude-native (fallback: <reason>)`. This is the ONLY sanctioned fallback and it is **never silent**.
-- **The Copy QA Gate runs regardless of engine.** Initial written cold touches must first pass `outreach-copy-framework.md`; all copy then passes `spam-word-checker.md` plus `cold-email-copy-best-practices.md` plus the rule checklist. No engine swap bypasses them.
-- **Why this slot wants a premium model.** Final copy is the one step where model quality shows up directly in the output a prospect reads. It runs on a small, clean input (the packet) and produces a small output, so a premium model here costs cents, while the same model used for bulk classification across a whole TAM costs real money. That asymmetry, not brand preference, is the reason to split the cheap bulk slot from the quality copy slot.
-- **A billed API call and a native session call to the same model family differ in billing, logging, and context isolation, not in capability.** The packet-in, QA-out contract is identical either way.
+## Copy Generation: HARD RULE (native Claude Code session)
+
+Final cold-email copy and phone scripts are written **in the native Claude Code session** from the clean research packet (no-AI-API rule, operator directive 2026-09-22). A clean-packet sub-agent (a Task sub-agent fed only the packet) is fine, and it is the preferred way to get context hygiene.
+
+- **This supersedes the 2026-06-17 directive** that generated copy through a Claude API call by default, and it retires the `ai.copywriting` slot. There is no API copy path and no "no key, notify, then fall back" branch. Native is the path.
+- **Record `ai_copy_provider = claude-native`** (or `claude-native (sub-agent)` when a clean-packet sub-agent wrote it).
+- **The Copy QA Gate runs regardless.** Initial written cold touches must first pass `outreach-copy-framework.md`; all copy then passes `spam-word-checker.md` plus `cold-email-copy-best-practices.md` plus the rule checklist. Nothing bypasses them.
+- **Quality comes from the packet and the gate.** Copy is good when it is built on a clean, evidence-backed packet and passes the QA gate. A sub-agent that sees only the packet gives the same context isolation a separate model call used to give, without any key.
 
 ## The Research Pipeline
 
-Research is not "call a provider." It is an ordered pipeline that knows what decision it is serving before it spends a cent. Intent decides routing, so the brief comes first; the cost gate is half-blind without it.
+Research is not "call a tool." It is an ordered pipeline that knows what decision it is serving before it spends any effort. Intent decides routing, so the brief comes first.
 
 ```
 0.  RESEARCH BRIEF        assembled from profile + data-point-catalog + campaign slice
@@ -94,27 +110,26 @@ Research is not "call a provider." It is an ordered pipeline that knows what dec
 1.  PRIMARY RESEARCH      Claude native /deep-research fan-out harness (multi sub-agents run ALL needed
                           categories in parallel: market/source/competitor/ICP-pain discovery + source URLs
                           + adversarial claim verification + cited synthesis + its own gap list)
-2.  GAP-FILL RESEARCH     ai.research_provider fills ONLY the primary pass's gaps: a cheap grounded pass on a
-                          thin sub-topic, a deep multi-step reasoning agent on technical gaps, a live social
-                          read for current X/LinkedIn signal. web.search stays a URL helper. In scale mode
-                          these + web.search EMIT ranked URLs, they do NOT scrape
-3.  SOURCE REGISTRY       dedupe + relevance-score URLs before crawling (link-generation lands here)
-4.  CRAWL / EXTRACT       web.crawl (default); a search-snippet fallback on crawl-fail / no-full-page
-5.  VOC / RAW EVIDENCE    separate branch; source_class; exact quotes
-6.  BULK CRUNCH           ai.bulk_classification: clustering / classification / frequency counts;
-                          compress raw dumps BEFORE expensive models
+2.  GAP-FILL RESEARCH     fills ONLY the primary pass's gap list: a targeted WebSearch/WebFetch pass on a
+                          thin sub-topic, or a second narrowly scoped /deep-research run on a technical or
+                          multi-step gap. No third-party provider. In scale mode these EMIT ranked URLs,
+                          they do NOT read every page
+3.  SOURCE REGISTRY       dedupe + relevance-score URLs before reading them (link-generation lands here)
+4.  READ / EXTRACT        WebFetch (default); WebSearch snippets on a fetch failure or blocked site
+5.  VOC / RAW EVIDENCE    separate branch; source_class; exact quotes; Reddit by operator paste only
+6.  BULK CRUNCH           Claude sub-agents fanned out in disjoint batches (one output file each, merge,
+                          dedupe); deterministic filters in plain code; compress raw dumps BEFORE synthesis
 7.  CLAUDE CODE SYNTHESIS campaign synthesis, scoring, judgment, offer-angle development
-8.  GAP-FILL / VERIFY     deep-reasoning delta-critique + Claude-native /deep-research verification on the
-                          PARTIAL packet (NOT a duplicate broad pass)
+8.  GAP-FILL / VERIFY     targeted /deep-research or WebSearch/WebFetch on the PARTIAL packet's named gaps,
+                          plus a differentiated Claude sub-agent critic (NOT a duplicate broad pass)
 9.  VALIDATION GATE       claim -> evidence_id; quote_count >= 3; counterexamples kept; critique applied
 10. CLEAN RESEARCH PACKET conclusions + evidence only; never raw dumps
-11. FINAL COPY            ai.copywriting (primary, from clean packet); native Claude Code session = fallback
-                          on unset slot / missing key / no credits (NOTIFY first)
+11. FINAL COPY            native Claude Code session (a clean-packet sub-agent is fine)
 12. COPY QA               outreach-copy-framework for the initial written cold touch -> spam-word-checker
                           -> cold-email-copy-best-practices -> rule checklist
 ```
 
-The Research Routing HARD RULE (above) governs the research stages (1, 2, and 5). Stage 1 is the Claude native `/deep-research` primary by default (`claude_deep_research`); the Stage 2 and Stage 8 complement engines fill only the gaps that primary flagged. They are DECLARED stages, not the broad pass. If the operator opted back to `third_party_ai`, Stage 1 is instead led by the configured `ai.research_provider`. Extraction, crunch, the Validation Gate, and final copy route per this map regardless of the primary-engine choice.
+The Research Routing HARD RULE (above) governs the research stages (1, 2, 5, and 8). Stage 1 is always the Claude native `/deep-research` primary; Stages 2 and 8 fill only the gaps that primary flagged. Every stage runs inside Claude Code.
 
 ### Stage 0: Research Brief (assembled, not interviewed)
 
@@ -136,80 +151,72 @@ Routing depends on intent, so every research pass opens with a brief. In this fl
 
 ### Premium-by-Default, Non-Redundant Routing
 
-There is ONE active research path. The cheap and standard tiers were removed. **"Premium-by-default" does NOT mean wasteful.** The lever that controls cost is **non-redundancy**, not tier-downgrading. The engines run in non-redundant order: **Claude native `/deep-research`** does the primary broad pass (fan-out sub-agents plus adversarial verify), and the configured complements then fill ONLY the gaps that pass leaves (thin, technical, niche, or live-social coverage). Each runs on what the others cannot do well. That non-redundancy, not tier-downgrading, is the cost lever.
+There is ONE active research path. "Premium-by-default" means the full `/deep-research` harness is always the primary, never a shallow inline answer. It does NOT mean wasteful: the lever that keeps a run lean is **non-redundancy**. Every extra pass costs session time and context even though it is not metered API spend, so each pass runs only on what the others did not cover.
 
-- **Claude native `/deep-research` is the primary research engine** and runs the broad pass FIRST. Because it fans out into multiple sub-agents, one invocation covers ALL the categories the brief needs at once (market scan, cited source discovery, competitor discovery, initial ICP hypotheses, trend scan, discussion/review/forum URL discovery), fetches and reads the real sources, and adversarially verifies each claim against them before synthesizing a cited report. Give it the assembled brief and let it run every category in parallel rather than firing one narrow query at a time. It returns cited claims, source URLs, and **an explicit gap list** (thin areas, unanswered questions, low-confidence or out-of-scope items the complement engines will fill).
-- **The complement engines fill gaps; they never repeat the broad pass.** After `/deep-research` (plus extraction and bulk crunch) produce the report and a gap list, route each gap to the engine role that is structurally best for it:
+- **Claude native `/deep-research` is the primary research engine** and runs the broad pass FIRST. Because it fans out into multiple sub-agents, one invocation covers ALL the categories the brief needs at once (market scan, cited source discovery, competitor discovery, initial ICP hypotheses, trend scan, discussion/review/forum URL discovery), fetches and reads the real sources, and adversarially verifies each claim against them before synthesizing a cited report. Give it the assembled brief and let it run every category in parallel rather than firing one narrow query at a time. It returns cited claims, source URLs, and **an explicit gap list** (thin areas, unanswered questions, low-confidence or out-of-scope items).
+- **Gap passes fill gaps; they never repeat the broad pass.** After `/deep-research` (plus extraction and bulk crunch) produce the report and a gap list, route each gap to the Claude-native tool that fits it:
 
-  | Gap in the primary pass | Route to (role) | Why |
+  | Gap in the primary pass | Route to | Why |
   |---|---|---|
-  | A thin sub-topic that just needs one more cheap grounded pass | Grounded web search pass | a fast cited web pass on a single narrow question, cheaper than re-running the harness |
-  | Deep technical / niche / code / standards / primary-doc reading | Deep-reasoning research agent | stronger on long technical chains a broad pass summarizes too thinly |
-  | Multi-step reasoning across sources: the "why," not just the "what" | Deep-reasoning research agent | reasons across sources instead of listing them |
-  | What a person said on X / LinkedIn right now (live social signal) | Live social read | live social signal the deep-research pass cannot get from static pages |
-  | A single highest-value question that needs an independent second run | Premium pinpoint reasoning run (1/client) | a separate premium reasoning run is a real second opinion on the one call that matters |
+  | A thin sub-topic that just needs one more grounded look | A targeted WebSearch/WebFetch pass | a fast cited pass on a single narrow question, far lighter than re-running the harness |
+  | Deep technical / niche / code / standards / primary-doc reading | A second, narrowly scoped `/deep-research` run on that gap question | its sub-agents read and cross-check the primary docs a broad pass only summarizes |
+  | Multi-step reasoning across sources: the "why," not just the "what" | Claude Code synthesis over the sources already fetched, or the same narrow `/deep-research` run | reason across the evidence in hand before fetching more |
+  | What a person said on X / LinkedIn right now (live social signal) | WebSearch where it returns public posts; LinkedIn engagers from the intent-signals data tool; otherwise log the gap | the live X read no longer exists (no-AI-API rule) |
+  | A single highest-value question that needs an independent second opinion | A differentiated Claude sub-agent critic (fresh context, adversarial brief), plus the advisor reviewer when available (1/client) | a genuinely independent second pass on the one call that matters, without another model family |
 
-  All four roles are filled from `ai.research_provider`. A stack may cover them with one tool or several; the routing logic is the same either way. Examples of tools that could fill these roles (illustrative only, none chosen for FNNL): a grounded search-and-cite API for the cheap pass, a hosted deep-research agent for the technical gaps, a live-social-indexed model for the social read.
+  Each returns ONLY the delta for its gap (new evidence, corrected or over-claimed conclusions, contradictions, counterexamples, source-quality issues, what is still missing). None rewrites the deep-research report unless explicitly asked. Record every pass that ran in `ai_research_provider`.
+- **Link-generation / scale mode (context too big, or too many references to read directly).** Do NOT pull full pages into the orchestrating session. Instead **`/deep-research` plus WebSearch EMIT ranked candidate URLs only** into the Source Registry (they decide *what is worth reading*); **Claude sub-agents, fanned out over disjoint URL batches, WebFetch the chosen URLs** and each writes a tight, focus-scoped digest to its own output file; the digests are merged and de-duplicated into one evidence packet; **Claude Code** synthesizes from that packet. The session picks sources and reasons; the sub-agents fetch and compress. That keeps context bounded.
+- **Pinpoint escalation:** the sub-agent critic above, **1/client**, only for the single highest-value question (high-ticket decision, conflicting-evidence ICP, market-entry, offer-strategy risk, final red-team).
 
-  Each returns ONLY the delta for its gap (new evidence, corrected or over-claimed conclusions, contradictions, counterexamples, source-quality issues, what is still missing). None rewrites the deep-research report unless explicitly asked. Record every engine that ran in `ai_research_provider`.
-- **Link-generation / scale mode (context too big, or too many references to read directly).** Do NOT feed full pages to the reasoning models. Instead **`/deep-research` plus the deep-reasoning agent plus `web.search` EMIT ranked candidate URLs only** into the Source Registry (they decide *what is worth reading*); **`web.crawl`** scrapes the chosen URLs to clean text; **`ai.bulk_classification`** compresses the bulk dumps; **Claude Code** synthesizes. The expensive models choose sources and reason; the cheap and bulk tools fetch and compress. This keeps every engine in its best-fit role and bounds token cost.
-- **Pinpoint escalation:** the premium pinpoint reasoning run, **1/client**, only for the single highest-value question (high-ticket decision, conflicting-evidence ICP, market-entry, offer-strategy risk, final red-team).
+**Anti-waste caps (run discipline, not spend gates):**
 
-**Two research-model tiers inside the `ai.research_provider` slot:**
-
-| Tier | When |
-|---|---|
-| Standard deep-research model | **default** complement: deep gap-fill on thin, technical, or multi-step topics, source-checking, second-model critique, focused validation; also the link-emitter in scale mode |
-| Premium pinpoint reasoning model | **high-value only**: high-ticket client decision, conflicting-evidence ICP, market-entry, offer-strategy risk, source-contradiction audit, "find what the primary missed" on a specific question, final red-team before a major client-facing report. NOT for broad duplicate research unless explicitly approved. |
-
-**Anti-waste caps (enforced by `/api-cost-governance`):**
-
-- Claude native `/deep-research` does the broad research first; the complement engines take only the gap list, never repeat the broad prompt.
-- The reasoning models get the packet plus specific gap questions only (or, in scale mode, EMIT links), never raw crawl dumps.
-- `ai.bulk_classification` compresses bulk evidence before any complement reasoning pass.
-- Max `/deep-research` primary runs per client: **1-2** (it fans out internally, so one run is many parallel category searches; a second run only for a genuinely distinct campaign slice). Max cheap grounded gap passes per client: **1-3**. Max deep-reasoning gap prompts per client: **1-3**. Max premium pinpoint runs: **1**/client. Raise only by explicit operator approval.
-- If the primary pass already has strong cited evidence for a claim, the complements **audit, they do not redo**.
+- Claude native `/deep-research` does the broad research first; gap passes take only the gap list, never repeat the broad prompt.
+- The critic and synthesis steps get the packet plus specific gap questions only (or, in scale mode, sub-agent digests), never raw page dumps.
+- Sub-agents compress bulk evidence before any synthesis or critique pass sees it.
+- Max `/deep-research` primary runs per client: **1-2** (it fans out internally, so one run is many parallel category searches; a second run only for a genuinely distinct campaign slice). Max targeted WebSearch/WebFetch gap passes per client: **1-3**. Max narrow gap `/deep-research` runs per client: **1-3**. Max pinpoint critic runs: **1**/client. Raise only when the operator asks.
+- If the primary pass already has strong cited evidence for a claim, the gap passes **audit, they do not redo**.
 - Sample before scaling VOC: 20-30 quotes first; expand to 100-300 only if patterns are strong; stop if weak.
-- Every third-party provider is independently capped at **$10/client** (see Cost-Control Rules).
 
 ### Stage 3: Source Registry (spec'd; manual table now, validator script pending)
 
-After discovery, do NOT crawl immediately. First record every discovered URL in a source registry so you crawl each one once and can always answer "where did this claim come from." This is also a cost lever: dedupe and relevance-score before paying for crawls.
+After discovery, do NOT read everything immediately. First record every discovered URL in a source registry so each one is read once and you can always answer "where did this claim come from." This is also an effort lever: dedupe and relevance-score before reading.
 
 | Field | Meaning |
 |---|---|
 | `source_id` | stable id the packet's `evidence_id` points back to |
 | `source_url` | the discovered URL |
 | `source_type` | reddit / review_site / forum / news / company_site / job_board / social / docs |
-| `discovered_by` | deep-research primary / research_provider / search / manual |
+| `discovered_by` | deep-research primary / websearch gap pass / operator paste / manual |
 | `query_used` | the query that surfaced it |
 | `date_found` | when discovery ran |
 | `published_date` | when the source itself was published (flag if unknown) |
-| `relevance_score` | quick 0-2 triage before paying to crawl |
-| `crawl_status` | pending / crawled / failed / skipped |
-| `reason_this_source_matters` | one line: why this source is worth crawling for this brief |
+| `relevance_score` | quick 0-2 triage before reading |
+| `crawl_status` | pending / crawled / failed / skipped (crawled = read with WebFetch or pasted) |
+| `reason_this_source_matters` | one line: why this source is worth reading for this brief |
 
-**Status (honest):** today this is a STRUCTURED TABLE the session maintains in the pass artifact. The deterministic dedupe and crawl-budget engine is a **pending follow-up**; until it lands, the registry is operator and Claude maintained, not an enforced script. Skip the full registry on `pass_depth = per-account-light`: a per-row TAM pass keeps only `source_url` plus `signal_date`.
+**Status (honest):** today this is a STRUCTURED TABLE the session maintains in the pass artifact. The deterministic dedupe and read-budget engine is a **pending follow-up**; until it lands, the registry is operator and Claude maintained, not an enforced script. Skip the full registry on `pass_depth = per-account-light`: a per-row TAM pass keeps only `source_url` plus `signal_date`.
 
 ### Stage 5: VOC / Raw-Evidence Layer
 
-A grounded *summary* of buyer pain is not buyer pain. It is one model's compression of a sample you never saw. For ICP, offer, and pain work, mine the raw discussion and keep exact quotes.
+A *summary* of buyer pain is not buyer pain. It is one pass's compression of a sample you never saw. For ICP, offer, and pain work, mine the raw discussion and keep exact quotes.
 
-Pipeline (capability roles, no new vendor):
+Pipeline (Claude-native tools only):
 
-1. **Live social read** (`ai.research_provider`): current X and LinkedIn language and human signal.
-2. **Search** (`web.search`, or a grounded search pass from `ai.research_provider`): find the EXACT discussion URLs (Reddit threads, review-site pages such as G2/Capterra/Trustpilot, Hacker News, YouTube comment pages, niche forums). Use domain filters and `site:` operators. This hop returns URLs only; it must NOT summarize the discussion.
-3. **Crawl** (`web.crawl`): scrape each URL to clean text. If a site blocks the crawler, fall back to search snippets or skip the source.
+1. **Search** (the built-in WebSearch): find the EXACT discussion URLs (review-site pages such as Capterra and Trustpilot, Hacker News, YouTube comment pages, niche forums). Use domain filters and `site:` operators. This hop returns URLs only; it must NOT summarize the discussion.
+2. **Read** (the built-in WebFetch): fetch each URL to clean text. If a site blocks the fetch, fall back to search snippets or skip the source.
+3. **Social:** the live X read no longer exists. Use WebSearch where it returns public posts, and log the gap in provenance. LinkedIn engagers and post signals come from the intent-signals data tool, not from an AI.
 4. Extract every usable quote with a `source_class`, never flattening the distinction:
 
 | source_class | What it is | Weight |
 |---|---|---|
-| `buyer_quote` | a real user / buyer describing a problem in their words | the gold, counts toward pain |
+| `buyer_quote` | a real user / buyer describing a problem in their words (operator-pasted Reddit text counts here) | the gold, counts toward pain |
 | `competitor_claim` | a competitor's marketing / landing copy | positioning context, NOT pain |
 | `analyst_claim` | a report / analyst / press framing | context, cite carefully |
 | `news` | event / announcement | timing signal only |
 
 A competitor landing page and a Reddit complaint must never be scored the same. One is marketing; the other is pain.
+
+**Reddit and G2 cannot be read by the harness** (tested 2026-09-22: its web fetch, web search and in-app browser all refuse reddit.com, and G2 returns HTTP 403; Trustpilot, Capterra and the Hacker News search API were readable). **The only Reddit route is operator paste**: someone reads the threads in their own browser and pastes the text plus the thread URL into the session. Pasted text counts as `buyer_quote`, with the thread URL as its `source_url`. There is no Reddit API, scraper, or third-party AI route. `/offer-intelligence` Vector 3 carries the same rule, and G2 pages count only when pasted the same way. If nothing was pasted, log Reddit (and G2) as unread. Never infer Reddit coverage from a search step that names it.
 
 VOC evidence rows (one row per quote): `evidence_id`, `source_url`, `source_type`, `date`, `user_persona` (if known), `exact_quote`, `context`, `pain_point`, `urgency_signal`, `current_workaround`, `desired_outcome`, `objection`, `buying_trigger`, `confidence_score`. Major claims need >=3 sourced `buyer_quote` rows where possible; keep counterexamples; do not compress raw evidence into vague summaries too early; never let a model invent buyer language.
 
@@ -228,43 +235,44 @@ Before anything enters the clean packet, every major claim must pass:
 - targeted critique / gap-fill applied where needed (below)
 - a claim with no evidence is a hypothesis, not a fact (same rule as the packet)
 
-This is where the **gap-fill / red-team pass** lands (Stage 8). The Claude native `/deep-research` primary already adversarially verifies its own claims against sources, so this stage is a targeted top-up, not a second broad verification: the **deep-reasoning research agent** (premium pinpoint only when it earns it) digs the thin and technical gaps, and a **cheap grounded pass** cross-checks any single claim still shaky after the primary. Each takes the partial packet plus specific gap questions and returns ONLY the delta: unsupported claims, contradictions, missing counterexamples, source-quality issues, strategic risks, next questions, verdict. Neither re-runs the broad research or rewrites the report. Record every engine that ran in `validation_provider` and the findings in `validation_notes`.
+This is where the **gap-fill / red-team pass** lands (Stage 8). The `/deep-research` primary already adversarially verifies its own claims against sources, so this stage is a targeted top-up, not a second broad verification: a narrow `/deep-research` run digs the thin and technical gaps, a WebSearch/WebFetch cross-check tests any single claim still shaky after the primary, and a **differentiated Claude sub-agent critic** (plus the advisor reviewer when available) red-teams the partial packet. Each takes the partial packet plus specific gap questions and returns ONLY the delta: unsupported claims, contradictions, missing counterexamples, source-quality issues, strategic risks, next questions, verdict. None re-runs the broad research or rewrites the report. Record every pass that ran in `validation_provider` and the findings in `validation_notes`.
 
 **Status (honest):** the STRONGEST version of this gate is mechanical, a script that resolves every `evidence_id` against the registry and counts `buyer_quote` sources deterministically. **That script does not exist yet.** Until it lands, the gate runs as a STRUCTURED SELF-CHECK in Claude Code, plus the delta critique pass above when the decision warrants it. Do not describe the gate as "mechanical" or "automatic" while it is a self-check; that would overclaim the one capability that justifies it.
 
 ## Compact Capability-Fit Map
 
-Vendor names below are illustrative only. None is chosen for FNNL; the actual tool per slot comes from `stack-contract.yaml`.
+Every capability below is Claude Code native, except headshot image generation (the one approved exception).
 
-| Need | Capability slot / role | Role in stack | Weak move |
+| Need | Claude Code capability | Role in stack | Weak move |
 |---|---|---|---|
-| PRIMARY broad research: market / competitor / ICP-pain / source discovery across all needed categories, cited and self-verified | Claude native `/deep-research` skill (runtime, not a purchased slot) | **Primary research engine**, the default | Firing one narrow inline WebSearch and calling it the primary pass, instead of running the multi-agent harness over the whole brief |
-| Cheap extra grounded pass on ONE thin sub-topic the primary left shallow | `ai.research_provider`, grounded-search role | Gap-fill grounding helper, not the primary | Re-running a grounded pass across the whole brief the deep-research primary already covered, which is duplicate cost |
-| Real-time X / social human-signal read (founder posts, complaints, buyer language) | `ai.research_provider`, live-social role | Social timing and human hook | Treating a like or post as buying intent |
-| Mining real buyer voice (Reddit, review sites, HN, YouTube) into exact quotes | live-social read, then `web.search` for URLs, then `web.crawl` to scrape | VOC / raw-evidence layer | Letting the search layer summarize the discussion instead of scraping the exact quotes; summaries hide sampling garbage |
-| Filling the gaps the primary pass left thin / technical / niche / multi-step | `ai.research_provider`, deep-reasoning role (typically fire-and-poll) | Complementary, non-redundant gap-fill | Asking it the same broad question the deep-research primary already answered, which is duplicate cost |
-| Corpus too big / too many references to read directly | `/deep-research` + deep-reasoning agent + `web.search` EMIT ranked URLs, then `web.crawl` scrapes, then `ai.bulk_classification` compresses, then Claude Code synthesizes | Link-generation / scale mode | Feeding full raw pages into the reasoning models, which blows context and cost |
-| Pinpoint high-value reasoning (conflicting-evidence ICP, market-entry, offer risk, final red-team) | `ai.research_provider`, premium pinpoint tier, 1/client | Premium reasoning | Using the premium tier for broad duplicate research |
-| Image or GIF generation, or an optional QA voter on high-value copy | `ai.image_generation` (images); any configured cheap model (QA voter) | Image generation / optional QA | Routing JSON, classification, or structured output to a paid provider, which Claude Code handles inline |
-| Low-cost bulk synthesis / clustering / pre-compressing raw crawl and VOC dumps before premium models | `ai.bulk_classification` | Bulk crunch and dump pre-compression | Sending raw crawl dumps straight to a premium model instead of compressing first |
-| Final high-quality cold email and phone scripts from a clean packet | `ai.copywriting` (PRIMARY); native Claude Code session = notify-then-fallback on unset slot / missing key / no credits | Final copy | Falling back to the native session WITHOUT notifying the operator first, or treating the billing/logging difference as a quality difference |
-| Raw URL to clean markdown or structured text | `web.crawl` | Extraction | Asking an LLM to "browse" instead of extracting the page first |
-| Backfill a single missing MUST-HAVE field a source left blank (for example a personal `linkedin_url`, `company_linkedin`) | The configured contact-data tool first, then **`web.search` (returns the REAL URL) then a model (confirms the result matches the entity by name plus company/domain)** | Verified field backfill | Letting the LLM emit a URL or value from memory (a hallucinated `linkedin.com/in/...`), or accepting a candidate without confirming name plus company. A wrong value is worse than a blank. Tool: `scripts/linkedin_find_web.mjs` |
+| PRIMARY broad research: market / competitor / ICP-pain / source discovery across all needed categories, cited and self-verified | The `/deep-research` skill (runtime, not a purchased slot) | **Primary research engine**, always | Firing one narrow inline WebSearch and calling it the primary pass, instead of running the multi-agent harness over the whole brief |
+| One more grounded look at ONE thin sub-topic the primary left shallow | A targeted WebSearch/WebFetch pass | Gap-fill helper, not the primary | Re-running a pass across the whole brief the primary already covered, which is duplicate effort |
+| Real-time X / social human-signal read (founder posts, complaints, buyer language) | WebSearch where it returns public posts; LinkedIn engagers from the intent-signals data tool; otherwise a logged gap | Social timing and human hook | Treating a like or post as buying intent, or claiming a live X read that no longer exists |
+| Mining real buyer voice (review sites, HN, YouTube, forums) into exact quotes | WebSearch for URLs, then WebFetch to read; Reddit and G2 by operator paste only | VOC / raw-evidence layer | Letting the search layer summarize the discussion instead of reading the exact quotes; implying Reddit was read when nothing was pasted |
+| Filling the gaps the primary pass left thin / technical / niche / multi-step | A second, narrowly scoped `/deep-research` run on the gap question | Non-redundant gap-fill | Asking it the same broad question the primary already answered |
+| Corpus too big / too many references to read directly | `/deep-research` + WebSearch EMIT ranked URLs, then sub-agents WebFetch and digest disjoint batches, then merge and dedupe, then Claude Code synthesizes | Link-generation / scale mode | Pulling full raw pages into the orchestrating session, which blows context |
+| Pinpoint high-value reasoning (conflicting-evidence ICP, market-entry, offer risk, final red-team) | A differentiated Claude sub-agent critic plus the advisor reviewer when available, 1/client | Independent second opinion | Using it for broad duplicate research, or reaching for another model family |
+| Critic / second-opinion / judge panels (`/consultant`, `/roast`) | Differentiated Claude sub-agent personas plus the advisor reviewer when available; web fact-checks via WebSearch/WebFetch | Critique | Calling a model from another family for "diversity" |
+| Sender persona headshots | `ai.image_generation`: OpenAI, headshots only, asked for at infrastructure setup (the approved exception) | Image generation | Using the exception for any other image, or asking for its key before infrastructure setup |
+| Bulk synthesis / clustering / classification / pre-compressing raw page and VOC dumps before synthesis | Claude sub-agents fanned out per `/personalization-subagent-pattern` (disjoint batches, one output file each, post-merge dedupe); deterministic filters in plain code | Bulk crunch and dump pre-compression | One agent reading the whole corpus, or overlapping batches that return duplicate or convergent output |
+| Final high-quality cold email and phone scripts from a clean packet | The native Claude Code session (a clean-packet sub-agent is fine) | Final copy | Writing copy inside a long, messy execution context instead of from the clean packet |
+| Raw URL to clean text | WebFetch | Extraction | Answering from memory about a page instead of fetching it |
+| Backfill a single missing MUST-HAVE field a source left blank (for example a personal `linkedin_url`, `company_linkedin`) | The configured contact-data tool first, then **WebSearch (returns the REAL URL), then Claude confirms the result matches the entity by name plus company/domain** | Verified field backfill | Emitting a URL or value from memory (a hallucinated `linkedin.com/in/...`), or accepting a candidate without confirming name plus company. A wrong value is worse than a blank |
 
-A search API (`web.search`) is the raw discovery and URL feed that sits in front of grounded research and crawling. See `lead-list-tech-stack-research.md`. It is a data tool, not a model.
+WebSearch is the raw discovery and URL feed that sits in front of research and page reads. See `lead-list-tech-stack-research.md`. It is a harness tool, not a purchased slot.
 
-**Nothing is "in" or "out" of the stack until the contract says so.** Do not route research, extraction, crunch, validation, or copy to a tool that is not recorded in `stack-contract.yaml`, and do not rule a tool out on the strength of a vendor name appearing (or not appearing) in this file.
+**For data tools, nothing is "in" or "out" of the stack until the contract says so.** For AI, the rule is closed: no third-party AI tool is added to fill a retired slot, whatever a worked example, a catalogue, or a connected MCP server suggests.
 
 ## Clean Research Packet
 
-The final copy step must receive a **clean research packet**, not a messy long-running execution context, whether that step runs as a Claude Code sub-agent or as a billed API call. The packet is conclusions plus evidence, never raw crawl dumps, tool logs, or model scratch.
+The final copy step must receive a **clean research packet**, not a messy long-running execution context, whether it runs in the session or in a clean-packet sub-agent. The packet is conclusions plus evidence, never raw page dumps, tool logs, or scratch work.
 
 ```
 buyer_persona          # who, seniority, real buyer title
 account_context        # what the company is / does
 business_context       # initiative, expansion, funding, hiring: why it matters
 technical_context      # stack, docs/changelog/product signal if relevant
-human_hook             # public post / comment, if any (live-social sourced)
+human_hook             # public post / comment, if any (WebSearch-sourced; there is no live X read)
 verified_signal        # the one proven reason-now
 signal_source_url      # working evidence URL
 signal_date            # when the signal is from
@@ -277,9 +285,9 @@ offer_angle            # direction only
 lead_magnet_angle      # direction only
 likely_objection       # what they'll push back on
 constraints            # tone, banned words, client copy rules
-ai_research_provider   # provenance (e.g. claude-deep-research; + any gap-fill helpers that ran)
-ai_analysis_provider   # provenance (the bulk-classification tool / Claude Code)
-validation_provider    # who ran validation/critique (Claude Code self-check / research_provider tier)
+ai_research_provider   # provenance (e.g. claude-deep-research; + any claude-websearch gap passes)
+ai_analysis_provider   # provenance (claude-subagents / Claude Code)
+validation_provider    # who ran validation/critique (Claude Code self-check / sub-agent critic / advisor)
 validation_notes       # the delta: unsupported claims, contradictions, gaps flagged + verdict
 ```
 
@@ -302,105 +310,109 @@ Rule: if a fact in the packet has no `signal_source_url` (or `evidence_id`), it 
 
 ### Quick decision tree
 
-- First: assemble the brief (what decision, output, freshness, confidence). There is ONE path, premium-by-default and non-redundant. No tier to pick.
-- Broad market / source / competitor / ICP discovery? Run **Claude native `/deep-research`** as the primary pass: hand it the whole brief and let its sub-agents cover every category in parallel with adversarial verification. Search for raw URL expansion, a live social read, and a cheap grounded thin-gap top-up are helpers, not the primary brain.
-- Do I need REAL buyer language and pain quotes (not a summary of them)? Use the **live social read** for current X and LinkedIn, then **`web.search`** to find the exact Reddit, review, and forum URLs, then **`web.crawl`** to scrape. Capture exact quotes, and never let the search layer pre-summarize.
-- Is it about what a person said on X / LinkedIn / Reddit right now? Use the **live social read** (the underlying data discovery may come from an intent-signals tool; see the tech-stack file).
-- Do I just need a URL turned into text? Use **`web.crawl`** (no LLM needed to fetch).
-- Do I have a large corpus to compress across 500+ rows in an offline batch script? Use **`ai.bulk_classification`**.
-- Did the primary pass come back thin, too technical, or shaky on a sub-topic? Fill ONLY that gap with the **deep-reasoning role** (deep, technical, multi-step), a **cheap grounded cross-check** on one narrow claim, or the **live social read**. Use the premium pinpoint tier only for the one highest-value question. Never a duplicate broad pass.
-- Corpus too big or too many references to read directly? Use **scale mode**: let `/deep-research`, the deep-reasoning agent, and `web.search` EMIT ranked URLs, then **`web.crawl`** scrapes, **`ai.bulk_classification`** compresses, and **Claude Code** synthesizes. Do not feed full pages to the reasoning models.
-- Am I writing the actual email or phone script? Use **`ai.copywriting`** from a clean research packet. If the slot is unset or its key fails, **notify the operator**, then fall back to the **native Claude Code session**. See the Copy Generation HARD RULE.
-- Do I need to generate an image or GIF (for example an inbox profile headshot)? Use **`ai.image_generation`**.
+- First: assemble the brief (what decision, output, freshness, confidence). There is ONE path, premium-by-default and non-redundant. No tier to pick, and no provider to pick.
+- Broad market / source / competitor / ICP discovery? Run **Claude native `/deep-research`** as the primary pass: hand it the whole brief and let its sub-agents cover every category in parallel with adversarial verification. Targeted WebSearch/WebFetch passes are helpers, not the primary brain.
+- Do I need REAL buyer language and pain quotes (not a summary of them)? Use **WebSearch** to find the exact review and forum URLs, then **WebFetch** to read them, and ask the operator to paste any Reddit threads that matter. Capture exact quotes, and never let the search layer pre-summarize.
+- Is it about what a person said on X / LinkedIn / Reddit right now? X: WebSearch where it returns public posts, otherwise log the gap. LinkedIn: the intent-signals data tool. Reddit: operator paste only.
+- Do I just need a URL turned into text? Use **WebFetch**.
+- Do I have a large corpus to classify or compress (500+ rows)? Fan it out across **Claude sub-agents** in disjoint batches per `/personalization-subagent-pattern`, with deterministic filters in plain code first.
+- Did the primary pass come back thin, too technical, or shaky on a sub-topic? Fill ONLY that gap with a **narrow `/deep-research` run** (deep, technical, multi-step) or a **targeted WebSearch/WebFetch cross-check** on one narrow claim. Use the **sub-agent critic** only for the one highest-value question. Never a duplicate broad pass.
+- Corpus too big or too many references to read directly? Use **scale mode**: `/deep-research` and WebSearch EMIT ranked URLs, sub-agents WebFetch and digest disjoint batches, the digests are merged and de-duplicated, and **Claude Code** synthesizes.
+- Do I need a second opinion or a critic panel? Use **differentiated Claude sub-agent personas** plus the advisor reviewer when available. No other model family.
+- Am I writing the actual email or phone script? Write it in the **native Claude Code session** from a clean research packet (a clean-packet sub-agent is fine). See the Copy Generation HARD RULE.
+- Do I need a sender headshot? Use **`ai.image_generation`** through `/mailbox-profile-generator`, and only then ask for its key. Nothing else generates images.
 
 ## Credentials
 
-Credential **names** for each filled slot live in `stack-contract.yaml` and are mirrored machine-readably into `scripts/credential-registry.json`. Real values live only in `scripts/.env`, which is gitignored; `scripts/.env.example` carries placeholders and is regenerated by `/stack-setup` to match the chosen stack.
+No research, crunch, critique, or copy step needs an AI key. The only AI credential anywhere in the flow is the headshot key (OpenAI, headshots only, asked for at infrastructure setup), and it is never requested or flagged as missing before that point. Third-party AI keys and Claude API keys are retired: they do not belong in `scripts/.env.example` or `scripts/credential-registry.json`, and no skill asks for them.
 
-**This file asserts nothing about which keys are present.** Presence and shape are `/preflight-credentials`' job; balance and spend are `/api-cost-governance`' job. If a slot this run needs has no credential, that is a `/stack-setup` gap, not something to work around by substituting a vendor.
+Credential **names** for the data slots live in `stack-contract.yaml` and are mirrored machine-readably into `scripts/credential-registry.json`. Real values live only in `scripts/.env`, which is gitignored; `scripts/.env.example` carries placeholders and is regenerated by `/stack-setup` to match the chosen stack.
+
+**This file asserts nothing about which keys are present.** Presence and shape are `/preflight-credentials`' job; balance and spend are `/api-cost-governance`' job.
 
 ## Executable Layer
 
-The primary research pass is a **NATIVE SKILL invocation, not a router call and not an API call**: run the Claude native `/deep-research` skill directly inside this Claude Code session (native session inference, no API key) and hand it the assembled brief so its sub-agents cover every category in parallel. That is available today with an empty stack contract.
+Everything in this pipeline runs today, with no AI key and no activated pack:
 
-Everything else in this pipeline needs a tool in its slot. The integration code for a provider router (grounding, gap-fill, crunch, search, crawl, and billed copy generation through one uniform interface) ships **inactive** in `_vendor-library/` and becomes real only when `/stack-setup` activates the matching pack. Until then, describe those steps as unavailable rather than emitting a call to a script that is not there.
+- **Primary research** is a **native skill invocation, not a router call and not an API call**: run the Claude native `/deep-research` skill directly inside this Claude Code session and hand it the assembled brief so its sub-agents cover every category in parallel.
+- **Gap passes and page reads** are the built-in WebSearch and WebFetch tools.
+- **Bulk crunch and per-row research** run as Task sub-agents per `/personalization-subagent-pattern`: partition the rows into disjoint batches (10 to 20 items per agent for reasoning-heavy rows, larger for light classification), give each agent its own output file, merge by a stable id, then de-duplicate and check for convergent output. Per-row web research at TAM scale runs the same way, with each sub-agent using WebSearch/WebFetch, at sample scale first. Do **not** also run a broad research pass over the same rows; that is the duplicate-pass waste this doctrine forbids.
+- **Critic panels** are sub-agents given differentiated personas and adversarial briefs, plus the advisor reviewer when the session has one.
+- **Research-routing audit:** `scripts/research/research_routing_check.mjs` checks that each research-skill run logged its `/deep-research` primary in the ledger.
+- **Headshots:** `scripts/generate_inbox_profiles.py`, run by `/mailbox-profile-generator` (the one approved AI exception).
 
-The routing mechanics worth knowing before a pack is activated, because they shape how you plan a run:
-
-- **A provider router is the right shape.** One script with a `--provider` flag, reading keys from `scripts/.env`, returning a single JSON object (`{ ok, provider, model, content, citations?, usage?, error? }`), beats hand-rolling provider HTTP per step. It is also what makes the `ai_*_provider` provenance columns easy to fill honestly.
-- **A `--dry-run` flag that makes no call and costs nothing** is the cheapest way to sanity-check a prompt before spending.
-- **Deep-research agents are fire-and-poll, not instant.** A hosted deep-research job typically returns a job id with status `queued`, then you poll until `completed`. A job can run for tens of minutes, so do OTHER work between polls and never idle-wait. Cap each job's tool calls to bound cost.
-- **Scale mode needs a harvest helper.** Given citation URLs (or a finished deep-research job id) plus a focus statement, the helper crawls each page, compresses each to a tight focus-scoped digest with the bulk model, and emits ONE merged evidence packet. That is the "generate links, then scrape and compress" pattern that stops a big-reference pass from blowing up context.
-- **A per-row research surface is a different tool from a broad pass.** Some providers offer a per-company or per-contact structured research surface (give it a domain list, get back a structured per-row answer such as funding, hiring, pricing tier, a why-now trigger, or an ICP-fit verdict). **Scale caveat:** these typically poll the COMPLETE result set back into context, so use them at sample or small-batch scale only. At thousands of rows they flood context, so classify on-disk with the bulk model instead. And do **not** also run a broad research pass over the same rows; that is the duplicate-pass waste this doctrine forbids.
-
-Image and GIF generation (mailbox-profile headshots and logos) runs through `scripts/generate_inbox_profiles.py` via `/mailbox-profile-generator`, not through a text-provider router.
+The scripts that used to call AI provider APIs were archived on 2026-09-22 (see `outbound/_archive/no-ai-api-2026-09-22/MANIFEST.md`). Nothing in this pipeline calls them, and none is to be restored as a research, crunch, or copy path.
 
 **Still pending (do NOT describe as runnable):** the deterministic Validation Gate and source-registry store. Until they exist, the registry is a manual table and the gate is a structured self-check (see Stages 3 and 9).
 
 ## Fallback Rules
 
-Never emit a broken or hardcoded call to a provider whose slot is empty or whose key is absent. Degrade to the named fallback and record which provider actually ran in the `ai_*_provider` columns.
+Never emit a call to a third-party AI provider or a keyed Claude API call, and never substitute one when a Claude-native step struggles. Degrade inside Claude Code and record what actually ran.
 
-- **`ai.research_provider` unset or unkeyed.** Under the default `claude_deep_research` routing this is **NOT a hard-stop**: the primary pass is the native `/deep-research` harness, which needs no third-party key. An empty slot only removes the optional gap-fill complement stage. Note it in provenance and continue. **It IS a credential HARD-STOP only if the operator explicitly set `run_state.research_routing = third_party_ai`**, because then the third-party engine is the chosen primary. Name the slot to fill and route to `/stack-setup`; do not silently substitute.
-- **`ai.image_generation` unset or unkeyed.** Skip image generation and say so. Do not substitute a text provider for an image step.
-- **Deep-reasoning gap-fill unavailable** (slot empty, or the job errors or times out). Use **Claude-native `/deep-research`** to fill the gaps instead, and run the Validation Gate as a Claude Code self-check. Record that the deep-reasoning gap-fill pass was skipped. It is a complementary add-on, not required for a run to complete.
-- **Any provider absent.** Log the substitution in `ai_research_provider` / `ai_analysis_provider` / `ai_copy_provider` so provenance stays honest.
-- **If nothing but the native session is available, the pipeline still runs.** The **primary research pass is the Claude native `/deep-research` harness by default**, so no third-party key is needed for it, and Claude Code also handles crunch, scoring, the validation self-check, and copy locally. **Still never treat a bare inline WebSearch/WebFetch answer as the primary research pass** (that is `claude_native`, the weak path); run the full `/deep-research` fan-out harness instead. Add a grounded gap-fill pass, a live social read, and bulk extraction as each slot gets filled. They enrich, they do not replace the primary.
+- **The `/deep-research` harness is unavailable or errors.** Say so and retry once. If it still fails, get a fresh explicit operator OK before proceeding on targeted WebSearch/WebFetch passes alone, and log that run as a flagged exception in the ledger line and the activity log. Never present a bare inline answer as the primary pass.
+- **A gap pass comes back empty or thin.** Record the gap as open in `validation_notes` and mark the affected claims low-confidence. Do not escalate to another provider.
+- **WebFetch is blocked on a site.** Fall back to WebSearch snippets, or skip the source and note it in the registry. Reddit and G2: operator paste only; if nothing was pasted, log them as unread.
+- **A live social read is requested.** It is not available. Use WebSearch where it returns public posts and log the gap.
+- **A sub-agent batch fails or returns malformed output.** Re-run that batch alone on the same partition. Never collapse to one agent reading everything, and never route the batch to a paid model.
+- **The `ai.image_generation` key is absent when the headshot step runs.** Ask for it at that point, which is the only moment the rule allows. If the operator declines, skip image generation and say so. Do not substitute a text model for an image step.
+- **Provenance stays honest.** Log what actually ran in `ai_research_provider` / `ai_analysis_provider` / `ai_copy_provider` / `validation_provider`.
+- **The whole pipeline runs on Claude Code alone.** That is the design, not a degraded mode. The one thing that never counts as the primary research pass is a bare inline WebSearch/WebFetch answer; run the full `/deep-research` fan-out harness instead.
 
 ## Cost-Control Rules
 
-- **One active path: premium-by-default, non-redundant** (no cheap or standard tiers). Cost is controlled by non-redundancy, not tier-downgrading. Do not run the union of all providers on the same question; that is an API buffet, not a pipeline.
-- **Run `/api-cost-governance` before any paid provider call** to preview the USD range, check the relevant key's balance, block if a key is below the estimated cost or under the $10 warning threshold, and enforce the anti-waste caps (deep-research primary first; gap-fill prompts 1-3/client; premium pinpoint 1/client). It is the spend gate for every paid skill in its registry.
-- **Per-provider research budget: HARD STOP at `run_state.research_budget_usd_per_provider` (default $10 EACH).** Every third-party provider has its own $10/client ceiling on cumulative research spend, not a shared pool. `/api-cost-governance` blocks that provider's call if this pass would exceed its $10 and requires an explicit operator raise. Provider-side hard usage limits, prepaid balances, and auto-recharge OFF are the real backstop against a negative balance.
-- **The complement engines never duplicate the primary broad pass.** The primary is Claude native `/deep-research` (1-2 runs/client, because it fans out internally, so one run is many parallel category searches). The complements run only on the *gaps* the primary flagged (thin, technical, niche, live-social). Caps: 1-3 cheap grounded gap passes/client, 1-3 deep-reasoning gap prompts/client, 1 premium pinpoint run/client. If the primary pass already has strong cited evidence for a claim, the complements audit, they do not redo.
-- **Crawl only after the Source Registry dedupes and relevance-scores URLs** (deep passes). Duplicate crawl calls are pure waste.
-- **Use `web.search` before a grounded research pass when you only need URLs.** A research model is better for synthesis; a search API is cheaper for raw URL discovery.
-- Use **`ai.bulk_classification`** for bulk synthesis, clustering, and **pre-compressing raw crawl and VOC dumps before premium models see them** (especially 500+ row batches). **Never send raw crawl dumps directly to a premium model by default.** Tiny interactive corpora (a couple of pages) can be handled inline in Claude Code without a bulk call.
-- **Scale mode beats brute force when references are many or context is huge:** have `/deep-research`, the deep-reasoning agent, and `web.search` EMIT ranked candidate URLs only; **`web.crawl`** scrapes the chosen ones; **`ai.bulk_classification`** compresses; **Claude Code** synthesizes. The reasoning models pick sources and reason; they never ingest the full raw corpus.
-- **Copy QA defaults to rule-based:** `outreach-copy-framework.md` for the initial written cold touch, plus `spam-word-checker.md`, `cold-email-copy-best-practices.md`, and a rule checklist (plus an optional cheap-model pass). Escalate to a full model audit ONLY for high-ticket, risky-claim, strategic, or client-facing copy, never as the default.
-- **Final copy GENERATION routes to `ai.copywriting`**; the native session is the notify-then-fallback when the slot is unset or out of credits. **Synthesis, scoring, JSON subroutines, and copy QA** still default to Claude Code native and inline (or a cheap QA pass). The premium-copy rule is for the final-copy GENERATION step specifically, not every reasoning step.
-- Reserve the **deep-reasoning role** for complementary gap-fill, critique, and validation on the primary pass's gaps, **never a duplicate broad research pass.** Claude Code handles JSON, classification, and structured output inline; do not pay a provider for these.
-- Do not run the **primary `/deep-research` pass, or any grounded research pass, per row.** Run one account-level (or slice-level) research pass and reuse it across every contact at that account.
+- **One active path: premium-by-default, non-redundant.** Do not run every tool on the same question; that is a buffet, not a pipeline.
+- **Claude Code usage is not a per-call metered API spend in these skills.** The session, its sub-agents, `/deep-research`, and WebSearch/WebFetch get no token preview and no spend row in the ledger. The only AI spend row is the headshot image call. `/api-cost-governance` still gates every paid data-vendor call and that headshot call.
+- **There is no AI research budget.** The old per-provider research cap (`run_state.research_budget_usd_per_provider`) was removed on 2026-09-22 because no AI provider is left for it to cap. No skill writes, reads or blocks on it; ignore it in older profiles. Research is bounded by the run caps below, not by dollars.
+- **Gap passes never duplicate the primary broad pass.** The primary is `/deep-research` (1-2 runs/client, because it fans out internally). Gap passes run only on the gaps it flagged: 1-3 targeted WebSearch/WebFetch passes/client, 1-3 narrow gap `/deep-research` runs/client, 1 pinpoint critic/client. These caps bound session time and context. If the primary already has strong cited evidence for a claim, the gap passes audit, they do not redo.
+- **Read only after the Source Registry dedupes and relevance-scores URLs** (deep passes). Duplicate reads are pure waste.
+- **Use WebSearch before a `/deep-research` run when you only need URLs.**
+- **Compress in sub-agents before synthesis.** Never pull raw page or VOC dumps straight into the orchestrating session by default; have sub-agents digest them in disjoint batches first (especially 500+ row batches). Tiny interactive corpora (a couple of pages) can be handled inline.
+- **Scale mode beats brute force when references are many or context is huge:** `/deep-research` and WebSearch EMIT ranked candidate URLs only; sub-agents WebFetch and digest; Claude Code synthesizes from the merged digests.
+- **Copy QA defaults to rule-based:** `outreach-copy-framework.md` for the initial written cold touch, plus `spam-word-checker.md`, `cold-email-copy-best-practices.md`, and a rule checklist. Add a sub-agent critic ONLY for high-ticket, risky-claim, strategic, or client-facing copy, never as the default.
+- **Final copy GENERATION happens in the native session**, as do synthesis, scoring, JSON subroutines, and copy QA.
+- Do not run the **primary `/deep-research` pass per row.** Run one account-level (or slice-level) research pass and reuse it across every contact at that account.
 - **Sample before scaling VOC:** 20-30 quotes first; expand only if patterns are strong; stop if weak.
-- Cache the clean research packet per company so a re-run does not re-pay for research.
-- If an AI step does not improve relevance, quality, cost, speed, scale, or QA, skip it.
+- Cache the clean research packet per company so a re-run does not redo research.
+- If an AI step does not improve relevance, quality, speed, scale, or QA, skip it.
 
 ## Don't Add AI Just Because It Exists
 
-- Static, template, or already-decided copy needs no AI call.
-- One provider per job. Stacking three models on one step is cost, not quality.
-- **Task-tool sub-agents stay the default for per-lead work AND for clean-context final copy.** `/personalization-subagent-pattern` and `/icp-prompt-builder` run on Claude Code Task sub-agents by design; final copy runs the same way (a sub-agent fed only the clean packet) to get context hygiene without claiming an API quality advantage. AI providers *feed* those agents richer research and context; they do not replace the agents for normal runs. Only the optional at-scale (1,000+ lead) API path those skills already permit, or a headless or production run, routes to a raw provider.
-- Provenance columns must reflect reality. If the bulk model ran the crunch, `ai_analysis_provider` names that model, not "Claude" because Claude Code orchestrated it.
-- Copy and QA guardrails are never bypassed by a model swap. `outreach-copy-framework.md` controls every initial written cold touch; `spam-word-checker.md` and `cold-email-copy-best-practices.md` remain required regardless of which model drafted.
+- Static, template, or already-decided copy needs no AI step.
+- One tool per job. Stacking passes on one step is time and context, not quality.
+- **Task-tool sub-agents are the default for per-lead work, bulk crunch, AND clean-context final copy.** `/personalization-subagent-pattern` and `/icp-prompt-builder` run on Claude Code Task sub-agents by design; final copy runs the same way (a sub-agent fed only the clean packet) to get context hygiene. At 1,000+ leads, run more sub-agent batches (in sequential waves if needed); there is no raw-provider path.
+- Provenance columns must reflect reality. If sub-agents ran the crunch, `ai_analysis_provider` says `claude-subagents`, not a vague "Claude".
+- Copy and QA guardrails are never bypassed. `outreach-copy-framework.md` controls every initial written cold touch; `spam-word-checker.md` and `cold-email-copy-best-practices.md` remain required regardless of who drafted.
 
 ## Where This Can Fail
 
-- A grounded model still hallucinates if you skip the evidence URL. Keep `signal_source_url` and `evidence_id`.
-- Low-cost crunch on a bad corpus produces confident garbage. Garbage-in still applies.
+- A web-grounded pass still hallucinates if you skip the evidence URL. Keep `signal_source_url` and `evidence_id`.
+- Sub-agent crunch on a bad corpus produces confident garbage. Garbage-in still applies.
 - **Treating a competitor landing page like a buyer complaint.** Enforce `source_class`: marketing copy is positioning context, not pain. Flattening them is how bad ICP thinking starts.
 - **Prose that reads as if a script ran.** The Source Registry and Validation Gate are a manual table and a self-check until their scripts exist. Calling them "mechanical" or "automatic" overclaims the very capability that justifies them, so keep the status honest.
-- **Calling a declared complement a "fallback."** Claude-native `/deep-research` used to fill a NAMED gap in the chosen primary pass is a logged complement (Stages 2 and 8), not the prohibited silent fallback. Quietly swapping it in *for* a missing primary third-party engine IS the violation. Keep the distinction.
-- **Narrating a deep-research call as instant.** A hosted deep-research job is fire-and-poll and can run for tens of minutes. Do not claim such a call returned content in one shot; it returns a job id first, then you poll. Idle-waiting on the poll also violates the don't-idle-wait rule, so do other work between polls.
-- **Assuming a tool exists because this file names it as an example.** Every vendor name here is illustrative. Check `stack-contract.yaml`, and check that the slot's status is `live` rather than `chosen`, before you promise the operator a step is automated.
+- **Calling a declared gap pass a "fallback."** A targeted WebSearch/WebFetch pass or a narrow `/deep-research` run that fills a NAMED gap in the primary is a logged gap pass (Stages 2 and 8), not a silent fallback. Quietly swapping a bare WebSearch in *for* the missing `/deep-research` primary IS the violation. Keep the distinction.
+- **Claiming coverage the harness cannot reach.** Reddit and G2 are unreadable by WebFetch, WebSearch, and the browser pane, and the live X read is gone. Log them as unread gaps rather than implying a search step covered them.
+- **Reaching for another model family.** A second opinion comes from a differentiated Claude sub-agent plus the advisor reviewer, never another provider. If a skill, an example, or a connected MCP server suggests one, it is retired by the no-AI-API rule.
+- **Fan-out without partitioning.** Overlapping batches produce duplicate or convergent output. Partition first, give each agent its own output file, and de-duplicate after the merge.
+- **Assuming a data tool exists because a file names it.** Check `stack-contract.yaml`, and check that the slot's status is `live` rather than `chosen`, before you promise the operator a step is automated.
 - Social signal is timing and language, not proof of fit. Pair it with account context.
-- Routing adds value only when the step is genuinely research, crunch, social, extraction, VOC, validation, or copy heavy. For pure orchestration, file edits, and local execution, Claude Code is correct and no routing is needed.
+- Routing adds value only when the step is genuinely research, crunch, social, extraction, VOC, validation, or copy heavy. For pure orchestration, file edits, and local execution, Claude Code works directly and no routing is needed.
 
 ## Capability-to-Stage Quick Reference
 
-- PRIMARY broad research (all categories, fan-out, adversarial verify, cited synthesis): **Claude native `/deep-research` skill**, the default primary engine
-- Cheap grounded gap-fill on ONE thin sub-topic: `ai.research_provider`, grounded-search role (helper, not the primary)
-- Social and human hook: `ai.research_provider`, live-social role
-- Buyer-voice mining (exact pain quotes): live-social read, then `web.search` for URLs, then `web.crawl` to scrape
-- Raw page extraction: `web.crawl` (fallback: search snippets)
-- Bulk synthesis and pre-compressing raw crawl/VOC dumps: `ai.bulk_classification`
-- Deep technical or multi-step gap-fill on the primary pass: `ai.research_provider`, deep-reasoning role (premium pinpoint tier only when it earns it), never a duplicate broad pass
-- Corpus too big or too many references: scale mode. `/deep-research`, the deep-reasoning agent, and `web.search` emit URLs, then `web.crawl` scrapes, `ai.bulk_classification` compresses, Claude Code synthesizes
-- Packet validation: the primary `/deep-research` already self-verifies; add a structured self-check in Claude Code plus a targeted gap-fill critique when warranted (validator script pending)
-- Image and GIF generation: `ai.image_generation`
-- Independent second-opinion QA voter (optional): any configured cheap model
+- PRIMARY broad research (all categories, fan-out, adversarial verify, cited synthesis): **Claude native `/deep-research` skill**, always
+- One more grounded look at ONE thin sub-topic: a targeted WebSearch/WebFetch pass (helper, not the primary)
+- Social and human hook: WebSearch where it returns public posts; LinkedIn engagers from the intent-signals data tool; the live X read no longer exists
+- Buyer-voice mining (exact pain quotes): WebSearch for URLs, then WebFetch to read; Reddit and G2 by operator paste only
+- Raw page extraction: WebFetch (fallback: search snippets)
+- Bulk synthesis, classification, and pre-compressing raw page/VOC dumps: Claude sub-agents fanned out per `/personalization-subagent-pattern`; deterministic filters in plain code
+- Deep technical or multi-step gap-fill on the primary pass: a narrow `/deep-research` run on the gap question, never a duplicate broad pass
+- Corpus too big or too many references: scale mode. `/deep-research` and WebSearch emit URLs, sub-agents WebFetch and digest disjoint batches, the digests are merged and de-duplicated, Claude Code synthesizes
+- Packet validation: the primary `/deep-research` already self-verifies; add a structured self-check in Claude Code plus a targeted gap pass or sub-agent critic when warranted (validator script pending)
+- Critic / second-opinion panels (`/consultant`, `/roast`): differentiated Claude sub-agent personas plus the advisor reviewer when available
+- Sender headshots: `ai.image_generation` (the approved exception, headshots only, key asked for at infrastructure setup)
 - All inline reasoning, JSON, classification, scoring, synthesis: Claude Code
-- Final email and phone copy: `ai.copywriting`; native Claude Code session = notify-then-fallback on unset slot, missing key, or no credits
-- Copy QA: outreach-copy-framework for the initial written cold touch, plus spam-word-checker, cold-email-copy-best-practices, and the rule checklist (default); a full model audit only for high-ticket or client-facing work
+- Final email and phone copy: the native Claude Code session (a clean-packet sub-agent is fine)
+- Copy QA: outreach-copy-framework for the initial written cold touch, plus spam-word-checker, cold-email-copy-best-practices, and the rule checklist (default); a sub-agent critic only for high-ticket or client-facing work
 - Orchestration, file ops, routing: Claude Code (local)
 
 ## Activity Log Protocol

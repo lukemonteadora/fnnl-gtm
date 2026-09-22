@@ -1,13 +1,13 @@
 ---
 name: mcp-tools-routing
-description: "Infra/sending-tool MCP routing for FNNL Agency cold outbound. Use before any domain, DNS, mailbox, campaign-upload, or deliverability/reporting step to decide MCP tool vs script vs raw API. The infra-layer sibling of ai-model-routing.md (which routes AI models) and lead-list-tech-stack-research.md (which routes data tools). CRITICAL: MCP tool calls are a new spend surface, so route every spend op through /api-cost-governance."
+description: "Infra/sending-tool MCP routing for FNNL Agency cold outbound. Use before any domain, DNS, mailbox, campaign-upload, or deliverability/reporting step to decide MCP tool vs script vs raw API. The infra-layer sibling of ai-model-routing.md (which routes Claude Code's own research, crunching and copy) and lead-list-tech-stack-research.md (which routes data tools). CRITICAL: MCP tool calls are a new spend surface, so route every spend op through /api-cost-governance."
 ---
 
 # MCP Tools Routing
 
 This is the tool-selection reference for the **infrastructure and sending** steps of the cold-outbound flow: registrars, DNS, mailbox providers, sending platforms, and their reporting. It is the third routing sibling:
 
-- `ai-model-routing.md`: which **AI model** researches, crunches, or writes.
+- `ai-model-routing.md`: how **Claude Code itself** researches, crunches, and writes. Since the no-AI-API rule (operator directive 2026-09-22) there is no third-party AI model to route; the one AI call left is the headshot image (see the routing table below).
 - `lead-list-tech-stack-research.md`: which **data tool** collects a signal.
 - **this file**: which **infra/sending tool** (MCP server, script, or raw API) performs a domain, mailbox, campaign, or reporting action.
 
@@ -17,9 +17,9 @@ MCP servers give Claude live, native tool access to the infra and sending layer 
 
 ## ⚠️ Cost gate first: MCP is a new spend surface
 
-`/api-cost-governance` (the STANDING PROTOCOL) was built around a **script registry**, so it knows which `.py`/`.ps1` scripts spend money. **MCP tool calls bypass that registry entirely.** A single MCP call can register 24 domains or create 48 mailboxes: real money, no script involved. The operator's standing rule is "never silently auto-spend," with a top-up gate and a $10 warning.
+`/api-cost-governance` (the STANDING PROTOCOL) was built around a **script registry**, so it knows which `.py`/`.ps1` scripts spend money. **MCP tool calls bypass that registry entirely.** A single MCP call can register 24 domains or create 48 mailboxes: real money, no script involved. The operator's standing rule is "never silently auto-spend": every charge is previewed and reported, it runs without a question only inside an approved budget (the standing $100 per client run for paid data steps, operator directive 2026-09-22; the setup total the operator approved for infrastructure), and there is a top-up gate and a $10 warning.
 
-**Therefore: any MCP op that spends money routes through `/api-cost-governance` exactly like a script: preview USD, check balance/funds, confirm, then act.**
+**Therefore: any MCP op that spends money routes through `/api-cost-governance` exactly like a script: preview USD, check balance/funds, check it against the approved budget (inside it, the budget is the confirmation and nothing is asked; over it, ask), then act.**
 
 | MCP op class (by capability slot) | Spends real money? | Gate before running |
 |---|---|---|
@@ -59,7 +59,7 @@ junk state going to the browser for things an MCP call does cleanly. Before any 
 
 ## The capability slots (category level)
 
-FNNL has not chosen its infra tools. What follows are **capability slots**, not a stack. The actual tool in each slot is whatever `stack-contract.yaml` locks it to, and per client whatever the matching `run_state` field locks it to. There is no default. If a slot is unset, stop and route the operator to `/stack-setup` rather than substituting a vendor.
+FNNL's infra tools are not settled: the registrar and mailbox slots are `held` (email infra is deferred by the operator), while the sending platform is chosen. What follows are **capability slots**, not a stack. The actual tool in each slot is whatever `stack-contract.yaml` locks it to, and per client whatever the matching `run_state` field locks it to. There is no default. If a slot is unset, stop and route the operator to `/stack-setup` rather than substituting a vendor.
 
 A named tool is also not a working tool. Per `/stack-setup`'s capability-truth rule, a slot at status `chosen` has only been recorded, while `live` means a real call against FNNL's own account has succeeded. Never tell the operator a step can be automated on the strength of `chosen` alone.
 
@@ -71,7 +71,9 @@ Tool names below are categories, not signatures. Confirm the exact tool at point
 | `mailbox_provider` | Create and hold the sending mailboxes | domain management, mailbox create/update, export of mailboxes into the sending platform | `stack-contract.yaml`; per client `run_state.mailbox_provider` |
 | `sending_platform` | Send the campaigns and report on them | campaigns, leads, email accounts, statistics, deliverability | `stack-contract.yaml`; per client `run_state.sending_platform` |
 
-Examples of tools that could fill these slots (illustrative only, none chosen for FNNL): `spaceship-mcp` for registrar plus DNS; `zapmail` and `salesforge` (Primeforge) for the mailbox provider, the Forge one being HTTP with an `X-Primeforge-Key` header; `smartlead` (LeadMagic) and `emailbison` for the sending platform, EmailBison being self-hosted so it needs an instance URL as well as a key.
+> **Approved-stack rule (operator directive 2026-09-22).** FNNL's tools are the closed list in the `approved_stack` block of `outbound/stack-contract.yaml`. Meet every need from that list first, and check each listed tool's full surface (its MCP tool list and API docs) before declaring a gap. Any other tool named in this file is a catalogue example: raise it only as "OUT OF STACK, needs operator approval", never as the path, and never credential or spend on it until the operator approves it by name and it is recorded in `approved_stack.approved_exceptions`. A slot at status `held` declares nothing, exactly like `not_chosen`.
+
+Examples of tools that could fill these slots (illustrative only, not routing instructions): `spaceship-mcp` for registrar plus DNS; `zapmail` and `salesforge` (Primeforge) for the mailbox provider, the Forge one being HTTP with an `X-Primeforge-Key` header; `smartlead` (LeadMagic) and `emailbison` for the sending platform, EmailBison being self-hosted so it needs an instance URL as well as a key.
 
 **There is no default sending platform.** The sending platform is whatever `run_state.sending_platform` is locked to for this client, sourced from the workspace stack contract at `outbound/stack-contract.yaml`. It must be set during `/stack-setup`, and if the slot is unset, stop and route the operator to `/stack-setup` rather than substituting a vendor. The downstream rule that matters: route every sending-platform read and write to whichever platform that client actually uses, never to a remembered or assumed one. Platform-specific skills (`smartlead-*`, `emailbison-*`) ship inert in `_vendor-library/skills/` for the platforms they name, and become available only once `/stack-setup` activates the matching pack.
 
@@ -93,7 +95,7 @@ Routing for any document, spreadsheet, or file-storage operation once such a ser
 
 ## Routing: MCP-first vs scripts-first
 
-The dividing line is **volume and determinism**, same spirit as "don't run DeepSeek per row" in `ai-model-routing.md`.
+The dividing line is **volume and determinism**: bulk work goes to batched, resumable scripts rather than one tool call per item.
 
 | Situation | Use | Why |
 |---|---|---|
@@ -103,7 +105,7 @@ The dividing line is **volume and determinism**, same spirit as "don't run DeepS
 | Bulk mailbox provisioning | **Scripts** | Same: batch + resumable + one cost gate, not N tool calls |
 | Bulk lead upload to a campaign | **Scripts / raw API** | Throughput; MCP is per-call |
 | Per-lead personalization | **Task sub-agents** (`personalization-subagent-pattern`) | Unchanged: MCPs feed context, they do not replace the agents |
-| Mailbox-profile image/GIF generation (`mailbox-profile-generator`) | **Script** (`generate_inbox_profiles.py`) for asset generation; **MCP** to *apply* the picture at the `mailbox_provider` | Image gen isn't an MCP capability, but applying the avatar is, so MCP-first per the hard rule above |
+| Mailbox-profile image/GIF generation (`mailbox-profile-generator`) | **Script** (`generate_inbox_profiles.py`) for asset generation; **MCP** to *apply* the picture at the `mailbox_provider` | Image gen isn't an MCP capability, but applying the avatar is, so MCP-first per the hard rule above. The headshot is the one AI API call left (OpenAI, headshots only, asked for at infrastructure setup) |
 
 ## Stage map: where each slot lands in the flow
 

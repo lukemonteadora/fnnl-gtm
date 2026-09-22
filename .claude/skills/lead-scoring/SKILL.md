@@ -37,6 +37,17 @@ profiles/<business-slug>/campaigns/<campaign-slug>/leads.scored.csv
 
 Never overwrite `tam.csv` or `contacts.csv`. The scored files are derived outputs that can be rebuilt when the offer, ICP, or timing data changes.
 
+## List workbench: publish the queue where the operator can watch (HARD RULE, operator directive 2026-09-22)
+
+The scored queue is published to the list workbench (`run_state.list_workbench`, contract slot `lead_data.list_workbench`) by default, so the operator watches the ranked list fill live instead of receiving a CSV assembled out of sight. The full mechanics live in `<outbound>/stack-contract.yaml` at `lead_data.list_workbench.build_protocol`. This section covers only what scoring does.
+
+- **Readiness.** The `scored` table is ready only when `list_workbench_tables.scored` in `profiles/<business-slug>/client-profile.yaml` has `ready: true`, `auto_run_off: true` (a table that auto-runs columns on arriving rows can spend workbench credits) and a non-empty `webhook_url`; the push script checks all three and exits 3 when any is missing. The operator creates the table in the workbench and fills those in, because the session cannot create tables or columns.
+- **Push.** After the scoring script writes the P1-to-P5 contact queue, push it with `node scripts/workbench_push.mjs --client <business-slug> --table scored --stage scored --csv profiles/<business-slug>/tam/contacts.scored.csv`. On the external-campaign path, push `profiles/<business-slug>/campaigns/<campaign-slug>/leads.scored.csv` the same way and add `--campaign <campaign-slug>`. Do not push `tam.scored.csv`, since every contact row already carries its company points. A webhook push costs zero workbench credits, so it is not paid spend.
+- **The CSV stays the working copy.** Every downstream skill reads the local scored file, because the workbench's API cannot read a table back below its top plan tier. The table is the operator's live view, and edits made there come back only as a manual export.
+- **Fallback, never a block.** If `run_state.list_workbench` is unset or the `scored` table is not ready, write the scored CSV natively and finish scoring. Open the scoring report (`profiles/<business-slug>/tam/lead-scoring-report.md`) and the activity-log entry with "list workbench not ready: scored CSV-only". The push never changes `scoring_stage`.
+- **Zero workbench credits.** Scoring is deterministic arithmetic in Claude Code. Never use a workbench AI column, a formula that runs on credits, or a workbench enrichment to compute or fill any score input or tier.
+- **Verify.** Compare the script's pushed count to the CSV row count and report "pushed N/N rows to scored (list_stage=scored)". A shortfall goes at the top of the scoring report.
+
 ## Workflow position and gate
 
 Run after `/tam-build` has:
@@ -228,6 +239,8 @@ Priority tiers:
 
 All eligible tiers remain in the queue. Reveal and verify P1 first, then P2 through P5 as capacity becomes available. Within a company, the highest-scoring two contacts may enter the same active wave by default. Rank 3+ stays marked for a later staggered wave.
 
+Once the contact output (`contacts.scored.csv`, or `leads.scored.csv` on the external-campaign path) is written, push it to the list workbench's `scored` table as described above, and put the "pushed N/N rows to scored (list_stage=scored)" count, or the CSV-only fallback note, in the scoring report.
+
 ## Score confidence
 
 Score confidence measures evidence coverage, not lead quality.
@@ -253,6 +266,7 @@ Use a stratified sample that includes exact fits, adjacent fits, weak fits, miss
 - When the offer or ICP changes, immediately set `run_state.status.scoring_stage: none`, increment `score_version`, and block downstream work until the stable components are rebuilt. Promoting a winning arm inside a segment's already-scored offer set, or locking a new segment's set, is a `score_version` bump for that offer component only, never a downstream block (operator decision 2026-09-22).
 - Recalculate timing tiers and total scores during the monthly TAM refresh.
 - Preserve `score_version` so downstream files can prove which rubric produced them.
+- A re-score pushes the new scored file to the `scored` table as a new push (the push script refuses a duplicate of the same file). Pushes append rows rather than update them, so tell the operator to filter or clear the old rows in the table, using `score_version` or `scored_at` to tell them apart.
 
 ## Downstream rules
 
@@ -273,6 +287,9 @@ Stop and fail loud when:
 - Any hard-no or suppression row is marked eligible.
 - A downstream step tries to filter out P4 or P5 merely because the score is low.
 - A paid email step is attempted before scoring completes.
+- The list workbench push reported fewer rows than the scored CSV holds, and one retry also fell short.
+
+A push shortfall is reported at the top of the scoring report and retried once, never silently accepted. That stop applies to the publish step only. It does not reset `scoring_stage` or hold `/campaign-strategy` and `/email-waterfall`, because the local scored CSV they read is intact. A list workbench that is not ready is not a stop gate: it takes the CSV-only fallback above.
 
 ## Related skills
 
@@ -282,4 +299,4 @@ Stop and fail loud when:
 - `/campaign-strategy`: slices and orders the scored universe.
 - `/email-waterfall`: reveals and verifies email in score order.
 - `/list-quality-scorecard`: verifies score coverage and send safety.
-- `/api-cost-governance`: gates any AI normalization spend.
+- `/api-cost-governance`: gates any paid data call a scoring step triggers (normalization itself runs on Claude Code and is not metered).

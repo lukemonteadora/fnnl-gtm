@@ -22,9 +22,9 @@ This skill names **capability roles**, never specific vendors. Resolve every rol
 outbound/stack-contract.yaml
 ```
 
-Roles this skill uses: contact-discovery source, email finder, email verifier, waterfall enricher, sending platform, web-search API.
+Roles this skill uses: contact-discovery source, email finder, email verifier, waterfall enricher, sending platform, list workbench (never a stop: an unset or not-ready list workbench falls back to a native CSV, see "List workbench" below). (The third-party web-search API role is retired under the no-AI-API rule, operator directive 2026-09-22: `linkedin_url` backfill now runs through the contact-discovery source and the stack contract's contact-enrichment tools, with Claude's built-in WebSearch as the last resort. See "Backfill the gaps".)
 
-**If a role this step needs is empty or missing in the contract, STOP and route to `/stack-setup`.** Never substitute a guessed vendor, and never hardcode a tool name into an artifact this skill writes.
+**If a role this step needs is empty or missing in the contract, STOP and route to `/stack-setup`.** The list workbench is the one exception: it is never a stop for this skill. Never substitute a guessed vendor, and never hardcode a tool name into an artifact this skill writes.
 
 
 This skill turns a raw lead or company-contact CSV into a send-safe lead CSV.
@@ -33,11 +33,22 @@ It does not own list targeting. Run `/icp-prompt-builder` first when the source 
 
 This is the **Layer-2 (per-contact) step** in the TAM model: it runs on a single campaign **slice** of the company-level TAM (`tam/tam.csv` from `/tam-build`), not across the whole TAM. Per-contact email/phone reveal and verification cost per credit, so they happen here — only for the slice that is going live — never up front across the entire TAM.
 
+## List workbench: build the send list where the operator can watch (HARD RULE, operator directive 2026-09-22)
+
+By default, the campaign's verified send list is built in the list workbench (`run_state.list_workbench`, contract slot `lead_data.list_workbench`), so the operator watches it fill live instead of receiving a CSV assembled out of sight. The full mechanics live in the stack contract at `lead_data.list_workbench.build_protocol`; this section only says how this skill applies them.
+
+- **Readiness check.** Read `list_workbench_tables.send_lists.<campaign-slug>` in the client's gitignored `profiles/<business-slug>/client-profile.yaml`. The table is ready only when `ready: true`, `auto_run_off: true` (a table that auto-runs columns on arriving rows can spend workbench credits) AND `webhook_url` is non-empty; the push script checks all three and exits 3 when any is missing. The operator creates the table and its webhook in the workbench UI; this session cannot create tables or columns.
+- **The push.** Once `leads.verified.csv` is written, push it with `node scripts/workbench_push.mjs --client <business-slug> --table send_list --stage verified --campaign <campaign-slug> --csv profiles/<business-slug>/campaigns/<campaign-slug>/leads.verified.csv` (add `--dry-run` to preview). Every row lands tagged `list_stage=verified`. Webhook import costs zero workbench credits, so the push is not paid spend. The script refuses to re-push the same CSV to the same table without `--force`, because webhook pushes append rows rather than update them.
+- **The CSV stays the working copy.** The local `leads.verified.csv` is still what `/list-quality-scorecard` and the platform upload read, because the workbench's API cannot read a table back below its top plan tier. The table is the operator's live view of the list, not the file the next skill reads.
+- **Fallback, never a blocker.** If `run_state.list_workbench` is unset or this campaign's send-list table is not ready, write the CSV natively and keep the waterfall moving. Say so at the top of the report and in the activity log: "list workbench not ready: verified list CSV-only".
+- **Zero workbench credits (CLAUDE.md section 7, full text at `lead_data.list_workbench.credit_policy_rule`).** Email finding, verification, catch-all checks and the residue waterfall run only on FNNL's own keyed tools from the stack contract, either outside the workbench with the results pushed in, or in a keyed column the operator set up inside the workbench after it passed the contract's 1-to-5-row credit test. Never use the workbench's own email or phone waterfall, its native enrichment on its own account, its AI columns, or its connector's search, enrich or subroutine tools, even when a key is missing or failing: stop and report instead. Paid calls on FNNL's own keys still route through `/api-cost-governance`.
+- **Verify the push.** Compare the rows pushed against the rows in the CSV and report "pushed N/N rows to send_list <campaign-slug> (list_stage=verified)". A shortfall goes at the top of the report.
+
 ## Material Decision Rule
 
 When this skill reaches a material fork, name the realistic options, recommend the strongest path, and explain why the main alternatives are weaker before committing.
 
-Ask before choices that affect spend, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
+Ask before choices that affect spend beyond an approved budget, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
 
 Do not turn failed or unsafe paths into user-facing options. If this skill's QA rules or stop gates reject a path, filter it out and explain the blocker only when useful.
 
@@ -110,7 +121,7 @@ The default active-wave cap is exactly two contacts per company. Use `contact_ra
 
 Contact *discovery* (finding the people) is distinct from the email *finder* (revealing the address) and the email *verifier* (judging it). A deep per-persona contact-*research* escalation (work history, recent posts, persona web research a discovery index cannot do) is a Tier-2 step run on the winning slice, never the way you find the people in the first place. The fallback contact-generation routes referenced below (fabricated-name re-discovery, nameless rows) are this **gap-fill / residue** path, not a primary route around the primary source.
 
-> **HARD RULE: NEVER discover contacts from LinkedIn / Google search results (operator directive 2026-07-17).** Do not build a contact list by running a LinkedIn public-profile search through the web-search API (`site:linkedin.com/in "<Company>" ("Chief Digital" OR COO OR ...)`) and having an AI pass pick which results match the target titles. **This is how you get retired and departed people.**
+> **HARD RULE: NEVER discover contacts from LinkedIn / Google search results (operator directive 2026-07-17).** Do not build a contact list by running a LinkedIn public-profile search through any web search (`site:linkedin.com/in "<Company>" ("Chief Digital" OR COO OR ...)`) and having an AI pass pick which results match the target titles. **This is how you get retired and departed people.**
 >
 > **Why it fails, mechanically:** a search-engine result is the engine's **cached** view of a profile, so the `First Last - Title - Company` string reflects whenever it was last crawled, often months or years stale. The AI sees only that string and has **no employment-currency signal whatsoever**, so an instruction like "pick people who CURRENTLY work at X" asks for a judgment it cannot make; it just pattern-matches a company name in a snippet. The method therefore returns *whoever the engine once indexed at that company*, which is precisely a roster of people who have since retired or left.
 >
@@ -118,7 +129,7 @@ Contact *discovery* (finding the people) is distinct from the email *finder* (re
 >
 > **Contacts must come from a real contact database with a current-employer field**, gap-filled with the fallback people-databases. Those carry current employer plus tenure, which is exactly the signal a search-engine snippet lacks.
 >
-> **This bans SERP-based *discovery*, NOT the sanctioned web-search *backfill* below. Do not over-apply it.** Using the web-search API plus an AI confirmation pass to fill a `linkedin_url` (or `company_linkedin`) for a person or company you **already have from a real source** is still correct and still required (see "Backfill the gaps" below). The line is: **a real database tells you the person exists and still works there; the web-search API may only fill in a field about someone already established.** Never let a search engine decide who is on the list. The same outage exception applies as for the email finder: only on an actually-observed connector or API error does the discovery queue route straight to a fallback (see the SANCTIONED EXCEPTION below; the same posture applies to a contact-discovery outage).
+> **This bans SERP-based *discovery*, NOT the sanctioned *backfill* below. Do not over-apply it.** Filling a `linkedin_url` (or `company_linkedin`) for a person or company you **already have from a real source** is still correct and still required (see "Backfill the gaps" below). The line is: **a real database tells you the person exists and still works there; a backfill, including a web search, may only fill in a field about someone already established.** Never let a search engine decide who is on the list. The same outage exception applies as for the email finder: only on an actually-observed connector or API error does the discovery queue route straight to a fallback (see the SANCTIONED EXCEPTION below; the same posture applies to a contact-discovery outage).
 
 **No paid email enrichment until a contact is confirmed into a campaign. HARD RULE (operator directive 2026-06-29).** The build order is strict: (1) build the FULL TAM both levels up front, company-level (`tam.csv`) AND contact-level (`contacts.csv`: decision-makers + all Tier-1 contact signals + `co_*` company signals + any free email-exists flag the source offers), Layer-1, NO email reveal; (2) `/campaign-strategy` slices both levels and the operator confirms which contacts go into a campaign (signal-based or broad); (3) **only then**, and **only on the confirmed-campaign contacts**, does any per-contact EMAIL spend happen: the email finder reveals FIRST, then the verifier judges, then the waterfall enricher runs on the residue the finder could not close. **The waterfall enricher (and every paid finder or verifier) is doubly gated: Layer-2 (confirmed slice only, never the TAM or contact-TAM) AND residue-only (never opens the finding).** Never reveal or waterfall-enrich an email during the TAM or contact-TAM build, and never on a contact not yet confirmed into a campaign. A free email-exists flag tells you up front *that* an email exists; you pay to reveal it only for contacts you are actually about to email. This is what makes contact-signal campaigns possible without breaking the Layer-1/Layer-2 cost firewall: discover and signal the whole base cheaply, reveal emails only on the chosen contacts.
 ## Suppression Cross-Check (run before any enrichment spend)
@@ -214,7 +225,7 @@ The finder keys on `first_name`+`last_name`+`company_domain`, so **real first + 
 
 **`linkedin_url` is a required data-quality field for every B2B contact (operator directive 2026-06-20).** It is *not* part of the email-finder key, so a missing LinkedIn mid-pipeline must never block email finding (don't over-block a name-complete row), and B2C lists are exempt. But the **finalized** B2B list should carry a verified `linkedin_url` for every contact, so it must be **actively filled**, not just captured opportunistically:
 - **Capture at the source.** Take `linkedin_url` wherever discovery returns it and carry it through every transform. Do not let column-mapping drop it (the 2026-06-20 backfill existed because the field was schema-present but never populated or synced for ~40% of contacts).
-- **Backfill the gaps: contact-database first, then AI-verified web search (operator routing).** For B2B rows still missing `linkedin_url` after discovery: (1) query the **contact-discovery source by name** with the contact's full name plus company domain and take the matching row's profile URL. (2) **Residue goes to the web-search API plus an AI confirmation pass**, anti-hallucination-gated: the URL MUST come from a real `linkedin.com/in/` search result, and the model confirms the profile's name AND company match the contact. Write only on a confirmed match, else leave blank (a wrong LinkedIn is worse than a blank one). Tools: `scripts/linkedin_find_web.mjs` (residue), `scripts/linkedin_merge_apply.mjs` (fold back into the lead CSV).
+- **Backfill the gaps: contact-database first, then the contact-enrichment tools, then a Claude web-search check (operator routing; no-AI-API rule, operator directive 2026-09-22).** For B2B rows still missing `linkedin_url` after discovery: (1) query the **contact-discovery source by name** with the contact's full name plus company domain and take the matching row's profile URL. (2) **Residue goes to the stack contract's contact-enrichment tools** (the `lead_data.contact_enrichment` tools, plus the secondary contact source the contract records, whose tool surface includes a batch lookup that returns LinkedIn profile URLs from verified work emails). That lookup is not proven on FNNL's own account until a real call succeeds (`chosen` is not `live`, CLAUDE.md section 1); if it fails or returns nothing, move the residue to step (3) and say so. Take the URL only when the returned record's name AND company match the contact. Paid lookups route through `/api-cost-governance`, and never through the list workbench's built-in search (zero-workbench-credit HARD RULE, CLAUDE.md section 7). (3) **Last resort, for a residue small enough to be worth it:** Claude sub-agents fanned out per `/personalization-subagent-pattern` run WebSearch for the person, anti-hallucination-gated: the URL MUST come from a real `linkedin.com/in/` search result, and the sub-agent confirms the profile's name AND company match the contact. Write only on a confirmed match, else leave blank (a wrong LinkedIn is worse than a blank one). No outside AI provider or search API runs any step. Tool: `scripts/linkedin_merge_apply.mjs` (fold the filled URLs back into the lead CSV).
 - **Sync to the sending platform.** On upload, map `linkedin_url` to the sending platform's **native** LinkedIn-profile field (the one its UI surfaces for reply-handling), not only a custom field.
 
 ## Required Order
@@ -246,6 +257,8 @@ The waterfall enricher is the all-in-one **waterfall finder** used as the **resi
 
 **It is a Layer-2 step: run it on the campaign slice that is going live, never across the whole TAM.** Per-contact credits are the expensive layer; the TAM stays company-level (`/tam-build`).
 
+**The residue waterfall never runs on the list workbench's own waterfall or credits.** It runs on the waterfall enricher the stack contract names, on FNNL's own key, and its results reach the workbench only through the push or a keyed column (zero-workbench-credit HARD RULE, see "List workbench" above).
+
 **How to run it.** Resolve the waterfall enricher from the stack contract; if that slot is empty, stop and route to `/stack-setup`. Whatever runner the contract wires to the slot, it must support these three steps in order, and it reads its API key from `scripts/.env`. **Run it on the post-suppression survivors, after Required Order steps 1-2 (dedupe + drop suppression matches), never on the raw list**, so you never pay to enrich someone you cannot contact:
 
 1. **Connectivity + balance check (free, no spend)** before anything else.
@@ -266,7 +279,7 @@ Stop and ask before spending money when:
 - Any ineligible, suppressed, hard-no, or rank 3+ same-company row leaked into the active wave
 - The list has more than 500 rows and no ICP qualification pass exists
 - The list has no `lead-source-plan.md` and the source is not obvious from the user's latest request
-- The user has not approved the enrichment budget
+- The enrichment would push the run past its budget (`run_state.spend_ceiling_usd`, the standing $100 per client run). Inside the budget no approval is needed and nothing is asked (`/autonomous-execution-policy` section 2).
 - Required API credentials are missing
 - The list source is mostly company-level and has no person names
 
@@ -275,6 +288,8 @@ Stop and do not upload when:
 - Any unchecked row remains in the send file. This skill is the single owner of the verification gate: `leads.verified.csv` must be **100% verification-checked**, with every non-deliverable (invalid / risky / catch-all-fail) row moved to `leads.review.csv` — never into the send file.
 - Fewer than 80% of the original sourced rows survived as verified-deliverable. Below that the source itself is too weak — fix the source, do not send a thin list.
 - The source list has not passed `/list-quality-scorecard` with grade B or better. (The scorecard reports coverage; it does not re-gate verification — that gate lives here.)
+
+A list workbench push shortfall is not a stop, but it is never silently accepted: report it at the top of the report and retry once by pushing a CSV that holds only the rows that did not land. Never re-push the full file with `--force`: webhook pushes append, so that duplicates every row that already landed. Until the counts match, the table is not a safe source for a manual export. A not-ready list workbench is not a stop gate either; it is the CSV-only fallback in "List workbench" above.
 
 ## Output Files
 
@@ -288,6 +303,8 @@ profiles/<business-slug>/campaigns/<campaign-slug>/
   leads.review.csv
   email-waterfall-report.md
 ```
+
+`leads.verified.csv` is also pushed to the campaign's send-list table in the list workbench (see "List workbench" above), the report states the result as "pushed N/N rows to send_list <campaign-slug> (list_stage=verified)" or the CSV-only fallback line, and every push is logged to `profiles/<business-slug>/workbench/push-log.jsonl`.
 
 The report must include:
 
@@ -310,6 +327,8 @@ This skill never uploads to a sending platform.
 After `/list-quality-scorecard` passes, hand the verified list to the upload workflow for the platform locked in `run_state.sending_platform`. Resolve that platform and its upload path from the stack contract; if the sending-platform slot is empty or no platform is locked, stop and route to `/stack-setup`. Never guess a platform or improvise an upload path.
 
 Only show the path matching locked `run_state.sending_platform`.
+
+The upload reads the local `leads.verified.csv`, not the list workbench table, because the workbench's API cannot read a table back below its top plan tier. If the operator edits or deletes rows in the send-list table before upload, those edits come back only as a manual export from the workbench that replaces the local `leads.verified.csv`. Treat the replaced file as a new send file: any row whose email was not already verified goes back through the email verifier, and `/list-quality-scorecard` runs again before upload.
 
 ## Related Skills
 
