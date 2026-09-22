@@ -1,6 +1,6 @@
 ---
 name: cold-email-kickoff
-description: Single "start here" orchestrator for new cold email operators. Runs a pre-fill discovery pass first (.env, existing profiles, website scrape), then checks for profiles/<business-slug>/intake-form.md - if found, skips all intake questions and reads execution_mode and spend_ceiling_usd from the form. If no form, it fills the infrastructure and sending-platform capability slots from the stack contract at <outbound>/stack-contract.yaml, never from a default vendor, and stops for /stack-setup when a slot the run needs is empty. Runs /icp-onboarding -> /offer-intelligence (discovery) -> /lead-magnet-brainstorm (offer locks) -> /data-point-discovery -> /tam-build -> /lead-scoring -> /campaign-strategy, then /lead-source-strategy Lead Source Plan Mode after campaign selection, for new offers; or /offer-intelligence (validation) for existing offers. With execution_mode=auto_execute, picks top-ranked offer and campaign without pausing. Runs /mailbox-mix-strategy before any mailbox infrastructure spend. Spend gate auto-approves purchases only when a non-zero spend_ceiling_usd is explicitly set; the default ceiling is 0, meaning always confirm before any spend.
+description: Single "start here" orchestrator for new cold email operators. Runs a pre-fill discovery pass first (.env, existing profiles, website scrape), then checks for profiles/<business-slug>/intake-form.md - if found, skips all intake questions and reads execution_mode from the form. If no form, it fills the infrastructure and sending-platform capability slots from the stack contract at <outbound>/stack-contract.yaml, never from a default vendor, and stops for /stack-setup when a slot the run needs is empty. Runs /icp-onboarding -> /offer-intelligence (discovery) -> /lead-magnet-brainstorm (offer test set locks) -> /offer-test-slate (client slate, approval optional) -> /data-point-discovery -> /tam-build -> /lead-scoring -> /campaign-strategy, then /lead-source-strategy Lead Source Plan Mode after campaign selection, for new offers; or /offer-intelligence (validation) for existing offers. With execution_mode=auto_execute, locks the offer test set and picks the top-ranked campaign without pausing. Runs /mailbox-mix-strategy before any mailbox infrastructure spend. Spend is never asked at onboarding (operator directive 2026-09-22). Every client run gets a standing $100 budget in run_state.spend_ceiling_usd, so paid data steps inside it auto-approve and only a purchase that would push the run over it stops to ask. Mailbox infrastructure is outside that budget and needs the operator's approval of the setup total.
 ---
 
 # Cold Email Kickoff
@@ -13,13 +13,13 @@ The single entry point for a fresh user. Replaces "stare at 29 skills and guess 
 
 When this skill reaches a material fork, name the realistic options, recommend the strongest path, and explain why the main alternatives are weaker before committing.
 
-Ask before choices that affect spend, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
+Ask before choices that affect spend beyond an approved budget, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
 
-Do not turn failed or unsafe paths into user-facing options. If this skill's QA rules or stop gates reject a path, filter it out and explain the blocker only when useful.
+Do not turn untrue, unsafe or non-compliant paths into user-facing options. Offer candidates, ICP segments and test arms are never hidden for effort, capacity or "the client may not want it" reasons: they stay visible with their label and the reason they rank where they do (operator directive 2026-09-22).
 
 ## Interaction Policy
 
-This skill defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the operator's default), proceed without pausing: pick the strongest option per the rubric, record it to `run_state`/profile, and continue — never re-ask a decision already in `run_state`, `client-profile.yaml`, `campaign-plan.md`, memory, or the latest operator message. Confirm spend once against `run_state.spend_ceiling_usd`, then auto-approve within it. Stop only for the hard-stops in the policy. On a long async wait, background-poll and move to other productive work — never idle.
+This skill defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the operator's default), proceed without pausing: pick the strongest option per the rubric, record it to `run_state`/profile, and continue — never re-ask a decision already in `run_state`, `client-profile.yaml`, `campaign-plan.md`, memory, or the latest operator message. Spend runs against the standing budget in `run_state.spend_ceiling_usd` ($100 per client run, never asked, in either execution mode): auto-approve within it. Stop only for the hard-stops in the policy. On a long async wait, background-poll and move to other productive work — never idle.
 
 ## First-Wave Default: validate the offer before scaling
 
@@ -61,13 +61,13 @@ Ask for the stack once at the start, save it, and route everything from it.
 ```yaml
 run_state:
   execution_mode: review_gates|auto_execute
-  spend_ceiling_usd: null|int
-  research_budget_usd_per_provider: 10                   # per-client, PER-PROVIDER hard cap on AI research/model spend: EACH AI research, model, search, or crawl provider the run uses is capped at $10/client (NOT a shared pool); separate from spend_ceiling_usd; cumulative per provider, hard-stop at cap, raise ONLY by explicit operator approval. Full rule: /api-cost-governance
-  research_routing: claude_deep_research|third_party_ai|claude_native   # DEFAULT claude_deep_research (Claude native /deep-research fan-out harness = primary research brain; multi sub-agents run all categories in parallel + adversarial verify). NATIVE session inference, NOT the Claude API key (no CLAUDE_API_KEY, not ai_router --provider claude — that key is for final COPY only). unset → treat as claude_deep_research, do NOT stop to ask. third_party_ai (older Perplexity-led primary) or claude_native (bare inline WebSearch, the weak path) ONLY on explicit operator opt-out. ENFORCED: in claude_deep_research mode the Stage-1 primary pass MUST be an actual /deep-research invocation (not a single inline WebSearch / DiscoGen per-row pass) — record ai_research_provider=claude-deep-research + an api-balance-ledger.md line; a research step finishing with no recorded /deep-research primary = flagged violation. No third-party key needed for the primary; a missing key hard-stops ONLY if the operator explicitly chose third_party_ai. Full rule: /ai-model-routing
+  spend_ceiling_usd: 100   # the standing budget per client run (operator directive 2026-09-22). Written automatically, never asked. Paid data steps inside it auto-approve; a purchase that would go over it stops to ask. Mailbox infrastructure is outside it. A figure the operator sets for a client replaces it. Rule: /autonomous-execution-policy section 2
+  research_routing: claude_deep_research   # the ONLY value (no-AI-API rule, operator directive 2026-09-22; third_party_ai and claude_native are retired). The Claude native /deep-research fan-out harness is the primary research brain (multi sub-agents run all categories in parallel + adversarial verify), plus Claude's built-in WebSearch/WebFetch; a thin sub-topic gets a second targeted /deep-research or WebSearch/WebFetch pass, never another provider. Native session, no API key of any kind. unset (or a retired value) → treat as claude_deep_research, do NOT stop to ask. ENFORCED: the Stage-1 primary pass MUST be an actual /deep-research invocation (not a single inline WebSearch or a per-row pass). Record ai_research_provider=claude-deep-research + an api-balance-ledger.md provenance line (an audit line with no dollar decrement; research_routing_check.mjs reads it); a research step finishing with no recorded /deep-research primary = flagged violation. Full rule: /ai-model-routing
   infrastructure_stack: <from stack contract>   # composite of the contract's registrar + mailbox provider slots, lowercase, joined with an underscore. No default.
   registrar: <from stack contract>              # No default. Set during /stack-setup, or ask the operator.
   mailbox_provider: <from stack contract>       # No default. Set during /stack-setup, or ask the operator.
   sending_platform: <from stack contract>       # No default. Set during /stack-setup, or ask the operator.
+  list_workbench: <from stack contract>         # lead_data.list_workbench. Where lead lists are built so the operator watches them fill (zero-workbench-credit HARD RULE). Unset is NOT a stop: list builds fall back to CSV-only and say so.
   emailbison_instance_url: null|string          # instance URL, filled only when the locked sending platform is self-hosted and needs one
   emailbison_api_token_ready: yes|no|unknown    # applies only when the locked sending platform needs an API token before upload
   sender_personas: null|list   # one realistic human persona per client (first/last name), reused across every domain, inbox, and inbox provider. Set/recorded by the domain-setup skill before any inbox is created; never a role mailbox (team@/info@). Default: one persona per client.
@@ -92,7 +92,14 @@ run_state:
     list_stage: not_started|in_progress|complete
     copy_stage: not_started|in_progress|complete
     upload_stage: not_started|draft_created|launched_by_user
+list_workbench_tables:        # top-level, NOT inside run_state. Written only when run_state.list_workbench is set.
+  companies: { webhook_url: "", ready: false, auto_run_off: false }
+  contacts:  { webhook_url: "", ready: false, auto_run_off: false }
+  scored:    { webhook_url: "", ready: false, auto_run_off: false }
+  send_lists: {}              # one entry per campaign, added when the campaign is selected
 ```
+
+**List workbench tables.** When `run_state.list_workbench` is set, write the `list_workbench_tables` block above into the client profile with every table not ready. Then, once, before `/tam-build`'s first push, ask the operator to create the `companies`, `contacts` and `scored` tables in the list workbench's UI with an inbound-webhook source, turn auto-run off on each, and write each webhook URL plus `ready: true` and `auto_run_off: true` straight into the profile file. Treat webhook URLs like credentials: never ask for them in chat and never write them to a tracked file. A campaign's send-list table is requested the same way when `/email-waterfall` first needs it. Until a table is ready, the skill that needs it builds CSV-only and says so; it never blocks. Mechanics: `stack-contract.yaml` `lead_data.list_workbench.build_protocol`.
 
 This state is binding. Do not suggest the other registrar, mailbox provider, or sending platform unless the selected path is impossible or the user explicitly asks to change providers.
 
@@ -121,17 +128,17 @@ Use validation mode only for a real existing offer backed by live or prior campa
 **Pre-fill discovery pass (run first, silently, before asking anything):**
 
 1. Check `<outbound>/profiles/*/intake-form.md` and `<outbound>/profiles/*/client-profile.yaml` for prior `run_state` values.
-2. Read `.env` and `.env.local` from the workspace root. Treat every key found as evidence that a credential exists, never as a stack decision. Map each key to the capability slot it would serve (sending platform, registrar, mailbox provider, self-hosted instance URL, email verification, lead source) and check it against `<outbound>/stack-contract.yaml`. A key for a provider the contract does not declare is a mismatch to surface to the operator, not a vendor to adopt.
+2. Read `.env` and `.env.local` from the workspace root. Treat every key found as evidence that a credential exists, never as a stack decision. Map each key to the capability slot it would serve (sending platform, registrar, mailbox provider, self-hosted instance URL, email verification, lead source) and check it against `<outbound>/stack-contract.yaml`. A key for a provider the contract does not declare is a mismatch to surface to the operator, not a vendor to adopt. AI-provider keys are out of scope here (no-AI-API rule, 2026-09-22): never ask for one at kickoff, and leave the headshot image key to infrastructure setup (Step 6).
 3. If a business website URL is available from context, scrape it to build ICP pre-fills for Step 2.
 
 **Intake form fast path:**
 
 Check `<outbound>/profiles/<business-slug>/intake-form.md`:
 
-- If it exists and is valid: read it, populate `run_state` (including `execution_mode` and `spend_ceiling_usd`), and **skip all Step 1 stack-routing questions**. Confirm in one line: "Loaded intake form for [business]. Stack: [stack]. Platform: [platform]. Mode: [execution_mode]." Then proceed to Step 2.
+- If it exists and is valid: read it, populate `run_state` (including `execution_mode`, plus the standing `spend_ceiling_usd: 100`), and **skip all Step 1 stack-routing questions**. Confirm in one line: "Loaded intake form for [business]. Stack: [stack]. Platform: [platform]. Mode: [execution_mode]." Then proceed to Step 2.
 - If it does not exist: continue with the stack resolution below. Fill each capability slot from the stack contract, show the value with its source label, and let the user confirm or correct it.
 
-Set safe defaults when no intake form is present: `run_state.execution_mode: review_gates` and `run_state.spend_ceiling_usd: 0` (always confirm before spend). `auto_execute` and any non-zero spend ceiling are opt-in only — set them solely from a confirmed intake form or an explicit user instruction, never silently. These match the defaults `/icp-onboarding` writes, so a profile from either entry path behaves identically.
+Set these defaults when no intake form is present: `run_state.execution_mode: review_gates` and `run_state.spend_ceiling_usd: 100` (the standing budget, operator directive 2026-09-22, never asked). `auto_execute` is opt-in only: set it solely from a confirmed intake form or an explicit user instruction, never silently. The spend figure changes only when the operator names a different one for this client. These match the defaults `/icp-onboarding` writes, so a profile from either entry path behaves identically.
 
 Before touching business context, resolve the stack from the contract rather than from a vendor menu.
 
@@ -140,15 +147,15 @@ Read `<outbound>/stack-contract.yaml` and fill, in this order:
 1. `run_state.registrar` and `run_state.mailbox_provider` from the contract's declared infrastructure pairing, then derive `run_state.infrastructure_stack` as the composite of the two.
 2. `run_state.sending_platform` from the contract's sending-platform slot, plus `run_state.emailbison_instance_url` only when that platform is self-hosted and the contract carries an instance URL.
 
-There is no default for any of these slots. If the contract is missing, or a slot this run needs is empty, **STOP** and tell the operator to run `/stack-setup` to declare it. Do not present a vendor menu, do not infer a vendor from a key in `.env`, and do not carry a vendor over from another client. This stop holds under `auto_execute`, because provider routing is a hard stop rather than a rubric choice.
+There is no default for any of these slots. If the contract itself is missing, **STOP** and tell the operator to run `/stack-setup`. If a slot is empty (for example the registrar and mailbox provider while infrastructure is deferred), record it as `deferred` in `run_state` and continue (operator decision 2026-09-22): ICP, offer research, the offer test slate, lists, copy and the paused draft need no infrastructure. An empty slot becomes a stop only at the step that uses that tool: the registrar and mailbox provider at an infrastructure purchase, the sending platform at sender verification and draft upload. Do not present a vendor menu, do not infer a vendor from a key in `.env`, and do not carry a vendor over from another client. That never-guess rule holds under `auto_execute`, because provider routing is a hard stop rather than a rubric choice.
 
 When the contract does declare a slot, confirm it back in one line with its source and let the operator correct it before it is saved, as a Claude Desktop native Interactive Input / Choice Prompt with the contract value as the recommended option. A correction made here is written back to the contract too, so the next run reads the same value.
 
 Do not ask whether domains are purchased, inboxes are warmed, or provider keys are connected during kickoff. Those are execution checks owned by the selected setup, source, verification, or platform manager skill at the moment that check actually matters.
 
-If the user volunteers existing infrastructure status, record it in `run_state.status` as unverified context. Before upload, verify sender readiness through the manager for the locked sending platform. If readiness cannot be verified, stop with the missing verification instead of asking the kickoff question again.
+If the user volunteers existing infrastructure status, record it in `run_state.status` as unverified context. Before the draft upload, confirm through the manager for the locked sending platform that the senders exist and are connected; warmup readiness is Gate A, checked before Start. If readiness cannot be verified, stop with the missing verification instead of asking the kickoff question again.
 
-Allowed infrastructure pairings come from the contract, not from this file. `run_state.infrastructure_stack` is the composite of the contract's declared registrar and mailbox provider, written lowercase and joined with an underscore (`<registrar>_<mailbox_provider>`); a provider that bundles its own domain registration fills both slots with itself. Route only a pairing the contract declares valid.
+Allowed infrastructure pairings come from the contract, not from this file. When either slot is `deferred`, `run_state.infrastructure_stack` is `deferred` too: there is no pairing to validate yet, so the pairing rules below apply only once the operator resolves the contract, at the infrastructure purchase in Step 6 (operator decision 2026-09-22). `run_state.infrastructure_stack` is the composite of the contract's declared registrar and mailbox provider, written lowercase and joined with an underscore (`<registrar>_<mailbox_provider>`); a provider that bundles its own domain registration fills both slots with itself. Route only a pairing the contract declares valid.
 
 Reject any pairing the contract does not declare, and name the rule it broke (most often a bundled mailbox provider paired with a separate registrar it cannot accept). Do not repair a rejected pairing by picking a substitute provider yourself: stop, show the contract's valid pairings, and let the operator choose or re-run `/stack-setup`.
 
@@ -170,7 +177,7 @@ D. Custom answer
 
 - If it does not exist, invoke `/icp-onboarding`.
 
-If the profile already has `run_state`, compare it to Step 1 answers. If they conflict, stop and ask the user which one is current before proceeding. Provider drift at this point breaks later steps.
+If the profile already has `run_state`, compare it to Step 1 answers. If they conflict, stop and ask the user which one is current before proceeding. Provider drift at this point breaks later steps. Spend is never one of those conflicts: a `spend_ceiling_usd` of 0, null, or missing that was only the old default becomes the standing `100` (log it and mention it in one line of the run's report), per `/autonomous-execution-policy` section 2, while a figure the operator set on purpose stays. Never ask about spend here.
 
 ### Step 2.1: Resume routing
 
@@ -181,6 +188,7 @@ If a profile already exists, do not restart from the top. Resume from the earlie
 | No `client-profile.yaml` | Step 2 (create via `/icp-onboarding`) |
 | Profile exists but neither `offer.lead_magnet` nor `offer.offer_validation_path` exists | Step 3A, offer work: `/offer-intelligence` discovery, then `/lead-magnet-brainstorm` |
 | Profile contains only `offer.client_suggested_*` fields | Step 3A, `/offer-intelligence` discovery, then `/lead-magnet-brainstorm` with the form idea as Candidate A |
+| Test set locked but no `offer.test_slate` | Step 3.2, `/offer-test-slate` slate mode (the flow does not wait for the client unless `offer_slate_approval = required`) |
 | Offer locked but no `data-point-catalog.md` | Step 3.3 — `/data-point-discovery` |
 | `data-point-catalog.md` exists but `proof_bank_stage` not complete (no `social-proof-bank.md`) | Step 3.5 — `/social-proof-bank` (runs in parallel with TAM build; does not block Step 4) |
 | Offer locked but `tam_stage` is `none` (no `tam/tam.csv`) | Step 3.4 — `/tam-build` (Phase A sample) |
@@ -193,6 +201,7 @@ If a profile already exists, do not restart from the top. Resume from the earlie
 | Infrastructure ready but no list | Step 6 — list/launch branch (`/lead-source-strategy` Lead Source Plan Mode) |
 | List exists but no `variants.yaml` | Step 6 — `/campaign-copywriting` |
 | `variants.yaml` exists | Step 6 — spintax then upload for locked `run_state.sending_platform` |
+| Offer-Validation Wave read complete (a winner picked, or every arm switched off) but no `offer.scale_review` | Step 8, `/offer-test-slate` scale-review mode |
 
 ### Step 2.5: Enumerate distinct ICP segments
 
@@ -201,8 +210,8 @@ Before deciding on the offer path, scan `client-profile.yaml` for distinct buyer
 Group the industries from `icp_hard_filters.industries_in` into segments. Example for a client targeting Insurance, Banking, and Tourism: (1) Insurance, (2) Banking / Financial Services, (3) Tourism & Hospitality.
 
 Rules:
-- Cap at 5 segments. Single-segment clients run Steps 3A-3B once.
-- If more than 3 segments exist, ask the user to prioritize the top 3 for discovery work - run offer intelligence on those only.
+- Single-segment clients run Steps 3A-3B once. With more than 5 segments, merge the closest ones (same pain, same offer fit) rather than dropping any.
+- Run offer intelligence on every confirmed segment (one sub-agent per segment, launched together) and put all of them on the offer slate. Prioritize at launch, where the floors, the capacity trim and the flight schedule decide what runs first (operator directive 2026-09-22; this used to cap discovery at the top 3).
 - If all segments share the same source landscape and offer fit, one combined discovery run is acceptable - flag it explicitly.
 
 Present the segments before proceeding:
@@ -213,7 +222,7 @@ I see N distinct ICP segments in your profile:
 2. [Segment 2] - [titles / industry]
 ...
 
-I will run offer intelligence on each and select the lead magnet, then catalog the data points against the locked offer.
+I will run offer intelligence on each, build the offer test set, show it to you as the offer test plan, then catalog the data points against it.
 
 A. [Recommended] Proceed with these N segments
 B. Merge some segments (explain which)
@@ -225,7 +234,7 @@ Save the confirmed segment list to `run_state` or a note in `client-profile.yaml
 
 ### Step 2.6: Credential Preflight Gate
 
-Before any offer research (Steps 3-5 call paid AI APIs) or infrastructure spend (Step 6), verify that the API keys the **locked path** actually needs are present and well-formed. This catches a missing or malformed key in seconds at kickoff instead of failing deep into a run. It is a binary pass/fail gate and a legitimate credential hard-stop under `/autonomous-execution-policy` (a missing required key is a real stop, regardless of `execution_mode`).
+Before any offer research (Steps 3-5) or infrastructure spend (Step 6), verify that the API keys the **locked path** actually needs are present and well-formed. This catches a missing or malformed key in seconds at kickoff instead of failing deep into a run. It is a binary pass/fail gate and a legitimate credential hard-stop under `/autonomous-execution-policy` (a missing required key is a real stop, regardless of `execution_mode`). Kickoff runs it at the default `kickoff` scope (operator decision 2026-09-22): infrastructure and sending-platform keys only warn here, because offer research, lists and copy never use them, and an empty registrar or mailbox slot reads as deferred. Step 6 re-runs it with `--scope infra` before any infrastructure purchase, and the pre-launch gates re-run it with `--scope launch` before sender verification and draft upload.
 
 Placed here (not literally after Step 1) because the check reads `run_state` from `client-profile.yaml`, which does not exist until Step 2. By this point the stack and platform are locked and persisted, and it is still before any spend.
 
@@ -248,7 +257,7 @@ It resolves required vs optional keys from `scripts/credential-registry.json` ×
 - **Exit 2:** the gate could not scope/verify (no profile, no `run_state`, or registry missing/invalid). **STOP** and print the script's fallback message; fix the profile/registry, then re-run.
 - **`node` not found:** do not crash the flow — tell the operator to verify the keys for the locked stack by hand in `scripts/.env`, then continue at their discretion.
 
-Warn-level keys (AI routing, email verifier, lead-source tools) print `⚠` if missing but never block. **Which keys are REQUIRED and which are warn-level is resolved by `scripts/credential-registry.json` against the locked `run_state`, never by a vendor roster in this file.** The third-party research key is warn-level under the default `claude_deep_research` routing, because the primary research pass is the Claude native `/deep-research` harness and needs no third-party key (a missing key only removes an optional gap-fill grounding pass). It is elevated to REQUIRED (hard-stop) **only when the operator explicitly set `run_state.research_routing = third_party_ai`**, since that provider is then the chosen primary. **Warn-level is graceful degradation, NOT "optional extra":** a warn-level key usually belongs to a tool the stack contract expects on a real run, and stays warn only because it degrades to a documented fallback (`/ai-model-routing`). Email verification is one of several interchangeable tools; the lead-source key is gated later by `/api-cost-governance` when the source is actually chosen.
+Warn-level keys (email verifier, lead-data and lead-source tools) print `⚠` if missing but never block. **Which keys are REQUIRED and which are warn-level is resolved by `scripts/credential-registry.json` against the locked `run_state`, never by a vendor roster in this file.** **No AI key is asked for or flagged at kickoff** (no-AI-API rule, operator directive 2026-09-22): research, crunching and copy run in Claude Code itself and need no key, and the one AI exception, the headshot image key, is "not needed yet" until infrastructure setup starts (Step 6). Do not raise it here. **Warn-level is graceful degradation, NOT "optional extra":** a warn-level key usually belongs to a tool the stack contract expects on a real run, and stays warn only because it degrades to a documented fallback. Email verification is one of several interchangeable tools; the lead-source key is gated later by `/api-cost-governance` when the source is actually chosen.
 
 Standalone re-run at any time with `/preflight-credentials`.
 
@@ -264,7 +273,7 @@ B. Evidence-backed existing offer validation
 C. Custom answer
 ```
 
-Do not run both paths. That creates two sources of truth.
+Do not run both paths as competing sources of truth. One record holds the offer: `offer.lead_magnet` plus `offer.validation_arms`. An evidence-backed existing offer can still be the control in a multi-offer test: after validation returns Go, run `/lead-magnet-brainstorm` for validation arms to test beside it (operator directive 2026-09-22).
 
 Choose A for new clients, new campaigns, and any onboarding form suggestion that has not already been used in a campaign.
 
@@ -274,7 +283,7 @@ Choose A for new clients, new campaigns, and any onboarding form suggestion that
 
 If all confirmed segments share the same buyer pain and offer fit, one combined discovery run is acceptable - explicitly note it covers all segments.
 
-**Research-routing gate (first research step of the run).** *(Wired enforcement: after the offer-research sub-skills run, execute `node scripts/research/research_routing_check.mjs --skill <skill> --client <business-slug> --json` per research skill — or the no-`--skill` full audit once per client — and treat `violation:true` / exit 1 as a flagged routing violation that blocks declaring research done.)* Check `run_state.research_routing`: if **unset**, default to **`claude_deep_research`** (the Claude native `/deep-research` fan-out harness as the primary research brain) and proceed — do NOT stop to ask. Switch to **`third_party_ai`** (older Perplexity-led primary) or **`claude_native`** (bare inline WebSearch, the weak path) only on an explicit operator opt-out. In `claude_deep_research` mode the primary pass MUST be an actual **`/deep-research` invocation** (hand it the assembled brief so its sub-agents cover every category in parallel), not a single inline WebSearch or a DiscoGen per-row pass — record `ai_research_provider = claude-deep-research` + an `api-balance-ledger.md` line; a research step finishing with **no recorded `/deep-research` primary** is a **flagged violation**. No third-party key is needed for the primary; a missing key hard-stops only if the operator explicitly chose `third_party_ai`. Full rule: `/ai-model-routing`.
+**Research-routing gate (first research step of the run).** *(Wired enforcement: after the offer-research sub-skills run, execute `node scripts/research/research_routing_check.mjs --skill <skill> --client <business-slug> --json` per research skill — or the no-`--skill` full audit once per client — and treat `violation:true` / exit 1 as a flagged routing violation that blocks declaring research done.)* `run_state.research_routing` has one value, **`claude_deep_research`** (no-AI-API rule, operator directive 2026-09-22: the old `third_party_ai` and `claude_native` values are retired). If it is **unset** or holds a retired value, treat it as `claude_deep_research` and proceed, do NOT stop to ask. The primary pass MUST be an actual **`/deep-research` invocation** (hand it the assembled brief so its sub-agents cover every category in parallel), not a single inline WebSearch or a per-row pass. A thin sub-topic is filled by a second targeted `/deep-research` run or a WebSearch/WebFetch pass, never by another provider. Record `ai_research_provider = claude-deep-research` + an `api-balance-ledger.md` provenance line (an audit line, no dollar decrement); a research step finishing with **no recorded `/deep-research` primary** is a **flagged violation**. No key is needed. Full rule: `/ai-model-routing`.
 
 Invoke `/offer-intelligence` in **discovery mode**. This is the first offer step and it leads with buyer pain: it researches that pain in the prospect's own words from the client profile, the client's website, and public buyer voice. From that pain it maps which offer archetypes are saturated or open in this market and flags contrarian opportunity.
 
@@ -286,12 +295,12 @@ If the onboarding form suggested a lead magnet, `/lead-magnet-brainstorm` treats
 
 At the end of `/lead-magnet-brainstorm`, ranked candidates are available. Apply `run_state.execution_mode` (`auto_execute` is the recommended default for this operator, per operator directive):
 
-- `auto_execute`: select the highest-scored candidate automatically. Report: "Auto-selected offer: [name] (score: X/7). Reason: [one-sentence rationale]." Write it to `profiles/<business-slug>/lead-magnets.md` and lock in `client-profile.yaml`. Do not pause for input.
-- `review_gates`: show ranked options and wait for operator selection. Only then write the chosen offer.
+- `auto_execute`: lock the test set automatically, exactly as `/lead-magnet-brainstorm`'s Execution Mode Gate defines it (the top-ranked offer that can send today as the primary, and every other qualifying candidate as ranked validation arms). Report: "Auto-selected offer: [name] (score: X/7), plus validation arms: [names]. Reason: [one-sentence rationale]." Write them to `profiles/<business-slug>/lead-magnets.md` and lock in `client-profile.yaml`. Do not pause for input.
+- `review_gates`: show every ranked candidate and wait for operator selection. Only then write the chosen primary and arms.
 
 ### Step 3B: Existing-offer path
 
-**Research-routing gate (first research step on this branch).** *(Wired enforcement: after the validation research runs, execute `node scripts/research/research_routing_check.mjs --skill offer-intelligence --client <business-slug> --json` and treat `violation:true` / exit 1 as a flagged routing violation that blocks declaring research done.)* Validation mode below runs research; if `run_state.research_routing` is **unset**, default to **`claude_deep_research`** (the Claude native `/deep-research` fan-out harness as the primary research brain) and proceed — do NOT stop to ask. Switch to **`third_party_ai`** (older Perplexity-led primary) or **`claude_native`** (bare inline WebSearch, the weak path) only on an explicit operator opt-out. In `claude_deep_research` mode the primary pass MUST be an actual **`/deep-research` invocation**, not a single inline WebSearch or a DiscoGen per-row pass — record `ai_research_provider = claude-deep-research` + an `api-balance-ledger.md` line; finishing with **no recorded `/deep-research` primary** is a **flagged violation**. No third-party key is needed for the primary; a missing key hard-stops only if the operator explicitly chose `third_party_ai`. Full rule: `/ai-model-routing`.
+**Research-routing gate (first research step on this branch).** *(Wired enforcement: after the validation research runs, execute `node scripts/research/research_routing_check.mjs --skill offer-intelligence --client <business-slug> --json` and treat `violation:true` / exit 1 as a flagged routing violation that blocks declaring research done.)* Validation mode below runs research. `run_state.research_routing` has one value, **`claude_deep_research`** (the old `third_party_ai` and `claude_native` values are retired by the no-AI-API rule); if it is **unset** or holds a retired value, treat it as `claude_deep_research` and proceed, do NOT stop to ask. The primary pass MUST be an actual **`/deep-research` invocation**, not a single inline WebSearch or a per-row pass, and a thin sub-topic gets a second targeted `/deep-research` or WebSearch/WebFetch pass, never another provider. Record `ai_research_provider = claude-deep-research` + an `api-balance-ledger.md` provenance line (an audit line, no dollar decrement); finishing with **no recorded `/deep-research` primary** is a **flagged violation**. No key is needed. Full rule: `/ai-model-routing`.
 
 Invoke `/offer-intelligence` in **validation mode**. Do not send the offer through `/lead-magnet-brainstorm` as if brainstorming were evaluation.
 
@@ -299,9 +308,18 @@ Validation mode is allowed only when there is evidence that the offer exists out
 
 If the evidence-backed offer was captured during onboarding, read it from `offer.validation_candidate` and verify `offer.validation_candidate_evidence` before invoking validation mode.
 
-- If validation returns Go: lock the offer in `client-profile.yaml`, including `offer_validation_run` and `offer_validation_path`, then proceed through Steps 3.3, 3.4, and 3.6 before Step 4.
+- If validation returns Go: lock the offer in `client-profile.yaml` as the primary (the control), including `offer_validation_run` and `offer_validation_path`, then run `/lead-magnet-brainstorm` for validation arms to test beside it, then Step 3.2 (the offer test slate), then Steps 3.3, 3.4, and 3.6 before Step 4.
 - If validation returns Iterate: keep the same offer source of truth, revise only the weak parts, then rerun validation until it scores 6+/7.
 - If validation returns Swap or Swap (Contrarian): use the validated replacement offer from evidence, or run `/lead-magnet-brainstorm` only for replacement options informed by validation.
+
+### Step 3.2: Show the client the offer test plan (`/offer-test-slate`, approval optional)
+
+Run `/offer-test-slate` in slate mode as soon as the test set is locked (Step 3A, or Step 3B plus its arms), before any list work. It turns the research and the ranked offers into a client-facing plan: the buyer types, the problems found in the buyer's own words, every offer we want to test and why, who honors a prospect's yes during the test, and the test plan. Claude authors and renders it; the operator sends it.
+
+- `run_state.offer_slate_approval: optional` (the default, operator directive 2026-09-22): continue to Step 3.3 straight away. Offers the agency honors move toward launch without waiting. An offer only the client can honor ("Needs your OK") waits for the client's yes on its own and never blocks the rest.
+- `required`: pause here until the client's answer is recorded in `offer.test_slate.client_response`.
+
+A client veto on any offer is always honored: that offer's status becomes `vetoed`.
 
 ### Step 3.3: Catalog the data points (data-point discovery)
 
@@ -315,11 +333,11 @@ profiles/<business-slug>/data-point-catalog.md
 
 **Do not rename the two headings the approval deck parses.** `outbound/scripts/campaign_approval_brief.ps1` reads the literal strings `## Ranked Source Signals` and `- **Source risks:**` out of that catalog to build the client-facing approval deck, so both must stay byte-identical. Renaming either one silently empties a deck section while the script still exits 0. This is a naming guard on the catalog's headings, never a stop gate: do not halt a run over it.
 
-This is **discovery, not collection** — it spends nothing beyond a small AI brainstorm (gated by `/api-cost-governance`) and reveals/verifies no contacts. The catalog is the contract `/tam-build` collects against. One catalog covers all confirmed segments (per-segment sections when segments differ). On completion set `run_state.status.datapoint_stage: complete`.
+This is **discovery, not collection**: it spends nothing (the brainstorm runs in the Claude Code session, with no AI API call) and reveals/verifies no contacts. The catalog is the contract `/tam-build` collects against. One catalog covers all confirmed segments (per-segment sections when segments differ). On completion set `run_state.status.datapoint_stage: complete`.
 
 ### Step 3.4: Build the company-level TAM
 
-> **`/social-proof-bank`'s seed + proof-readiness portion runs BEFORE this step; the rest runs concurrently (parallelize-by-default).** `/tam-build`'s default discovery motion is a **seeded lookalike expansion from the client's case-study / customer companies** (run through whichever lookalike or similar-company tool the stack contract declares), so `/social-proof-bank` must FIRST produce the **per-group seed set** and clear the **Seed-and-Proof Readiness gate**: each proven-motion group needs its seed domains AND copy-ready proof-facts, and a `gap_block` on a group holds THAT group's TAM until the client returns the fact (never the other groups). A group with no case study at all is not a proven-motion group — route it to this step's EXPANSION motion (broad ICP filter, offer-led, no proof gate) as a deliberate net-new play. Once the seed sets exist, launch the **rest** of `/social-proof-bank` (full trigger bank, one-liners) alongside `/tam-build` — that remainder depends only on the locked offer + confirmed segments + `data-point-catalog.md`, NOT the TAM, so do **not** park it behind this step's sample→full **GO gate** (which governs TAM scaling only).
+> **`/social-proof-bank`'s seed + proof-readiness portion runs BEFORE this step; the rest runs concurrently (parallelize-by-default).** `/tam-build`'s default discovery motion is a **seeded lookalike expansion from the client's case-study / customer companies** (run through whichever lookalike or similar-company tool the stack contract declares), so `/social-proof-bank` must FIRST produce the **per-group seed set** and clear the **Seed-and-Proof Readiness gate**: each proven-motion group needs its seed domains before its TAM builds; copy-ready proof-facts are collected in parallel and never hold the build (operator directive 2026-09-22): a `gap_block` holds only that group's proof-led copy angle, and its offer-led copy ships without the proof line. A group with no case study at all is not a proven-motion group — route it to this step's EXPANSION motion (broad ICP filter, offer-led, no proof gate) as a deliberate net-new play. Once the seed sets exist, launch the **rest** of `/social-proof-bank` (full trigger bank, one-liners) alongside `/tam-build` — that remainder depends only on the locked offer + confirmed segments + `data-point-catalog.md`, NOT the TAM, so do **not** park it behind this step's sample→full **GO gate** (which governs TAM scaling only).
 
 After `/data-point-discovery` (and after `/social-proof-bank`'s seed portion) and before campaign strategy, invoke `/tam-build`. **It builds one group-TAM per case-study group.** Its default discovery motion is a **seeded lookalike expansion from that group's case-study companies (the PROVEN motion)**; a broad ICP filter is the **EXPANSION motion** for net-new segments or a no-proof new offer; **the contact and company database named in the stack contract is the enrichment layer, not the discovery spine** (Case-Study-Anchored Discovery HARD RULE). Reading `data-point-catalog.md`, it builds the addressable company universe **up front, cheaply, at the company level** — the stable core (identity + firmographics) plus the `collect_now` extension columns the ranked catalog selected (sales-motion CTAs, pricing, org-structure depth, running ads, proof / case studies, tech, hiring). Critically it does this in two passes — **qualify then enrich.** Layer 1a attaches cheap firmographics + one homepage crawl across the whole TAM and scores ICP fit (`fit_status` = good/maybe/bad) with an `/icp-prompt-builder` prompt; the fit gate then drops clear bad-fit, and Layer 1b spends the expensive per-record/multi-page enrichment **only on good-fit survivors** (`enrichment_tier = enriched`). Gated-out companies stay in the file, not deleted. It writes:
 
@@ -327,7 +345,7 @@ After `/data-point-discovery` (and after `/social-proof-bank`'s seed portion) an
 profiles/<business-slug>/tam/tam.csv
 ```
 
-This is **Layer 1 only**: discovery + web-crawl + company-database signals + cheap AI normalization. It does **not** reveal or verify per-contact emails — that per-credit work is deferred to the live slice in `/email-waterfall`. One `tam.csv` covers all confirmed segments and case-study groups via `segment`, `group`, and `discovery_motion` columns (`proven` = seeded lookalike, `expansion` = broad filter).
+This is **Layer 1 only**: discovery + web fetch (WebFetch) + company-database signals + normalization by Claude Code sub-agents (no AI API). It does **not** reveal or verify per-contact emails — that per-credit work is deferred to the live slice in `/email-waterfall`. One `tam.csv` covers all confirmed segments and case-study groups via `segment`, `group`, and `discovery_motion` columns (`proven` = seeded lookalike, `expansion` = broad filter).
 
 **Offer-fit is a HARD survival gate, not just an ICP call.** Because the offer is locked before the TAM is built, `fit_status` is judged against the locked offer as well as the ICP. The gate question is: can this business actually use, stock, deploy, or buy the thing the offer delivers? A company that cannot resolves to `fit_status: bad` and is dropped before Layer 1b enrichment spend, staying in the file rather than being deleted, consistent with the existing gated-out convention. An offer-derived disqualifier list is built at offer lock and applied in the free pre-screen before any paid classification. `/tam-build` owns the exact mechanics, including the NAME+DOMAIN-only matching discipline for auto-DQ.
 
@@ -347,7 +365,7 @@ profiles/<business-slug>/social-proof-bank.md
 
 It **self-gathers first** — from the intake `proof:` block + `icp.triggers`, `onboarding-call-notes.md`, `offer-intelligence.md`, the client's own case-study/website scrape, and any voicenotes — and only routes the genuine **raw-fact** gaps to the client, once, through `/proof-asset-request` (bank mode). The client is never asked for copy: the skill synthesizes every one-liner and `poke_the_bear` test-arm line and runs each through the Copy QA Gate (`spam-word-checker.md` + `cold-email-copy-best-practices.md`). Its data-backed trigger rows reuse `/data-point-discovery`'s exact canonical column names, so it feeds — never forks — `/campaign-strategy`'s Signal-Driven Slice Library and `/campaign-copywriting`'s Signal Angle Library.
 
-**Runs in parallel with Step 3.4.** It needs the locked offer + the confirmed segments (Step 2.5) + `data-point-catalog.md`, NOT the enriched TAM — so under `auto_execute` launch it alongside `/tam-build` rather than after it (parallelize-by-default). It is a **soft gate**: it does not block campaign work, and a still-pending client fact-request does not hold it open (the bank is usable now and upgrades when facts return). The hard enforcement stays the copy-time Proof-Asset Gate in `/campaign-copywriting`, which this pre-loads. On completion set `run_state.status.proof_bank_stage: complete`. Discovery/synthesis only — no per-record spend (only a small AI copy-synthesis pass, gated by `/api-cost-governance`).
+**Runs in parallel with Step 3.4.** It needs the locked offer + the confirmed segments (Step 2.5) + `data-point-catalog.md`, NOT the enriched TAM — so under `auto_execute` launch it alongside `/tam-build` rather than after it (parallelize-by-default). It is a **soft gate**: it does not block campaign work, and a still-pending client fact-request does not hold it open (the bank is usable now and upgrades when facts return). The hard enforcement stays the copy-time Proof-Asset Gate in `/campaign-copywriting`, which this pre-loads. On completion set `run_state.status.proof_bank_stage: complete`. Discovery/synthesis only: no per-record spend, and the copy synthesis runs in the Claude Code session (no AI API call).
 
 ### Step 3.6: Score the company and contact TAMs
 
@@ -377,7 +395,7 @@ When `data-point-catalog.md` and `offer-intelligence.md` both exist (Step 3.3 al
 
 ```markdown
 ## Per-Segment Offer Summary
-| ICP Segment | Top Source Signal | Open Archetypes | Chosen Lead Magnet | Archetype |
+| ICP Segment | Top Source Signal | Open Archetypes | Offers Under Test (primary + arms) | Archetype |
 |-------------|-------------------|-----------------|-------------------|-----------|
 | [Segment 1] | [signal]          | [e.g. G, F, C]  | [magnet name]     | [letter]  |
 | [Segment 2] | [signal]          | [open letters]  | [magnet name]     | [letter]  |
@@ -448,10 +466,13 @@ Route on the answer:
   source and list work, which is not blocked by this. Verify real sender health
   later through the locked platform's manager before any upload, never on the
   operator's word alone.
-- **Still needs building.** The fork has to close first. Stop and route to
-  `/stack-setup` to resolve `infrastructure_stack`. Buying domains on an
-  unresolved pairing is the expensive mistake this gate exists to prevent.
-- **Not sure.** Treat it as "still needs building".
+- **Still needs building.** The fork has to close before any infrastructure purchase:
+  route to `/stack-setup` to resolve `infrastructure_stack` whenever the operator is ready.
+  Buying domains on an unresolved pairing is the expensive mistake this gate exists to
+  prevent. It never holds the list, copy or the paused draft: continue to the lead source
+  and list work below while the fork is open (operator decision 2026-09-22).
+- **Not sure.** Treat it as "still needs building", and still continue with the list and
+  copy work.
 
 This gate is a deliberate, narrow exception to the "do not ask whether domains
 are purchased or inboxes are warmed during kickoff" rule in Step 1. That rule
@@ -466,9 +487,9 @@ at least one client's infrastructure has been provisioned through the system.
 ```text
 Your next step is provisioning or verifying the selected domain + inbox setup. Real sending stays blocked until the selected platform manager verifies healthy warmed senders.
 
-A. [Recommended] Start the selected domain + inbox setup now
+A. [Recommended once the infrastructure pairing is resolved] Start the selected domain + inbox setup now
 B. Verify existing senders through the selected platform manager
-C. Save the plan and build the lead source plan/list first
+C. [Recommended while infrastructure is deferred] Save the plan and build the lead source plan/list first
 D. Custom answer
 ```
 
@@ -486,9 +507,11 @@ Before invoking the setup skill, check `run_state.mailbox_mix_strategy`.
 
 Do not spend money or run domain availability checks until the mailbox mix strategy is saved or explicitly chosen.
 
-**Credential recheck (before any purchase):** Confirm the Credential Preflight (Step 2.6) passed for the locked path — `profiles/<business-slug>/preflight-credentials.json` shows `"verdict": "PASS"`. If it was never run or shows FAIL, run `/preflight-credentials` and resolve any missing REQUIRED key before spending. (Presence/shape only — `/api-cost-governance` still owns the balance/spend check below.)
+**Credential recheck (before any purchase):** run the preflight at infrastructure scope, `node "<outbound>/scripts/preflight-credentials.mjs" --profile <business-slug> --scope infra`, and resolve any missing REQUIRED registrar or mailbox key before spending. The Step 2.6 kickoff-scope pass only warned on these keys. (Presence and shape only: `/api-cost-governance` still owns the balance and spend check below.)
 
-**Spend gate (before any purchase):** If `run_state.spend_ceiling_usd` is a number greater than 0 and the estimated spend is below that ceiling, auto-approve and report: "Spend estimate: $X (within $Y ceiling). Proceeding with purchase." If `spend_ceiling_usd` is 0, null, or not set, or the estimate meets or exceeds the ceiling, confirm with the user before any purchase. The default is 0 — always confirm — so spend is never auto-approved unless the user explicitly set a ceiling. Once a non-zero `spend_ceiling_usd` is confirmed at run start, auto-approve EVERY purchase whose running total stays within it and report each ("Spent $X of $Y ceiling") — do NOT re-confirm per purchase; only stop if a purchase would push the running total over the ceiling.
+**Headshot image key (the one AI exception, asked for here and not before).** Choosing A above is the operator starting cold-email infrastructure setup, so this is the first point the sender-headshot key may be requested: OpenAI, headshots only, used by `/mailbox-profile-generator` (no-AI-API rule, operator directive 2026-09-22). If the persona will get a generated headshot and the key is not yet in `scripts/.env`, ask the operator to add it there (never in chat). It is not part of the Step 2.6 preflight, and it is not needed when the persona is a real person with a real photo.
+
+**Spend gate (before any purchase):** Mailbox infrastructure is outside the standing $100 client budget in `run_state.spend_ceiling_usd`, because that budget covers paid data steps only (operator directive 2026-09-22). So before the first domain or mailbox purchase, show the setup's total (one-time domain cost plus the recurring monthly mailbox cost) and get the operator's approval of that total once. Then auto-approve EVERY purchase whose running total stays inside the approved figure and report each ("Spent $X of $Y approved"). Do NOT re-confirm per purchase; only stop if a purchase would push the running total over it.
 
 Invoke the one domain + inbox setup skill the stack contract names for the locked `registrar` + `mailbox_provider` pairing. If the contract names no setup skill for that pairing, or the skill it names is not present in `.claude/skills/`, STOP and report that gap instead of substituting another provider's setup skill.
 
@@ -545,18 +568,18 @@ Then invoke `/lead-source-strategy` in **Lead Source Plan Mode** before any list
 profiles/<business-slug>/campaigns/<campaign-slug>/lead-source-plan.md
 ```
 
-Before source collection, run `/campaign-approval-brief` when the client needs to review or approve the campaign path. This is the last cheap gate for changing ICP, offer, source signal, or launch campaign before list build and enrichment spend. If `run_state.campaign_approval_brief_needed` is set (from the intake form), honor it: `yes` always runs the brief, `no` skips it. When the field is absent, fall back to the judgment call above.
+Before source collection, run `/campaign-approval-brief` when the client wants a campaign-level review (lists, sources, copy). It is not an offer gate: the offers were already shown in the Step 3.2 slate, client approval of offers is optional, and only a client-honored offer waits for the client's OK (operator directive 2026-09-22). This is the last cheap point for changing ICP, source signal, or launch campaign before list build and enrichment spend. If `run_state.campaign_approval_brief_needed` is set (from the intake form), honor it: `yes` always runs the brief, `no` skips it. When the field is absent, fall back to the judgment call above.
 
-Choose the source workflow from the source plan, not from tool comfort. The source plan must use `/lead-list-tech-stack-research`, the selected campaign's source options, location fit, and data availability risk before picking the final build path. Default to Claude Code native as the workflow layer for combining, scoring, dedupe, and final export preparation (the session builds the CSV directly), unless the stack contract declares a separate list-building workspace or another operator path is stronger:
+Choose the source workflow from the source plan, not from tool comfort. The source plan must use `/lead-list-tech-stack-research`, the selected campaign's source options, location fit, and data availability risk before picking the final build path. Default to the list workbench (`run_state.list_workbench`) as the workflow layer, so the operator watches the list fill live instead of receiving a blind CSV. The session does the combining, scoring, and dedupe with FNNL's own keyed tools and pushes finished rows into the workbench table through its inbound webhook, never spending the workbench's own credits (zero-workbench-credit HARD RULE, CLAUDE.md section 7). If no workbench is locked, or the client's table and webhook are not set up yet, fall back to Claude Code native (the session builds the CSV directly) and say so in the source plan. Either way the CSV the downstream skills read is an export of the working list. Another operator path wins only when it is stronger:
 
 | Source signal | Likely source workflow |
 |---|---|
 | Title + industry only | A contact-database export, only when the person database is the real signal |
-| Lookalike accounts | A lookalike / similar-company tool first for similarity; a category-or-revenue database only when that is the signal; search plus crawl APIs for public-web similarity; then contact enrichment |
+| Lookalike accounts | A lookalike / similar-company tool first for similarity; a category-or-revenue database only when that is the signal; Claude's built-in WebSearch/WebFetch for public-web similarity; then contact enrichment |
 | Local SMBs | A maps or local-business source (maps scraper, places API, or equivalent) |
 | Named accounts or known domains | Domain-to-person enrichment |
 | Competitor or thought-leader engagement | An approved social-engagement or social-intent source |
-| Niche directory, association, marketplace, event, job board, or custom website pattern | Search plus crawl APIs, or a custom scrape workflow, with Claude Code native as the workflow layer |
+| Niche directory, association, marketplace, event, job board, or custom website pattern | Claude's built-in WebSearch/WebFetch (fanned out across sub-agents for volume), or a custom scrape workflow, with the list workbench as the workflow layer (Claude Code native if no workbench table is ready) |
 
 Every tool the source plan names must be one the stack contract declares; if the fitting capability slot is empty, stop and route to `/stack-setup` rather than reaching for a familiar vendor. A source is allowed only when its data actually fits the campaign signal and target geography, and contact enrichment is not the same thing as source selection.
 
@@ -568,22 +591,22 @@ After source collection, the locked sequence is:
 4. `/list-quality-scorecard`
 5. `/campaign-copywriting`
 6. Platform spintax from `run_state.sending_platform`
-7. **Pre-launch gates (all must pass before upload)**, see below
-8. Platform upload from `run_state.sending_platform`
+7. Platform upload from `run_state.sending_platform` as a PAUSED draft, after re-running the preflight with `--scope launch`
+8. **Pre-launch gates (all must pass before Start)**, see below
 
 Do not move past `/campaign-copywriting` unless Email 1 passes `outreach-copy-framework.md`, all copy passes `spam-word-checker.md` and `cold-email-copy-best-practices.md`, and the confirmed-deliverable CTA gate passes. Spintax and upload must stop and route back to `/campaign-copywriting` if they find failed copy.
 
-### Pre-launch gates (locked sequence: after spintax, before platform upload)
+### Pre-launch gates (locked sequence: after the paused draft is built, before the operator presses Start)
 
-Before invoking the platform upload skill, enforce these three gates in order. Each is binary pass/fail. On any fail, STOP and route to the fix — do not upload, and never start real sending.
+These gates block the live send, not the draft (ported from A-Sales, operator decision 2026-09-22). Build the complete PAUSED draft as soon as copy passes QA and the verified list is ready, even while senders are still warming (`/autonomous-execution-policy` drafting HARD RULE); uploading it needs the sending platform, so re-run the preflight with `--scope launch` first. Then, before the operator presses Start, enforce these three gates in order. Each is binary pass/fail. On any fail, STOP and route to the fix: the draft stays paused, and real sending never starts.
 
 **Gate A — Warmup readiness.** Real sending stays blocked until senders are actually warmed. Confirm through the locked platform manager (the inbox-manager skill the stack contract names for `run_state.sending_platform`) that the senders intended for this campaign are warmed at least 2 weeks, not warmup-blocked, and tagged usable (`active`, or `insurance` being promoted). If `run_state.status.warmup_stage` is not `complete` or the manager cannot verify warmed senders, STOP with exactly what is missing. Uploading to a draft is allowed during warmup; **starting/sending is not**.
 
 **Gate B — Pre-launch deliverability / placement.** Before first real send, run a seed / inbox-placement check on the warmed senders (a seed-list placement test, or the locked platform's native placement check). Confirm SPF/DKIM/DMARC pass for each sending domain. If placement is poor or auth fails, STOP and route to `/email-deliverability-audit` (diagnose) → `/deliverability-incident-response` (fix). Do not present placement as proven if no test was actually run — state the gap.
 
-**Gate C — Final QA checklist.** Immediately before upload, confirm: copy passed the copy-QA gate (spam-word-checker + best-practices + confirmed-CTA); spintax renders as natural complete sentences with no banned tokens; lead list passed `/list-quality-scorecard` at grade B or higher; sender assignment count and tags are correct; and 2024+ bulk-sender compliance holds (one-click List-Unsubscribe header, authenticated domain, target spam-complaint rate under 0.3%, bounce under 2-3%). If any item fails, STOP and route to the owning skill.
+**Gate C — Final QA checklist.** Immediately before Start, confirm: copy passed the copy-QA gate (spam-word-checker + best-practices + confirmed-CTA); each offer-arm campaign's `lead_magnet_client_ok` still reads `not_needed` or `yes` (at `pending` only that campaign waits; at `no`, or a `vetoed` status, it is pulled, operator directive 2026-09-22); spintax renders as natural complete sentences with no banned tokens; lead list passed `/list-quality-scorecard` at grade B or higher; sender assignment count and tags are correct; and 2024+ bulk-sender compliance holds (one-click List-Unsubscribe header, authenticated domain, target spam-complaint rate under 0.3%, bounce under 2-3%). If any item fails, STOP and route to the owning skill.
 
-Only when Gates A, B, and C all pass, proceed to the platform upload skill. Upload still creates a PAUSED draft — the user starts it manually.
+Only when Gates A, B, and C all pass may the operator press Start on the paused draft. The user starts it manually.
 
 Platform handoff: run the spintax, campaign-upload, reply-agent, and reply-scoring skills the stack contract names for the locked `run_state.sending_platform`, and only those. Where the contract names no skill for one of those steps, use that platform's own native workflow (variation, upload, reply AI, reply reporting) and say which step ran natively. Never mix in a step from another platform's toolchain.
 
@@ -592,6 +615,10 @@ Platform handoff: run the spintax, campaign-upload, reply-agent, and reply-scori
 ### Step 7: Offer to open the plan
 
 Print the `campaign-plan.md` path.
+
+### Step 8: Read the offer test and run the client scale review (`/offer-test-slate`)
+
+When the Offer-Validation Wave reads out (`/campaign-strategy` picks a winner among the arms, or every arm is switched off), run `/offer-test-slate` in scale-review mode before the coverage wave scales. It shows the client what was tested and what won, and asks what running the winner at full volume takes. Record the answer in `offer.scale_review`; `/campaign-strategy` sizes the coverage wave to `confirmed_capacity_per_week`. Queued offers that never ran move into the next flight (`/cold-email-weekly-rhythm` Step 6). This is where the capacity question lives now: after the market has picked, never at ideation (operator directive 2026-09-22).
 
 ## Safeguards
 
@@ -609,12 +636,13 @@ Follow the Step 6 branch that matches `run_state`. This skill hands off cleanly 
 
 ## Related skills
 
-- `/autonomous-execution-policy` - cross-cutting policy this skill defers to; governs when to proceed vs stop, the single upfront spend ceiling, the no-re-ask rule, the hard-stop list, and the don't-idle-wait rule under `execution_mode = auto_execute`
+- `/autonomous-execution-policy` - cross-cutting policy this skill defers to; governs when to proceed vs stop, the standing spend budget, the no-re-ask rule, the hard-stop list, and the don't-idle-wait rule under `execution_mode = auto_execute`
 - `/client-intake-form` - run before kickoff to pre-populate all static answers and set execution_mode; when found, kickoff skips all intake questions
 - `/icp-onboarding` - invoked in Step 2 (skipped when icp.source = intake_form)
 - `/lead-source-strategy` - single-mode. Invoked in Lead Source Plan Mode at Step 6, after campaign selection and before any list builder, scraper, database pull, or enrichment spend
 - `/offer-intelligence` - invoked in discovery mode at Step 3A as the first offer step (buyer pain first), or in validation mode for evidence-backed existing offers
-- `/lead-magnet-brainstorm` - invoked only for new offers or validated replacement options
+- `/lead-magnet-brainstorm` - invoked for new offers, for validation arms beside an evidence-backed existing offer, and for replacement options
+- `/offer-test-slate` - invoked at Step 3.2 (the client-facing offer test plan, approval optional) and Step 8 (the results and scale review before a winner scales)
 - `/campaign-strategy` - invoked in Step 4 (reads the TAM and proposes campaigns per data point)
 - `/lead-scoring` - invoked in Step 3.6 to build the governed P1 through P5 queue before campaign selection or email spend
 - `/data-point-discovery` - invoked in Step 3.3 to catalog the data points (`data-point-catalog.md`, the contract the TAM collects against) before `/tam-build`

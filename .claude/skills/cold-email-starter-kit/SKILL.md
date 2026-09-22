@@ -9,9 +9,9 @@ This is the orientation layer, not the operating checklist.
 
 ## Before anything else: is the stack set up?
 
-This workspace ships with **no tech stack**. Skills are written against capability roles ("the sending platform"), not brand names, and the actual tools live in `<outbound>/stack-contract.yaml`.
+This workspace ships with **no default tech stack**; FNNL's own approved stack is recorded in the contract's `approved_stack` block. Skills are written against capability roles ("the sending platform"), not brand names, and the actual tools live in `<outbound>/stack-contract.yaml`.
 
-**Check that file first.** If the infrastructure and lead-data slots are still `not_chosen`, stop and run **`/stack-setup`**. Client work cannot proceed on an empty contract, and no skill should guess a vendor to get around it.
+**Check that file first.** If the infrastructure and lead-data slots are still `not_chosen` or `held` (a `held` slot has `tool: null` and declares nothing), stop and run **`/stack-setup`**. Client work cannot proceed on an empty contract, and no skill should guess a vendor to get around it.
 
 Once the stack is recorded, run `/preflight-credentials` to confirm the keys resolve.
 
@@ -33,9 +33,9 @@ Do not route users to old numbered legacy docs from earlier versions of this rep
 
 When this skill reaches a material fork, name the realistic options, recommend the strongest path, and explain why the main alternatives are weaker before committing.
 
-Ask before choices that affect spend, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
+Ask before choices that affect spend beyond an approved budget, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
 
-Do not turn failed or unsafe paths into user-facing options. If this skill's QA rules or stop gates reject a path, filter it out and explain the blocker only when useful.
+Do not turn untrue, unsafe or non-compliant paths into user-facing options. Offer candidates, ICP segments and test arms are never hidden for effort, capacity or "the client may not want it" reasons: they stay visible with their label and the reason they rank where they do (operator directive 2026-09-22).
 
 When asking the user, use the Claude Desktop native Interactive Inputs / Choice Prompts pattern from /clarification-first: recommended option first, short choices, and Custom answer last when a custom answer is plausible.
 
@@ -66,7 +66,7 @@ For the real sequence with all prerequisites and gates, run `/cold-email-kickoff
 - Do not let a campaign idea into strategy unless its source path has a plausible target-geography fit.
 - Do not build a list before `/lead-source-strategy` Lead Source Plan Mode decides what signal the list must prove.
 - Do not treat onboarding form offers as locked. Store them under `offer.client_suggested_*`, then run discovery and ranked brainstorm.
-- Confirm before any step that spends money.
+- Do not ask about spend at startup. Paid data steps run inside the standing $100 budget per client run (`run_state.spend_ceiling_usd`); confirm only a purchase that would push the run over it, plus the setup total once before any mailbox infrastructure purchase.
 - Wait at least 2 weeks after warmup starts before real sending.
 - Never upload a campaign from unverified copy or a list below B grade.
 - Upload skills create draft or paused campaigns only. The user starts the campaign manually.

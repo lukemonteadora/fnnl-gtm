@@ -4,7 +4,7 @@
 >
 > **Scope boundary, so this is not a second source of truth.** `signal-strategy-playbook.md` owns **which signals exist**, what each one proves, its campaign slices, its copy angles, and its acquisition paths. This doc owns the layer underneath that: **the six shapes a list can be derived in**, and the rule for deciding **which groupings earn their own campaign, their own copy, or neither**. Where a play depends on a signal, the signal's detail lives in the playbook and is cross-linked, never restated. The volume shape of a wave is owned by `/campaign-strategy` (Volume-first, the ≥500-company floor, the Offer-Validation Wave); this doc quotes those rules and never sets its own.
 >
-> **Tool-status note (FNNL Agency).** Every play below is written as a **capability**, never a vendor. FNNL has not chosen its tools. The live answer for any capability is `stack-contract.yaml`, which ships with every slot at `tool: null`, `status: not_chosen`. Before running a play, read the matching slot and confirm the specific **field or filter** the play names actually exists in the chosen tool. A tool being named in any signal library is not evidence the filter exists; `chosen` is not `live`.
+> **Tool-status note (FNNL Agency).** Every play below is written as a **capability**, never a vendor. FNNL's tools are the closed list in the `approved_stack` block of `stack-contract.yaml` (operator directive 2026-09-22), and the live answer for any capability is the matching slot there. A slot at `not_chosen` or `held` declares nothing, and a tool outside the approved list needs explicit operator approval before any play uses it. Before running a play, read the matching slot and confirm the specific **field or filter** the play names actually exists in the chosen tool. A tool being named in any signal library is not evidence the filter exists; `chosen` is not `live`.
 
 ---
 
@@ -136,17 +136,17 @@ Most of the confusion here comes from one word doing three jobs. Separate them a
 
 **1. The offer category.** The business you are in. "We help companies hire talent." This never varies by group. If two groups genuinely need different categories, that is not a segment, it is a second business line with its own ICP, its own proof, and its own pipeline.
 
-**2. The offer.** The specific front-end thing, with a defined deliverable, a timeframe, and a risk reversal. "Five pre-vetted candidates for one open role, delivered in 72 hours, free, you only pay if you hire one." **One offer per client per wave.** This is what the Offer-Validation Wave exists to test.
+**2. The offer.** The specific front-end thing, with a defined deliverable, a timeframe, and a risk reversal. "Five pre-vetted candidates for one open role, delivered in 72 hours, free, you only pay if you hire one." **Several offers per wave, each in its own randomized cell** (operator directive 2026-09-22, following Aaron's three-to-four-offer test portfolio, doctrine §5). The Offer-Validation Wave splits one broad list evenly into one cell per offer, with the same copy skeleton, so the offer is the only variable (`/campaign-strategy` validation arms). This used to read "one offer per client per wave".
 
 **3. The copy variable.** Everything that changes by group: which pain you lead with, which proof you show, the vocabulary, and the concrete noun that gets slotted into the offer sentence (which role the shortlist is for, which vertical the case study is in).
 
 The resolution: **groups vary the copy variable, not the offer.** A shortlist of five candidates is one offer whether the role is a controller or a warehouse supervisor. Which role it is, is a variable inside the offer.
 
-### Why one offer, and why it is sequenced first
+### Why the offer is tested first, and why each offer gets its own cell
 
 The four levers run in a fixed order of impact: **offer, then list, then personalization, then volume.** The offer is the biggest lever, which is why `/campaign-strategy` makes the Offer-Validation Wave a HARD RULE for any client whose offer is not yet market-proven.
 
-Running several offers across several groups at once means that when the wave underperforms you cannot tell whether the offer was weak or the group was wrong, because both varied simultaneously. You then burn freshly warmed sending capacity and first-touch reputation to learn nothing. Validate one offer broadly first, on the biggest and cleanest lists, differentiated by **message** rather than by a sparse timing signal. Once it shows life, fan out.
+Running several offers across several groups inside one undifferentiated campaign means that when it underperforms you cannot tell whether the offer was weak or the group was wrong, because both varied simultaneously, and you burn freshly warmed sending capacity and first-touch reputation to learn nothing. The fix is structure, not fewer offers: give each offer its own randomized cell on the same list, so any difference between cells is the offer. Validate the offers broadly first, on the biggest and cleanest lists, differentiated by **message** rather than by a sparse timing signal. Once one shows life, fan out.
 
 ### The strongest objection, and the ruling
 

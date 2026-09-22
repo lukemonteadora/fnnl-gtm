@@ -86,7 +86,7 @@ Every field must be present and non-empty before authoring. Each one feeds a spe
 | Field | File | What it drives |
 |---|---|---|
 | `**Primary:**` / `**Secondary:**` / `**Avoid:**` lines | `offer-intelligence.md` | Appendix A (options considered) |
-| `## Primary Offer` / `## Archived / Not Selected` | `lead-magnets.md` | Appendix A (rejected offers) |
+| `## Primary Offer` / `## Validation arms` / `## Every candidate` / `## Archived / Not Selected` | `lead-magnets.md` | Sections 1 and 2 (the offers under test: first flight and queue) and Appendix A (offers that will not be tested) |
 | Campaign names in campaign-strategy.md table | `campaign-strategy.md` | Slide 3 grid |
 
 If any required field is missing, print the STOP block (list each missing `**Label:**` field by campaign + any missing profile-level field), then route back to `/lead-source-strategy` Lead Source Plan Mode and re-run. Only proceed to authoring once all required fields are confirmed present.
@@ -120,7 +120,7 @@ If `variants.yaml` exists, read the saved copy before packaging it into the deck
 
 Stop and route back to `/campaign-copywriting` if the copy fails. Do not rewrite copy inside this skill.
 
-Hard-stop examples include em dashes, double hyphens, mid-sentence dash separators, colon-as-runway sentences, comma-wrapped company descriptors, weak CTAs, repeated generic new-thread CTA deliverables, unconfirmed CTA deliverables, broken two-thread 4-step structure, follow-up-reference openers, goodbye or fake wrap-up emails, or links and calendar links in emails 1-3 without explicit user override.
+Hard-stop examples include em dashes, double hyphens, mid-sentence dash separators, colon-as-runway sentences, comma-wrapped company descriptors, weak CTAs, repeated generic new-thread CTA deliverables, CTA deliverables with no named honorer (an arm whose `lead_magnet_client_ok` is `pending` is shown as "Needs your OK", not a hard stop), broken single-thread 2-to-3-step structure (a second new thread or a 4th email), follow-up-reference openers, goodbye or fake wrap-up emails, or links and calendar links in emails 1-3 without explicit user override.
 
 **Copy Preview gate (Slides 6-7 only).** Include finalized copy on the copy-preview + full-sequence slides only when the campaign's slice passed the verified-list gate (`verified-list-gate.md`): a `leads.verified.csv` exists and `variants.yaml` was produced by `/campaign-copywriting` under that gate. When the deck is built pre-list-build (its normal, intended timing), there is no verified slice yet, so **replace the copy-preview slide with a single placeholder line** ("Copy preview available once the list is built and copy is approved") and drop the full-sequence slide. The deck itself is NOT gated on a verified list; only the two copy slides are. Never block deck generation waiting for a list.
 
@@ -234,7 +234,7 @@ Include only client-facing needs that change campaign content or require client 
 
 - customer exclusion / suppression CSV
 - benchmark data or customer metrics needed for a promised benchmark
-- explicit approval for a new offer, proof claim, or asset the client must provide
+- explicit approval only for a proof claim, an asset the client must provide, or a client-honored offer whose `lead_magnet_client_ok` is still `pending`. Offers the agency honors need no approval: `/offer-test-slate` already showed them, and client approval of offers is optional by default (operator directive 2026-09-22)
 
 Exclude technical or internal launch tasks (API keys, workspace IDs, list-building, verifier, mailbox, registrar, warmup or sending-platform configuration, and any source-workflow build step the operator can do without client input).
 

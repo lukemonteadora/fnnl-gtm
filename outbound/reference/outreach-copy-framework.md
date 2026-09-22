@@ -34,7 +34,7 @@ It does not force the same skeleton onto same-thread follow-ups, warm replies, a
 
 **What it does.** It leads with a useful, specific free deliverable, shows that the sender handles the work, and asks permission for a small next step. The doctrine names this pattern the direct concrete offer (doctrine §8, the first of his seven frameworks), and it is his default when the buyer understands the benefit without a lesson. Its measured shape is the winner anatomy from his 1.5M-email study (S02, 2026-05-11, doctrine §9). "Framework A" is only our house name for it: his own letter labels are not stable across videos (doctrine §0), so describe it by what it does.
 
-The offer comes before any of this. If the offer is weak, the copy cannot rescue it (doctrine §2, the diagnostic order: buyer, offer, can we deliver it at twenty yeses, and only then the copy).
+The offer comes before any of this. If the offer is weak, the copy cannot rescue it (doctrine §2, the diagnostic order: buyer, offer, can every yes in the test be honored, and only then the copy).
 
 ### The Email 1 contract (B1 to B15)
 
@@ -264,7 +264,7 @@ Every initial cold message must pass all of these checks. Each one names the con
 5. **End with soft permission (B1).** Default `Would that be worth sharing more?`, or a question-form variant from examples §4 (his statement-form asks there, such as the Sep 14 trial-link line, do not close Email 1 on their own; see the §4 exemplar note). House variants of the same permission-to-send ask stay accepted: `Would that be worth hearing more?`, `Open to it?`, `May I send it over?`, `Can I send it across?`, `Would it help if I sent it?`. The CTA must follow a named deliverable.
 6. **Say "free" (B9).** When the deliverable is free, the copy says "free" or "no cost".
 7. **Proof only when it is true, compact, and in the PS (B6).**
-8. **Keep the offer real (B15, house).** The free deliverable, sender workload, proof, and prospect action must all be accurate and fulfillable at reply scale.
+8. **Keep the offer real (B15, house).** The free deliverable, sender workload, proof, and prospect action must all be accurate, and every yes must have a named honorer for this arm's test flight (the agency by default, the client only with `lead_magnet_client_ok: yes`); full-volume capacity is asked after the test in `/offer-test-slate`, never here.
 
 ## Channel Adaptation
 
@@ -295,7 +295,7 @@ Do not rescue a weak offer by switching the initial cold touch to a pain-led or 
 - replace a vague offer or a service description with a named deliverable
 - make the output and the prospect's effort clear (the real scope disclosure, or a PS that carries the effort)
 - narrow or change the audience so the offer is immediately relevant
-- replace an unfulfillable free offer with one the sender can deliver at twenty yeses
+- replace a free offer nobody can honor during the test with one the agency can honor, or get the client's OK for it (`/offer-test-slate`)
 
 Do not produce sendable copy until the failure is fixed or the operator explicitly overrides this hard rule.
 
@@ -334,7 +334,7 @@ Before showing, saving, serializing, or uploading the first cold message, record
 - em dashes: none of any kind
 - rejection bank (`aaron-examples.md` §8) and kill-list (B9): checked
 - pre-send test (B11): "would I answer this?" answered yes
-- proof and fulfilment: verified
+- proof: verified; fulfilment: every yes has a named honorer
 
 Any failed row blocks the copy.
 

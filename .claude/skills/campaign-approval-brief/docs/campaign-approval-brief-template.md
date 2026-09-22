@@ -138,9 +138,9 @@ Copy everything between the rules below into `profiles/<business-slug>/campaign-
 
 **Who we're reaching.** <The audience and the decision-makers we target, in plain words.>
 
-**What we'll offer them.** <The offer in one plain sentence: what each prospect actually gets, and why it's useful on its own. If one offer across all lists, say so.>
+**What we'll offer them.** <The offer in one plain sentence: what each prospect actually gets, and why it's useful on its own. If one offer across all lists, say so. When several offers are under test, list the first flight and the queue exactly as the offer slate (`offer-test-slate.md`) showed them, each with its buyer type; offers still in the test are never filed under "not selected".>
 
-**<The unifying idea>.** <e.g. "Why three lists, one offer": what's held constant and what that lets us learn.>
+**<The unifying idea>.** <e.g. "Why three lists, one offer" or "One list, three offers, one winner": what's held constant and what that lets us learn.>
 
 **Where things stand.** Your <N> sending mailboxes (the accounts the campaign sends from) are finishing their warm-up (the few-week ramp that builds an account's reputation so messages land in the inbox, not spam), so the earliest real send is around <date>. We build the contact lists and the copy during that window and hand you paused drafts to start.
 
@@ -255,7 +255,7 @@ Evaluated and set aside for later waves:
 
 - **<Alternative campaign / slice>**: <one line on why it's a later wave>.
 
-**Offers considered and not selected:**
+**Offers considered and not selected** (only offers that will not be tested; offers in the test queue appear in Sections 1 and 2, not here):
 - **<Rejected offer>**: <why it wasn't chosen>.
 
 <If alternatives are not explicit in artifacts, write: Not captured in current artifacts.>

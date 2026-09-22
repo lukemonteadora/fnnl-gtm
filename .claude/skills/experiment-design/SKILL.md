@@ -28,7 +28,7 @@ This skill is the antidote: plan each experiment around ONE variable, keep every
 
 When this skill reaches a material fork, name the realistic options, recommend the strongest path, and explain why the main alternatives are weaker before committing.
 
-Ask before choices that affect spend, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
+Ask before choices that affect spend beyond an approved budget, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
 
 Do not turn failed or unsafe paths into user-facing options. If this skill's QA rules or stop gates reject a path, filter it out and explain the blocker only when useful.
 
@@ -74,7 +74,7 @@ Use this mode when you do not have a hypothesis yet and want the system to **pro
 Then it outputs **ranked single-variable experiment candidates grounded in columns that already exist**:
 
 1. **Mine the TAM for untested slices — `enrichment_tier = enriched` rows only.** Each candidate is a list-only experiment defined by populated TAM columns with enough rows that have not been tested yet (e.g. `has_demo_cta = true AND sales_ic_count = 0`, row count N). **Slice only `enriched` rows: a blank `gate_role = enrich` column on an enriched row is a real negative, but a blank on a `qualified_out` row is a gate-skip (never collected), not data — never build a slice on it.** (If a legacy `tam.csv` has no `enrichment_tier` column, treat all rows as eligible.) Never propose a slice with too few rows for the sample-size table below. Also mine `data-point-catalog.md` for `in_reserve` rows (catalogued but not yet collected): proposing one means **collecting that column first**, which routes through `/tam-build`'s tiering + `/api-cost-governance` as new Layer-1 spend (gated), not an automatic crawl.
-2. **Mine results for copy/offer variables.** From `experiments/*.json` and reply-scoring history, surface copy or angle variables worth a copy-only test against the current baseline.
+2. **Mine results for copy/offer variables.** From `experiments/*.json` and reply-scoring history, surface copy or angle variables worth a copy-only test against the current baseline. **Propose the offer queue first:** every queued or still-reading arm in `offer.validation_arms` (with `lead_magnet_client_ok` `not_needed` or `yes`) is an offer-only (type D) candidate against the current winner, ranked ahead of copy and list candidates (Aaron's test order: offer, then positioning, then CTA, doctrine §5 step 9).
 3. **Rank by expected positive-reply lift × confidence × row availability.** Prefer candidates that isolate one variable and have the rows to reach significance.
 4. **One variable per candidate:** list-only, copy-only or offer-only, never two at once. Combined tests are only for genuinely new ICPs.
 5. **Human approval gate.** Present the ranked candidates (recommended first) and let the operator pick which to run. Do not auto-launch sends. Under `auto_execute`, you may auto-select the top candidate(s) for the next wave and write their plan files, but launching still goes through the upload skill's paused-draft + manual-start gate.
@@ -121,7 +121,7 @@ If ANY constant is actually changing, stop. Either lock it down, or reclassify a
 
 Before running any experiment, confirm your baseline is healthy: **overall reply rate >=1% after 200+ sends.** If your baseline is below 1% after 200 sends, the problem isn't your experiment - your infrastructure, list, offer or copy is already broken. Run `/email-deliverability-audit` first when a deliverability trigger fires (bounce above the house threshold, a placement-test flag, reply rate near 0.1%, contacts-per-positive jumping; `/offer-intelligence` Vector 5). Otherwise the offer is the live candidate, per Aaron's diagnostic order (doctrine §2). Open rate never decides this: opens are not tracked in this system (operator-approved Aaron alignment, 2026-09-21).
 
-Running an experiment on a broken baseline is wasted effort: you'll learn that "both arms are bad," not "which arm wins."
+Running an experiment on a broken baseline is wasted effort: you'll learn that "both arms are bad," not "which arm wins." **Offer-only (type D) tests are exempt (operator directive 2026-09-22):** when deliverability is ruled out and the offer is the broken thing, the fix IS a new offer test, so a sub-1% baseline routes to the next offer flight (`/campaign-strategy`), and only copy and list tests wait for a healthy baseline.
 
 ### Step 3: Calculate minimum sample size
 
@@ -300,7 +300,7 @@ Launch the planned experiment through the campaign upload path for the locked `r
 
 Then wait 21 days before evaluating. Reply rate needs that long to stabilize. After 21 days, run the positive-reply scoring path for the locked `run_state.sending_platform` on each arm.
 
-If you do not have 2,000+ leads per experiment arm, you cannot detect normal-sized effects. Build a bigger list first through the source path `/lead-source-strategy` selects.
+If you do not have 2,000+ leads per experiment arm, you cannot detect normal-sized effects. (Offer arms may still launch below this and ride HOLD under `/campaign-strategy`'s pooled flip, which never kills an arm on a small sample.) Build a bigger list first through the source path `/lead-source-strategy` selects.
 
 ## Related skills
 

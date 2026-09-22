@@ -12,9 +12,11 @@ Every skill is written against a *job to be done* ("the sending platform", "the 
 outbound/stack-contract.yaml
 ```
 
-That file ships empty. When a skill needs a tool and the slot is blank, the skill stops and sends you to `/stack-setup` rather than guessing.
+That file shipped empty. When a skill needs a tool and the slot is blank, the skill stops and sends you to `/stack-setup` rather than guessing.
 
 This is deliberate. A system that quietly assumes a vendor will happily build a campaign on a tool nobody bought.
+
+**FNNL's approved stack (2026-09-22): GetLeads, AI Ark, Prospeo, MillionVerifier, Clay and PlusVibe.** These six are the only tools the system uses, and they govern every future tool choice. The contract's `approved_stack` block maps each to its job and holds the rule: meet every need from the six first, and bring in anything else only with explicit operator approval recorded in that block.
 
 ## First run, in order
 
@@ -32,7 +34,7 @@ Recurring cadence is `/cold-email-weekly-rhythm`. If you would rather browse tha
 ## How a client flows through the system
 
 1. **Intake** (`/client-intake-form`, `/icp-onboarding`, `/client-onboarding-call-summarizer`) captures who they sell to and what they sell.
-2. **Strategy** (`/lead-source-strategy`, `/offer-intelligence`, `/lead-magnet-brainstorm`, `/campaign-strategy`) decides where the list comes from, what the offer is, and which campaigns to run.
+2. **Strategy** (`/lead-source-strategy`, `/offer-intelligence`, `/lead-magnet-brainstorm`, `/offer-test-slate`, `/campaign-strategy`) decides where the list comes from, which offers to test (shown to the client as an offer test plan, approval optional), and which campaigns to run.
 3. **List** (`/data-point-discovery`, `/tam-build`, `/lead-scoring`, `/email-waterfall`, `/list-quality-scorecard`) builds the target universe cheaply, scores it, reveals contact details only for leads worth paying for, and gates on quality before anything sends.
 4. **Copy** (`/campaign-copywriting`, `/outreach-copywriting`, `/spam-word-checker`, `/social-proof-bank`) writes and QAs the sequences.
 5. **Infrastructure** (`/mailbox-mix-strategy`, `/mailbox-pool-staging`, `/mailbox-profile-generator`) stands up domains and mailboxes.
@@ -44,7 +46,7 @@ Five directories. The split is by *what reads the file*, not by topic.
 
 | Path | Contents | Who reads it |
 |---|---|---|
-| `.claude/skills/` | The 57 active skills (53 owned here, plus 4 mirrored persona-consult skills that are edited in Personal GTM System). Edit here; Claude Code loads them live. | Claude, automatically |
+| `.claude/skills/` | The 60 active skills (56 owned here, plus 4 mirrored persona-consult skills that are edited in Personal GTM System). Edit here; Claude Code loads them live. | Claude, automatically |
 | `outbound/` | Everything the skills operate on. | Skills, at runtime |
 | `_vendor-library/` | Parked integrations for specific tools. **Nothing loads until `/stack-setup` activates it.** | Nothing, until activated |
 | `library/` | Third-party PDFs and DOCX: copywriting courses, prompt packs, spintax samples. | Humans, by hand |
@@ -64,14 +66,14 @@ The line between `library/` and `outbound/reference/` is the useful one. If a sk
 
 ## Ground rules baked into the system
 
-- **Nothing spends money without asking.** The workspace default is a zero spend ceiling, so every paid call gets confirmed. Raise it deliberately, per client, never silently.
+- **Spend is capped, not asked.** Every client run gets a standing $100 budget (operator directive 2026-09-22), and onboarding never asks about spend. Paid data steps inside it run without a confirmation. Anything that would push the run over it stops and asks, and mailbox infrastructure keeps its own purchase approval. Change a client's figure deliberately, never silently.
 - **Done means proven.** Skills verify a result against the system that actually holds the truth before reporting success. A tool returning "OK" is not proof the work landed.
 - **Cheap filtering before expensive enrichment.** Qualify the company list on free data first. Never pay per record for companies that were never a fit.
 - **Recommendations come with the case against them.** Material decisions name the options, recommend one, and say why the alternatives are weaker.
 
 ## What is deliberately not here
 
-- **No default tech stack.** No vendor is assumed, configured, or credentialed.
+- **No default tech stack.** The system assumes no vendor. FNNL's own six are recorded in the contract by operator choice, not shipped as a default, and none is proven `live` yet.
 - **No clients.** No profiles, lead lists, campaigns, or activity logs.
 - **No secrets.** `.env` is gitignored and was never committed. Only `.env.example` ships, and it carries no tool keys.
 - **No personal tooling.** Content publishing, personal briefings, and operator-specific trackers from the upstream workspace were removed rather than carried over.

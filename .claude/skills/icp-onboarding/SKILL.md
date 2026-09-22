@@ -20,9 +20,9 @@ This skill creates `client-profile.yaml`. Every downstream skill reads it. If th
 
 When this skill reaches a material fork, name the realistic options, recommend the strongest path, and explain why the main alternatives are weaker before committing.
 
-Ask before choices that affect spend, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
+Ask before choices that affect spend beyond an approved budget, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
 
-Do not turn failed or unsafe paths into user-facing options. If this skill's QA rules or stop gates reject a path, filter it out and explain the blocker only when useful.
+Do not turn untrue, unsafe or non-compliant paths into user-facing options. Offer candidates, ICP segments and test arms are never hidden for effort, capacity or "the client may not want it" reasons: they stay visible with their label and the reason they rank where they do (operator directive 2026-09-22).
 
 When asking the user, use the Claude Desktop native Interactive Inputs / Choice Prompts pattern from /clarification-first: recommended option first, short choices, and Custom answer last when a custom answer is plausible.
 
@@ -59,7 +59,7 @@ Check `<outbound>/profiles/<business-slug>/client-profile.yaml`:
 Before asking any question, build a pre-fill map silently:
 
 1. If a business website URL is available from context or the caller, scrape it and infer: offer summary, likely buyer titles, apparent headcount range from pricing, industries from homepage imagery and case studies, geography from footer/currency/case study locations, client-suggested offer from services pages, tone from copy voice.
-2. Read `<outbound>/stack-contract.yaml` for the tool declared in each capability slot (registrar, mailbox provider, sending platform, email verification, lead sources), then check `.env` and `.env.local` for the matching credentials. A key is evidence that a credential exists, never a stack decision: no `run_state` provider field is filled from a key, from habit, or from another client's profile. If a slot this run needs is empty, leave the field `null` and route the operator to `/stack-setup`. That stop holds under `auto_execute`, because provider routing is a hard stop rather than a rubric choice.
+2. Read `<outbound>/stack-contract.yaml` for the tool declared in each capability slot (registrar, mailbox provider, sending platform, email verification, lead sources), then check `.env` and `.env.local` for the matching credentials. A key is evidence that a credential exists, never a stack decision: no `run_state` provider field is filled from a key, from habit, or from another client's profile. If a slot is empty, leave the field `null` (it reads as deferred) and continue: ICP and offer work never need an infrastructure or sending-platform tool, so the empty slot becomes a stop only at the step that uses it (operator decision 2026-09-22). The never-guess rule holds under `auto_execute`, because provider routing is a hard stop rather than a rubric choice.
 3. Check any existing `client-profile.yaml` for prior values.
 
 Use this pre-fill map to suggest answers for every interview question. Present each question as a confirm-or-correct native choice prompt with the suggested value as the recommended option. The user clicks to accept or types a correction - they do not answer from blank.
@@ -139,7 +139,7 @@ Batch these into native multi-question confirm-or-correct prompts — group rela
 8. Preferred sources, blocked sources, or custom scraping limits for lead sourcing
 9. Competitors, customers, partners, or domains that must be excluded
 10. Current offer or ask suggested by the client or form
-11. Front-end offer they can legally and operationally give, plus what would be needed to deliver it
+11. Anything the client legally cannot offer or claim (a hard limit), plus any delivery facts worth knowing, such as a fixed turnaround. Delivery facts are labels for the post-test scale review, never a limit on which offers get tested (operator directive 2026-09-22)
 12. Email tone
 13. Banned words, compliance limits, or regulated-industry constraints
 14. **Buyer pain, in the client's own words (HYPOTHESIS).** What problem do buyers come to you with, and what do they actually say when they are frustrated about it? Capture their phrasing verbatim where you can, and note which buying persona feels it if the client distinguishes. This is the client's belief about their market, not a verified fact: `/offer-intelligence` discovery mode tests it against real public buyer voice. Never treat it as established, and never attach it to a named prospect.
@@ -230,7 +230,7 @@ sales_call_library:
 
 run_state:
   execution_mode: review_gates   # default; auto_execute is opt-in only (set by /client-intake-form or the user)
-  spend_ceiling_usd: 0           # default; 0 = always confirm before any spend. A number opts into auto-approve under that amount.
+  spend_ceiling_usd: 100         # the standing budget per client run (operator directive 2026-09-22); written automatically, never asked. Paid data steps inside it auto-approve.
   infrastructure_stack: <from stack contract|null>   # the contract's registrar + mailbox provider, lowercase, joined with an underscore
   registrar: <from stack contract|null>              # no default; declared by /stack-setup
   mailbox_provider: <from stack contract|null>       # no default; declared by /stack-setup
@@ -251,7 +251,7 @@ offer:
   lead_magnet: null
   lead_magnet_details: null
   lead_magnet_cta_direction: null
-  validation_arms: null   # set at offer lock by /lead-magnet-brainstorm: 1 to 3 ranked arms beside the primary; [] only with a stated reason
+  validation_arms: null   # set at offer lock by /lead-magnet-brainstorm: every qualifying candidate, ranked (uncapped), run in flights by /campaign-strategy; [] only with a stated reason
   value_prop: <why prospects should care>
 
 lead_sourcing:
@@ -259,7 +259,7 @@ lead_sourcing:
   preferred_sources: []
   blocked_sources: []
   approved_custom_scraping: false
-  approval_required_for_paid_sources: true
+  approval_required_for_paid_sources: false   # default (operator directive 2026-09-22): paid data sources run inside the standing $100 run budget without an approval
 
 capability_boundary:
   deliverable_strengths: []
@@ -310,7 +310,7 @@ Do not overwrite an existing `client-profile.yaml` without explicit confirmation
 
 ## What To Do Next
 
-After `client-profile.yaml` exists (and after `/stack-setup` has declared any capability slot this client's run still needs):
+After `client-profile.yaml` exists (an empty infrastructure or platform slot does not hold this; it stops only the step that uses it):
 
 - New guided start or full locked-platform launch: `/cold-email-kickoff` (the single entry-point orchestrator)
 - Guarded draft automation: `/auto-research-public`, only after setup is complete and sender readiness is verified through the locked platform manager

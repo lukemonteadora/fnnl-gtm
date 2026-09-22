@@ -28,13 +28,13 @@ Here `<outbound>` is the root of this skill library - resolve it to wherever the
 - A raw transcript: a discovery call, sales call, onboarding / kickoff call, or "go for a walk and talk" voice memo. Accepts pasted text or Fathom / Otter / Zoom / Teams / Granola exports (full, partial, or fragmented).
 - Optional: the business slug / name, if known. If it is not stated, infer it from the company named in the transcript, or ask once.
 
-Works inside Claude Code — no API spend for the summarization. For a very long transcript, route the crunch to DeepSeek per `/ai-model-routing`; the output schema below is unchanged.
+Works inside Claude Code, with no API spend for the summarization. For a very long transcript, split it into ordered chunks and fan them out across Claude Code sub-agents per `/personalization-subagent-pattern` (one chunk per agent, one output file per agent), then merge and de-duplicate the findings in the session; the output schema below is unchanged. No outside AI provider is used (no-AI-API rule, operator directive 2026-09-22).
 
 ## Material Decision Rule
 
 When this skill reaches a material fork, name the realistic options, recommend the strongest path, and explain why the main alternatives are weaker before committing.
 
-Ask before choices that affect spend, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
+Ask before choices that affect spend beyond an approved budget, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
 
 When asking the user, use the Claude Desktop native Interactive Inputs / Choice Prompts pattern from /clarification-first: recommended option first, short choices, and Custom answer last when a custom answer is plausible.
 
@@ -53,7 +53,7 @@ Read the whole transcript and pull everything relevant to these field groups (th
 - **Business:** what they sell (one-liner), website, value prop, how they make money, tone / voice.
 - **Best customer / ICP:** the single best existing customer described, buying job titles, headcount range, industries in / out, target geography (countries / states / cities in and out of scope).
 - **Pain & why-now:** the problems the ICP has *in their own words*, buying triggers, what makes outreach timely.
-- **Offer clues:** any front-end offer / lead magnet / CTA the client suggested (a **hypothesis**, never a locked offer), what they can legally and operationally give away, delivery constraints.
+- **Offer clues:** any front-end offer / lead magnet / CTA the client suggested (a **hypothesis**, never a locked offer), what they legally cannot offer or claim, and any delivery facts they mentioned (capacity remarks are context for the post-test scale review, never a limit on which offers get tested).
 - **Proof:** named customers, case studies, metrics, results mentioned.
 - **Capability boundary:** deliverable strengths, operational limits, legal / compliance limits.
 - **Exclusions & constraints:** competitors / customers to exclude, banned words, regulated-industry constraints.
@@ -93,7 +93,8 @@ Use this structure (note: **no action-item section**):
 | geography in / out | | |
 | ICP pain / triggers (why-now) | | |
 | client-suggested offer / CTA (hypothesis only) | | |
-| deliverable constraints / capability boundary | | |
+| legal / claim limits (hard) | | |
+| delivery facts and capacity remarks (scale-review context, not a filter) | | |
 | proof points (customers, metrics) | | |
 | exclusions (competitors / customers) / banned words | | |
 
@@ -117,5 +118,5 @@ Hand the notes to onboarding:
 
 - `/icp-onboarding` - consumes these notes as pre-fill; this skill answers many of its interview questions in advance
 - `/client-intake-form` - same; folds these notes into its pre-fill map
-- `/ai-model-routing` - optional DeepSeek crunch for very long transcripts
+- `/personalization-subagent-pattern` - the sub-agent fan-out (disjoint chunks, merge, dedupe) for very long transcripts
 - `anthropic-skills:ai-meeting-summarizer` - the personal, action-item version; use that for your own internal meetings, this one for client onboarding

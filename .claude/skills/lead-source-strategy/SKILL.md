@@ -18,15 +18,17 @@ This skill has one job: after campaign selection, choose the final source path f
 
 It does not scrape, enrich, verify, write copy, upload, or lock an offer. It writes a lead source plan that proves the list source matches the selected campaign.
 
-Defaulting to whichever contact database or maps scrape is easiest is weak thinking. Use a source when it is the best evidence for the signal. Otherwise, build from the source that actually proves fit.
+Defaulting to whichever contact database or maps scrape is easiest is weak thinking. Use a source when it is the best evidence for the signal. Otherwise, build from the source that actually proves fit. **Offer-test exception (operator directive 2026-09-22):** for an Offer-Validation Wave cell, a broad ICP pull is the right source, because the offer is what is being tested and the offer does the heavy lifting (Aaron's wide net plus back-end filter, doctrine §5). For those cells, "Why this beats a generic database pull" may read "not needed, offer test".
 
 Read `/lead-list-tech-stack-research` before choosing the source stack. That skill is the tool-fit map. This skill makes the decision.
+
+> **Approved-stack rule (operator directive 2026-09-22).** FNNL's tools are the closed list in the `approved_stack` block of `outbound/stack-contract.yaml`. Meet every need from that list first, and check each listed tool's full surface (its MCP tool list and API docs) before declaring a gap. Any other tool named in this file is a catalogue example: raise it only as "OUT OF STACK, needs operator approval", never as the path, and never credential or spend on it until the operator approves it by name and it is recorded in `approved_stack.approved_exceptions`. A slot at status `held` declares nothing, exactly like `not_chosen`.
 
 ## Material Decision Rule
 
 When this skill reaches a material fork, name the realistic options, recommend the strongest path, and explain why the main alternatives are weaker before committing.
 
-Ask before choices that affect spend, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
+Ask before choices that affect spend beyond an approved budget, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
 
 Do not turn failed or unsafe paths into user-facing options. If this skill's QA rules or stop gates reject a path, filter it out and explain the blocker only when useful.
 
@@ -85,18 +87,18 @@ lead_sourcing:
   preferred_sources: []
   blocked_sources: []
   approved_custom_scraping: false
-  approval_required_for_paid_sources: true
+  approval_required_for_paid_sources: false   # default (operator directive 2026-09-22): paid data sources run inside the standing $100 run budget without an approval
 ```
 
 ## Core Rule
 
 Capability boundary first, source signal second.
 
-Do not chase a clever source the client cannot serve. This skill never locks, re-opens, or edits an offer. By the time it runs the offer is already locked, so source-first means the source signal has to prove the locked offer is believable to the buyer that source puts on the list. It does not replace market reasoning or delivery reality.
+Do not chase a clever source whose buyers the client cannot truthfully serve (a geography, licence, or legal limit that would make the promise false to the recipient). Delivery capacity and scale are not source filters: they are asked after the test, in `/offer-test-slate` scale review (operator directive 2026-09-22). This skill never locks, re-opens, or edits an offer. By the time it runs the offer is already locked, so source-first means the source signal has to prove the locked offer is believable to the buyer that source puts on the list. It does not replace market reasoning or delivery reality.
 
 Choose the source from the selected campaign signal, not from tool comfort.
 
-**Do not rewrite the offer to fit an attractive source.** Do not write to `offer.lead_magnet`, do not re-open the locked offer, and do not create a second locked offer field. A tempting source is a reason to consider a source path, never a reason to swap the offer out from under the rest of the chain.
+**Do not rewrite the offer to fit an attractive source.** Do not write to `offer.lead_magnet`, do not re-open the locked offer, and do not create a second locked offer field. A tempting source is a reason to consider a source path, never a reason to swap the offer out from under the rest of the chain. If a source suggests a new offer idea (a directory or job-board pattern that exposes a new pain), log it under `## Every candidate` in `lead-magnets.md` as an idea for the next test flight, so it reaches the operator and the client slate instead of being lost.
 
 Ask:
 
@@ -119,17 +121,17 @@ If the target market is location-specific, do not recommend a source family unti
 
 Every Lead Source Plan must separate the stack into five roles:
 
-1. **Workflow layer:** **Claude Code native by default** — the running session combines sources, runs API calls, scores, dedupes, and prepares the final CSV directly. **RevCode is the preferred optional workspace** for the same work (no API, so manual/human-in-the-loop) — use it when you want its UI, shareable workflows, or local large-list engine; it yields an identical CSV (same canonical columns), so nothing downstream changes (full rule in `/lead-list-tech-stack-research`). Clay, spreadsheets, scripts, APIs, or MCP tools are also allowed when they fit better.
+1. **Workflow layer: the list workbench by default** (`run_state.list_workbench`, resolved from the stack contract). The working list lives in a workbench table so the operator can watch it fill live instead of receiving a blind CSV. The session sources and enriches with FNNL's own API-keyed tools, combines, scores, and dedupes, then pushes finished rows into the table through its inbound webhook. It never spends the workbench's own credits (zero-workbench-credit HARD RULE, CLAUDE.md section 7). The operator creates the table in the workbench UI, since the session cannot create tables or columns there. **Fallback: Claude Code native.** If no workbench is locked, or the client's table and webhook are not set up yet, the session builds the CSV directly and says so in the plan. RevCode (no API, so manual and human-in-the-loop), spreadsheets, scripts, APIs, or MCP tools remain allowed when they fit better (full rule in `/lead-list-tech-stack-research`). Whatever the surface, the CSV the downstream skills read is an export of the working list, with the same canonical columns, so nothing downstream changes.
 2. **Source-of-truth signal:** the public source where the campaign proof actually lives.
 3. **Collection tool:** the best tool for collecting that signal, such as DiscoLike, GetLatka, Serper, Spider Cloud, Scrap.io, Apify, Trigify, a database, or a custom parser.
-4. **Contact discovery + enrichment:** discover real named people from a contact database with a **current-employer field** (Clay `search-contacts` / A-Leads `advanced_search`, DiscoLike `generate-contacts`, or a people-DB — never `search-contacts` index mode, which fabricates names; ⛔ and **never from a LinkedIn/Google search via Serper + an AI title-picker**, banned 2026-07-17 because Google's cached snippets carry no employment-currency signal and yield retired/departed people — see `/email-waterfall`) so every row has a real first + last name **who still works there**; then, for rows with no email, the FINDER = **A-Leads `find_email` (find) + Deliverable.co (verify + catch-all) first (HARD RULE), BetterContact ONLY on the residue** (no email found, or `undeliverable`/`catch_all`/`risky`/`unknown`), with Prospeo/WizLeads/Blitz further fallback. If a row already has an email, it is **verified first with Deliverable.co** (verify + catch-all in one), not re-found — that ordering and the Deliverable.co verify routing are owned by `/email-waterfall`'s Verification Doctrine.
+4. **Contact discovery + enrichment:** discover real named people from a contact database with a **current-employer field** (A-Leads `advanced_search`, DiscoLike `generate-contacts`, or a people-DB — never `search-contacts` index mode, which fabricates names; ⛔ and **never from a LinkedIn/Google search via Serper + an AI title-picker**, banned 2026-07-17 because Google's cached snippets carry no employment-currency signal and yield retired/departed people — see `/email-waterfall`) so every row has a real first + last name **who still works there**; then, for rows with no email, the FINDER = **A-Leads `find_email` (find) + Deliverable.co (verify + catch-all) first (HARD RULE), BetterContact ONLY on the residue** (no email found, or `undeliverable`/`catch_all`/`risky`/`unknown`), with Prospeo/WizLeads/Blitz further fallback. If a row already has an email, it is **verified first with Deliverable.co** (verify + catch-all in one), not re-found — that ordering and the Deliverable.co verify routing are owned by `/email-waterfall`'s Verification Doctrine. Never discover or enrich contacts through the list workbench's own built-in search or enrichment, because those spend the workbench's credits (zero-workbench-credit HARD RULE); contacts come from FNNL's own keyed tools and are pushed into the workbench.
 5. **QA and verification:** `/icp-prompt-builder`, /email-waterfall, and `/list-quality-scorecard`.
 
 Do not collapse these roles into Prospeo because Prospeo has good contact data. Prospeo is usually a contact database or enrichment layer. It is the source only when title, company, technology, job-change, or Prospeo-native data is the real source of truth.
 
 Default role choices:
 
-- Claude Code native is the default workflow layer; RevCode is the preferred optional workspace for it (no API, so manual) — neither is the source.
+- The list workbench is the default workflow layer (rows pushed in by webhook, zero workbench credits), with Claude Code native as the fallback when no workbench table is ready; RevCode stays an optional manual workspace. None of them is the source.
 - A contact database is the strongest contact layer available, never the default list source. The source-of-truth signal decides who belongs on the list; the contact layer only finds the people at those companies.
 - For true lookalike or company-similarity discovery, use whatever fills `lead_data.company_discovery`. Some similarity tools also do per-company AI research, contact discovery, and ICP-fit validation. Before routing a job to one, read its capability map and current plan feature gates, because these features are commonly plan-gated: if `/stack-setup` activated a pack for it, that pack documents them; otherwise check the vendor's own docs.
 - GetLatka is preferred when SaaS ARR, revenue stage, growth, category, or SaaS database coverage is the actual signal.
@@ -137,21 +139,21 @@ Default role choices:
 
 ## AI/API Routing
 
-> **Research Routing — HARD RULE (Claude deep-research primary, enforced).** Read `run_state.research_routing`: if it is **unset**, default to **`claude_deep_research`** and proceed. The primary research brain is the Claude native `/deep-research` fan-out harness (multiple sub-agents research every needed category in parallel, fetch real sources, adversarially verify each claim, and synthesize a cited report). Do NOT stop to ask, and do NOT satisfy the primary pass with a bare inline WebSearch (that is the weak `claude_native` path, which is not the same thing as `claude_deep_research`). The operator can explicitly opt back to **`third_party_ai`** (the older Perplexity-led primary); switch to that only on an explicit opt-out. In `claude_deep_research` mode the primary pass MUST be an **actual `/deep-research` invocation** (native inline WebSearch/WebFetch, DiscoGen, or a complement engine do NOT satisfy it) — record `ai_research_provider = claude-deep-research` and append an `api-balance-ledger.md` line; a research step that finishes with **no `/deep-research` primary** is a **flagged violation** (run it, or get a fresh explicit OK to skip). **Wired check:** after the primary pass, run `node scripts/research/research_routing_check.mjs --skill lead-source-strategy --client <business-slug> --json` — a `violation:true` / exit 1 means no logged primary; do not declare this research step done until it passes. No third-party key is needed for the primary pass (it is the native harness); a missing `PERPLEXITY_API_KEY` is a credential **HARD-STOP** only if the operator explicitly chose `third_party_ai`. Full rule: `/ai-model-routing`.
+> **Research Routing: HARD RULE (Claude deep-research primary, enforced; no-AI-API rule, operator directive 2026-09-22).** `run_state.research_routing` has exactly one value, **`claude_deep_research`**. If it is unset, set it to that and proceed. If it still holds a retired value (`third_party_ai`, or the bare-WebSearch `claude_native`), treat it as `claude_deep_research` and note the correction in the activity log. The primary research brain is the Claude native `/deep-research` fan-out harness (multiple sub-agents research every needed category in parallel, fetch real sources, adversarially verify each claim, and synthesize a cited report). Do NOT stop to ask, and do NOT satisfy the primary pass with a bare inline WebSearch. The primary pass MUST be an **actual `/deep-research` invocation** (inline WebSearch/WebFetch alone does NOT satisfy it): record `ai_research_provider = claude-deep-research` and append the run-log line to `api-balance-ledger.md` (a provenance record the wired check reads, not an AI spend row). A research step that finishes with **no `/deep-research` primary** is a **flagged violation** (run it, or get a fresh explicit OK to skip). **Wired check:** after the primary pass, run `node scripts/research/research_routing_check.mjs --skill lead-source-strategy --client <business-slug> --json`. A `violation:true` / exit 1 means no logged primary; do not declare this research step done until it passes. No API key of any kind is needed: research runs only on Claude Code itself (the harness, its sub-agents, WebSearch and WebFetch), and no other AI provider is ever called. Full rule: `/ai-model-routing`.
 
-The five tool roles above are data layers. AI/model routing is a parallel layer for this skill's own market and source research, and it runs the single premium-by-default, non-redundant path in `/ai-model-routing` — there is no cheap/standard tier. The Claude native `/deep-research` fan-out harness runs the primary broad pass (web-grounded company/market research via parallel sub-agents, source fetch, adversarial verification, cited synthesis). Perplexity, OpenAI `o4-mini-deep-research`, and Grok are demoted to gap-fill + grounding helpers that fill ONLY the gaps the primary pass leaves (thin / technical / too-broad / unverified), never a duplicate broad pass (Perplexity for web-grounded gap-fill, Serper/Grok for raw URLs / X-social, `o4-mini-deep-research` default with `o3-deep-research` pinpoint; OpenAI 1-3 prompts/client); raw URL extraction → Spider Cloud; bulk synthesis / pain-extraction / pre-compressing raw dumps → DeepSeek. When references are too many, scale mode has the helpers EMIT ranked URLs → Spider Cloud scrapes → DeepSeek compresses → Claude Code synthesizes. When a campaign signal lives in buyer discussion (Reddit, review sites, forums, YouTube), collect it through the **VOC / Raw-Evidence pipeline** in `/ai-model-routing` (Grok → Perplexity Search/Serper for the exact discussion URLs → Spider Cloud to scrape; tag `source_class`), not a loose web search - and every source carries a `source_url`. See `ai-model-routing.md` for the full pipeline (Brief → `/deep-research` primary → Source Registry → Spider extract → VOC → DeepSeek → Claude Code synthesis → Perplexity/OpenAI gap-fill + validation → Packet → Copy → QA), env-var names, and the fallbacks used when a helper key (Perplexity or MiniMax) is absent. This skill produces evidence, not emails — do not route final copy here; that is `/campaign-copywriting` (Claude Code native, clean-packet sub-agent) from a clean packet. Keep the canonical CSV fields (`source, source_type, source_url, evidence_url, signal, fit_reason, source_confidence`) intact; the AI-routing columns in `lead-list-tech-stack-research.md` map onto them.
+The five tool roles above are data layers. Research routing is a parallel layer for this skill's own market and source research, and it runs the single Claude Code native path in `/ai-model-routing` (no cheap/standard tier, no other AI provider). The Claude native `/deep-research` fan-out harness runs the primary broad pass (web-grounded company/market research via parallel sub-agents, source fetch, adversarial verification, cited synthesis). Gaps the primary pass leaves (thin / technical / too-broad / unverified) are filled by a second targeted `/deep-research` pass or a targeted WebSearch/WebFetch pass, never a duplicate broad pass. Raw URLs → WebSearch; page extraction → WebFetch; bulk synthesis / pain-extraction / pre-compressing raw dumps → Claude Code sub-agents fanned out over disjoint batches per `/personalization-subagent-pattern`. When references are too many, scale mode has WebSearch EMIT ranked URLs → sub-agents read their own URL batch with WebFetch and compress it → the main Claude Code session synthesizes. The live X / social read no longer exists, so note that gap rather than claiming X coverage. When a campaign signal lives in buyer discussion (review sites, forums, YouTube), collect it through the **VOC / Raw-Evidence pipeline** in `/ai-model-routing` (WebSearch for the exact discussion URLs → WebFetch to read them; tag `source_class`), not a loose web search, and every source carries a `source_url`. Reddit is the exception: Claude's tools cannot read it, so it enters only as text an operator pasted with its thread URL, and otherwise it is logged as unread. See `ai-model-routing.md` for the full pipeline (Brief → `/deep-research` primary → Source Registry → WebFetch extract → VOC → sub-agent crunch → Claude Code synthesis → targeted gap-fill + validation → Packet → Copy → QA). This skill produces evidence, not emails. Do not route final copy here; that is `/campaign-copywriting` (Claude Code native, clean-packet sub-agent) from a clean packet. Keep the canonical CSV fields (`source, source_type, source_url, evidence_url, signal, fit_reason, source_confidence`) intact; the AI-routing columns in `lead-list-tech-stack-research.md` map onto them.
 
 ## Accepted Source Families
 
 Use any public, legal, campaign-relevant source family that fits the signal:
 
-- Workflow layers: Claude Code native by default (the session builds the CSV directly); RevCode as the preferred optional workspace (no API, so manual — for its UI or local large-list engine); Clay, spreadsheets, scripts, APIs, MCP tools, or manual QA for combining and scoring sources
+- Workflow layers: the list workbench by default (the session pushes finished rows into its table by webhook, zero workbench credits); Claude Code native as the fallback when no workbench table is ready (the session builds the CSV directly); RevCode as an optional manual workspace (no API, for its UI or local large-list engine); spreadsheets, scripts, APIs, MCP tools, or manual QA for combining and scoring sources
 - Contact databases and enrichment: the **email finder** finds first, the **email verifier** verifies every address including a separate catch-all signal, and the **waterfall enricher** runs on the residue ONLY. That ordering is the HARD RULE, not any particular brand. Resolve each role from `stack-contract.yaml` (`lead_data.contact_discovery`, `lead_data.contact_enrichment`, `lead_data.email_verification`); if a role is empty, stop and route to `/stack-setup`. **Whichever finder produces the email, the verifier of record verifies it**, and the residue it cannot clear (invalid, catch-all, risky, unknown) plus rows no finder closed go to the waterfall enricher to recover a new address, whose output is then re-verified by the same verifier. No source is exempt. Record the waterfall order in `lead_data.contact_enrichment.notes` and mirror it in `/email-waterfall`.
 - Company discovery: the tool in `lead_data.company_discovery`, plus public company databases and official company registries (examples of the category: a lookalike engine, a firmographic database, a registry pull).
 - Local business sources: Google Maps, Scrap.io, Apify Maps actors, Serper Maps or Places
-- Search discovery: Serper, Spider Cloud search, Google operators, news, patents, scholar, shopping, images when relevant
-- Website extraction: Spider Cloud, Apify, custom crawlers, public website pages
-- Social intent: Trigify, competitor engagers, public LinkedIn activity, X, Reddit, YouTube, podcasts
+- Search discovery: the harness's WebSearch (what `web.search` means in FNNL); catalogue examples Serper, Spider Cloud search; Google operators, news, patents, scholar, shopping, images when relevant
+- Website extraction: the harness's WebFetch (what `web.crawl` means in FNNL); catalogue examples Spider Cloud, Apify, custom crawlers; public website pages
+- Social intent: Trigify, competitor engagers, public LinkedIn activity, X, Reddit (operator paste only: Claude's tools cannot read it), YouTube, podcasts
 - Public directories: associations, certification directories, partner directories, marketplaces, app stores, agency directories, vendor ecosystems
 - Event sources: exhibitor lists, sponsor pages, speaker pages, public attendee pages, conference schedules
 - Hiring sources: job boards, careers pages, LinkedIn Jobs, Indeed, niche job boards
@@ -169,7 +171,7 @@ Use this routing logic:
 
 This table is a starting map, not a shortcut. Apply the target market's real source reality and the selected campaign row before choosing the final source. A source that is strong in one country can be useless in another.
 
-Start every plan with Claude Code native as the workflow layer (RevCode is the preferred optional workspace if you want it) unless another operator path is stronger. Then pick the source-of-truth signal and collection tool.
+Start every plan with the list workbench as the workflow layer (rows pushed in by webhook, zero workbench credits), or Claude Code native if no workbench table is ready, unless another operator path is stronger. Where the table below names RevCode or Claude Code native as the workflow surface, read it as whichever surface the plan uses; RevCode stays an optional manual workspace. Then pick the source-of-truth signal and collection tool.
 
 | Campaign signal | Source-of-truth signal and collection tool | Workflow and contact layer | Common trap |
 |---|---|---|---|
@@ -181,7 +183,7 @@ Start every plan with Claude Code native as the workflow layer (RevCode is the p
 | Platform or ecosystem membership | Partner directories, app marketplaces, integration pages, tech-stack source | RevCode to merge directory and tech evidence; contact enrichment later | Using only a generic technology filter |
 | Social pain or intent | Trigify, competitor-engagers, social post/comment source | RevCode for context scoring and compliance flags; contact enrichment after sample QA | Treating a like as buying intent |
 | Hiring trigger | Job boards, careers pages, Serper, Spider Cloud, LinkedIn Jobs, Indeed, or Prospeo job signals when Prospeo is the native job source | RevCode to preserve job URLs; buyer enrichment after company qualification | Treating any hiring as relevant |
-| Event sponsorship / exhibiting | Serper to find the event, Spider Cloud to crawl its sponsor / exhibitor / speaker pages, DeepSeek to extract the roster (the ladder in `/lead-list-tech-stack-research`; a sponsor page is plain HTML, so it never reaches a paid scraper) | Claude Code native to normalize the roster and join `co_event_*` onto companies; contact enrichment after the ICP pass | Scraping the famous shows. See the Quality Rule below |
+| Event sponsorship / exhibiting | WebSearch to find the event, WebFetch to read its sponsor / exhibitor / speaker pages, Claude Code sub-agents to extract the roster (the ladder in `/lead-list-tech-stack-research`; a sponsor page is plain HTML, so it never reaches a paid scraper) | Claude Code native to normalize the roster and join `co_event_*` onto companies; contact enrichment after the ICP pass | Scraping the famous shows. See the Quality Rule below |
 | SaaS revenue or growth fit | GetLatka, funding databases, Seedtable, Crunchbase, Serper news | RevCode for growth-stage scoring; contact enrichment after account fit | Guessing ARR from headcount |
 | Old CRM or CSV | Owned CRM/CSV as the source of truth | RevCode or spreadsheet cleanup, enrichment waterfall, suppression, then QA | Buying a fresh list before fixing owned data |
 
@@ -215,7 +217,7 @@ Use this structure. The header block and bold-label format are **required** — 
 
 ## Source Stack
 
-- **Workflow layer:** <Claude Code native by default; RevCode or equivalent if used>
+- **Workflow layer:** <the list workbench by default (rows pushed in by webhook, zero workbench credits); Claude Code native CSV if no workbench table is ready; RevCode or equivalent if used>
 - **Source-of-truth signal:** <The specific observable signal that proves fit — job posting, hire trigger, association directory entry, etc.>
 - **Collection tool:** <Which tool pulls the initial list>
 - **Contact enrichment:** <Which tool finds the person after the company is qualified>
@@ -235,7 +237,7 @@ Use this structure. The header block and bold-label format are **required** — 
   - <Option 2: name + why considered or rejected>
 - **Location coverage risk:** <Low / Medium / High + brief reason>
 - **Data availability risk:** <Low / Medium / High + brief reason>
-- **Why this beats a generic database pull:** <Specific reason the source-of-truth signal proves fit that a generic title export cannot>
+- **Why this beats a generic database pull:** <Specific reason the source-of-truth signal proves fit that a generic title export cannot, or "not needed, offer test" for an Offer-Validation Wave cell>
 - **Expected row type:** company-level first | person-level | mixed
 - **Expected volume:** <N qualified companies → N verified contacts after enrichment>
 
@@ -268,11 +270,11 @@ Campaign-specific fields:
 
 ## Enrichment Path
 
-- **Workflow layer:** <Claude Code native by default; RevCode or equivalent if used — orchestrates all steps below>
+- **Workflow layer:** <the list workbench by default (rows pushed in by webhook, zero workbench credits); Claude Code native CSV if no workbench table is ready; RevCode or equivalent if used. Orchestrates all steps below>
 - **Company cleanup:** <Dedup, ICP filter, suppression>
 - **Contact finding:** <the contact-discovery tool from the stack contract, a sales-navigator-style export, or manual lookup>
 - **Email finding:** <Waterfall sequence>
-- **Verification:** <MillionVerifier or equivalent>
+- **Verification:** <the `email_verification` tool from the stack contract>
 - **Suppression:** <Existing client list + prior campaign records>
 
 ---
@@ -283,7 +285,7 @@ Campaign-specific fields:
 - **ICP prompt requirement:** <Run /icp-prompt-builder before contact enrichment spend>
 - **Manual spot checks:** <What to manually verify and at what sample size>
 - **Stop if:** <Specific numeric conditions that pause the workflow>
-- **Approval needed before paid or high-risk scraping:** <What requires explicit sign-off>
+- **Approval needed before paid or high-risk scraping:** <What requires explicit sign-off: high-risk scraping, and any paid pull that would push the run past its standing $100 budget. Paid pulls inside the budget need none>
 
 ---
 
@@ -322,7 +324,7 @@ If a source cannot preserve evidence, mark `source_confidence=low` unless there 
 
 Ask before scaling when:
 
-- paid API or database credits will be used
+- paid API or database credits would push the run past its budget (`run_state.spend_ceiling_usd`, the standing $100 per client run). Paid credits inside the budget need no approval.
 - custom scraping is needed and `approved_custom_scraping` is not true
 - the source is social, platform-sensitive, or likely to trigger account risk
 - the source includes personal data beyond normal B2B contact data
@@ -340,7 +342,7 @@ Public web data is allowed as a source candidate. That does not make it automati
 - **Event sponsorship is three signals in one artifact, and the middle one is the valuable one.** A company that paid to sponsor or exhibit at a show has disclosed, voluntarily and at real cost: (1) **budget** (they paid), (2) **who they sell to** (they paid to stand in a room full of one specific buyer), and (3) a **dated why-now** (the event has a date). Number 2 is the reason to bother. The `sold_to` axis is the highest-leverage message-differential cut we have (`/campaign-strategy`), and today it is *derived* by classifying website text at `med` coverage. A sponsor roster is a near-100%-precision `sold_to` oracle instead: a company that paid $40k to stand in a GTM room has stated who it sells to more reliably than any homepage classifier can infer it. Treat a sponsor list as ground truth for `sells_to_*`, not just as another list to scrape.
 - **Sponsor lists: niche and regional shows only, never the famous ones (HARD).** Eric's own list-building doctrine praises custom scraping as "hidden gold, less competition" and then his demo pulls Dreamforce and SaaStr, which are the single most-scraped sponsor lists in B2B software. Those inboxes are the most-hit in the market, so the famous shows invert the very advantage the source family exists for. A 200-sponsor roster from a regional or vertical show is the play. If the event has its own Wikipedia page, assume every competitor already mailed that list this quarter and pick a different show.
 - **Events enter as a company signal, not as the TAM spine.** Sponsorship joins onto companies as `co_event_*` per `/tam-build`'s Layer 1d. Building a list whose source of truth *is* the event roster is this skill's source-first motion and is fine; what it must not do is displace the case-study-seeded lookalike as the TAM discovery spine (`/tam-build` Case-Study-Anchored Discovery HARD RULE).
-- Use Claude Code native as the default operating layer for multi-source lists, scoring, dedupe, evidence preservation, and final export preparation — the session builds the CSV directly via MCP + scripts. RevCode is the preferred optional workspace for the same work (no API, so manual/human-in-the-loop — reach for it for its UI or local large-list engine). Either path produces an identical CSV, so nothing downstream changes.
+- Use the list workbench as the default operating layer for multi-source lists, so the operator watches the list fill live. The session does the scoring, dedupe, and evidence preservation with FNNL's own keyed tools via MCP and scripts, then pushes finished rows into the workbench table through its inbound webhook, never spending the workbench's own credits (zero-workbench-credit HARD RULE). If no workbench is locked, or the client's table and webhook are not set up yet, fall back to Claude Code native: the session builds the CSV directly and the plan says so. RevCode stays an optional manual workspace for the same work (no API, for its UI or local large-list engine). Every path produces the same canonical CSV as an export of the working list, so nothing downstream changes.
 - Do not pick a source because it is easy if another public source proves campaign fit or target-geography fit better.
 - Do not scrape a niche source at scale until a small sample passes `/icp-prompt-builder`.
 - Do not enrich thousands of rows until the source sample shows at least 40% ICP fit.

@@ -22,9 +22,9 @@ Having 29 cold email skills doesn't help if you don't run them on a schedule. Th
 
 When this skill reaches a material fork, name the realistic options, recommend the strongest path, and explain why the main alternatives are weaker before committing.
 
-Ask before choices that affect spend, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
+Ask before choices that affect spend beyond an approved budget, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
 
-Do not turn failed or unsafe paths into user-facing options. If this skill's QA rules or stop gates reject a path, filter it out and explain the blocker only when useful.
+Do not turn untrue, unsafe or non-compliant paths into user-facing options. Offer candidates, ICP segments and test arms are never hidden for effort, capacity or "the client may not want it" reasons: they stay visible with their label and the reason they rank where they do (operator directive 2026-09-22).
 
 When asking the user, use the Claude Desktop native Interactive Inputs / Choice Prompts pattern from /clarification-first: recommended option first, short choices, and Custom answer last when a custom answer is plausible.
 
@@ -72,7 +72,7 @@ It does **not** replace the manual cadence below — that stays the system of re
 - A `/schedule` weekly cloud routine invokes this skill in review mode. Written to be portable to the always-on VPS later with no change to the logic.
 - It builds the **active-client set** from `profiles/*` — every client whose `client-profile.yaml` `run_state` shows launched/live campaigns (cross-checked against the locked sending platform's live campaign list via MCP).
 - For each active client it runs the seven-step weekly run below, then emits that client's section of the Slack digest and writes `profiles/<client>/portfolio-review.md`.
-- Read-only platform analytics are free; the only spend is an in-ceiling TAM refresh or per-slice enrichment it proposes and you approve.
+- Read-only platform analytics are free; the only spend is a TAM refresh or per-slice enrichment, which runs inside the client's standing $100 run budget without asking. Anything that would go over the budget is proposed for your approval instead.
 
 ### The weekly run (per client)
 
@@ -97,9 +97,11 @@ This is precautionary reputation hygiene for young domains, NOT a bounce-cause c
 - **Gate B — portfolio maturity (the "enough data to decide?" gate).** Count **mature** campaigns: live ≥21 days **and** ≥300 sends each. If **fewer than 3 mature campaigns across at least 2 distinct signals**, the portfolio is too thin to diagnose anything systemic — **skip the diagnosis and just propose the next new signal slice** (more coverage). This is the rule that stops a premature "the offer is dead" call when you've only launched a few campaigns.
 - **Diagnosis (only when the portfolio is mature enough).** See the cross-campaign diagnosis below. It decides between **launch-new / scale / hold / diagnose-offer**, bounded by the Step-4 capacity verdict.
 - **Offer-Validation Wave read (while `run_state.offer_market_proven` is false).** Read `/campaign-strategy`'s flip criterion per arm on pooled positive replies (PROVEN / DEAD / HOLD), never pooled across arms, and deactivate a dead arm. Report time-agreed replies per 1,000 first touches beside the positive-reply rate for every arm; among PROVEN arms, propose as winner the one that does not lose on it, and label a PROVEN arm whose time-agreed replies are zero or clearly lag the other arms as farming interest (judged against the other arms; the operator confirms): not scaled, routed to reshape the offer so it filters better, not killed. This read is not the Gate B maturity diagnosis, which is for coverage waves (operator-approved Aaron alignment, 2026-09-21).
+- **Scale review and next flight (operator directive 2026-09-22).** When the read proposes a winner, or every arm is switched off, run `/offer-test-slate` in scale-review mode before the coverage wave scales: it takes the results back to the client and records what running the winner at full volume takes, and the coverage wave is sized to that answer. When a cell frees up and a queued arm can send (`lead_magnet_client_ok` is `not_needed` or `yes`), propose **Start next offer flight** in Step 6.
 
 **Step 6 — Execute to paused drafts.**
 - **Launch-new** routes through `/campaign-strategy` (next-wave signal slices, `[FL]` ≥500-company floor (HARD RULE, operator directive 2026-07-12), offer + copy held constant) → the per-slice pipeline (`/lead-source-strategy` → `/email-waterfall` verify → `/list-quality-scorecard` → `/campaign-copywriting` → spintax → paused upload).
+- **Start next offer flight** routes through `/campaign-strategy`: the queued validation arms that can send run as offer-only cells against the current winner as control, fed from uncontacted TAM rows first and a lookalike expansion (`/tam-build`) when none remain, then the per-slice pipeline as in Launch-new. Re-render the client slate (`/offer-test-slate`) when a flight starts.
 - **Scale** runs the Scale sub-routine below.
 - **Diagnose-offer** routes to `/offer-intelligence` validation mode (Go / Iterate / Swap), and — because offer and copy are confounded under a constant-copy wave — also flags a copy re-check against `/campaign-copywriting` + `cold-email-copy-best-practices.md`.
 - **Reintroduce catch-alls** (per Step 3b) for every campaign whose domains have matured: auto-prepare the next controlled slice from `leads.catchall-holdback.csv` (or the paused catch-all leads) and **stage it for one-click approval** in the digest — re-rendered against the campaign's current copy, ready to add/resume on approval. Never auto-sent. Re-check bounce after each approved slice before staging the next. This is the discharge of the standing reintroduction obligation that every valid-only launch created.

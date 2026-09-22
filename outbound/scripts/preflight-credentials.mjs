@@ -5,17 +5,22 @@
 // api-cost-governance owns balance+spend. Reads scripts/credential-registry.json (single
 // source of truth) + the active client's run_state from profiles/<slug>/client-profile.yaml.
 //
-// Conditional rule (operator directive 2026-07-02): the primary research pass now defaults to the Claude
-// native /deep-research fan-out harness (research_routing = claude_deep_research, the default when unset),
-// which needs no third-party key. So a provider with "research_primary": true (Perplexity) stays warn-level
-// under the default and is ELEVATED to REQUIRED ONLY when run_state.research_routing is an explicit
-// third_party_ai opt-out (Perplexity is the chosen primary there, so its key becomes a credential hard-stop).
+// No-AI-API rule (operator directive 2026-09-22): the primary research pass is the Claude native
+// /deep-research harness, which needs no key, and no AI-provider key is checked or elevated here.
+// The one AI key left (OPENAI_API_KEY, sender headshots only) is asked for at infrastructure setup,
+// never at preflight; its registry trigger is one preflight never selects.
 //
-// Runtime: zero dependencies (native fetch + fs + JSON), Node 18+. Mirrors ai_router.mjs.
+// Runtime: zero dependencies (native fetch + fs + JSON), Node 18+. Same conventions as the other scripts in this folder.
 // Keys are NEVER printed — only present / MISSING / malformed, or a masked last-4 tail.
 //
 // Usage:
-//   node preflight-credentials.mjs [--profile <slug>] [--validate] [--stack <id>] [--platform <name>]
+//   node preflight-credentials.mjs [--profile <slug>] [--scope kickoff|infra|launch|full] [--validate] [--stack <id>] [--platform <name>]
+// Scope (operator decision 2026-09-22: offer work runs without infrastructure). Each infrastructure or
+// sending-platform key is required only at the step that uses it:
+//   kickoff (default): registrar / mailbox / platform slots may be blank or `deferred`; their keys only warn.
+//   infra:  before an infrastructure purchase; the registrar and mailbox slots and keys are required.
+//   launch: before sender verification and draft upload; the sending-platform slot and keys are required.
+//   full:   every slot and every `fail` key required (the pre-2026-09-22 behaviour).
 // Exit codes: 0 all REQUIRED present & well-formed (warnings allowed) | 1 a REQUIRED key is
 //   missing/malformed OR a required slot has no registry entry (registry gap) | 2 cannot scope
 //   (no profile / no run_state / registry missing or invalid).
@@ -29,7 +34,7 @@ const SCRIPTS_DIR = __dirname;
 const PROFILES_DIR = path.resolve(__dirname, '..', 'profiles');
 const REGISTRY_PATH = path.resolve(__dirname, 'credential-registry.json');
 
-// ── .env loader (scripts/.env, same pattern as ai_router.mjs) ────────────────
+// ── .env loader (scripts/.env, same pattern as the other scripts) ────────────────
 function loadEnvFile(envPath) {
   const out = {};
   if (!fs.existsSync(envPath)) return out;
@@ -68,7 +73,7 @@ function siblingFilesWithName(name) {
   return hits;
 }
 
-// ── arg parsing (same shape as ai_router.mjs) ────────────────────────────────
+// ── arg parsing (same shape as the other scripts) ────────────────────────────────
 function parseArgs(argv) {
   const a = {};
   for (let i = 0; i < argv.length; i++) {
@@ -83,6 +88,10 @@ function parseArgs(argv) {
   return a;
 }
 const args = parseArgs(process.argv.slice(2));
+const SCOPES = { kickoff: [], infra: ['registrar', 'mailbox_provider'], launch: ['sending_platform'], full: ['registrar', 'mailbox_provider', 'sending_platform'] };
+const SCOPE = (typeof args.scope === 'string' ? args.scope : 'kickoff').toLowerCase();
+if (!Object.prototype.hasOwnProperty.call(SCOPES, SCOPE)) die(`unknown --scope "${SCOPE}" (use ${Object.keys(SCOPES).join(' | ')}).`, 2);
+const REQUIRED_SLOTS = SCOPES[SCOPE];
 
 // ── graceful exit helpers ────────────────────────────────────────────────────
 function die(msg, code = 2) {
@@ -220,15 +229,18 @@ function resolveVar(primary, aliases) {
     { name: 'platform',  field: 'sending_platform', value: locked.sending_platform },
   ];
 
-  // Cannot scope an unlocked core slot. A blank registrar/mailbox/platform means the run is not lockable,
-  // so we must NOT return the exit-0 that tells the kickoff "proceed to spend" - exit 2 (same bucket as no
-  // run_state). In the real kickoff these are locked at Step 1, so this only guards a standalone spot-check
-  // on a half-filled profile. ("Other" is a valid, deliberate platform value - not blank - handled below.)
-  const unlockedSlots = slots.filter(s => isBlank(s.value)).map(s => s.field);
+  // A blank or `deferred` slot stops the check (exit 2) only when this scope needs it: an infrastructure
+  // purchase needs the registrar + mailbox, a draft upload needs the sending platform. At the default
+  // kickoff scope nothing here is needed, so offer research, lists and copy are never blocked by an empty
+  // infrastructure slot (operator decision 2026-09-22). ("Other" is a valid platform value - not blank.)
+  const isDeferred = v => isBlank(v) || String(v).toLowerCase() === 'deferred';
+  const unlockedSlots = slots.filter(s => isDeferred(s.value) && REQUIRED_SLOTS.includes(s.field)).map(s => s.field);
   if (unlockedSlots.length) {
-    die(`run_state has unlocked core slot(s): ${unlockedSlots.join(', ')}. Lock the full stack + platform in `
-      + `${slug}'s client-profile.yaml before the preflight can scope the run.`, 2);
+    die(`run_state has unlocked core slot(s) that a ${SCOPE}-scope check needs: ${unlockedSlots.join(', ')}. Lock them in `
+      + `${slug}'s client-profile.yaml (run /stack-setup) before this step.`, 2);
   }
+  const deferredSlots = slots.filter(s => isDeferred(s.value) && !REQUIRED_SLOTS.includes(s.field)).map(s => s.field);
+  const scopeNotes = [];
 
   const triggerFields = p => (p.trigger && (p.trigger.fields || (p.trigger.field ? [p.trigger.field] : []))) || [];
   const matchesSlot = (p, slot) => !p.slot_optional && triggerFields(p).includes(slot.field) && p.trigger.equals === slot.value;
@@ -236,10 +248,13 @@ function resolveVar(primary, aliases) {
   // FAIL-LOUD: a non-"Other" required-slot value with no covering registry entry = registry drift.
   const registryGaps = [];
   for (const slot of slots) {
-    if (isBlank(slot.value)) continue;
+    if (isDeferred(slot.value)) continue;
     if (slot.name === 'platform' && String(slot.value).toLowerCase() === 'other') continue; // unmanaged escape hatch
     const covered = Object.values(PROVIDERS).some(p => matchesSlot(p, slot));
-    if (!covered) registryGaps.push({ slot: slot.name, value: slot.value });
+    if (!covered) {
+      if (REQUIRED_SLOTS.includes(slot.field)) registryGaps.push({ slot: slot.name, value: slot.value });
+      else scopeNotes.push(`registry has no entry for ${slot.name}="${slot.value}"; not needed at ${SCOPE} scope, fix it before the step that uses it`);
+    }
   }
 
   // Build the working provider set for this run.
@@ -257,11 +272,13 @@ function resolveVar(primary, aliases) {
     }
     if (!include) continue;
     let kind = (p.enforcement === 'fail') ? 'required' : 'optional';
-    // Conditional elevation: the third-party research-primary provider (Perplexity) is REQUIRED ONLY when
-    // the operator explicitly opted into third_party_ai routing (Perplexity is the chosen primary then).
-    // Under the default claude_deep_research the primary is the native /deep-research harness, which needs
-    // no third-party key, so Perplexity stays warn-level (optional gap-fill).
-    if (p.research_primary && locked.research_routing === 'third_party_ai') { kind = 'required'; reasonTag = 'research primary (third_party_ai opt-out)'; }
+    // Scope downgrade: a key tied to a slot this scope does not need is warn-only until its own step.
+    const slotFieldsOfP = triggerFields(p);
+    if (kind === 'required' && slotFieldsOfP.length && !slotFieldsOfP.some(f => REQUIRED_SLOTS.includes(f))) {
+      kind = 'optional';
+      reasonTag = `${reasonTag}, needed later (${slotFieldsOfP.includes('sending_platform') ? 'launch' : 'infra'} scope)`;
+    }
+    // (The third_party_ai elevation was removed by the no-AI-API rule, 2026-09-22: no research key is ever required.)
     selected.push({ id, p, kind, reasonTag });
   }
 
@@ -270,6 +287,8 @@ function resolveVar(primary, aliases) {
   const optionalResults = [];
   const missingRequired = [];
   const warnings = [];
+  for (const f of deferredSlots) warnings.push(`${f} is deferred; it blocks only the step that uses it`);
+  warnings.push(...scopeNotes);
 
   // "Other" is a valid sending_platform but has no managed provider - it selects nothing and would otherwise
   // pass invisibly. Surface it loudly (stays exit 0; the operator owns that platform's credentials).
@@ -350,8 +369,10 @@ function resolveVar(primary, aliases) {
   console.log('');
   console.log('══ Credential Preflight ─────────────────────────────────────────');
   console.log(`   profile      : ${slug}`);
+  console.log(`   scope        : ${SCOPE}` + (REQUIRED_SLOTS.length ? ` (requires ${REQUIRED_SLOTS.join(', ')})` : ' (infrastructure and platform keys warn only)'));
+  if (deferredSlots.length) console.log(`   deferred     : ${deferredSlots.join(', ')} (blocks only the step that uses them)`);
   console.log(`   locked path  : ${locked.infrastructure_stack || '(stack?)'} | registrar=${locked.registrar || '?'} · mailbox=${locked.mailbox_provider || '?'} · platform=${locked.sending_platform || '?'}`);
-  console.log(`   research     : routing=${locked.research_routing} → primary ${locked.research_routing === 'third_party_ai' ? 'Perplexity (REQUIRED)' : 'Claude /deep-research (native, no 3rd-party key); Perplexity optional gap-fill'}`);
+  console.log(`   research     : routing=${locked.research_routing} → primary Claude /deep-research (native, no key). No AI-provider keys are checked (no-AI-API rule, 2026-09-22)`);
   console.log(`   env loaded   : scripts/.env ${ENV_FILE_PRESENT ? '(present)' : '(absent — using process.env only)'}`);
   if (hasGap) for (const g of registryGaps) console.log(`   ⛔ REGISTRY GAP: locked ${g.slot}="${g.value}" has no entry in credential-registry.json (add it or fix run_state).`);
 
@@ -393,6 +414,8 @@ function resolveVar(primary, aliases) {
     profile: slug,
     checked_at: new Date().toISOString(),
     locked_path: locked,
+    scope: SCOPE,
+    deferred_slots: deferredSlots,
     verdict,
     exit_code: exitCode,
     registry_gaps: registryGaps,

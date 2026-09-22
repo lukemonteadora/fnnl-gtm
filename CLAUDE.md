@@ -1,6 +1,6 @@
 # FNNL Agency GTM System: Repo Conventions (Claude Code)
 
-This workspace runs cold outbound for **FNNL Agency** and its clients. It is a fresh build: no tech stack is assumed, no clients are configured, and nothing carried over from any previous operator's personal tooling.
+This workspace runs cold outbound for **FNNL Agency** and its clients. It was a fresh build: no tech stack was assumed, and nothing carried over from any previous operator's personal tooling. FNNL's own stack is now recorded (see section 1).
 
 ---
 
@@ -8,11 +8,22 @@ This workspace runs cold outbound for **FNNL Agency** and its clients. It is a f
 
 Every skill in this repo is written against a **capability role** ("the sending platform", "the contact enrichment tool", "the email verifier"), never against a brand name.
 
-**The single source of truth for which tool fills which role is `outbound/stack-contract.yaml`.** It ships empty.
+**The single source of truth for which tool fills which role is `outbound/stack-contract.yaml`.** It shipped empty and now records FNNL's choices.
+
+### FNNL's approved stack: six tools, and they govern every future choice (operator directive 2026-09-22)
+
+FNNL runs on **GetLeads, AI Ark, Prospeo, MillionVerifier, Clay and PlusVibe**. The contract's `approved_stack` block maps each one to its slots and holds the rule, which in short is:
+
+- **Six first, always.** Meet every capability need from one of the six before considering anything else, and check each tool's full surface (its MCP tool list and API docs) before declaring a gap.
+- **Nothing outside the six without explicit operator approval,** recorded in `approved_stack.approved_exceptions` before the tool is used. A tool is not approved because a worked example, the credential registry, `_vendor-library/`, or a connected MCP server names it.
+- **Label out-of-stack ideas as "OUT OF STACK, needs operator approval",** never as the default path.
+- **Approved is not live.** All six are `chosen` until one real call against FNNL's own account succeeds.
+
+Tools recorded earlier but not in the six (Dynadot, ScaledMail, HeyReach) sit at status `held`: treat them like `not_chosen`. Parallel.ai, once held for research and web access, is retired along with those slots by the no-AI-API rule (section 7). MillionVerifier replaced LeadMagic as the email verifier of record.
 
 The rules that follow from that:
 
-- **Never assume a vendor.** If a skill needs a tool and the matching slot in the contract is empty, **stop and route the operator to `/stack-setup`**. Do not pick a plausible tool, do not fall back to whatever a worked example mentions, and do not infer the stack from a name you find in `_vendor-library/`.
+- **Never assume a vendor.** If a skill needs a tool and the matching slot in the contract is empty, **stop and route the operator to `/stack-setup`**. Stop only when the step being run actually uses that tool: an empty infrastructure slot (registrar, mailbox provider) or an unkeyed sending platform never blocks intake, ICP, offer research, the offer test slate, lists, copy or the paused draft; it blocks an infrastructure purchase or pressing Start (operator decision 2026-09-22). `deferred` in a `run_state` field means the same as empty: the step that actually needs that tool stops there and routes to `/stack-setup`. Do not pick a plausible tool, do not fall back to whatever a worked example mentions, and do not infer the stack from a name you find in `_vendor-library/`. (The one exception: slots at status `retired`, the AI and web slots retired by the no-AI-API rule in section 7. They are not gaps; Claude Code does those jobs natively, and a skill never routes to `/stack-setup` to fill them.)
 - **Never report a tool as working because it is named.** A tool in the contract with status `chosen` has not been proven. Only `live` means a real call against FNNL's own account has succeeded. Treat `chosen` as "not yet usable" when deciding whether to tell the operator something can be automated.
 - **Worked examples are not configuration.** Skills contain illustrative examples that may name tools or made-up client names. They teach the shape of a step. They never declare FNNL's stack.
 - **`_vendor-library/` is inert.** It holds complete integrations for specific tools, deliberately kept outside `.claude/skills/` so nothing loads. A pack becomes real only when `/stack-setup` activates it. Its presence is not permission to use it.
@@ -39,7 +50,7 @@ The workspace contract is the default. Each client's own profile at `outbound/pr
 
 The machine-level Claude config at `~/.claude/CLAUDE.md` contains cold-outbound doctrine written for a **different company's stack**. Most visibly, it mandates an "A-Leads-first, exhaust-then-gap-fill" routing rule as a hard rule, and names specific vendors as the signal architecture.
 
-**Inside this workspace, that vendor-specific doctrine does not apply.** FNNL Agency has not chosen a contact-data provider, so a rule that mandates one cannot be followed here.
+**Inside this workspace, that vendor-specific doctrine does not apply.** FNNL's contact-data layer is AI Ark, with Prospeo as the gap-fill (see the contract), not the vendor that doctrine mandates, so a rule that mandates it cannot be followed here.
 
 What survives from it, because it is stack-independent and genuinely good practice:
 
@@ -83,7 +94,8 @@ The read-first / write-after activity-log protocol itself still applies in full.
 
 | Path | Contents |
 |---|---|
-| `.claude/skills/` | The 57 active skills (53 owned here, plus the 4 mirrored persona-consult skills). Claude Code loads these live. |
+| `.claude/skills/` | The 60 active skills (56 owned here, plus the 4 mirrored persona-consult skills). Claude Code loads these live. |
+| `.claude/settings.json`, `.claude/hooks/` | Project hooks. Today one: `clay-credit-guard.mjs`, which enforces the zero-Clay-credit rule (section 7). |
 | `outbound/` | Everything the skills read and write. Detailed below. |
 | `_vendor-library/` | Parked tool integrations. **Nothing here loads**, by construction. |
 | `library/` | Third-party PDFs and DOCX for human reading. No skill reads this. |
@@ -124,10 +136,10 @@ For any client work in this workspace:
 
 ## 5. Getting started in a fresh workspace
 
-Run these in order. Each one refuses to guess what the previous one should have established.
+Run these in order. Each one refuses to guess what the previous one should have established, but none waits on infrastructure it does not use: offer research, lists and copy can start while the domain and mailbox slots are still deferred, and those slots block only an infrastructure purchase or pressing Start (operator decision 2026-09-22).
 
 1. **`/stack-setup`**: define FNNL's tools and process. Everything else depends on this.
-2. **`/preflight-credentials`**: confirm the keys for the chosen stack actually resolve.
+2. **`/preflight-credentials`**: confirm the keys for the chosen stack actually resolve. Its default kickoff scope only warns on infrastructure and sending-platform keys; `--scope infra` and `--scope launch` enforce them at their own steps.
 3. **`/cold-email-kickoff`**: onboard the first client.
 4. **`/continue-client`**: resume a client mid-flight.
 
@@ -167,7 +179,7 @@ Fuller guidance and a plain-English glossary live in `outbound/reference/output-
 
 ### Decisions
 
-At any material decision point (strategy, cost, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, risk exposure): **name the realistic options, give a recommendation with a reason, say briefly why the alternatives are weaker, then ask or proceed.** Ask when the choice affects spend, live systems, provider changes, compliance risk, or client-facing deliverables. Proceed on low-risk reversible choices. Never silently pick a material path.
+At any material decision point (strategy, cost, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, risk exposure): **name the realistic options, give a recommendation with a reason, say briefly why the alternatives are weaker, then ask or proceed.** Ask when the choice affects spend beyond an approved budget (a paid data step inside the standing $100 client budget is already approved; see Spend below), live systems, provider changes, compliance risk, or client-facing deliverables. Proceed on low-risk reversible choices. Never silently pick a material path.
 
 Use native Interactive Inputs where the runtime supports them, with the recommended option first and a custom-answer option last.
 
@@ -185,7 +197,34 @@ When work splits into two or more pieces with no shared state and no ordering de
 
 ### Spend
 
-Anything that costs money routes through `/api-cost-governance` and respects `run_state.spend_ceiling_usd`. The workspace default is a zero ceiling, meaning confirm before every paid call. Raise it only on an explicit instruction, never silently.
+Anything that costs money routes through `/api-cost-governance` and respects `run_state.spend_ceiling_usd`. **Every client run gets a standing budget of $100 (operator directive 2026-09-22), written automatically and never asked at onboarding, intake, kickoff or run start.** Paid data steps inside it run without a confirmation, and a purchase that would push the run over it stops and asks. Each new wave starts a fresh $100. Mailbox infrastructure (domains, mailbox capacity) is outside the budget and still needs the operator's approval of the setup total. Change a client's figure only on an explicit operator instruction, never silently. There is no separate AI research budget any more: research runs on Claude Code and costs nothing here.
+
+### List workbench (Clay): zero Clay credits, build lead lists in it (HARD RULE, operator directive 2026-09-22)
+
+**Never run anything in Clay that consumes Clay credits.** Clay is where FNNL's lead lists are built and watched. It is never a data vendor paid through Clay's own balance. The full rule lives in the stack contract at `lead_data.list_workbench.credit_policy_rule`; in short:
+
+- **Build lead lists in Clay by default.** A list lives in a Clay table so the operator watches it fill live, instead of a CSV assembled blind in Claude Code. `/tam-build`, `/lead-scoring` and `/email-waterfall` push each stage's rows into the client's tables by inbound webhook (`scripts/workbench_push.mjs`, protocol at `lead_data.list_workbench.build_protocol`). The local CSV stays the working copy the skills read, because Clay's API can't read a table back below its top plan tier; edits made in the table come back by manual export before upload. Build CSV-only while the client's table and webhook aren't ready, and say so.
+- **Zero Clay data credits, ever.** No Clay-native enrichments on Clay's account, no Clay waterfalls or AI columns on Clay credits, and no Clay MCP search, enrich or subroutine tools. A raised spend ceiling, `auto_execute`, or an approved exception never authorizes Clay credits. Only a new explicit operator directive changes this rule.
+- **Every tool inside Clay runs on FNNL's own API key** (for example GetLeads or Prospeo). A tool outside the approved six, such as BlitzAPI, still needs operator approval first. If a tool can't be keyed inside Clay, call it outside Clay with FNNL's key and push the rows in by webhook. Never fall back to Clay credits when a key is missing or failing: stop and report.
+- **Unproven means denied.** Anything in Clay whose billing isn't verified as zero-credit is treated as credit-consuming. Test a keyed column on 1 to 5 rows and read the credit balance before and after before running it on a full table.
+- **Keyed columns still use Clay "Actions"** (the plan's platform-usage allowance, a separate meter from credits). They're allowed but count as spend under `/api-cost-governance`. Prefer the zero-meter path when it gives the same result: enrich outside Clay with FNNL's keys and push rows in through the table's inbound webhook, which costs nothing.
+
+- **Enforced in code for Claude Code.** The project hook `.claude/hooks/clay-credit-guard.mjs` (wired in `.claude/settings.json`) blocks every Clay connector tool except the four free read calls (`get-current-workspace`, `list_subroutines`, `get-task`, `get-task-context`), and blocks the known credit-spending tool names on any server. Never disable or loosen it to get a result. If Clay reconnects under a new connector id, add the id to `CLAY_SERVER_IDS` in the hook. The hook cannot see columns run inside the Clay web app, so the 1-to-5-row credit test above still applies there.
+
+Skills refer to this as the zero-workbench-credit rule and name the role ("the list workbench"), never the brand.
+
+### No AI API calls (operator directive 2026-09-22)
+
+**The only AI in this workspace is Claude Code itself:** the running session, its sub-agents (the Task/Agent tool), the `/deep-research` harness, and its built-in WebSearch and WebFetch. No skill calls a third-party AI API, and no Claude API call is made with a key. The contract's research, bulk-classification, copywriting, web search and web crawl slots are `retired`, not gaps, so never send the operator to `/stack-setup` to fill them. `/ai-model-routing` holds the full doctrine; in short:
+
+- **Research** is a logged `/deep-research` primary pass. Thin spots get a second targeted `/deep-research` or WebSearch/WebFetch pass, never another provider. `run_state.research_routing` has one valid value, `claude_deep_research`.
+- **Bulk classification and crunching** run as Claude sub-agents fanned out per `/personalization-subagent-pattern`. Deterministic filters stay in plain code.
+- **Critique and second opinions** (`/roast`, `/consultant`) are differentiated Claude sub-agent personas, plus the advisor reviewer when available.
+- **Final copy** is written in the native session (a clean-packet sub-agent is fine). There is no API copy path and no fallback branch.
+- **No AI columns in the list workbench, on any key,** including FNNL's own. Reasoning happens in Claude Code and the result is pushed in by webhook.
+- **Live X reads no longer exist.** Use WebSearch where it returns public posts and log the gap. **Reddit is read only by operator paste** (text plus thread URL); if nothing was pasted, Reddit is logged as unread.
+- **The one exception is sender headshots:** OpenAI, headshots only, asked for at infrastructure setup (`ai.image_generation`, recorded in `approved_stack.approved_exceptions`). Its key is never requested or flagged as missing at onboarding, intake, kickoff, preflight, stack setup or workspace creation.
+- **No other AI key** belongs in `scripts/.env.example` or the credential registry. Claude Code usage is not metered API spend here, so `/api-cost-governance` previews only data-vendor calls and the headshot call.
 
 ### Secrets
 

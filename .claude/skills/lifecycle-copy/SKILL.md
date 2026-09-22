@@ -49,7 +49,7 @@ Multiple may be selected. Write each requested file independently.
 
 When this skill reaches a material fork, name the realistic options, recommend the strongest path, and explain why the main alternatives are weaker before committing.
 
-Ask before choices that affect spend, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
+Ask before choices that affect spend beyond an approved budget, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
 
 ## Inputs
 
@@ -72,7 +72,7 @@ Every subject line, body, and CTA this skill writes must pass, in order, before 
 2. `cold-email-copy-best-practices.md` — writing-quality and CTA standards
 3. Aaron's rejection bank (`aaron-examples.md` §8, in `/ask-aaron`): check every draft against it, then run his pre-send test, where "if I received that email, I definitely would not be answering it" must be false (doctrine §9). (Operator-approved Aaron alignment, 2026-09-21.)
 
-Also enforce the **Confirmed Deliverable Gate**: every CTA must map to a real, operator-producible deliverable. Hard-stop on unconfirmed audits, scorecards, benchmarks, ROI reports, or trials.
+Also enforce the **Confirmed Deliverable Gate**: every CTA must map to a real deliverable with a named honorer for every yes: the agency by default, the client only with `lead_magnet_client_ok: yes` (`/campaign-copywriting` Confirmed Deliverable Gate). Hard-stop only on a deliverable nobody will honor, or one whose data, method and delivery path are not known yet.
 
 If any line fails QA, rewrite it until it passes. Do not write a file containing failed copy. This skill is not allowed to output unreviewed copy. After writing each file, re-scan it for banned tokens, em dashes, double hyphens, and banned variable roots, exactly as `/campaign-copywriting` does after serializing `variants.yaml`.
 

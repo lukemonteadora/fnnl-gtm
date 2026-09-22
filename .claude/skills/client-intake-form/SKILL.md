@@ -11,7 +11,7 @@ Single-session intake that feeds every downstream cold outbound skill. Run this 
 
 When this skill reaches a material fork, name the realistic options, recommend the strongest path, and explain why the main alternatives are weaker before committing.
 
-Ask before choices that affect spend, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
+Ask before choices that affect spend beyond an approved budget, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
 
 When asking the user, use the Claude Desktop native Interactive Inputs / Choice Prompts pattern from /clarification-first: native interface first, recommended option first, short choices, and Custom answer last when a custom answer is plausible.
 
@@ -51,7 +51,7 @@ Before presenting any questions, run the following discovery pass and build a pr
 
 2. **Existing profile:** Check `profiles/*/client-profile.yaml` for prior run_state, ICP data, and infrastructure values. Use any found values as pre-fill suggestions.
 
-3. **Stack contract:** Read `<outbound>/stack-contract.yaml`. It declares the agency's chosen tool for each capability slot (registrar, mailbox provider, sending platform, email verification, lead sources), and it is the only place a vendor name for this form may come from. Pre-fill `infrastructure_stack`, `sending_platform`, and any platform-specific field from it, labelled `source: stack contract`. No slot has a default tool, so a slot the contract leaves empty stays blank here and is flagged for `/stack-setup`, never guessed.
+3. **Stack contract:** Read `<outbound>/stack-contract.yaml`. It declares the agency's chosen tool for each capability slot (registrar, mailbox provider, sending platform, email verification, lead sources), and it is the only place a vendor name for this form may come from. Pre-fill `infrastructure_stack`, `sending_platform`, and any platform-specific field from it, labelled `source: stack contract`. No slot has a default tool, so a slot the contract leaves empty is written as `deferred` here (flagged for `/stack-setup` before the step that uses it), never guessed.
 
 4. **Environment file:** Read `.env` and `.env.local` from the workspace root. A key found there is evidence that a credential exists, not a stack decision. Map each key to the capability slot it would serve (sending platform, registrar, mailbox provider, self-hosted instance URL, email verification, lead source) and check it against the stack contract. A key matching a provider the contract declares supports `credentials_ready` for that slot; a key for a provider the contract does not declare is a mismatch to surface, never a vendor to pre-fill.
 
@@ -62,7 +62,7 @@ Before presenting any questions, run the following discovery pass and build a pr
    - `industries_in` — from homepage imagery, case study industry labels, or category language
    - `geography` — from pricing currency, footer timezone, case study client locations, "we serve X" language
    - `offer_client_suggested` — from services/product pages, "what we offer" sections
-   - `deliverable_constraints` — from what the site explicitly promises (e.g., "audit in 48 hours," "live consultation")
+   - `deliverable_constraints`: only a legal or truth limit the site states outright (e.g., "we never guarantee ROI"). Do not pre-fill operational limits from marketing copy: a turnaround the site advertises is not a ceiling on what the test may offer (operator directive 2026-09-22).
    - `tone` — from homepage copy voice (formal/casual, data-heavy/story-driven, direct/nurturing)
 
 **Output of this pass:** A pre-fill map with field names, suggested values, and source labels. Use this to populate the form template below.
@@ -85,14 +85,14 @@ Tell the user: "Here is your intake form with fields I've pre-filled from your e
 
 ## Infrastructure
 
-infrastructure_stack: [REQUIRED]
-# From the stack contract: its declared registrar and mailbox provider, lowercase, joined with an underscore (<registrar>_<mailbox_provider>).
+infrastructure_stack: [REQUIRED, or `deferred`]
+# From the stack contract: its declared registrar and mailbox provider, lowercase, joined with an underscore (<registrar>_<mailbox_provider>). Write `deferred` when either slot is empty.
 # A provider that bundles its own domain registration fills both halves with itself.
-# No default. If either contract slot is empty, leave this blank and run /stack-setup.
+# No default. If either contract slot is empty, write `deferred` and carry on: offer research, lists, copy and the paused draft do not need infrastructure. It becomes a stop only at an infrastructure purchase (operator decision 2026-09-22).
 
 sending_platform: [REQUIRED]
 # From the stack contract's sending-platform slot. No default, and never inferred from a key in .env.
-# If that slot is empty, leave this blank and run /stack-setup.
+# If that slot is empty, write `deferred`; it becomes a stop only at sender verification and draft upload (operator decision 2026-09-22).
 
 emailbison_instance_url: [N/A or URL]
 # Required only when the locked sending platform is self-hosted and needs an instance URL
@@ -171,8 +171,8 @@ offer_client_suggested: [leave blank if none]
 # What front-end offer or lead magnet the client suggested, if any. This becomes Candidate A in brainstorm — not the locked answer.
 # source: inferred from services page — confirm or correct
 
-deliverable_constraints: [REQUIRED]
-# What you legally or operationally cannot promise. E.g.: "cannot guarantee ROI," "audit requires 48-hour turnaround, no exceptions"
+deliverable_constraints: [OPTIONAL]
+# What you legally cannot promise (a hard limit on claims). Operational notes are optional labels for the post-test scale review, never an intake stop and never a filter on which offers get tested (operator directive 2026-09-22). E.g.: "cannot guarantee ROI," "audit requires 48-hour turnaround, no exceptions"
 
 tone: [REQUIRED]
 # Desired email tone. E.g.: "direct, no-fluff" or "warm and conversational" or "data-driven, professional"
@@ -216,14 +216,13 @@ execution_mode: review_gates
 # auto_execute = OPT-IN. System picks top-ranked recommendations at each gate without pausing.
 #   Only set this if you explicitly want hands-off auto-selection.
 
-spend_ceiling_usd: 0
-# 0 (default) = always confirm before ANY spend (domains, inboxes, paid credits).
-# Set a number to auto-approve infrastructure purchases under that amount without confirmation.
-# Auto-approve is opt-in: leaving this at 0 means nothing spends money silently.
-
 campaign_approval_brief_needed: no
 # yes = generate a client-facing campaign approval brief before list build
 # no = skip the brief and proceed directly to list build
+
+offer_slate_approval: optional
+# optional (default) = the client sees the offer test plan (/offer-test-slate) and can veto any offer, but testing never waits on them
+# required = wait for the client's answer before list build (a regulated client, or one who asks to sign off)
 
 mailbox_mix: auto_recommend
 # auto_recommend = derive Google Workspace vs Microsoft 365 split from ICP headcount data
@@ -240,7 +239,7 @@ When the user returns the completed form, run validation before writing any file
 
 **Hard stops:**
 - `infrastructure_stack` naming a registrar + mailbox-provider pairing the stack contract does not declare valid: reject, give the contract's stated reason, and route back to `/stack-setup` instead of substituting a provider.
-- `infrastructure_stack` or `sending_platform` left blank because the matching contract slot is empty: stop and run `/stack-setup` to declare it. Never fill a slot with a vendor the operator did not choose, whatever the execution mode.
+- `infrastructure_stack` or `sending_platform` empty because the matching contract slot is empty: write `deferred`, warn once, and continue. Intake never stops on it (operator decision 2026-09-22); it becomes a stop only at the step that uses the tool (an infrastructure purchase, or sender verification and draft upload). Never fill a slot with a vendor the operator did not choose, whatever the execution mode.
 - A locked sending platform that needs a self-hosted instance URL, with no `emailbison_instance_url`: stop and request the URL.
 - `offer_path = existing_validated` with no `offer_validation_evidence`: stop. A form answer alone is not evidence. Route to `offer_path: new` instead.
 - `geography` too vague (e.g., "international," "global," "anywhere"): stop. Explain that geography must be specific enough for source planning. Ask for at least a list of target countries or regions.
@@ -250,7 +249,6 @@ When the user returns the completed form, run validation before writing any file
 - `headcount_min` and `headcount_max` span more than 5000 employees: note this is a wide range and `/lead-source-strategy` may recommend splitting into sub-campaigns.
 - `geography` includes markets known to have weak database coverage (e.g., Southeast Asia, sub-Saharan Africa): note that `/lead-source-strategy` will need to research local sources carefully.
 - `credentials_ready = partial` or `no`: warn that setup phases will stall without credentials.
-- `spend_ceiling_usd > 0`: the user has opted into auto-approving spend up to that amount. Confirm once that they intend to let purchases under that ceiling proceed without per-purchase confirmation.
 - `execution_mode = auto_execute`: the user has opted into hands-off auto-selection of offer and campaign. Confirm once that they intend the system to choose without pausing at those gates.
 - All three proof fields (`referenceable_clients`, `case_studies`, `hard_numbers`) blank: warn that the proof-asset gate will fire at strategy/copy time and a proof-asset-request form (proof-asset-request.md) will go to the client to collect real evidence before copy that needs it is written. Collecting it now avoids that round-trip. (These three fields plus `triggers` are the **first self-gather source** for `/social-proof-bank`, which builds the full copy-ready Social Proof + Trigger Bank later in the flow — anything captured here is one less thing that skill has to ask the client for.) The named case-study/customer companies (with their domains, grouped by sub-industry / what-they-sell) are also the lookalike **seeds** for `/tam-build`'s proven motion, and the result/timeframe/named-client facts are exactly what `/social-proof-bank`'s **Seed-and-Proof Readiness** gate checks before a proven-motion group's TAM is built, so capturing them up front is worth the extra minute.
 
@@ -307,12 +305,14 @@ proof:
   naming_constraints: <value or null>
 run_state:
   execution_mode: <auto_execute | review_gates>
-  spend_ceiling_usd: <value>
+  spend_ceiling_usd: 100   # the standing budget per client run, never asked (operator directive 2026-09-22)
   campaign_approval_brief_needed: <yes | no>
+  offer_slate_approval: <optional | required>   # read by /offer-test-slate; default optional
   infrastructure_stack: <value>
   registrar: <derived from infrastructure_stack>
   mailbox_provider: <derived from infrastructure_stack>
   sending_platform: <value>
+  list_workbench: <from stack contract lead_data.list_workbench, or null>
   emailbison_instance_url: <value or null>
   emailbison_api_token_ready: <value or null>
   credentials_ready: <yes | partial | no>
@@ -331,6 +331,8 @@ run_state:
     copy_stage: not_started
     upload_stage: not_started
 ```
+
+`spend_ceiling_usd` is always the standing `100` (operator directive 2026-09-22). The form never asks about spend. Paid data steps inside that budget run without a confirmation, and a purchase that would push the run over it stops to ask (`/autonomous-execution-policy` section 2). Mailbox infrastructure is outside the budget and keeps its own purchase approval at setup. A different figure is written only when the operator names one for this client.
 
 Derive `registrar` and `mailbox_provider` from `infrastructure_stack` by splitting the composite on its underscore: the first half is the registrar, the second is the mailbox provider, and a provider that bundles its own domain registration appears as both. Both halves must match the pairing the stack contract declares. If they do not, stop rather than writing a stack the contract never declared.
 
@@ -356,7 +358,7 @@ Intake form saved to: profiles/<business-slug>/intake-form.md
 Client profile saved to: profiles/<business-slug>/client-profile.yaml
 
 Execution mode: <auto_execute | review_gates>
-Spend ceiling: $<value> (or: always confirm)
+Spend budget: $100 per client run (standing, never asked)
 
 Ready to launch. Run /cold-email-kickoff.
 It will read this intake form and skip the interview phase.
@@ -366,12 +368,12 @@ It will read this intake form and skip the interview phase.
 
 - `/cold-email-kickoff` — checks for `intake-form.md` at Step 1. If found, reads it, skips infrastructure questions, sets `execution_mode` from form. This is the single entry-point orchestrator.
 - `/icp-onboarding` — checks for `icp.source: intake_form` in `client-profile.yaml`. If found, skips all interview questions and returns to caller.
-- `/lead-magnet-brainstorm` — checks `run_state.execution_mode`. If `auto_execute`, picks top-scored candidate without pausing.
+- `/lead-magnet-brainstorm` — checks `run_state.execution_mode`. If `auto_execute`, locks the test set (the top-ranked sendable offer as the primary plus every qualifying candidate as ranked validation arms) without pausing, then `/offer-test-slate` shows it to the client (approval optional, per `offer_slate_approval`).
 - `/campaign-strategy` — checks `run_state.execution_mode`. If `auto_execute`, selects top-recommended campaign without pausing.
 
 ## Related skills
 
-- `/stack-setup`: declares FNNL Agency's tool for each capability slot in `<outbound>/stack-contract.yaml`. Run it before this form when any infrastructure or platform slot is still empty.
+- `/stack-setup`: declares FNNL Agency's tool for each capability slot in `<outbound>/stack-contract.yaml`. Run it before the step that needs an empty slot (an infrastructure purchase, or sender verification and draft upload); intake and offer work do not wait on it.
 - `/cold-email-kickoff` — single entry-point orchestrator, reads this form
 - `/icp-onboarding` — skipped when `icp.source: intake_form` is set
 - `/mailbox-mix-strategy` — still runs during setup if `mailbox_mix: auto_recommend`

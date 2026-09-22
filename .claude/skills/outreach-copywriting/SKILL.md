@@ -28,7 +28,7 @@ Confirm or derive (Aaron asks for the same kind of inputs before he writes: the 
 - the optional P.S. job, if any (one of four, B1): the relevance line demoted from line one, one near-twin proof point, a casual risk-elimination or reason-it's-free line, or the deliverable's turnaround and the prospect's one small act
 - optional true proof claim, on file
 
-Do not draft around a missing or unfulfillable deliverable. Fix the offer first (doctrine §2: the offer before the copy).
+Do not draft around a missing deliverable, or one with no named honorer for this arm's test yeses (the agency by default, the client only with `lead_magnet_client_ok: yes`). Fix the offer first (doctrine §2: the offer before the copy).
 
 ## Drafting Rule
 
