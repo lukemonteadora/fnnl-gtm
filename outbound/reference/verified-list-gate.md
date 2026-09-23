@@ -1,15 +1,15 @@
 # Verified-List Gate (R1 + R2)
 
-Canonical definition of the gate that enforces the two hard rules of the cold-outbound flow. This file is the **single source of truth** — skills reference it; they never re-derive the conditions.
+Canonical definition of the gate that enforces the two hard rules of the cold-outbound flow. This file is the **single source of truth**. Skills reference it; they never re-derive the conditions.
 
-- **R1 — The lead list drives the message.** Copy and campaign angles are built FROM the real, verified data in the slice. Campaigns are developed around signals that actually exist in the list — never invented first and then forced onto a list afterward.
-- **R2 — No copy, no finalized campaign, before a verified lead-list slice + a locked strategy exist.**
+- **R1: The lead list drives the message.** Copy and campaign angles are built FROM the real, verified data in the slice. Campaigns are developed around signals that actually exist in the list, never invented first and then forced onto a list afterward.
+- **R2: No copy, no finalized campaign, before a verified lead-list slice + a locked strategy exist.**
 
 ## The Gate
 
 A skill that does any of the following MUST NOT proceed past its first generative output until **all three** conditions below hold for **this campaign slice**:
 
-- (a) emits sendable copy — subject lines, email bodies, sequences, spintax, lifecycle / follow-up copy; or
+- (a) emits sendable copy (subject lines, email bodies, sequences, spintax, lifecycle / follow-up copy); or
 - (b) finalizes or packages a campaign object for upload; or
 - (c) renders finalized campaign copy into a client-facing deliverable.
 
@@ -23,19 +23,19 @@ A skill that does any of the following MUST NOT proceed past its first generativ
 
 ## On failure
 
-STOP. Name the specific condition that failed and route to its producer — do not generate copy anyway, and do not treat a DRAFT/PAUSED upload as a substitute:
+STOP. Name the specific condition that failed and route to its producer. Do not generate copy anyway, and do not treat a DRAFT/PAUSED upload as a substitute:
 
 - No verified slice → `/email-waterfall`, then `/list-quality-scorecard`.
 - Grade below B → fix the source/list (do not send a thin list).
 - Strategy not locked → `/campaign-strategy` (with `/lead-source-strategy` Lead Source Plan Mode and `/offer-intelligence` / `/lead-magnet-brainstorm`).
 
-Autonomy never relaxes this gate. Under `/autonomous-execution-policy` `auto_execute`, this is a **hard stop** — the same class as spend-over-ceiling, live send, and credentials.
+Autonomy never relaxes this gate. Under `/autonomous-execution-policy` `auto_execute`, this is a **hard stop**, the same class as spend-over-ceiling, live send, and credentials.
 
 ## Exceptions (inherit the gate; do not re-check)
 
 - **Post-reply / list-agnostic copy**, e.g. `interested-reply` and `pre-call` nurture in `/lifecycle-copy`. They are written before Start (Gate D, reply readiness; Aaron process alignment, operator directive 2026-09-22) but only ever sent after a reply or a booking, so they assert the **parent** slice was gate-built, not a fresh `leads.verified.csv` check. A fresh check here would be a false block.
-- **Pre-enrichment planning** — `/campaign-approval-brief` is intentionally a *pre-list-build, pre-enrichment* gate and is allowed to run before a verified list exists. Only its finalized-**copy-preview** section is gated: skip or placeholder the preview when no verified slice exists yet. Brief generation itself stays on plan-level fields.
-- **Re-uploading an already-verified external list** — allowed only behind an explicit operator `verified_flag` override (a hard-stop-class action the operator takes deliberately), so a verified export named `leads.csv` is not false-blocked.
+- **Pre-enrichment planning**: `/campaign-approval-brief` is intentionally a *pre-list-build, pre-enrichment* gate and is allowed to run before a verified list exists. Only its finalized-**copy-preview** section is gated: skip or placeholder the preview when no verified slice exists yet. Brief generation itself stays on plan-level fields.
+- **Re-uploading an already-verified external list**: allowed only behind an explicit operator `verified_flag` override (a hard-stop-class action the operator takes deliberately), so a verified export named `leads.csv` is not false-blocked.
 
 ## Skills that reference this gate
 

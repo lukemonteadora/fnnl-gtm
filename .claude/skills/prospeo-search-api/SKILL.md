@@ -321,15 +321,15 @@ PROSPEO_API_KEY=your_api_key_here
 
 ## What to do next
 
-This is a reference skill — no direct next step. Used by `/prospeo-full-export` and `/auto-research-public` to build the actual search.
+This is a reference skill. No direct next step. Used by `/prospeo-full-export` and `/auto-research-public` to build the actual search.
 
 Return to the skill that sent you here.
 
 ## Related skills
 
-- `/prospeo-full-export` — the main consumer of this reference
-- `/auto-research-public` — also uses Prospeo search via phase-prospeo.ts
+- `/prospeo-full-export`: the main consumer of this reference
+- `/auto-research-public`: also uses Prospeo search via phase-prospeo.ts
 
 ## Activity Log Protocol
 
-Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short — record status, not raw output. Full protocol: `client-activity-log.md`.
+Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short: record status, not raw output. Full protocol: `client-activity-log.md`.

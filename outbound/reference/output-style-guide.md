@@ -1,4 +1,4 @@
-# Output Style Guide — cold outbound
+# Output Style Guide: cold outbound
 
 This is the fuller version of the **Communication & Output Style** rules in the repo `CLAUDE.md`. The short version is already always-on in every session. Read this one when you're writing a client-facing document, or when you want the expanded reasoning and a wider bank of before/after rewrites.
 
@@ -38,7 +38,7 @@ Do not write a spaced em dash (an em dash or en dash with a space around it, use
 Open with the answer or the recommendation. Keep the reasoning underneath it, not in front of it. If you're about to use three acronyms, gloss the first appearance of each.
 
 ### Option menus and decisions
-For every option, cover what it is, what happens if the operator picks it, and the trade-off. For the recommended option, say plainly why it's your pick and what the alternative would have to offer to win instead. Put the recommended option first and label it. This pairs with the global Decision & Recommendation Style rule — that rule says *name options, recommend, explain why the alternatives are weaker, then ask or proceed*. This guide is about saying all of that in plain language.
+For every option, cover what it is, what happens if the operator picks it, and the trade-off. For the recommended option, say plainly why it's your pick and what the alternative would have to offer to win instead. Put the recommended option first and label it. This pairs with the global Decision & Recommendation Style rule. That rule says *name options, recommend, explain why the alternatives are weaker, then ask or proceed*. This guide is about saying all of that in plain language.
 
 ### Questions and intake
 Ask one clear thing at a time. Give a one-line reason the answer matters, so the operator knows why you're asking and can give a better answer. If you have a suggested default, show it and let him confirm or correct it rather than starting from a blank.
@@ -47,7 +47,7 @@ Ask one clear thing at a time. Give a one-line reason the answer matters, so the
 Two or three sentences. What just finished, what it means, what's next (and the cost, if there is one). Skip the internal step numbers and the raw tool names unless they're the point.
 
 ### Reports, approval briefs, presentations
-Open with a short "what this is and what to do with it" so the reader isn't guessing. Define each key term and metric the first time it appears. Keep a clear spine through the whole document: what we did, what we found, what it means, and what we need from you. Cut internal tool chatter and strategy essays. The campaign approval brief already aims for this — its own rules say "keep the language simple, no internal tool chatter, no broad strategy essay, no fake certainty." Hold to that.
+Open with a short "what this is and what to do with it" so the reader isn't guessing. Define each key term and metric the first time it appears. Keep a clear spine through the whole document: what we did, what we found, what it means, and what we need from you. Cut internal tool chatter and strategy essays. The campaign approval brief already aims for this: its own rules say "keep the language simple, no internal tool chatter, no broad strategy essay, no fake certainty." Hold to that.
 
 ---
 
@@ -80,7 +80,7 @@ These show the writing problem, not the workflow. The tool names inside them are
 
 > Before: "Offer archetype undecided. Primary candidate: benchmark report (requires client metrics). Secondary: free audit. Avoid: discount. Confirm primary to proceed to copy."
 >
-> After: "We're ready to lock the offer — the free thing we lead with in the first email. My recommendation is a benchmark report that shows them how they compare to similar companies, because it's the kind of thing your buyers actually want and it's hard for competitors to copy. The one catch is that it needs a few real numbers from you to build. A simpler fallback is a free audit, which needs nothing from you but is a more common offer. Want to go with the benchmark report, or play it safe with the audit?"
+> After: "We're ready to lock the offer (the free thing we lead with in the first email). My recommendation is a benchmark report that shows them how they compare to similar companies, because it's the kind of thing your buyers actually want and it's hard for competitors to copy. The one catch is that it needs a few real numbers from you to build. A simpler fallback is a free audit, which needs nothing from you but is a more common offer. Want to go with the benchmark report, or play it safe with the audit?"
 
 **A deliverability note.**
 
@@ -94,20 +94,20 @@ These show the writing problem, not the workflow. The tool names inside them are
 
 Use these for the first-time gloss so the wording stays consistent. After the first mention in a message you can use the bare term.
 
-- **ICP** — the ideal customer profile, the kind of company and person you most want to reach.
-- **TAM** — the total set of companies that could ever be a fit, before any filtering.
-- **Cold email / cold outbound** — emailing people who haven't heard from you before, to start a conversation.
-- **Mailbox** — a single sending email address (the account, not the deliverability sense of "inbox").
-- **Warmup** — the gradual ramp-up that builds a mailbox's reputation before real sending starts.
-- **Deliverability** — whether your emails actually land in the inbox instead of spam.
-- **Placement** — where a sent email ends up, inbox versus spam.
-- **SPF / DKIM / DMARC** — the authentication records that prove an email really came from your domain.
-- **Enrichment** — looking up extra details for a company or person, most often their work email.
-- **Email waterfall** — trying several data sources in turn to find a valid email, stopping at the first hit.
-- **Spintax** — copy with interchangeable phrases so each recipient gets a slightly different version.
-- **Offer / lead magnet** — the free, valuable thing you lead with in the first email to earn a reply.
-- **Sequence** — the ordered set of emails in a campaign, the first message plus its follow-ups.
-- **Signal** — an observable fact about a company that suggests it's a good time to reach out (hiring, new funding, a tool they just adopted).
+- **ICP:** the ideal customer profile, the kind of company and person you most want to reach.
+- **TAM:** the total set of companies that could ever be a fit, before any filtering.
+- **Cold email / cold outbound:** emailing people who haven't heard from you before, to start a conversation.
+- **Mailbox:** a single sending email address (the account, not the deliverability sense of "inbox").
+- **Warmup:** the gradual ramp-up that builds a mailbox's reputation before real sending starts.
+- **Deliverability:** whether your emails actually land in the inbox instead of spam.
+- **Placement:** where a sent email ends up, inbox versus spam.
+- **SPF / DKIM / DMARC:** the authentication records that prove an email really came from your domain.
+- **Enrichment:** looking up extra details for a company or person, most often their work email.
+- **Email waterfall:** trying several data sources in turn to find a valid email, stopping at the first hit.
+- **Spintax:** copy with interchangeable phrases so each recipient gets a slightly different version.
+- **Offer / lead magnet:** the free, valuable thing you lead with in the first email to earn a reply.
+- **Sequence:** the ordered set of emails in a campaign, the first message plus its follow-ups.
+- **Signal:** an observable fact about a company that suggests it's a good time to reach out (hiring, new funding, a tool they just adopted).
 
 ---
 

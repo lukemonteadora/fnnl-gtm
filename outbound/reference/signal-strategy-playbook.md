@@ -92,13 +92,13 @@ Someone moved to a new company or got promoted within the last 90 to 365 days. N
 
 ### Campaign Slices
 
-**Slice A — New leader, new company (strongest signal)**
+**Slice A: New leader, new company (strongest signal)**
 Filter: Changed companies in last 90 days + VP/Director/C-suite seniority + ICP industry + ICP headcount. One new leader per account. This is your "new exec buying window" campaign.
 
-**Slice B — Promotion within same company (underused)**
+**Slice B: Promotion within same company (underused)**
 Filter: Job change = promotion only + same company + newly holds a budget title (Manager to Director, Director to VP). They just gained authority they did not have before. Same company. Different power.
 
-**Slice C — New to role, 180 to 270 day window**
+**Slice C: New to role, 180 to 270 day window**
 Filter: Changed companies in last 180 to 270 days + ICP profile. Past the chaos of the first 30 days, not yet locked into contracts. The 90-day window is over-competed. 180 days is quieter.
 
 ### Email Copy Angles
@@ -154,16 +154,16 @@ The size of a specific department tells you more than total headcount. A 100-per
 
 ### Campaign Slices
 
-**Slice A — Growing sales team, no RevOps support**
+**Slice A: Growing sales team, no RevOps support**
 Filter: Sales department 10 to 30 people, RevOps/Operations department 0 to 2 people. These companies have sales capacity but no infrastructure. They need data, sequencing, and process.
 
-**Slice B — Large engineering, tiny sales**
+**Slice B: Large engineering, tiny sales**
 Filter: Engineering department 30+ people, Sales department 0 to 5 people. Product-led company. The VP Engineering or CTO is likely the first buyer for developer tools. The sales motion has not been built yet.
 
-**Slice C — Large marketing, small sales**
+**Slice C: Large marketing, small sales**
 Filter: Marketing department 10+, Sales department 0 to 5. Demand gen exists. Sales development does not. Cold email infrastructure, SDR tooling, or outbound setup is the play.
 
-**Slice D — Small IT team relative to company size**
+**Slice D: Small IT team relative to company size**
 Filter: Company 200+ employees, IT department 1 to 3 people. These teams are stretched. IT security, SaaS management, and compliance tools are overdue.
 
 ### Email Copy Angles
@@ -175,7 +175,7 @@ Filter: Company 200+ employees, IT department 1 to 3 people. These teams are str
 > "[Company]'s engineering team is [3x] the size of the current sales org. Product-led companies at that ratio usually hit the first real GTM wall around now — distribution without a dedicated motion. We work with teams in exactly that position. Worth a 20-minute conversation?
 
 **On using department headcount in copy:**
-This signal works better as a targeting filter than as a direct personalization line. Referencing it directly — "I see you have 14 people in Sales" — can read as surveillance. Use it to select who to reach and what problem to lead with, not as the first sentence of the email.
+This signal works better as a targeting filter than as a direct personalization line. Referencing it directly ("I see you have 14 people in Sales") can read as surveillance. Use it to select who to reach and what problem to lead with, not as the first sentence of the email.
 
 ### Acquisition Path: Direct (a department-headcount filter)
 
@@ -211,16 +211,16 @@ A company that added 50 percent to its sales team in six months is in a differen
 
 ### Campaign Slices
 
-**Slice A — Sales team growing fast**
+**Slice A: Sales team growing fast**
 Filter: Sales department growth 40%+ in last 6 months. These companies are actively building GTM infrastructure. They will buy tools that help the new team hit numbers.
 
-**Slice B — Engineering growing, everything else flat**
+**Slice B: Engineering growing, everything else flat**
 Filter: Engineering headcount +50%+ in 6 months. Build mode. Developer tools, API security, compliance, cloud infra.
 
-**Slice C — Company headcount declining**
+**Slice C: Company headcount declining**
 Filter: Headcount declining or flat year over year. Different campaign. Cost-saving and efficiency angle. "Do more with fewer people" framing.
 
-**Slice D — Sales department shrinking**
+**Slice D: Sales department shrinking**
 Filter: Sales headcount down 20%+ in last 6 months. Recent layoffs or restructure. They cut team members and now need efficiency. High-value segment for automation and AI tools if timed correctly.
 
 ### Email Copy Angles
@@ -278,16 +278,16 @@ Company age is a proxy for buying stage, product maturity, technical debt, proce
 
 ### Campaign Slices
 
-**Slice A — 2 to 4 year old companies (2021 to 2023)**
+**Slice A: 2 to 4 year old companies (2021 to 2023)**
 Survived early chaos, have a product, have some revenue, hitting first scaling pains. This is the best buying window for most GTM tools, outbound infrastructure, and growth services.
 
-**Slice B — 5 to 7 year old companies (2018 to 2020)**
+**Slice B: 5 to 7 year old companies (2018 to 2020)**
 Past the scrappy phase. Either growing well or stuck. Process debt accumulating. May have outgrown founding-era tools. Migration or upgrade conversations.
 
-**Slice C — Pre-2010 companies (15+ years old)**
+**Slice C: Pre-2010 companies (15+ years old)**
 Enterprise-adjacent. Long sales cycles. Established tools. The framing shifts to "the version of this problem you are running into now did not exist when you built the original solution."
 
-**Slice D — Very new companies (less than 18 months, 2024 to 2025)**
+**Slice D: Very new companies (less than 18 months, 2024 to 2025)**
 Pre-infrastructure. Founder-led sales. Use "you are at the stage where X becomes the bottleneck" framing.
 
 ### Email Copy Angles
@@ -342,19 +342,19 @@ A company running paid ads has a marketing budget, an owner of demand gen, and a
 
 ### Campaign Slices
 
-**Slice A — Running Google Ads in your category**
+**Slice A: Running Google Ads in your category**
 Companies bidding on keywords adjacent to your offer know the problem exists and are spending to solve it. Your offer either directly addresses it or complements it.
 
-**Slice B — Running ads AND hiring in growth or marketing**
+**Slice B: Running ads AND hiring in growth or marketing**
 Two-signal confirmation. Growth investment confirmed at two layers. Budget is real and committed.
 
-**Slice C — Running Meta Ads but not Google Ads**
+**Slice C: Running Meta Ads but not Google Ads**
 Primarily B2C motion or product-aware brand. Different buyer psychology. Adjust offer framing accordingly.
 
-**Slice D — Not running any ads despite 50+ employees**
+**Slice D: Not running any ads despite 50+ employees**
 Either cost-disciplined or demand gen has not started. Outbound is the only top-of-funnel they have. This makes cold email more relevant, not less.
 
-**Slice E — Running LinkedIn or B2B platform ads**
+**Slice E: Running LinkedIn or B2B platform ads**
 This company is deliberately targeting decision-makers. They have a polished GTM motion. Likely a higher-budget buyer.
 
 ### Email Copy Angles
@@ -411,16 +411,16 @@ This is not about finding new prospects. This is about tracking a known contact 
 
 ### Campaign Slices
 
-**Slice A — Former champion motion**
+**Slice A: Former champion motion**
 Take your list of past contacts, clients, or engaged prospects. Detect who moved to a new company. They already know your product. They are warm by default at the new company.
 
-**Slice B — Former ghosted prospect**
+**Slice B: Former ghosted prospect**
 VP of Sales at Company A never replied to you six months ago. They just joined Company B as CRO. Re-engage. Different company, different context, different budget.
 
-**Slice C — Where did your churned customers go?**
+**Slice C: Where did your churned customers go?**
 Pull contacts from churned clients. Detect where the key people moved. They may have moved to a company that fits your ICP. They know your product.
 
-**Slice D — Competitive displacement**
+**Slice D: Competitive displacement**
 Pull contacts who bought from a competitor. Detect movers. At the new company they have not yet signed a competitor contract. Clean slate.
 
 ### Email Copy Angles
@@ -476,19 +476,19 @@ A company posting a specific role right now is spending money and has an unsolve
 
 ### Campaign Slices
 
-**Slice A — Hiring SDRs or BDRs**
+**Slice A: Hiring SDRs or BDRs**
 They are building outbound. They need email infrastructure, data, training, sequencing. Direct buying signal for GTM tooling.
 
-**Slice B — Hiring RevOps or Sales Ops**
+**Slice B: Hiring RevOps or Sales Ops**
 The company is formalizing its GTM stack. They are about to evaluate or buy tools. Get in before the new hire decides what they are building.
 
-**Slice C — Hiring in your buyer's department**
+**Slice C: Hiring in your buyer's department**
 If you sell to marketing teams and they are hiring a Demand Gen Manager, that role will own a budget you want. Get to the current Head of Marketing now while they are still running everything alone.
 
-**Slice D — Hiring roles that name the problem**
+**Slice D: Hiring roles that name the problem**
 A company hiring a "Data Quality Manager" has a data problem. A company hiring a "Sales Enablement Manager" has a coaching and content problem. These roles are the symptom. Your offer is the treatment.
 
-**Slice E — Posting the same role repeatedly**
+**Slice E: Posting the same role repeatedly**
 Companies re-posting the same role are struggling with retention or cannot find the right person. High internal pressure signal.
 
 ### Email Copy Angles
@@ -569,16 +569,16 @@ Where someone came from tells you what they know, what they have already tried, 
 
 ### Campaign Slices
 
-**Slice A — People who came from a specific company**
+**Slice A: People who came from a specific company**
 Former employees of Company X are now at ICP companies. Especially useful when Company X is a competitor user, a known champion company, or a company that had the exact problem you solve.
 
-**Slice B — People with specific certifications**
+**Slice B: People with specific certifications**
 Targeting IT buyers? People with AWS, Azure, CISSP, or SOC certifications are technically sophisticated. They do not need the basics explained. They need specificity.
 
-**Slice C — People who changed industries**
+**Slice C: People who changed industries**
 Someone who spent 10 years in finance and is now running ops at a SaaS company brings unusual context. Cross-domain background creates a natural opener tied to that unique perspective.
 
-**Slice D — High follower count (thought leaders)**
+**Slice D: High follower count (thought leaders)**
 If someone has 10K+ LinkedIn followers, they are an influencer in their space. LinkedIn DM or engagement-first motion usually outperforms cold email. A referral or mutual connection angle matters more here.
 
 ### Email Copy Angles
@@ -642,16 +642,16 @@ Who a company sells to (their customers' vertical, the size of those customers, 
 
 ### Campaign Slices
 
-**Slice A — By customer vertical**
+**Slice A: By customer vertical**
 Group `sells_to_vertical` into buckets, e.g. sells-into-legal vs sells-into-restaurants vs sells-into-healthcare. Each bucket is a distinct buyer world, so each earns its own pain and proof. The vertical name itself becomes the copy variable.
 
-**Slice B — By customer size (up-market vs down-market)**
+**Slice B: By customer size (up-market vs down-market)**
 Filter `sells_to_customer_size = enterprise` vs `sells_to_customer_size = smb`. Selling up-market is a different motion and a different pain than selling down-market: enterprise-sellers wrestle with long cycles, procurement, and security reviews, while SMB-sellers wrestle with volume, churn, and self-serve. The size band picks which pain and which proof you lead with.
 
-**Slice C — By sold-into department**
+**Slice C: By sold-into department**
 Filter `sells_to_department = finance` vs `sells_to_department = marketing`. A company that sells into finance buyers speaks a compliance-and-controls language. One that sells into marketing buyers speaks a pipeline-and-attribution language. The department they sell into tells you the vocabulary and the proof their own world runs on.
 
-**Slice D — By motion**
+**Slice D: By motion**
 Filter `sells_to_motion = b2c` vs `sells_to_motion = b2b`. The coarsest and cheapest first cut. A B2C-motion company and a B2B-motion company have almost nothing in common operationally, so this split alone often changes the message.
 
 The ≥500-company floor applies to whichever grouping you slice on: a sold-to bucket is launch-viable only when ≥500 companies carry it (the same floor every other signal answers to; HARD RULE, operator directive 2026-07-12, which retired the old ≥100-company and ≥100-contact floors). Group the free-text `sells_to_vertical` into ≥100-company buckets before treating a vertical as its own campaign.

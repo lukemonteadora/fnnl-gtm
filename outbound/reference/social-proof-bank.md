@@ -1,6 +1,6 @@
 # Social Proof + Trigger Bank: procedure detail, worked example, and export
 
-Reference doc read by `/social-proof-bank`. The skill file holds the operating logic; this holds the heavier material: a filled worked example so the operator sees what "good" looks like, worked examples of the two copy-ready lines (their definitions live once, in the skill's The two copy-ready lines section), and the client-facing xlsx export. The client-fill **Google Sheet** template (with worked examples as a guide) and the ready email/Slack outreach messages live in the sibling `social-proof-bank-client-fill-template.md`. Everything here is **client- and industry-agnostic** — the worked example is a digital agency for concreteness only; the same columns and trigger categories fit a SaaS vendor, manufacturer, healthcare provider, local-services business, ecommerce brand, or professional-services firm (`service_line` = whatever this client sells). Doctrine: memory.
+Reference doc read by `/social-proof-bank`. The skill file holds the operating logic; this holds the heavier material: a filled worked example so the operator sees what "good" looks like, worked examples of the two copy-ready lines (their definitions live once, in the skill's The two copy-ready lines section), and the client-facing xlsx export. The client-fill **Google Sheet** template (with worked examples as a guide) and the ready email/Slack outreach messages live in the sibling `social-proof-bank-client-fill-template.md`. Everything here is **client- and industry-agnostic**: the worked example is a digital agency for concreteness only; the same columns and trigger categories fit a SaaS vendor, manufacturer, healthcare provider, local-services business, ecommerce brand, or professional-services firm (`service_line` = whatever this client sells). Doctrine: memory.
 
 The one-line idea: **gather the client's real proof and real timing signals ourselves first, map them to copy-ready form, and only ask the client for the raw facts we genuinely can't find - never for the copy.**
 
@@ -79,7 +79,7 @@ A digital-agency client (mirrors the example workbooks; illustration only - gene
 | B2B Wines & Spirits | UX, Development, BigCommerce B2B | UK | 911% online revenue, 40% of orders now out-of-hours | From Mar 2025 | Inverarity Morton | y | PS, after we rebuilt Inverarity Morton's trade ordering the same way, their online revenue grew 911% from March 2025. | A lot of trade orders still have to wait for office hours. | on_file | website |
 | Specialist Retail (Golf) | SEO, PPC, Paid Social | UK | 41% shopping revenue, 47% organic sessions | Ongoing | American Golf | y | PS, we run American Golf's search and paid social together, and their shopping revenue grew 41%. | Paid and organic search usually get run by separate teams. | on_file | website |
 | Charity / Accessible Retail | UX, Replatforming, Shopify Plus | UK | UK's first WCAG 2.1 AA compliant ecommerce site | Ongoing | RNIB | y |  | Most online shops still fail basic accessibility checks. | on_file | website |
-| SaaS / High-ACV | (no direct-match case study on file) | US | — | — | — | — | — | (needs a US SaaS proof point) | gap_block | — |
+| SaaS / High-ACV | (no direct-match case study on file) | US | n/a | n/a | n/a | n/a | n/a | (needs a US SaaS proof point) | gap_block | n/a |
 
 The last row is the honest gap: no US-SaaS case study on file, and a likely SaaS angle is hollow without one -> `gap_block` -> it goes into the bank-mode form as the priority ask. It is not papered over with a UK-retail metric dressed as SaaS proof.
 
@@ -93,10 +93,10 @@ RNIB's `one_liner` is blank on purpose. Its result is real but carries no number
 | change_timing | Funding round announced | funded_last_90d | y | tam_column | New capital means new targets and urgency for pipeline | After a raise, the pipeline target usually moves faster than the team. | Tier 1 | high | data_catalog |
 | sold_to | Sells into a specific end vertical | sells_to_vertical | y | tam_column | Their buyer's world changes the pain and the proof to lead with | Selling into {their vertical} usually means a compliance review on every deal. | All | high | data_catalog |
 | demand | Running paid ads with no outbound motion | running_meta_ads | y | tam_column | Paid top-of-funnel without outbound = channel-handoff gap | Paid traffic often lands with no outbound follow-up behind it. | Tier 1 & 2 | medium | data_catalog |
-| events | Industry conference / trade show upcoming | — | n | manual | Shared context and a natural, no-pitch reason to connect |  | Tier 1 & 2 | high | manual |
-| macro_shift | Tariff / regulatory / AI-adoption wave | — | n | social_listening | Shared urgency across a whole market at once | {macro event} is pushing {area} up the list this quarter. | All | high | manual |
-| seasonal | End of financial year / Q4 budget flush | — | n | manual | Timing is often the difference between a yes and a no | Year-end close usually speeds up budget decisions. | All | medium | manual |
-| competitor_users | Prospect listed as a competitor's customer | — | n | per_campaign_research | Public signal of current-tool usage; a warm, self-selected target |  | All | high | manual |
+| events | Industry conference / trade show upcoming |  | n | manual | Shared context and a natural, no-pitch reason to connect |  | Tier 1 & 2 | high | manual |
+| macro_shift | Tariff / regulatory / AI-adoption wave |  | n | social_listening | Shared urgency across a whole market at once | {macro event} is pushing {area} up the list this quarter. | All | high | manual |
+| seasonal | End of financial year / Q4 budget flush |  | n | manual | Timing is often the difference between a yes and a no | Year-end close usually speeds up budget decisions. | All | medium | manual |
+| competitor_users | Prospect listed as a competitor's customer |  | n | per_campaign_research | Public signal of current-tool usage; a warm, self-selected target |  | All | high | manual |
 
 Note the split: the first four rows are data-backed (they reuse `/data-point-discovery` column names verbatim and feed the slice/angle libraries), the last four are message-only (the events/macro/seasonal/competitor angles the TAM can't produce - the bank's added value).
 

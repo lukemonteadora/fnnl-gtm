@@ -89,7 +89,7 @@ powershell -ExecutionPolicy Bypass -File scripts\lifecycle_docx_presentation.ps1
   -OutputName "Interested-Replies Sequence - Client Name.docx"
 ```
 
-**Google Doc (when configured).** After the DOCX renders, also create/update a native Google Doc so the client never has to upload it — gated on the one-time setup in `reference/gdoc-export-setup.md`; the script exits `2` and is safely skipped if creds are not set:
+**Google Doc (when configured).** After the DOCX renders, also create/update a native Google Doc so the client never has to upload it: gated on the one-time setup in `reference/gdoc-export-setup.md`; the script exits `2` and is safely skipped if creds are not set:
 
 ```powershell
 node scripts\docx_to_gdoc.mjs --in "profiles\<business-slug>\Interested-Replies Sequence - Client Name.docx" --title "Interested-Replies Sequence - Client Name"
@@ -115,4 +115,4 @@ If a spam or best-practice issue is found, report it and route back to copy edit
 
 ## Activity Log Protocol
 
-Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short — record status, not raw output. Full protocol: `client-activity-log.md`.
+Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short: record status, not raw output. Full protocol: `client-activity-log.md`.

@@ -31,7 +31,7 @@ This skill writes copy only. It does not package DOCX, upload, or send. The DOCX
 
 - **Before every campaign's Start (required).** As soon as `/campaign-copywriting` has produced `variants.yaml` for the campaign, write `interested-reply.md` (one reply template per category plus the `## Call Script`) and `pre-call.md` (the `## Confirmation Page` plus the pre-call sequence). Both are Gate D (reply readiness) inputs, so the operator's Start waits on them: a first reply inside 5 minutes cannot happen when the templates are only written after the first positive lands (Aaron, Sep 21: replies drafted "based on templates that we've established for each client specifically and what their offer is", then fired off "almost immediately"). The orchestration skills (`/cold-email-kickoff`, `/continue-client`) enforce the gate. (Aaron process alignment, operator directive 2026-09-22; supersedes writing these two files only on request or once a positive reply exists.)
 - Later, for re-engagement of non-repliers (`followups.yaml`): a separate sequence at least one month after the main sequence's last touch (Output 1).
-- When a lifecycle DOCX skill reports its source file is missing and routes back to "lifecycle copy creation" — that is this skill.
+- When a lifecycle DOCX skill reports its source file is missing and routes back to "lifecycle copy creation". That is this skill.
 
 Pick which flow(s) to write with a native choice prompt (recommended option first, Custom answer last) from `/clarification-first`:
 
@@ -56,10 +56,10 @@ Ask before choices that affect spend beyond an approved budget, provider routing
 
 Read for context before writing lifecycle copy:
 
-- `profiles/<business-slug>/client-profile.yaml` — ICP, offer, tone
-- `profiles/<business-slug>/campaigns/<campaign-slug>/variants.yaml` — the main cold sequence this lifecycle copy continues; match its voice, offer, and confirmed-deliverable CTA
-- `profiles/<business-slug>/lead-magnets.md` — the locked offer, including its fulfillment lines (`Input needed after yes:`, `If they don't qualify:`, and the paid next step), which `interested-reply.md` is built from (doctrine §11, the fulfillment-first reply plan)
-- `run_state.sending_platform` — for any platform-specific variable tokens
+- `profiles/<business-slug>/client-profile.yaml`: ICP, offer, tone
+- `profiles/<business-slug>/campaigns/<campaign-slug>/variants.yaml`: the main cold sequence this lifecycle copy continues; match its voice, offer, and confirmed-deliverable CTA
+- `profiles/<business-slug>/lead-magnets.md`: the locked offer, including its fulfillment lines (`Input needed after yes:`, `If they don't qualify:`, and the paid next step), which `interested-reply.md` is built from (doctrine §11, the fulfillment-first reply plan)
+- `run_state.sending_platform`: for any platform-specific variable tokens
 - The offer's type (a promised asset, or a direct, trial or service offer) and, for a costly front end (a trial, a service, custom work), its `offer.qualification` rule in `client-profile.yaml` (`criteria`, `form_fields`, `free_unit_cap_per_week`), which `/lead-magnet-brainstorm` writes at offer lock. The type decides the shape of the yes reply; the rule feeds the qualification step and the call script's prequalification questions. A cheap asset has no rule.
 - `profiles/<business-slug>/offer-intelligence.md`: the real objections `/offer-intelligence` found, from its First-Party Buyer Voice section (the client's won and lost calls) first, then its public buyer pain and objections. They become the FAQs on the `pre-call.md` confirmation page and the objection templates in `interested-reply.md`. Never invent an objection the research did not find.
 - The booking calendar link (or, where `offer.qualification` applies, the qualification page that leads to it) and the speed-to-lead owner: the person the operator named at Gate D to call interested replies, recorded in `run_state.speed_to_lead_owner`. Copy the owner, with the 5-minute target, onto the `Speed-to-lead owner:` line in the `## When to Use` header of the campaign's `interested-reply.md`. If either is unknown, write the placeholder and report it as a Gate D gap; never invent a link or a name.
@@ -68,12 +68,12 @@ Do not invent a different offer or CTA than the one locked for the campaign (for
 
 **Verified-list gate (inherited).** This skill runs only after `/campaign-copywriting` produced `variants.yaml` for the slice, which itself passed the verified-list gate (`verified-list-gate.md`). So `followups.yaml` inherits that gate via its parent cold sequence; confirm `variants.yaml` exists before writing it. `interested-reply.md` and `pre-call.md` are written before Start but only ever sent after a reply or a booking, so they assert only the parent gate, never a fresh `leads.verified.csv` check.
 
-## Copy QA Gate (mandatory — same gate as /campaign-copywriting)
+## Copy QA Gate (mandatory, same gate as /campaign-copywriting)
 
 Every subject line, body, and CTA this skill writes must pass, in order, before it is shown to the user or written to any file:
 
-1. `spam-word-checker.md` — formatting bans, weak/forbidden CTAs, opener and voice bans (including follow-up-reference openers and Aaron's named kill-list, doctrine §9), and silence-based closeout logic. It no longer carries a keyword blocklist.
-2. `cold-email-copy-best-practices.md` — writing-quality and CTA standards
+1. `spam-word-checker.md`: formatting bans, weak/forbidden CTAs, opener and voice bans (including follow-up-reference openers and Aaron's named kill-list, doctrine §9), and silence-based closeout logic. It no longer carries a keyword blocklist.
+2. `cold-email-copy-best-practices.md`: writing-quality and CTA standards
 3. Aaron's rejection bank (`aaron-examples.md` §8, in `/ask-aaron`): check every draft against it, then run his pre-send test, where "if I received that email, I definitely would not be answering it" must be false (doctrine §9). (Operator-approved Aaron alignment, 2026-09-21.)
 
 Also enforce the **Confirmed Deliverable Gate**: every CTA must map to a real deliverable with a named honorer for every yes: the agency by default, the client only with `lead_magnet_client_ok: yes` (`/campaign-copywriting` Confirmed Deliverable Gate). Hard-stop only on a deliverable nobody will honor, or one whose data, method and delivery path are not known yet.
@@ -82,7 +82,7 @@ If any line fails QA, rewrite it until it passes. Do not write a file containing
 
 **Link and calendar rules: cold steps versus warm replies** (Aaron process alignment, operator directive 2026-09-22; supersedes applying the cold-sequence link and calendar bans to every lifecycle file). The cold-sequence bans (for example `cold-email-copy-best-practices.md`'s "Keep calendar links out of emails 1-3") govern cold steps only. `followups.yaml` goes to people who never replied, so it is cold and those bans hold there in full. `interested-reply.md` and `pre-call.md` are warm, because a reply or a booking already exists, and they follow this file's reply rules instead: no calendar link and no times in an asset delivery reply (ledger R03); a booking link on booking intent and on a direct, trial or service yes (Aaron, Sep 21: "Here's my calendar"); the call link and the confirmation-page link in `pre-call.md`. Every other gate above applies to warm copy unchanged.
 
-## Output 1 — No-reply follow-ups (`followups.yaml`)
+## Output 1: No-reply follow-ups (`followups.yaml`)
 
 For prospects who did not reply to the main sequence. **Aaron's follow-up rules govern this file (operator-approved Aaron alignment, 2026-09-21).** They replace the earlier "add a new angle each time" line and the two context notes on short bumps and a no-oriented last touch, archived at `outbound/_archive/aaron-alignment-2026-09-21/lifecycle-copy--followup-context-notes.md`.
 
@@ -136,7 +136,7 @@ sequences:
 
 The builder `scripts/lifecycle_docx_presentation.ps1` (run via `/cold-email-followups-docx-presentation`) reads `name:`, the `# TRIGGER:` / `# PURPOSE:` / `# SETUP:` comment lines, each `- step:` with its `delay_days:`, and each `- label:` with an inline `subject:` and a `body: |` block. Use those exact names and forms. For threaded replies with no subject, use an empty inline subject (`subject: ""`).
 
-## Output 2 — Interested-reply handling (`interested-reply.md`)
+## Output 2: Interested-reply handling (`interested-reply.md`)
 
 What gets sent, and said on the phone, after a prospect replies positively ("yes, tell me more", "send info", "worth a quick test", booked a call). This is Markdown, not YAML. The `/interested-replies-docx-presentation` builder reads a `## When to Use` section, `## Email...` headings, the `## Call Script` section, `**Trigger:**` / `**Send as:**` / `**Subject:**` / `**Word count:**` bold-label lines, fenced body blocks, and a `## Notes` section. Put every body, the call script included, inside a plain triple-backtick fence with no language tag, and use no other bold labels, because the builder renders only fenced text and those labels. (The template below shows its inner fences with an invisible zero-width space so they display inside this skill file; the real `interested-reply.md` and `pre-call.md` use plain triple backticks, or the builder will not see the fence.)
 
@@ -230,7 +230,7 @@ Text fallback: <QA-approved, one or two sentences: the two times and the calenda
 <only if needed; otherwise omit>
 ```
 
-## Output 3 — Pre-call / booked-call nurture (`pre-call.md`)
+## Output 3: Pre-call / booked-call nurture (`pre-call.md`)
 
 The confirmation page and the nurture drip between a booked call and the call itself, plus a no-show email. The `/pre-call-nurture-docx-presentation` builder reads a `## When to Use` section, the `## Confirmation Page` section, `## Email...` headings, `## If They No-Show`, a `## Notes` section, `**Subject:**` / `**Purpose:**` / `**Word count:**` bold-label lines, and fenced body blocks (plain triple-backtick fences, no language tag, no other bold labels).
 
@@ -323,4 +323,4 @@ If copy fails QA at the DOCX stage, that skill routes back here. Fix the copy, r
 
 ## Activity Log Protocol
 
-Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short — record status, not raw output. Full protocol: `client-activity-log.md`.
+Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short: record status, not raw output. Full protocol: `client-activity-log.md`.

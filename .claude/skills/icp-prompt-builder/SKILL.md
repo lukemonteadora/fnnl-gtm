@@ -23,7 +23,7 @@ List builders and scrapers return companies or contacts. They do not know your c
 1. **TAM fit gate (company-level, in `/tam-build` Layer 1a).** Tune the prompt on a ~40-row mixed sample of the cheap TAM layer (firmographics + the homepage crawl), then `/tam-build` scores `fit_status` (`good`/`maybe`/`bad`) across the whole TAM to gate the expensive extension enrichment to good-fit companies only. Inputs are company rows (no contacts), and the output maps to `fit_status` rather than `qualified` true/false.
 2. **Per-campaign source sample (the original use, below).** After a lead source returns a sample for a chosen campaign, tune or reuse the prompt to qualify that slice before enrichment spend.
 
-The loop below is identical for both; only the input sample and the place it runs differ. **The prompt tuned at the TAM gate is saved and reused at the per-campaign step** — don't re-tune from scratch; re-tune only if the campaign signal changes what "fit" means.
+The loop below is identical for both; only the input sample and the place it runs differ. **The prompt tuned at the TAM gate is saved and reused at the per-campaign step**: don't re-tune from scratch; re-tune only if the campaign signal changes what "fit" means.
 
 ## Material Decision Rule
 
@@ -37,11 +37,11 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue — never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work — never idle.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue. Never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work. Never idle.
 
 ## Activity Log Protocol
 
-Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short — record status, not raw output. Full protocol: `client-activity-log.md`.
+Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short: record status, not raw output. Full protocol: `client-activity-log.md`.
 
 ## Inputs
 
@@ -49,7 +49,7 @@ Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURR
 - `profiles/<business-slug>/campaigns/<campaign-slug>/lead-source-plan.md`, when it exists
 - A sample CSV from any selected source path, including company-lookalike tools, domain-to-person builders, maps and local-business extractors, contact-database exports, social-engagement sources, directories, job boards, event pages, marketplaces, Serper plus Spider Cloud, Apify, Scrap.io, GetLatka, Trigify, A-Leads, WizLeads, or custom website scrapes
 - At least 50 mixed rows if possible
-- **For the TAM fit gate:** a ~40-row mixed sample of `tam.csv`'s cheap layer (identity + firmographics + the homepage-derived fields) from `/tam-build` Layer 1a — no contacts, no extension columns yet
+- **For the TAM fit gate:** a ~40-row mixed sample of `tam.csv`'s cheap layer (identity + firmographics + the homepage-derived fields) from `/tam-build` Layer 1a: no contacts, no extension columns yet
 
 Preserve these source fields when available:
 

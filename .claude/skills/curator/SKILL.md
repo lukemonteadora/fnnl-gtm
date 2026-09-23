@@ -3,7 +3,7 @@ name: curator
 description: "Scheduled, library-WIDE health pass over your whole agent system (the skill library in .claude/skills AND the operator memory library) that finds rot and fixes it in two tiers. This is the \"curator\" piece of a Hermes-style self-improving agent (the background maintenance pass that keeps a self-growing skill+memory library from rotting). It surveys the library for cross-skill DUPLICATION / overlap / twins (incl. plugin-twins and per-vendor skill families, where the same workflow exists once per sending platform), ORPHANS nothing references, internal CONTRADICTIONS across skills, STALENESS vs current truth (dead tools, banned providers, superseded defaults), and MEMORY health (the over-budget MEMORY.md index, oversized index lines, duplicate/overlapping topic files, memories that contradict current skills). Holds the METHOD, never the CRITERIA, so the curator can't itself go stale. Two tiers of fix: a NARROW safe/reversible tier (mechanical memory-index hygiene + append-only logs) may AUTO-APPLY behind a snapshot-first safety layer; everything RISKY (editing/merging/deleting/renaming skills, resolving contradictions, rewriting a memory fact, anything client-facing) stays PROPOSE-ONLY and waits for your approval. Runs Phase 1 (read-only scan + ranked report), then Phase 2 (auto-apply safe tier with archive-before-write, propose the rest). Built to run by hand OR by a weekly /schedule routine that posts to chat. Triggers - \"run the curator\", \"curate my library\", \"audit my skills/memory for rot\", \"what's gone stale across my skills\", \"my MEMORY.md is over budget\", \"find duplicate/overlapping skills\", \"weekly library health check\", \"/curator\". NOT for: folding one session's learnings into skills (use /session-distiller), certifying one client's pipeline (use /cold-email-flow-audit), driving a client forward (use /continue-client), or writing brand-new skills/clients from scratch."
 ---
 
-# Curator — keep the skill + memory library healthy as it grows
+# Curator: keep the skill + memory library healthy as it grows
 
 **Survey your entire agent library, fix the safe janitorial rot on its own, and propose everything riskier for your approval.** Point it at nothing in particular: it re-reads every skill under `.claude/skills/` and every file in your operator memory library, judges the library against itself and against today's truth, and produces one ranked report of what is rotting and how to fix it. Mechanical, reversible hygiene (the safe tier) it can apply itself behind a snapshot-first safety layer. Anything that changes a fact, a skill, or a file's identity (the risky tier) it proposes, and you approve.
 
@@ -51,7 +51,7 @@ If any of these cannot be satisfied, the edit is not safe-tier this run. Propose
 - **Owns:** the library-WIDE scan across both skills and memory; ranking findings by leverage; the adversarial second read on every finding; the single health report; the safe-tier auto-apply behind the safety layer; archiving superseded files; the weekly-run contract that makes it schedulable.
 - **Delegates (never reimplements):** the actual *authoring*. A "the skill is stale / a session taught us something new" fix routes to `/session-distiller` (session to skill) or a manual skill edit. A "this client's artifact is stale" fix routes to `/cold-email-flow-audit`. Heavy memory-content merges can route to `anthropic-skills:consolidate-memory`. The curator finds and proposes; the owning skill writes.
 
-## Boundary — what this is NOT (read before building anything near it)
+## Boundary: what this is NOT (read before building anything near it)
 
 | Skill | Its job | Why the curator is different |
 |---|---|---|
@@ -123,7 +123,7 @@ For each dimension, **derive the standard from the re-read library, not from thi
 - **Memory index health.** Is `MEMORY.md` over the size limit `CLAUDE.md` sets? Are index lines longer than the one-line cap (detail that belongs in a topic file)? The fix (trim the index line to a pointer, detail kept in the topic file) is **safe tier** when the detail is verifiably already in the topic file. The index must stay loadable; a truncated index silently drops memories from every session.
 - **Memory duplication / drift.** Two topic files covering the same fact, or a memory that contradicts the current skills. Merging topic-file *content* is risky tier. Removing an exact-duplicate *index line* is safe tier.
 
-## 3. Adversarial pass — every finding survives a skeptical second read
+## 3. Adversarial pass: every finding survives a skeptical second read
 
 Before any finding reaches the report, challenge it: am I sure these two skills truly overlap, or do their descriptions just sound similar while their jobs differ? Is this really an orphan, or does some flow reference it by a name I didn't grep? Is this memory actually stale, or is it a deliberate operator directive the skill simply hasn't absorbed? Only findings that survive are reported. This is the same discipline that keeps `/cold-email-flow-audit` from ordering a regeneration on a false alarm; here it keeps the curator from proposing you delete something load-bearing, and (critically) from auto-applying a "safe" trim that is not actually lossless.
 
@@ -131,7 +131,7 @@ Before any finding reaches the report, challenge it: am I sure these two skills 
 
 The library wins for **stale descriptive** memory (a memory that merely describes a skill mechanic that has since changed). But a `feedback` / `project` memory that records an explicit operator decision (often phrased "REVERSES the old default", "HARD RULE", "operator directive") is the **source of truth even when a skill disagrees**: there, the skill is behind. Never propose overwriting an operator directive to "match" a skill; surface it and propose flagging the *skill* for update instead. Editing an operator-directive memory is always risky tier, never auto-applied.
 
-## 5. Output of Phase 1 — present, then STOP
+## 5. Output of Phase 1: present, then STOP
 
 Write the report and present it leading with the point (per `output-style-guide.md`), in this order, then stop. Phase 2's safe-tier auto-apply runs next; the risky tier waits for approval.
 
@@ -206,10 +206,10 @@ The curator runs unattended on a weekly `/schedule` routine (and, once it exists
 
 ## Related skills
 
-- `/session-distiller` — the *author* half of the self-improving loop (session to skills). The curator is the *janitor* half; together they are the Hermes-style loop. When a finding is "the skill is stale", route the rewrite here.
-- `/cold-email-flow-audit` — same method-not-criteria and archive-never-delete DNA, scoped to one client's artifacts. The curator borrows its Stage-0 memory-drift-direction logic and applies it library-wide.
-- `anthropic-skills:consolidate-memory` — delegate heavy memory-content merges here; the curator adds the library-awareness, the index-budget enforcement, and the scheduling it lacks.
-- `/autonomous-execution-policy` — the don't-idle-wait / interleave rule and the hard-stop list (the curator layers its tiered apply on top: safe auto-applies, risky proposes).
-- `/api-cost-governance` — gates the small AI classify calls the scan may make.
-- `/cold-email-weekly-rhythm` — the model for the read-and-propose, fail-loud weekly scheduled-run contract.
-- `/schedule` — wraps the curator into the weekly routine that delivers its report to your channel.
+- `/session-distiller`: the *author* half of the self-improving loop (session to skills). The curator is the *janitor* half; together they are the Hermes-style loop. When a finding is "the skill is stale", route the rewrite here.
+- `/cold-email-flow-audit`: same method-not-criteria and archive-never-delete DNA, scoped to one client's artifacts. The curator borrows its Stage-0 memory-drift-direction logic and applies it library-wide.
+- `anthropic-skills:consolidate-memory`: delegate heavy memory-content merges here; the curator adds the library-awareness, the index-budget enforcement, and the scheduling it lacks.
+- `/autonomous-execution-policy`: the don't-idle-wait / interleave rule and the hard-stop list (the curator layers its tiered apply on top: safe auto-applies, risky proposes).
+- `/api-cost-governance`: gates the small AI classify calls the scan may make.
+- `/cold-email-weekly-rhythm`: the model for the read-and-propose, fail-loud weekly scheduled-run contract.
+- `/schedule`: wraps the curator into the weekly routine that delivers its report to your channel.

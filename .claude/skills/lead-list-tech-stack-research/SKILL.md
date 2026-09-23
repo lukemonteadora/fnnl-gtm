@@ -44,7 +44,7 @@ Each row names the capability **slot** that owns the need. The tool that actuall
 
 > **Sold-to axis (who a company sells to) is a FREE on-disk classification, not a new scrape.** The `sold_to` group (`sells_to_vertical`, `sells_to_customer_size`, `sells_to_department`, `sells_to_motion`) is `fill_method = derived`: `/tam-build` classifies it with Claude Code sub-agents in the same pass that scores `fit_status`, from text the `company_discovery` and `contact_discovery` tools already returned (typically a company description, keywords, and business-model field) plus the free homepage `extract-website-text`. No per-company credit, no new tool run. Per the Collection Routing Priority ladder below, this routes to the cheapest capable tool by default: the inputs are already captured, so it costs nothing beyond the classify pass, so do **not** route it to a paid scraper. Coverage is honestly `med` (many B2B firms publish "industries we serve" pages or vertical case studies; some state their end customer only implicitly). Native search-time sold-to filters (who a company sells to, customer size, sold-into department) exist in some premium tools, Prospeo v2 among them; treat that as a shortcut worth considering only if such a tool is what `contact_discovery` is actually locked to, never as an assumed capability. Slices → `/campaign-strategy`; data points → `/data-point-discovery`.
 
-## Collection Routing Priority — cheapest capable tool (minimize paid scrapers)
+## Collection Routing Priority: cheapest capable tool (minimize paid scrapers)
 
 When more than one tool can collect a signal, route to the **cheapest tool that actually returns it**. The light layer (the `crawl` and `search` roles, which in FNNL are the harness's WebFetch and WebSearch, plus Claude Code sub-agent extraction) plus free public data does most of the work; a paid scraper is a last resort, only when nothing lighter can get the field. This ladder is the default for `/data-point-discovery` `source_tool` assignment, `/tam-build` Layer 1b enrich + Layer 1c workflow-layer handoff, and any list-build collection step.
 
@@ -71,7 +71,7 @@ Do not collapse these layers into one vendor unless one vendor truly owns the so
 
 When building the whole TAM up front (see `/tam-build`), split the stack by what it costs. Layer 1 is company-level and flat/per-page cheap, so it is affordable across the ENTIRE TAM. Layer 2 is per-contact-credit and only runs on the slice a campaign actually sends to.
 
-**Layer 1 — company-level, build across the whole TAM up front (cheap):**
+**Layer 1: company-level, build across the whole TAM up front (cheap):**
 
 - Account discovery (primary spine: pick one per operator choice; HARD RULE in `/tam-build`): whatever `company_discovery` is locked to. Augment/extend only, never the primary list: `search` (coverage), a local-business source (truly local-SMB is its own motion, and the maps integration pack that runs it ships inert in `_vendor-library/` until `/stack-setup` activates it), a SaaS-revenue database (SaaS ARR)
 - Firmographics: the discovery tool itself, or a similarity/firmographic enricher
@@ -80,13 +80,13 @@ When building the whole TAM up front (see `/tam-build`), split the stack by what
 - Org-structure depth (sales-leader-vs-IC, CRO / VP Sales / CMO present): a **free exact-count endpoint** on the `contact_discovery` tool, scoped by `domains[]` + `job_functions[]` / `seniority[]` / `personas[]`. Where the tool offers this for **free (0 credits)** and returns an exact count (illustrative only: GetLeads `count_contacts`, §16), it is a true company-level aggregate with no per-contact reveal and no spend, and a `where_sql` predicate can reach org role-count fields directly (e.g. `MARKETING_ROLE_COUNT_ORG >= 5`). If the slot's tool instead charges per record for this, it is a Layer 2 cost and does not belong here.
 - Normalize / crunch: Claude Code sub-agents over disjoint batches (per `/personalization-subagent-pattern`); process / dedupe / score: the workflow layer (the list workbench by default, `run_state.list_workbench`, with rows pushed in by its inbound webhook at zero workbench credits; the session natively as fallback, or a workspace with a local no-row-ceiling engine on large lists)
 
-**Layer 2 — per-contact, defer to the live campaign slice (per-credit, expensive at TAM scale):**
+**Layer 2: per-contact, defer to the live campaign slice (per-credit, expensive at TAM scale):**
 
 - Contact DISCOVERY (real named people: first+last+title+LinkedIn; the discovery itself, with no email reveal, runs up front across the whole qualified TAM in `/tam-build` Layer 1d, because `full_enriched` means mapped, fit-scored and contacts discovered; signal columns optional): the people-search side of `contact_discovery`, run primary-first and then gap-filled per the contract's waterfall order. Examples of tools that could fill this slot (illustrative only, none chosen for FNNL): A-Leads `advanced_search`, GetLeads `search_contacts` (§16; always size it first with the free `count_contacts`), DiscoLike `generate-contacts` (ContaGen). **Never use a contact-index / `has_email` mode that returns the company email *pattern* rather than a real person for a sendable list**: pattern guesses fabricate names and bounce (one similarity vendor's version of this trap is documented in its integration pack, which ships inert in `_vendor-library/` until `/stack-setup` activates it). ⛔ **And NEVER discover contacts from a LinkedIn/Google search: a `site:linkedin.com/in` query plus an AI title-picker is BANNED.** Google's cached snippets give the AI **no employment-currency signal**, so it returns retired/departed people whose rows still pass every downstream gate. Contacts come only from a source with a **current-employer field**. (This does not touch the sanctioned search-plus-AI *backfill* of a LinkedIn URL for someone you already have.) Full rule: `/email-waterfall`.
 - Work email / mobile **FINDER** (when a real-named row has NO email): the primary `contact_enrichment` provider first, exhausted across the set, then the gap-fill provider, then a multi-provider waterfall for the residue (find+verify+catch-all across 20+ sources on a pay-per-valid model; illustrative only: BetterContact). The order is the one recorded at `lead_data.contact_enrichment.notes`, not a preference re-decided per run. A finder needs first+last+domain. Where the `contact_discovery` tool already returns emails on its contact rows, or exposes a LinkedIn-to-email batch endpoint, that is a cheaper gap-fill to exhaust before the paid waterfall (§16). (Per-tool routing detail in `/email-waterfall`.)
 - Email **VERIFICATION + catch-all** (when a row ALREADY has an email: verify-first, don't pay a finder to re-discover it): the `email_verification` tool. Prefer a **two-in-one** verifier whose single call returns both a deliverability status (deliverable/undeliverable/risky/unknown) AND a catch-all flag, covering deliverability AND catch-all in one pass, so no separate catch-all tool is needed. A verifier that collapses catch-all into valid or invalid will quietly inflate bounce rate. **Every finder's output is re-verified through the `email_verification` tool before sending: no source is exempt, and a finder's own internal self-check is a provider signal, not the send-gate.** Candidate reference below (§14); routing owned by `/email-waterfall`'s Verification Doctrine.
 
-Rule: build Layer 1 for the whole TAM; spend Layer 2 only on the contacts a campaign has confirmed it sends to. In the first wave that is the whole scored, eligible TAM, revealed and verified in P1 to P5 order, with the standing $100 run budget still stopping and asking (Aaron process alignment, operator directive 2026-09-22). Never run per-contact reveal / verification across the whole TAM up front, before scoring and campaign selection: that is the expensive move the "right order" avoids. **Within Layer 2, verify any existing email FIRST (email + catch-all) before paying a finder to discover a new one — finding when you already have a verifiable email double-pays.** Preview both layers through `/api-cost-governance` before spending.
+Rule: build Layer 1 for the whole TAM; spend Layer 2 only on the contacts a campaign has confirmed it sends to. In the first wave that is the whole scored, eligible TAM, revealed and verified in P1 to P5 order, with the standing $100 run budget still stopping and asking (Aaron process alignment, operator directive 2026-09-22). Never run per-contact reveal / verification across the whole TAM up front, before scoring and campaign selection: that is the expensive move the "right order" avoids. **Within Layer 2, verify any existing email FIRST (email + catch-all) before paying a finder to discover a new one. Finding when you already have a verifiable email double-pays.** Preview both layers through `/api-cost-governance` before spending.
 
 # Lead List Ideas From The Candidate Tool Catalog
 
@@ -298,28 +298,28 @@ RevCode is not mainly a data source. It is the operating layer that combines sou
 
 ### AI-Routing + Source-Signal Column Groups
 
-These extend the campaign-ready export above for source-signal-first campaigns where the row must carry its proof, its AI provenance, and its copy inputs. Build only the groups a given campaign needs — do not bloat every list with all of them.
+These extend the campaign-ready export above for source-signal-first campaigns where the row must carry its proof, its AI provenance, and its copy inputs. Build only the groups a given campaign needs. Do not bloat every list with all of them.
 
-**Canonical-schema reconciliation (read this first):** the source-evidence vocabulary is owned by `/lead-source-strategy`, whose required CSV fields are `source, source_type, source_url, evidence_url, signal, fit_reason, source_confidence`. The columns below **map onto** that schema — they do not rename it. `/list-quality-scorecard` dimension 5 and `/icp-prompt-builder` both read the canonical names, so keep them intact.
+**Canonical-schema reconciliation (read this first):** the source-evidence vocabulary is owned by `/lead-source-strategy`, whose required CSV fields are `source, source_type, source_url, evidence_url, signal, fit_reason, source_confidence`. The columns below **map onto** that schema. They do not rename it. `/list-quality-scorecard` dimension 5 and `/icp-prompt-builder` both read the canonical names, so keep them intact.
 
 - **Discovery group** (maps onto the canonical signal fields):
   - `source_signal` ↔ canonical `signal`
   - `signal_source_url` ↔ canonical `evidence_url`
   - `signal_source_type` ↔ canonical `source_type`
-  - `signal_date` (additive — when the signal is from)
-  - `signal_strength` (additive — strong / medium / weak; never overclaim weak)
+  - `signal_date` (additive: when the signal is from)
+  - `signal_strength` (additive: strong / medium / weak; never overclaim weak)
 
 - **Contact group:** the existing export columns (first/last/title/company/domain/email/LinkedIn) plus `buyer_persona`.
 
 - **Enrichment group:** `enrichment_status`, `email_status`, `phone_status`.
 
-- **Source-evidence group** (kept by canonical name): `source`, `source_url`, `fit_reason`, `source_confidence` — plus `account_context`, `business_context`, `technical_context`, `human_hook`.
+- **Source-evidence group** (kept by canonical name): `source`, `source_url`, `fit_reason`, `source_confidence`, plus `account_context`, `business_context`, `technical_context`, `human_hook`.
 
 - **Scoring group:**
-  - `confidence_score` (additive — the row's overall fit score; distinct from `source_confidence`, which is evidence strength)
+  - `confidence_score` (additive: the row's overall fit score; distinct from `source_confidence`, which is evidence strength)
   - `reason_for_fit`, `reason_now`, `pain_point`, `likely_objection`
 
-- **AI-routing group** (provenance — which provider ran each stage):
+- **AI-routing group** (provenance: which provider ran each stage):
   - `ai_research_provider`, `ai_analysis_provider`, `ai_copy_provider`
   - Under the no-AI-API rule (operator directive 2026-09-22) each of these records a Claude Code label (for example `claude-deep-research` for the research primary). The column names are kept because downstream skills read them.
 
@@ -1085,18 +1085,18 @@ Spider Cloud is a web crawling, scraping, search, screenshot, links, and browser
 
 Spider Cloud is not a lead database. It turns websites and pages into structured data you can use to qualify leads.
 
-## Fast-crawl settings (measured — read before any large crawl)
+## Fast-crawl settings (measured: read before any large crawl)
 
-Crawl throughput is **concurrency-bound, not per-site-bound.** A single crawl returns in ~0.5s in *any* mode, so the way to go fast is to run many in parallel and keep each call cheap — not to tune one call. Measured on a 1,800-site healthcare batch (2026-06-12): naive defaults ran ~15 rows/min; the settings below hit ~133 rows/min (~9x), zero rate-limit rejections.
+Crawl throughput is **concurrency-bound, not per-site-bound.** A single crawl returns in ~0.5s in *any* mode, so the way to go fast is to run many in parallel and keep each call cheap, not to tune one call. Measured on a 1,800-site healthcare batch (2026-06-12): naive defaults ran ~15 rows/min; the settings below hit ~133 rows/min (~9x), zero rate-limit rejections.
 
 - **`proxy_enabled: false`.** The premium proxy is an **8–9x slowdown** (≈86s/page vs ≈10s) *and* returns fewer pages. Crawl proxy-off by default; turn the proxy on only as a last resort for a confirmed bot wall.
 - **`request: 'http'` first; escalate to `'chrome'` only on an empty (0-page) result.** Raw-HTTP handles the server-rendered majority in ~0.5s; reserve the headless browser (slower) for the minority http can't render. `'smart'` works but http-first is faster and more predictable.
 - **`limit: 2` pages**, not 4+. Homepage + one internal page covers most company-level facts; more pages just costs time and credits.
 - **Concurrency ≈ 40 workers.** Measured 16→49 rows/min, 40→133 rows/min, both **0 × 429** across Spider + the sibling providers in that run (Serper and an AI extractor; the AI extractor is retired under the no-AI-API rule, operator directive 2026-09-22, and extraction now runs after the crawl in Claude Code sub-agents). ~40 is the sweet spot; in that run the extractor's latency was the next ceiling past it. Push higher only while watching **which provider 429s first** (the "master instrument"); that provider is your real cap, and stopping there is the rule.
-- **Run independent providers in parallel** (e.g. a Serper Places lookup alongside the crawl) with `Promise.all`, not serially — a row's wall-time becomes the *max* of the two, not the sum.
-- **"Run more workers/agents" does NOT add capacity past the provider ceiling.** Every crawl funnels through the one Spider account; more callers just queue or trigger 429s. The levers are the per-call config above + concurrency to the 429 knee — not more parallel callers.
-- **Direct `fetch()` is not a rescue path** for sites Spider can't crawl: on a bot-walled/JS tail it recovered only ~4/60 (403s + timeouts). Those need the chrome/proxy escalation or stay blank — don't build a "just fetch it yourself" fallback expecting it to save the hard cases.
-- **Kill orphaned crawl processes before relaunching.** A backgrounded crawl can survive a machine sleep or a killed task and keep appending to the same output file — two writers waste credits and can interleave lines. Check for stray PIDs (`Get-CimInstance Win32_Process -Filter "Name='node.exe'"`) first; an append-only + resume-on-done design makes any duplicates harmless, but kill the orphan anyway.
+- **Run independent providers in parallel** (e.g. a Serper Places lookup alongside the crawl) with `Promise.all`, not serially: a row's wall-time becomes the *max* of the two, not the sum.
+- **"Run more workers/agents" does NOT add capacity past the provider ceiling.** Every crawl funnels through the one Spider account; more callers just queue or trigger 429s. The levers are the per-call config above + concurrency to the 429 knee, not more parallel callers.
+- **Direct `fetch()` is not a rescue path** for sites Spider can't crawl: on a bot-walled/JS tail it recovered only ~4/60 (403s + timeouts). Those need the chrome/proxy escalation or stay blank. Don't build a "just fetch it yourself" fallback expecting it to save the hard cases.
+- **Kill orphaned crawl processes before relaunching.** A backgrounded crawl can survive a machine sleep or a killed task and keep appending to the same output file. Two writers waste credits and can interleave lines. Check for stray PIDs (`Get-CimInstance Win32_Process -Filter "Name='node.exe'"`) first; an append-only + resume-on-done design makes any duplicates harmless, but kill the orphan anyway.
 
 ## Lead Lists You Can Build
 
@@ -1741,23 +1741,23 @@ Added: June 8, 2026
 LeadsFriday (`leadsfriday.com`) is a pay-as-you-go B2B lead **extraction** platform. It scrapes contact and company records out of *existing* databases and platforms and exports them to CSV.
 
 **Where it earns its place is extraction only, from these four sources:**
-- **Crunchbase** — company data (company-only, not people)
-- **StoreLeads** — Shopify / ecommerce stores
-- **BuiltWith** — companies by web-visible technology
-- **LinkedIn** — Company Followers and Public Group Members
+- **Crunchbase:** company data (company-only, not people)
+- **StoreLeads:** Shopify / ecommerce stores
+- **BuiltWith:** companies by web-visible technology
+- **LinkedIn:** Company Followers and Public Group Members
 
 The platform also markets email/phone waterfall enrichment, email verification, and other LinkedIn/Sales-Navigator scrapes. **Treat those as a separate decision that belongs to the `contact_enrichment` and `email_verification` slots**, not something you inherit by using the extraction side. Route enrichment and verification through whatever those slots are locked to, in the waterfall order recorded at `lead_data.contact_enrichment.notes`, per the `/email-waterfall` skill. Do not default to an extraction vendor's own waterfall just because you are already using it for extraction: if it is genuinely the better option, it should win the slot on its merits.
 
 The site cites pre-compiled datasets (e.g. 3.5M+ Crunchbase companies, 3.5M+ Shopify stores). Treat every such count as a vendor marketing claim until you benchmark it on your own ICP.
 
-**Where it sits in the stack:** LeadsFriday is a *low-cost extraction layer* — a cheap way to pull rows out of the five sources above — not a source-of-truth signal and not the contact-enrichment layer. Its distinctive pitch is price and no subscription: pay-as-you-go credits, minimum 10 credits to start.
+**Where it sits in the stack:** LeadsFriday is a *low-cost extraction layer* (a cheap way to pull rows out of the five sources above), not a source-of-truth signal and not the contact-enrichment layer. Its distinctive pitch is price and no subscription: pay-as-you-go credits, minimum 10 credits to start.
 
 **Pricing (vendor-stated, PAYG, verify before relying on it):**
 - Crunchbase companies: ~$3.50 per 1,000 companies
 - LinkedIn company followers: ~$3.00 per 1,000 followers
-- (StoreLeads / BuiltWith / LinkedIn group members billed per result on the same credit system — confirm current rate in-app before a large pull)
+- (StoreLeads / BuiltWith / LinkedIn group members billed per result on the same credit system: confirm current rate in-app before a large pull)
 
-Because it bills per result on a small floor, it is genuinely cheap for high-volume extraction — which is exactly why the discipline below matters. Cheap data tempts you to skip ICP and source logic. Don't.
+Because it bills per result on a small floor, it is genuinely cheap for high-volume extraction, which is exactly why the discipline below matters. Cheap data tempts you to skip ICP and source logic. Don't.
 
 ## Lead Lists You Can Build
 
@@ -1768,32 +1768,32 @@ Because it bills per result on a small floor, it is genuinely cheap for high-vol
   - Build a list of Shopify stores for ecommerce-tooling offers (retention, reviews, logistics, ads).
 
 - Tech-stack list (BuiltWith)
-  - Target companies by web-visible technologies. Same limitation as Prospeo/Wappalyzer — it sees web-visible tech only, not internal tools.
+  - Target companies by web-visible technologies. Same limitation as Prospeo/Wappalyzer. It sees web-visible tech only, not internal tools.
 
 - LinkedIn company-followers list
   - Pull the followers of a competitor or category-leader company page.
-  - Treat following as weak intent, not buying intent — qualify before outreach.
+  - Treat following as weak intent, not buying intent. Qualify before outreach.
 
 - LinkedIn public-group-member list
   - Extract members of a relevant public LinkedIn group.
   - Same caution as Trigify-style social lists: group membership is context, not a buying signal.
 
-Every one of these is a raw extract. Hand it to the usual pipeline — `/icp-prompt-builder` to qualify, the contact layer (A-Leads, then GetLeads §16, then BetterContact for the residue, verified by Deliverable.co; see `/email-waterfall`) to fill and verify emails, `/list-quality-scorecard` before upload.
+Every one of these is a raw extract. Hand it to the usual pipeline: `/icp-prompt-builder` to qualify, the contact layer (A-Leads, then GetLeads §16, then BetterContact for the residue, verified by Deliverable.co; see `/email-waterfall`) to fill and verify emails, `/list-quality-scorecard` before upload.
 
 ## Tiny Features That Matter
 
-- Pay-as-you-go with a low credit floor means you can test on a small batch before committing volume — use that.
+- Pay-as-you-go with a low credit floor means you can test on a small batch before committing volume. Use that.
 - Four extraction sources (Crunchbase, StoreLeads, BuiltWith, LinkedIn followers/group members) from one cheap tool reduces vendor-hopping for raw pulls.
 - CSV export feeds straight into RevCode, `/icp-prompt-builder`, the contact layer, `/list-quality-scorecard`, and the locked sending-platform upload path.
 
 ## Where It Can Fail
 
-- It scrapes *other* platforms (LinkedIn). That carries the same platform-TOS and account-risk exposure as any LinkedIn scraper — third-party scraping is not risk-free. Treat it as a compliance decision, not a default.
+- It scrapes *other* platforms (LinkedIn). That carries the same platform-TOS and account-risk exposure as any LinkedIn scraper. Third-party scraping is not risk-free. Treat it as a compliance decision, not a default.
 - Its big database counts are marketing claims. Benchmark coverage and accuracy on a 25–50 row sample before scaling.
 - Cheap per-result pricing makes it easy to over-pull volume and poison a campaign. The price is not a reason to skip ICP, source-signal, and QA logic.
-- It is extraction-only for us. The output rows are unverified and often missing emails — they are not send-ready. Always route through the contact/verification layer before upload.
-- Crunchbase is company-only here — you still need a contact layer for people.
-- It is not account discovery. It will not tell you *which* companies to target — that's the primary spine (a DiscoLike case-study-seeded lookalike by default, or a broad ICP filter for net-new segments, with A-Leads as the enrichment layer; see `/tam-build`), augmented by Serper+Spider / GetLatka / the source signal.
+- It is extraction-only for us. The output rows are unverified and often missing emails. They are not send-ready. Always route through the contact/verification layer before upload.
+- Crunchbase is company-only here. You still need a contact layer for people.
+- It is not account discovery. It will not tell you *which* companies to target. That's the primary spine (a DiscoLike case-study-seeded lookalike by default, or a broad ICP filter for net-new segments, with A-Leads as the enrichment layer; see `/tam-build`), augmented by Serper+Spider / GetLatka / the source signal.
 
 ## Cost-Governance Note
 
@@ -1807,7 +1807,7 @@ Added: June 13, 2026
 
 ## What It Is
 
-BetterContact (`bettercontact.rocks`) is a **waterfall** email and phone enrichment API. You hand it a person (name + company, or a LinkedIn URL), and it queries **20+ data providers in sequence** until one returns a work email and/or a mobile number — then runs the result through a 4-layer verification check and, on a **pay-only-for-valid** credit model, charges only when the data passes. The pitch is a higher find rate than any single provider (it claims 60–70% higher email find rates and ~88% phone discovery) for the same effort, because it aggregates many sources instead of betting on one. Treat those numbers as vendor claims until benchmarked on your own ICP.
+BetterContact (`bettercontact.rocks`) is a **waterfall** email and phone enrichment API. You hand it a person (name + company, or a LinkedIn URL), and it queries **20+ data providers in sequence** until one returns a work email and/or a mobile number, then runs the result through a 4-layer verification check and, on a **pay-only-for-valid** credit model, charges only when the data passes. The pitch is a higher find rate than any single provider (it claims 60–70% higher email find rates and ~88% phone discovery) for the same effort, because it aggregates many sources instead of betting on one. Treat those numbers as vendor claims until benchmarked on your own ICP.
 
 This is a candidate for the **all-in-one waterfall at the Layer-2 contact step** (`/email-waterfall`). A multi-provider waterfall normally sits as the **residue-only fallback**, running after the primary finder rather than as the first call, but the actual position is whatever the contract records at `lead_data.contact_enrichment.notes`. It is not account discovery and not a lead source: it does not tell you *which* companies to target (that is the `company_discovery` spine, see `/tam-build`). It is the layer that turns a chosen person-row into a verified, sendable contact.
 
@@ -1819,8 +1819,8 @@ This is a candidate for the **all-in-one waterfall at the Layer-2 contact step**
 - Auth: header `X-API-Key: <key>` (env var `BETTERCONTACT_API_KEY` in `scripts/.env`)
 - `GET /account` → credits balance + auth check (free)
 - `POST /async` → submit 1–100 contacts (`enrich_email_address`, `enrich_phone_number` flags) → returns a request `id`
-- `GET /async/{id}` → poll until `status` reaches `terminated` (lifecycle `not_started` → `in_progress` → `terminated` — the script waits through the first two); returns per-contact `contact_email_address` + `contact_email_address_status` (`deliverable` / `catch_all_safe` / `catch_all_not_safe` / `undeliverable`), `email_provider`, and phone when requested. Note: the live API does not echo `custom_fields` back, so the script joins results by batch index (with a count check)
-- Free tier: 50 starter credits — enough to prove the pipeline end-to-end before committing budget.
+- `GET /async/{id}` → poll until `status` reaches `terminated` (lifecycle `not_started` → `in_progress` → `terminated`: the script waits through the first two); returns per-contact `contact_email_address` + `contact_email_address_status` (`deliverable` / `catch_all_safe` / `catch_all_not_safe` / `undeliverable`), `email_provider`, and phone when requested. Note: the live API does not echo `custom_fields` back, so the script joins results by batch index (with a count check)
+- Free tier: 50 starter credits, enough to prove the pipeline end-to-end before committing budget.
 
 ## Lead Lists You Can Build
 
@@ -1836,7 +1836,7 @@ These are all *enrichment passes over an already-targeted person list*, not stan
 
 - Email + mobile multichannel list
   - Add `--phone` to also pull mobile numbers for a calling/SMS channel where legally allowed.
-  - Higher cost and higher compliance risk — use deliberately, not by default.
+  - Higher cost and higher compliance risk. Use deliberately, not by default.
 
 - Deliverability-classified list (still verifier-gated)
   - BetterContact's built-in self-check gives a first cut, separating likely-`valid` from catch-all/risky/undeliverable.
@@ -1851,36 +1851,36 @@ These are all *enrichment passes over an already-targeted person list*, not stan
 
 ## Tiny Features That Matter
 
-- Waterfall across 20+ providers in one call — higher find rate than any single source, no manual provider-hopping.
-- Pay-only-for-valid — credits are not burned on misses, which makes the cost preview an upper bound, not the actual spend.
+- Waterfall across 20+ providers in one call: higher find rate than any single source, no manual provider-hopping.
+- Pay-only-for-valid: credits are not burned on misses, which makes the cost preview an upper bound, not the actual spend.
 - Built-in 4-layer self-check: a useful provider signal, but **NOT the send-gate**. Per the universal-verifier rule, every email it sources is still re-verified through the `email_verification` tool before sending, exactly like any other finder's output.
-- Async batch API (≤100/request) with poll-or-webhook — fits a deterministic, resumable script better than an interactive tool.
-- **Per-account batches process in PARALLEL** — probed 2026-06-16: 6 concurrent batches ran with no `on_hold`/queue and ~3.5× effective speedup. `bettercontact_enrich.mjs --concurrency N` (default 4) keeps N batches in flight, so a multi-batch list finishes far faster than one-at-a-time. The real speed lever is `--concurrency`, not contacts-per-request (already capped at 100). The server's useful concurrency tops out ~3–4, and the 60 req/min API limit still holds (the pool polls well under it) — so don't push past ~5 or run multiple instances (that risks the `on_hold` throttle). `--concurrency 1` = old strictly-sequential mode.
+- Async batch API (≤100/request) with poll-or-webhook: fits a deterministic, resumable script better than an interactive tool.
+- **Per-account batches process in PARALLEL:** probed 2026-06-16: 6 concurrent batches ran with no `on_hold`/queue and ~3.5× effective speedup. `bettercontact_enrich.mjs --concurrency N` (default 4) keeps N batches in flight, so a multi-batch list finishes far faster than one-at-a-time. The real speed lever is `--concurrency`, not contacts-per-request (already capped at 100). The server's useful concurrency tops out ~3–4, and the 60 req/min API limit still holds (the pool polls well under it), so don't push past ~5 or run multiple instances (that risks the `on_hold` throttle). `--concurrency 1` = old strictly-sequential mode.
 - `custom_fields` echo lets the script join results back to the exact input row; `bettercontact_enrich.mjs` falls back to an index join with a count check if the echo is ever absent.
 - 50 free credits to benchmark before paying.
 
 ## Where It Can Fail
 
-- It is enrichment, not discovery — it will not improve a bad ICP or a wrong target list. Garbage rows in, verified-garbage out.
+- It is enrichment, not discovery. It will not improve a bad ICP or a wrong target list. Garbage rows in, verified-garbage out.
 - Find rate depends on the input quality; a clean `linkedin_url` or an exact `company_domain` lifts results well above a fuzzy company name.
-- The waterfall takes minutes, not seconds — this is an async submit-then-poll flow, never a synchronous lookup. Build it as a two-step job (the script already does).
+- The waterfall takes minutes, not seconds. This is an async submit-then-poll flow, never a synchronous lookup. Build it as a two-step job (the script already does).
 - Vendor find-rate claims (60–70% higher, 88% phone) are marketing until benchmarked on your ICP. Benchmark it properly rather than by feel: run this vendor and its alternatives against one frozen, dated sample, and score each on its **incremental unique correct contribution** over what the current stack already returns plus its **false-negative rate**, not on raw coverage. Method: **Benchmark A Vendor Before You Pay For It** above, from `eric-deliverability-doctrine.md` Part 2.
-- Mobile numbers raise compliance and brand risk — only enable `--phone` when calling/SMS is appropriate and legal for that market.
-- Per-contact credits are expensive at TAM scale — keep it on the live campaign slice (Layer 2), never the whole TAM.
+- Mobile numbers raise compliance and brand risk: only enable `--phone` when calling/SMS is appropriate and legal for that market.
+- Per-contact credits are expensive at TAM scale: keep it on the live campaign slice (Layer 2), never the whole TAM.
 
 ## Cost-Governance Note
 
 BetterContact is a paid, credit-based tool. Before any enrichment run, route through `/api-cost-governance` to preview the credit/USD cost (the `--dry-run` eligible-row count is the upper bound; pay-per-valid means actual spend is usually lower), check the balance, and block if the key is under cost or the $10 warning threshold. The same gate applies to every paid tool in this catalog. If this vendor's parked script is ever activated, its `--max-credits N` flag is the hard pre-submit stop worth wiring into that gate.
 
-## Credit Planning — Avoid the "On Hold" Trap
+## Credit Planning: Avoid the "On Hold" Trap
 
-BetterContact runs on a **monthly credit allowance**, not a usage-based wallet, and it has **no auto-recharge**. The key rule: **never run out of credits while a run is in flight.** The moment credits hit 0, BetterContact parks enrichment requests as **"on hold"**, and held calls do **NOT** automatically retrigger when you add credits later — you must manually **Process** the on-hold queue in the API Cockpit, and processing still consumes credits. A balance that goes to 0 mid-run therefore strands the remainder of the batch.
+BetterContact runs on a **monthly credit allowance**, not a usage-based wallet, and it has **no auto-recharge**. The key rule: **never run out of credits while a run is in flight.** The moment credits hit 0, BetterContact parks enrichment requests as **"on hold"**, and held calls do **NOT** automatically retrigger when you add credits later. You must manually **Process** the on-hold queue in the API Cockpit, and processing still consumes credits. A balance that goes to 0 mid-run therefore strands the remainder of the batch.
 
 Practical prevention (apply on every run and when sizing the plan):
 
-- **Check the balance before you submit, top up before you hit the limit.** The step-0 `--credits` call is load-bearing; the script now also auto-checks the live balance before submitting — it aborts at a 0 balance and warns when the balance is below the eligible-row count, so it never silently creates an on-hold queue.
+- **Check the balance before you submit, top up before you hit the limit.** The step-0 `--credits` call is load-bearing; the script now also auto-checks the live balance before submitting: it aborts at a 0 balance and warns when the balance is below the eligible-row count, so it never silently creates an on-hold queue.
 - **Plan around the monthly allowance.** Pricing tiers: Free = 50 one-time signup credits; **Starter $15/mo = 200 credits; Pro $49/mo = 1,000–50,000** (tiered); Enterprise $799+/mo. Costing is **1 credit = 1 verified email, 10 credits = 1 verified phone**, pay-per-valid (only valid results charge). Unused credits **roll over, capped at your plan's monthly amount.** For recurring or high-volume sending, size the monthly plan above real volume rather than topping up reactively after each stall.
-- **Respect the rate limits:** **60 requests/minute, ≤100 contacts per request.** The script's 100-row sequential batches stay well under this — but do **not** run multiple instances concurrently, which trips BetterContact's throttle (it queues batches as `on_hold`).
+- **Respect the rate limits:** **60 requests/minute, ≤100 contacts per request.** The script's 100-row sequential batches stay well under this, but do **not** run multiple instances concurrently, which trips BetterContact's throttle (it queues batches as `on_hold`).
 - **Estimate credits from volume.** If the operator gives a rough daily/weekly request count, compute the monthly credits needed (≈ verified-emails/mo + 10×verified-phones/mo, adjusted for the find rate) and recommend the matching plan tier so the account never runs dry.
 
 ---
@@ -1906,7 +1906,7 @@ A working integration script for this vendor (`deliverable_verify.mjs`, zero-dep
 
 ## API
 
-Base `https://api.deliverable.co/gateway`, auth header `x-api-key`. Single: `POST /verify/single {email}` → `task_id`; poll `POST /verify/single/status {task_id}` → `{processing_status, email_status, is_catch_all}`. Bulk: `POST /verify/bulk` (multipart `file`+`fileName`, ≤25MB, one email/line) → `file_id`; poll `POST /verify/bulk/status {file_id}` → `{status, download_url}`; list `GET /verify/bulk/files?page&pageSize`. Errors: 400 / 401 / 402 / 413 / 429. **No balance/credits endpoint** — a `402` means out of credits / expired.
+Base `https://api.deliverable.co/gateway`, auth header `x-api-key`. Single: `POST /verify/single {email}` → `task_id`; poll `POST /verify/single/status {task_id}` → `{processing_status, email_status, is_catch_all}`. Bulk: `POST /verify/bulk` (multipart `file`+`fileName`, ≤25MB, one email/line) → `file_id`; poll `POST /verify/bulk/status {file_id}` → `{status, download_url}`; list `GET /verify/bulk/files?page&pageSize`. Errors: 400 / 401 / 402 / 413 / 429. **No balance/credits endpoint:** a `402` means out of credits / expired.
 
 ## Gate Mapping (catch-all OVERRIDES deliverable)
 
@@ -1921,8 +1921,8 @@ Send only `valid`. `catch_all` / `risky` / `unknown` → review; `invalid` / no-
 ## Tiny Things That Matter
 
 - **Single-async is fast; bulk is a slow queue.** Live test: 3 emails via single-async finished in <10s; a 3-email bulk file was still `pending` after 5+ minutes. Default to single-async for campaign slices; use `--bulk` only for very large unattended jobs.
-- **No balance endpoint** — you cannot pre-read credits, so `--check` is connectivity only and a `402` mid-run = out of credits. Top up at `app.deliverable.co`.
-- It correctly flags catch-all domains that a plain deliverability verifier calls "valid" (e.g. stripe.com → `deliverable` + `is_catch_all:true`). That is the whole point — never auto-send a catch-all "deliverable" row.
+- **No balance endpoint:** you cannot pre-read credits, so `--check` is connectivity only and a `402` mid-run = out of credits. Top up at `app.deliverable.co`.
+- It correctly flags catch-all domains that a plain deliverability verifier calls "valid" (e.g. stripe.com → `deliverable` + `is_catch_all:true`). That is the whole point: never auto-send a catch-all "deliverable" row.
 
 ## Cost-Governance Note
 
@@ -2424,4 +2424,4 @@ That is the bar. Anything below that is just spreadsheet decoration.
 
 ## Activity Log Protocol
 
-Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short — record status, not raw output. Full protocol: `client-activity-log.md`.
+Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short: record status, not raw output. Full protocol: `client-activity-log.md`.

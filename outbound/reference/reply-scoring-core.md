@@ -23,7 +23,7 @@ meeting_book_rate = meetings booked / (positive_interested + positive_soft + pos
 
 ## Classification schema
 
-Every reply is classified into exactly one bucket. Classify only the **first** reply per lead — later messages are the conversation, not the scoring signal.
+Every reply is classified into exactly one bucket. Classify only the **first** reply per lead. Later messages are the conversation, not the scoring signal.
 
 | Label | Meaning | Count as "positive"? |
 |---|---|---|
@@ -115,7 +115,7 @@ The router says "suppress" for several classes. Make it concrete: append every `
 profiles/<business-slug>/suppression-list.csv   (schema defined in /email-waterfall)
 ```
 
-For each suppressed reply write: `email`, `company_domain`, `linkedin_url`, `company_name`, `reason` (the reply class; `bounce` for technical bounces), `source_campaign` (this campaign slug), `date_added`. For `negative_hostile`, also suppress the whole `company_domain`. Create the file if it does not exist. **Do NOT suppress** `negative_notnow` or `neutral_question` — those are re-touch-later, not do-not-contact.
+For each suppressed reply write: `email`, `company_domain`, `linkedin_url`, `company_name`, `reason` (the reply class; `bounce` for technical bounces), `source_campaign` (this campaign slug), `date_added`. For `negative_hostile`, also suppress the whole `company_domain`. Create the file if it does not exist. **Do NOT suppress** `negative_notnow` or `neutral_question`. Those are re-touch-later, not do-not-contact.
 
 The upload skills read `suppression-list.csv` at their List Gate / Suppression Gate, so every future campaign for this client inherits these suppressions.
 

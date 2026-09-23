@@ -1,12 +1,12 @@
-# Google Docs auto-export — one-time setup
+# Google Docs auto-export: one-time setup
 
 This wires the cold-outbound DOCX renderers (campaign approval brief, campaign-sequence and lifecycle presentations) so that every render also creates a **native, formatted Google Doc** in your Google Drive automatically. No more "transfer and upload" into Google Docs.
 
-**Why a setup step at all?** The connected Drive tool can only auto-convert plain text/CSV, and it can't reliably push a full DOCX. So a tiny uploader script (`scripts/docx_to_gdoc.mjs`) uses *your own* Google credential to upload the DOCX with Drive's conversion flag — producing a real Google Doc you can open, edit, and share. You do this once (~10 minutes); after that it's fully automatic.
+**Why a setup step at all?** The connected Drive tool can only auto-convert plain text/CSV, and it can't reliably push a full DOCX. So a tiny uploader script (`scripts/docx_to_gdoc.mjs`) uses *your own* Google credential to upload the DOCX with Drive's conversion flag, producing a real Google Doc you can open, edit, and share. You do this once (~10 minutes); after that it's fully automatic.
 
-The script uses the least-privilege **`drive.file`** scope: it can only touch files it creates (its own export folder and the Docs it makes) — it cannot see the rest of your Drive.
+The script uses the least-privilege **`drive.file`** scope: it can only touch files it creates (its own export folder and the Docs it makes). It cannot see the rest of your Drive.
 
-> **Related:** for *native* read/write of Docs, Sheets, and Drive (beyond this one-way DOCX export) there's now a Google MCP — see [`google-docs-mcp-setup.md`](google-docs-mcp-setup.md). It's complementary: this script preserves full Word formatting on import (the MCP can't); the MCP edits docs/sheets live afterward. Both can share the **same** OAuth client you create below — just enable the extra APIs the MCP needs.
+> **Related:** for *native* read/write of Docs, Sheets, and Drive (beyond this one-way DOCX export) there's now a Google MCP: see [`google-docs-mcp-setup.md`](google-docs-mcp-setup.md). It's complementary: this script preserves full Word formatting on import (the MCP can't); the MCP edits docs/sheets live afterward. Both can share the **same** OAuth client you create below, just enable the extra APIs the MCP needs.
 
 ---
 
@@ -54,7 +54,7 @@ Paste that line into `scripts/.env` too.
 node docx_to_gdoc.mjs --in "../profiles/<client-slug>/Campaign Approval Brief - <Client>.docx" --title "Campaign Approval Brief - <Client>"
 ```
 
-It prints `CREATED <link>` (or `UPDATED <link>` on later runs) and, on first run, a `GDRIVE_FOLDER_ID=…` line — add that to `scripts/.env` to pin the destination folder. Done.
+It prints `CREATED <link>` (or `UPDATED <link>` on later runs) and, on first run, a `GDRIVE_FOLDER_ID=…` line. Add that to `scripts/.env` to pin the destination folder. Done.
 
 ---
 
@@ -66,12 +66,12 @@ The skills run it automatically right after rendering the DOCX:
 node scripts/docx_to_gdoc.mjs --in "<rendered .docx>" --title "<doc title>"
 ```
 
-- **First render** of a brief → creates a Google Doc in the **"FNNL Agency - Cold Outbound"** Drive folder.
+- **First render** of a brief → creates a Google Doc in the FNNL Agency Cold Outbound Drive folder (its exact name is the `FOLDER_NAME` constant in `scripts/docx_to_gdoc.mjs`).
 - **Re-renders** of the same title → update the *same* Doc, so any link you've shared stays valid.
-- If the creds aren't set up yet, the script exits with code `2` and the skills simply skip the Google Doc and deliver the DOCX as before — nothing breaks.
+- If the creds aren't set up yet, the script exits with code `2` and the skills simply skip the Google Doc and deliver the DOCX as before. Nothing breaks.
 
 ## Security notes
 
 - The refresh token and client secret live only in `scripts/.env` (already gitignored). Treat them like any API key.
 - To revoke access later: <https://myaccount.google.com/permissions> → remove the app.
-- Scope is `drive.file` — the script never reads your existing Drive files, only the ones it creates.
+- Scope is `drive.file`: the script never reads your existing Drive files, only the ones it creates.

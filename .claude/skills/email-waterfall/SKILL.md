@@ -58,11 +58,11 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue — never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work — never idle.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue. Never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work. Never idle.
 
 ## Activity Log Protocol
 
-Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short — record status, not raw output. Full protocol: `client-activity-log.md`.
+Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short: record status, not raw output. Full protocol: `client-activity-log.md`.
 
 ## Inputs
 
@@ -149,14 +149,14 @@ profiles/<business-slug>/suppression-list.csv
 | Column | Meaning |
 |---|---|
 | `email` | primary match key |
-| `company_domain` | domain-level match (used for `negative_hostile` — suppress the whole domain) |
+| `company_domain` | domain-level match (used for `negative_hostile`: suppress the whole domain) |
 | `linkedin_url` | person match when email is absent |
 | `company_name` | fuzzy fallback match |
 | `reason` | `unsubscribe` / `negative_notfit` / `negative_hostile` / `bounce` / `manual` |
 | `source_campaign` | campaign slug that produced the suppression |
 | `date_added` | `YYYY-MM-DD` |
 
-If the file does not exist yet, treat it as empty (it is created on first write by the reply-scoring skills). Match on `email` first, then `linkedin_url`, then `company_domain` (the whole domain when the reason is `negative_hostile`), then `company_name` fuzzy. Drop every match **before** spending on enrichment or verification — never pay to enrich someone you cannot contact.
+If the file does not exist yet, treat it as empty (it is created on first write by the reply-scoring skills). Match on `email` first, then `linkedin_url`, then `company_domain` (the whole domain when the reason is `negative_hostile`), then `company_name` fuzzy. Drop every match **before** spending on enrichment or verification. Never pay to enrich someone you cannot contact.
 
 ## Verification Doctrine. HARD RULE (operator standard, updated 2026-06-16)
 
@@ -289,7 +289,7 @@ Stop and ask before spending money when:
 
 Stop and do not upload when:
 
-- Any unchecked row remains in the send file. This skill is the single owner of the verification gate: `leads.verified.csv` must be **100% verification-checked**, with every non-deliverable (invalid / risky / catch-all-fail) row moved to `leads.review.csv` — never into the send file.
+- Any unchecked row remains in the send file. This skill is the single owner of the verification gate: `leads.verified.csv` must be **100% verification-checked**, with every non-deliverable (invalid / risky / catch-all-fail) row moved to `leads.review.csv`. Never into the send file.
 - The send file has not passed `/list-quality-scorecard` with grade B or better. (The scorecard removes or quarantines failing rows first and grades the remainder. It reports verification coverage and does not re-gate verification, because that gate lives here.)
 
 **Email yield is not a send gate (Aaron process alignment, operator directive 2026-09-22; supersedes the house stop "fewer than 80% of the original sourced rows survived as verified-deliverable, fix the source, do not send a thin list").** Rows no finder or residue pass could close go to `leads.review.csv` as `no_email`, verified catch-alls go to the holdback, and every row the email verifier returns `valid` ships. Judge a source on fit, bounce and reply, never on find rate. Aaron's Sep 21 run shipped at about 61% yield (about 19,600 leads, just under 12,000 verified emails) and launched. A low yield goes in the report as evidence for the source and waterfall-order review, never as a reason to hold the verified rows.

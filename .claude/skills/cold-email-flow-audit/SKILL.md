@@ -5,15 +5,15 @@ description: Full-chain conformance auditor for ONE cold-outbound client. Re-rea
 
 # Cold Email Flow Audit
 
-**Certify one client's entire cold-outbound pipeline against today's skills, memories, and policies — and fix what drifted.** Point it at a client and it re-reads the current flow on disk, walks every stage from `/cold-email-kickoff` to the ready-to-launch draft, and judges each existing artifact, default, and memory by one question: *does this still conform to what the skill that produced it says today?* Anything built under an older version of a skill is flagged **STALE** and routed for regeneration, the old file is archived, and a conformance report is written.
+**Certify one client's entire cold-outbound pipeline against today's skills, memories, and policies, and fix what drifted.** Point it at a client and it re-reads the current flow on disk, walks every stage from `/cold-email-kickoff` to the ready-to-launch draft, and judges each existing artifact, default, and memory by one question: *does this still conform to what the skill that produced it says today?* Anything built under an older version of a skill is flagged **STALE** and routed for regeneration, the old file is archived, and a conformance report is written.
 
-This is a **certifier that finds drift** — not a driver that pushes to launch. It can run on any client at any time, including ones everyone assumes are "done," because that is exactly where stale artifacts hide.
+This is a **certifier that finds drift**, not a driver that pushes to launch. It can run on any client at any time, including ones everyone assumes are "done," because that is exactly where stale artifacts hide.
 
-## The principle that makes this skill trustworthy — METHOD, never CRITERIA
+## The principle that makes this skill trustworthy: METHOD, never CRITERIA
 
-An auditor that hardcodes the rules it checks ("copy must carry the 3-line signature", "min time gap = 15", "per-contact full-body columns") goes stale the moment those rules change, and then it cheerfully certifies artifacts against **yesterday's** standard — becoming the exact bug it hunts.
+An auditor that hardcodes the rules it checks ("copy must carry the 3-line signature", "min time gap = 15", "per-contact full-body columns") goes stale the moment those rules change, and then it cheerfully certifies artifacts against **yesterday's** standard, becoming the exact bug it hunts.
 
-So this skill file contains the **method** (how to audit a stage), and **never the criteria** (what a stage requires). At runtime it **derives** every checklist by re-reading the current source of truth — the producing skill's `SKILL.md`, the governing memories, and the cross-cutting policy docs — on disk, right now. Any concrete value mentioned anywhere in this file is an **illustration as of writing, not the standard**: trust the re-read source, never this file's examples. If this file and a re-read skill ever disagree, the re-read skill wins, and this file is what's stale.
+So this skill file contains the **method** (how to audit a stage), and **never the criteria** (what a stage requires). At runtime it **derives** every checklist by re-reading the current source of truth (the producing skill's `SKILL.md`, the governing memories, and the cross-cutting policy docs) on disk, right now. Any concrete value mentioned anywhere in this file is an **illustration as of writing, not the standard**: trust the re-read source, never this file's examples. If this file and a re-read skill ever disagree, the re-read skill wins, and this file is what's stale.
 
 ## How "built under an outdated skill" is detected
 
@@ -26,7 +26,7 @@ Artifacts carry no version stamp, so there is nothing to version-diff. The only 
 - **Owns:** re-reading the current flow; classifying memory drift direction; the per-stage existence + conformance checks; the adversarial verification of every finding; the conformance report; the archive-after-regenerate cleanup; the activity-log write-after.
 - **Delegates (never reimplements):** every actual fix. Regeneration is handed to the owning skill (`/icp-onboarding`, `/offer-intelligence`, `/market-evidence`, `/lead-magnet-brainstorm`, `/offer-test-slate`, `/lead-source-strategy`, `/data-point-discovery`, `/tam-build`, `/campaign-strategy`, `/email-waterfall`, `/list-quality-scorecard`, `/campaign-copywriting`, `/lifecycle-copy`, the platform spintax + upload skills) or to `/continue-client` for the multi-step tail. Remaining-step routing reads from `/cold-email-kickoff` Step 2.1 / Step 6, the single routing table. Proceed-vs-stop, the spend ceiling, the no-re-ask rule, the hard-stop list, and the browser-fallback rule come from `/autonomous-execution-policy`.
 
-## Boundary — what this is NOT
+## Boundary: what this is NOT
 
 | Skill | Job | Why this is different |
 |---|---|---|
@@ -37,11 +37,11 @@ Artifacts carry no version stamp, so there is nothing to version-diff. The only 
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`), proceed without pausing: run the audit, apply the delegated fixes, and re-verify — never re-ask a decision already in `run_state`, `client-profile.yaml`, the activity log, memory, or the operator's latest message. Spend runs against the standing budget in `run_state.spend_ceiling_usd` ($100 per client run, never asked, in either execution mode): auto-approve within it. Stop only for the hard stops below. On a long async wait (an enrichment or copy regen), background-poll and interleave other productive work — never idle.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`), proceed without pausing: run the audit, apply the delegated fixes, and re-verify. Never re-ask a decision already in `run_state`, `client-profile.yaml`, the activity log, memory, or the operator's latest message. Spend runs against the standing budget in `run_state.spend_ceiling_usd` ($100 per client run, never asked, in either execution mode): auto-approve within it. Stop only for the hard stops below. On a long async wait (an enrichment or copy regen), background-poll and interleave other productive work. Never idle.
 
 ## Material Decision Rule
 
-When a finding's remediation reaches a material fork — a provider change, spend above the ceiling, a source-of-truth change, a campaign-direction change, a memory edit with cross-client blast radius, or anything client-facing or live-system-affecting — name the realistic options, recommend the strongest, and say why the alternatives are weaker before committing, per the global Decision & Recommendation Style. For low-risk reversible fixes inside the locked plan, state the recommendation and proceed.
+When a finding's remediation reaches a material fork (a provider change, spend above the ceiling, a source-of-truth change, a campaign-direction change, a memory edit with cross-client blast radius, or anything client-facing or live-system-affecting), name the realistic options, recommend the strongest, and say why the alternatives are weaker before committing, per the global Decision & Recommendation Style. For low-risk reversible fixes inside the locked plan, state the recommendation and proceed.
 
 ## Activity Log Protocol (read-first / write-after)
 
@@ -49,12 +49,12 @@ Read `profiles/<client>/activity-log.md` (its CURRENT STATE block) before auditi
 
 ## Canonical paths
 
-Resolve every `profiles/<client>/...`, `scripts/...`, `memory/...`, `client-activity-log.md`, `cold-email-copy-best-practices.md`, `verified-list-gate.md`, and `output-style-guide.md` reference under `<outbound>/` (the data home: `outbound/`), per the repo path-resolution rule — not the current working directory. A reference of the form `/<name>` means that skill in `.claude/skills/`. Client profiles are gitignored, so enumerate and read them with the **Bash/Read tools, not Glob/Grep** (Glob is `.gitignore`-filtered and won't see them). The persistent operator memory lives at the user's `~/.claude/projects/.../memory/` directory (`MEMORY.md` index + topic files), outside this repo — read it there.
+Resolve every `profiles/<client>/...`, `scripts/...`, `memory/...`, `client-activity-log.md`, `cold-email-copy-best-practices.md`, `verified-list-gate.md`, and `output-style-guide.md` reference under `<outbound>/` (the data home: `outbound/`), per the repo path-resolution rule, not the current working directory. A reference of the form `/<name>` means that skill in `.claude/skills/`. Client profiles are gitignored, so enumerate and read them with the **Bash/Read tools, not Glob/Grep** (Glob is `.gitignore`-filtered and won't see them). The persistent operator memory lives at the user's `~/.claude/projects/.../memory/` directory (`MEMORY.md` index + topic files), outside this repo. Read it there.
 
 ## When to use
 
-- Before pressing Start on any client — a final "is this pipeline actually built to today's flow?" certification.
-- After a skill-library update that touched the flow — re-certify in-flight clients so nothing carries a superseded artifact forward.
+- Before pressing Start on any client: a final "is this pipeline actually built to today's flow?" certification.
+- After a skill-library update that touched the flow: re-certify in-flight clients so nothing carries a superseded artifact forward.
 - Periodically, for a long-running client, to catch silent drift.
 - When you're unsure whether an artifact, default, or memory is current.
 - Operator says "audit <client> end to end", "is <client> conformant", "check <client> against the current flow", "re-certify <client>", "did anything go stale".
@@ -68,50 +68,50 @@ Resolve every `profiles/<client>/...`, `scripts/...`, `memory/...`, `client-acti
 
 ## What this skill produces
 
-- A per-client report: `profiles/<client>/cold-email-flow-audit-<date>.md` — headline verdict, a **memory-reconciliation** section, a **per-stage conformance table**, a prioritized **remediation** list, an **archived** section, and an "already conforms — leave alone" section. Optionally exported to a Google Doc.
+- A per-client report: `profiles/<client>/cold-email-flow-audit-<date>.md`: headline verdict, a **memory-reconciliation** section, a **per-stage conformance table**, a prioritized **remediation** list, an **archived** section, and an "already conforms: leave alone" section. Optionally exported to a Google Doc.
 - Under `auto_execute`: the stale stages **regenerated via their owning skills** and re-verified, the superseded files **archived** (not deleted), and stale **descriptive memory corrected** to match the current skills.
 - A refreshed activity log (CURRENT STATE + a LOG entry).
 
 ## Source-of-truth registry (what to re-read every run)
 
-Re-read these on disk at the start — never audit from memory of how they work:
+Re-read these on disk at the start, never audit from memory of how they work:
 
 1. **The chain skills' current `SKILL.md`** for every stage below: `/cold-email-kickoff`, `/icp-onboarding`, `/offer-intelligence`, `/market-evidence`, `/lead-magnet-brainstorm`, `/offer-test-slate`, `/lead-source-strategy`, `/data-point-discovery`, `/social-proof-bank`, `/tam-build`, `/lead-scoring`, `/campaign-strategy`, `/icp-prompt-builder`, `/email-waterfall`, `/list-quality-scorecard`, `/campaign-copywriting`, `/lifecycle-copy`, the locked platform's spintax + upload + inbox-manager skills (plus its reply manager, if `/stack-setup` activated a pack that provides one), and an inbox-setup tracker, if `/stack-setup` activated a pack that provides one (none ships in this workspace).
 2. **Cross-cutting policy docs:** `/autonomous-execution-policy`, `/api-cost-governance`, `/ai-model-routing`, `market-evidence-standard.md` (the research evidence standard), `cold-email-copy-best-practices.md`, `verified-list-gate.md`, `output-style-guide.md`, `coldoutbound-gotchas.md`, `spam-word-checker`.
-3. **Memory** — the operator `MEMORY.md` index + the relevant HARD-RULE topic files + this client's onboarding memory.
-4. **Repo + global `CLAUDE.md`** — the path-resolution rule, the Decision & Recommendation Style, the Communication & Output Style, the client-activity-log protocol.
-5. **This client** — `activity-log.md` CURRENT STATE, `client-profile.yaml` (`run_state` + every `run_state.status.*` flag), and only the campaign artifacts the stages below reference.
+3. **Memory:** the operator `MEMORY.md` index + the relevant HARD-RULE topic files + this client's onboarding memory.
+4. **Repo + global `CLAUDE.md`:** the path-resolution rule, the Decision & Recommendation Style, the Communication & Output Style, the client-activity-log protocol.
+5. **This client:** `activity-log.md` CURRENT STATE, `client-profile.yaml` (`run_state` + every `run_state.status.*` flag), and only the campaign artifacts the stages below reference.
 
 ## Two conformance classes, two check mechanisms
 
 The chain mixes files with live infrastructure; they are checked differently:
 
 - **Artifact stages** (a file on disk) → "does this file's content conform to its producing skill today?"
-- **Live / infra stages** (platform or mailbox state) → "does the live state match current policy?" — judged from **cheap live reads** (list campaigns, read warmup/mailbox status), never by re-running a paid step.
+- **Live / infra stages** (platform or mailbox state) → "does the live state match current policy?", judged from **cheap live reads** (list campaigns, read warmup/mailbox status), never by re-running a paid step.
 
 ## Read-only and free to audit
 
-Conformance is judged from artifacts already on disk plus cheap live reads. The audit **never** re-runs paid enrichment, re-verifies emails, or re-crawls a TAM just to check — that would make a QA pass cost like a build. Spending happens only inside delegated remediation, and only through the owning skill, gated by `/api-cost-governance` and the spend ceiling.
+Conformance is judged from artifacts already on disk plus cheap live reads. The audit **never** re-runs paid enrichment, re-verifies emails, or re-crawls a TAM just to check. That would make a QA pass cost like a build. Spending happens only inside delegated remediation, and only through the owning skill, gated by `/api-cost-governance` and the spend ceiling.
 
 ---
 
 ## Flow
 
-### Stage 0 — Memory & defaults conformance (run FIRST)
+### Stage 0: Memory & defaults conformance (run FIRST)
 
 Memory sets the defaults the rest of the audit judges against, so reconcile it before the artifact walk. For each relevant memory (the operator `MEMORY.md` topic files + this client's onboarding memory), compare it against the current skills you re-read, and **classify the direction of drift before editing anything**:
 
-- **Memory is stale (skill is newer)** — the skill moved on; the memory still pins an old default, tool, or rule. → **Auto-correct the memory to match the skill** (this is the common case the operator asked for). Rewrite the one-fact file, update the `MEMORY.md` index pointer, keep `[[links]]`, and record it.
-- **Skill is stale (memory is newer)** — the memory is a `feedback` / `project` entry recording an explicit operator decision the skill hasn't absorbed yet (e.g. a "REVERSES the old default" directive). Here the **memory is the truth** and the skill is behind. → **Do NOT touch the memory.** Surface it to the operator and **flag the SKILL for update** (note it in the report; a `/session-distiller` pass or a manual skill edit is the fix).
-- **Ambiguous / genuine conflict** — can't tell which is authoritative → surface to the operator (Material Decision), edit nothing.
+- **Memory is stale (skill is newer):** the skill moved on; the memory still pins an old default, tool, or rule. → **Auto-correct the memory to match the skill** (this is the common case the operator asked for). Rewrite the one-fact file, update the `MEMORY.md` index pointer, keep `[[links]]`, and record it.
+- **Skill is stale (memory is newer):** the memory is a `feedback` / `project` entry recording an explicit operator decision the skill hasn't absorbed yet (e.g. a "REVERSES the old default" directive). Here the **memory is the truth** and the skill is behind. → **Do NOT touch the memory.** Surface it to the operator and **flag the SKILL for update** (note it in the report; a `/session-distiller` pass or a manual skill edit is the fix).
+- **Ambiguous / genuine conflict:** can't tell which is authoritative → surface to the operator (Material Decision), edit nothing.
 
-**Policy (operator-confirmed): skill wins for stale *descriptive* memory; protect operator directives.** Auto-correct only memory that merely *describes* a skill mechanic that changed. Anything that looks like an operator directive, or whose correction has cross-client blast radius, is **surfaced, not auto-flipped** — because a memory edit is read by every future session and every client, a far larger blast radius than one client's artifact. Never delete a `feedback`/`project` operator directive to make it "match" a skill — that inverts the source of truth.
+**Policy (operator-confirmed): skill wins for stale *descriptive* memory; protect operator directives.** Auto-correct only memory that merely *describes* a skill mechanic that changed. Anything that looks like an operator directive, or whose correction has cross-client blast radius, is **surfaced, not auto-flipped**, because a memory edit is read by every future session and every client, a far larger blast radius than one client's artifact. Never delete a `feedback`/`project` operator directive to make it "match" a skill. That inverts the source of truth.
 
 Write the outcome into the report's **Memory reconciliation** section: each memory checked, drift direction, action taken (corrected / surfaced / left as-is), and blast radius.
 
 ### The stage map (the audit spine)
 
-Walk the stages in order. Each row names the **governing source(s) to re-read** and the **kind of check** — the actual pass/fail bar is whatever the re-read source says today (method, not criteria).
+Walk the stages in order. Each row names the **governing source(s) to re-read** and the **kind of check**: the actual pass/fail bar is whatever the re-read source says today (method, not criteria).
 
 **Artifact stages (file-conformance):**
 
@@ -160,41 +160,41 @@ Skip only provider-specific branches that do not apply, such as a step belonging
 For each applicable stage:
 
 1. **Re-read** the governing source(s) for that stage (from the registry).
-2. **Derive** the required-checks list from them — not from this file.
+2. **Derive** the required-checks list from them, not from this file.
 3. **Locate** the artifact / live state (Bash/Read for gitignored profiles; the platform API for live state).
-4. **Existence check** — is it actually there and non-empty?
-5. **Conformance check** — does its content/state meet today's derived requirements?
-6. **Verdict** — `CONFORMS` / `STALE` (built under a superseded flow) / `MISSING` / `DRIFT` (live state diverged from policy) / `N/A` (path doesn't require it) — with **evidence**: the specific rule + the artifact location.
-7. **Remediation owner** — which skill regenerates it.
+4. **Existence check:** is it actually there and non-empty?
+5. **Conformance check:** does its content/state meet today's derived requirements?
+6. **Verdict:** `CONFORMS` / `STALE` (built under a superseded flow) / `MISSING` / `DRIFT` (live state diverged from policy) / `N/A` (path doesn't require it), with **evidence**: the specific rule + the artifact location.
+7. **Remediation owner:** which skill regenerates it.
 
 ### Adversarial pass (before any finding is acted on)
 
-Every `STALE` / `DRIFT` / `MISSING` finding gets a skeptical second read: *"Am I sure the current skill requires this, or am I misreading it? Is the artifact actually non-conforming, or just formatted differently?"* Only findings that survive the second read are reported and remediated. This prevents the audit from ordering an expensive regeneration on a false alarm — the same discipline that produced the optimization-audit's adversarial check.
+Every `STALE` / `DRIFT` / `MISSING` finding gets a skeptical second read: *"Am I sure the current skill requires this, or am I misreading it? Is the artifact actually non-conforming, or just formatted differently?"* Only findings that survive the second read are reported and remediated. This prevents the audit from ordering an expensive regeneration on a false alarm: the same discipline that produced the optimization-audit's adversarial check.
 
 ### Transitive staleness
 
-After Stage 0 corrects a stale memory default, check whether any client artifact was produced **under the old default**. If yes, that artifact is stale **by inheritance** even if it conforms to its own skill in isolation — route it through the same remediation. (Example: a memory pinned an old default tool; lists were built with it; the corrected default changes the tool → the affected lists are re-evaluated.)
+After Stage 0 corrects a stale memory default, check whether any client artifact was produced **under the old default**. If yes, that artifact is stale **by inheritance** even if it conforms to its own skill in isolation. Route it through the same remediation. (Example: a memory pinned an old default tool; lists were built with it; the corrected default changes the tool → the affected lists are re-evaluated.)
 
-### Remediation (diagnose, then delegate — never reimplement)
+### Remediation (diagnose, then delegate, never reimplement)
 
 Under `auto_execute`, for each surviving `STALE` / `MISSING` finding, in stage order:
 
 1. **Hand the fix to the owning skill** (or `/continue-client` for the multi-step tail). Pass the locked `run_state`, the artifact path, and the specific rule it failed. The owning skill regenerates to today's standard. Honor every gate (verified-list gate, copy-QA gate, spend ceiling) and the no-re-ask rule.
-2. **Re-verify** the regenerated artifact with the same conformance check — confirm it now `CONFORMS` before moving on.
-3. **Then archive** the superseded file (next section) — only after the replacement verifies.
+2. **Re-verify** the regenerated artifact with the same conformance check. Confirm it now `CONFORMS` before moving on.
+3. **Then archive** the superseded file (next section), only after the replacement verifies.
 
-The copy-architecture / personalization-rung choice in `/campaign-copywriting` is a surfaced, client-facing fork — resolve it per that skill's rule (don't silently default to list-level templating) and record the rationale. Never reimplement a skill's logic here; this skill routes and verifies.
+The copy-architecture / personalization-rung choice in `/campaign-copywriting` is a surfaced, client-facing fork: resolve it per that skill's rule (don't silently default to list-level templating) and record the rationale. Never reimplement a skill's logic here; this skill routes and verifies.
 
 Under `review_gates`, stop after the report and present the prioritized remediation list for the operator to trigger.
 
-### Cleanup — archive superseded files (never delete)
+### Cleanup: archive superseded files (never delete)
 
 A regenerated stage is only half the fix: a leftover stale file that "looks done" is what causes the next session to reuse it. So:
 
-- **Archive, don't delete.** Move each superseded or orphaned file to `profiles/<client>/_archive/<date>-flow-audit/`, mirroring its original relative path so it is one-step restorable. Match any archive convention already present in the profile rather than inventing a competing one. **Deletion is never automatic** — purging the archive is a manual operator action.
-- **Order is the safety rule.** Archive the old file **only after** its conforming replacement exists and verifies. Never move the old one aside first — a failed regeneration must never leave the client with nothing.
-- **What gets archived:** (a) artifacts the audit superseded, and (b) genuine **orphans** — files no current skill produces anymore, left by a removed/renamed step.
-- **Orphans are adversarially verified before moving** — confirm no current skill still reads the file (same false-positive discipline as the STALE check; honors the "never sweep the tree" rule). If a file's content contradicts what it's assumed to be, or the agent didn't generate it, **surface it instead of archiving** (harness safety rule).
+- **Archive, don't delete.** Move each superseded or orphaned file to `profiles/<client>/_archive/<date>-flow-audit/`, mirroring its original relative path so it is one-step restorable. Match any archive convention already present in the profile rather than inventing a competing one. **Deletion is never automatic**. Purging the archive is a manual operator action.
+- **Order is the safety rule.** Archive the old file **only after** its conforming replacement exists and verifies. Never move the old one aside first. A failed regeneration must never leave the client with nothing.
+- **What gets archived:** (a) artifacts the audit superseded, and (b) genuine **orphans**: files no current skill produces anymore, left by a removed/renamed step.
+- **Orphans are adversarially verified before moving**: confirm no current skill still reads the file (same false-positive discipline as the STALE check; honors the "never sweep the tree" rule). If a file's content contradicts what it's assumed to be, or the agent didn't generate it, **surface it instead of archiving** (harness safety rule).
 - **Never archive** a working/source-of-truth file (`client-profile.yaml`, `activity-log.md`) or anything a live draft still references.
 - **Live cleanup is not a file move.** A superseded platform draft is handled by the remediation handoff to the platform skill; removing or replacing a live draft is a Material Decision, not a silent sweep.
 - **Manifest.** Write `_archive/<date>-flow-audit/MANIFEST.md`: what moved, from where, why (stage + rule failed), and what replaced it. It feeds the report's Archived section and makes restore trivial.
@@ -203,25 +203,25 @@ A regenerated stage is only half the fix: a leftover stale file that "looks done
 
 Write `profiles/<client>/cold-email-flow-audit-<date>.md`, leading with the point (per `output-style-guide.md`):
 
-- **Headline verdict** — is this pipeline conformant to today's flow? How many stages were stale, fixed, still blocked?
-- **Memory reconciliation** — what was corrected, what was surfaced, drift direction, blast radius.
-- **Per-stage conformance table** — Stage · Artifact · Exists · Conforms · Verdict · Rule/evidence · Remediation owner.
-- **Remediation** — what was regenerated + re-verified (auto_execute), or the prioritized fix-list (review_gates).
-- **Archived** — what was moved and why (from the manifest).
-- **Already conforms — leave alone.**
+- **Headline verdict:** is this pipeline conformant to today's flow? How many stages were stale, fixed, still blocked?
+- **Memory reconciliation:** what was corrected, what was surfaced, drift direction, blast radius.
+- **Per-stage conformance table:** Stage · Artifact · Exists · Conforms · Verdict · Rule/evidence · Remediation owner.
+- **Remediation:** what was regenerated + re-verified (auto_execute), or the prioritized fix-list (review_gates).
+- **Archived:** what was moved and why (from the manifest).
+- **Already conforms: leave alone.**
 
 Optionally export to a Google Doc (`scripts/docx_to_gdoc.mjs` path, soft-skip if creds absent). Then append the activity-log LOG entry + refresh CURRENT STATE. Commit the session's own scripts/report per the standing commit rule.
 
 ---
 
-## Hard stops (never auto-do — from `/autonomous-execution-policy` §3)
+## Hard stops (never auto-do, from `/autonomous-execution-policy` §3)
 
 - **Starting / sending a live campaign.** The audit certifies; the operator presses Start.
 - **Spend above the approved ceiling**, entering financial credentials, or enabling auto-recharge.
 - **Changing a locked provider stack / sending platform**, or any source-of-truth change, without surfacing it.
-- **Overwriting an operator-directive memory** to match a skill — surface it and flag the skill instead.
-- **Deleting** anything — the audit archives (reversible move) only; deletion is manual.
-- **The pre-launch safety gates** (warmup ≥ 2 weeks, placement/auth, final QA, reply readiness under Gate D) and the **verified-list gate** — these block the live send on fail; autonomy never relaxes them.
+- **Overwriting an operator-directive memory** to match a skill. Surface it and flag the skill instead.
+- **Deleting** anything: the audit archives (reversible move) only; deletion is manual.
+- **The pre-launch safety gates** (warmup ≥ 2 weeks, placement/auth, final QA, reply readiness under Gate D) and the **verified-list gate**: these block the live send on fail; autonomy never relaxes them.
 - **Filling an empty capability slot.** A provider slot the stack contract leaves empty, or a locked value with no contract slot behind it, is reported as a finding and routed to `/stack-setup`. The audit never picks a vendor to close the gap, whatever the execution mode.
 - **Irreversible actions; legal / compliance risk; anything in the global safety rules.**
 
@@ -239,10 +239,10 @@ Optionally export to a Google Doc (`scripts/docx_to_gdoc.mjs` path, soft-skip if
 
 ## Related skills
 
-- `/cold-email-kickoff` — the from-zero orchestrator and the **single source of truth** for the stage chain, resume routing (Step 2.1), and the per-campaign launch pipeline (Step 6) this audit certifies against.
-- `/continue-client` — the forward-driver; this audit hands the multi-step regeneration tail to it. (That skill conformance-checks only the remaining chain; this one certifies the whole chain.)
-- `/autonomous-execution-policy` — proceed-vs-stop, the spend ceiling, the no-re-ask rule, the hard-stop list, the don't-idle-wait and browser-fallback rules.
-- `/session-distiller` — when a finding is "the SKILL is stale, not the artifact/memory," route the skill update here.
-- `/api-cost-governance` — gates any spend inside delegated remediation.
+- `/cold-email-kickoff`: the from-zero orchestrator and the **single source of truth** for the stage chain, resume routing (Step 2.1), and the per-campaign launch pipeline (Step 6) this audit certifies against.
+- `/continue-client`: the forward-driver; this audit hands the multi-step regeneration tail to it. (That skill conformance-checks only the remaining chain; this one certifies the whole chain.)
+- `/autonomous-execution-policy`: proceed-vs-stop, the spend ceiling, the no-re-ask rule, the hard-stop list, the don't-idle-wait and browser-fallback rules.
+- `/session-distiller`: when a finding is "the SKILL is stale, not the artifact/memory," route the skill update here.
+- `/api-cost-governance`: gates any spend inside delegated remediation.
 - The chain skills (`/icp-onboarding`, `/offer-intelligence`, `/market-evidence`, `/lead-magnet-brainstorm`, `/offer-test-slate`, `/lead-source-strategy`, `/data-point-discovery`, `/social-proof-bank`, `/tam-build`, `/lead-scoring`, `/campaign-strategy`, `/icp-prompt-builder`, `/email-waterfall`, `/list-quality-scorecard`, `/campaign-copywriting`, `/lifecycle-copy`, the platform spintax/upload/inbox-manager skills, and an inbox-setup tracker, if `/stack-setup` activated a pack that provides one (none ships in this workspace)): re-read for their current standard and delegated to for fixes.
-- `client-activity-log.md`, `output-style-guide.md`, `verified-list-gate.md`, `cold-email-copy-best-practices.md`, `coldoutbound-gotchas.md` — the protocol + reference docs the audit reads.
+- `client-activity-log.md`, `output-style-guide.md`, `verified-list-gate.md`, `cold-email-copy-best-practices.md`, `coldoutbound-gotchas.md`: the protocol + reference docs the audit reads.

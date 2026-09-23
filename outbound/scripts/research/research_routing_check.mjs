@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// research_routing_check.mjs — ledger-based audit that a PRIMARY research pass was actually
+// research_routing_check.mjs: ledger-based audit that a PRIMARY research pass was actually
 // LOGGED for each research-skill run. This is the telemetry behind the
-// "Research Routing — HARD RULE (Claude native deep research primary)" rule in ai-model-routing.md.
+// "Research Routing: HARD RULE (Claude native deep research primary)" rule in ai-model-routing.md.
 // Zero dependencies (native fs + JSON), Node 18+. Reads the run-log table in
 // ../api-balance-ledger.md (scripts/api-balance-ledger.md).
 //
@@ -16,7 +16,7 @@
 // (operator directive 2026-09-22). A run whose ledger lines name ANY third-party AI provider FLAGS,
 // even when the same cell also names a Claude primary or says "deep research": under the rule no
 // third-party AI provider is a valid route, as primary or as helper.
-// It FLAGS any research-skill run that logged NEITHER — i.e. a run that appears to have skipped a
+// It FLAGS any research-skill run that logged NEITHER, i.e. a run that appears to have skipped a
 // real primary pass (drifted to a bare inline WebSearch / a DiscoGen per-row pass / nothing).
 //
 // AUDITABILITY NOTE: Claude native /deep-research is Anthropic-billed, so it does NOT move any
@@ -170,8 +170,8 @@ if (skillFilter) {
     .sort((a, b) => (a.lastDate < b.lastDate ? 1 : -1))[0];
   if (!latest) {
     const res = { ok: false, violation: true, reason: 'no logged ledger line found for this research-skill run',
-      skill: skillFilter, client: clientFilter || '(any)', detail: 'No ledger row matched — a research run that wrote NO line is invisible here; append the primary-research line per /ai-model-routing.' };
-    if (JSON_OUT) console.log(JSON.stringify(res, null, 2)); else console.log(`VIOLATION — ${res.reason} (skill=${res.skill}, client=${res.client})`);
+      skill: skillFilter, client: clientFilter || '(any)', detail: 'No ledger row matched: a research run that wrote NO line is invisible here; append the primary-research line per /ai-model-routing.' };
+    if (JSON_OUT) console.log(JSON.stringify(res, null, 2)); else console.log(`VIOLATION: ${res.reason} (skill=${res.skill}, client=${res.client})`);
     process.exit(1);
   }
   const g = latest.g;
@@ -187,7 +187,7 @@ if (skillFilter) {
         : 'No primary research pass logged: FLAG. Run the /deep-research primary (or the claude-subagent-fanout fallback) and log it (no third-party primary is valid under the no-AI-API rule).',
   };
   if (JSON_OUT) console.log(JSON.stringify(res, null, 2));
-  else console.log(`${g.hasPrimary ? 'PASS' : 'FLAG'} — ${g.skill} (${g.clientRaw}) — providers: ${[...g.providers].join(', ') || '—'}`);
+  else console.log(`${g.hasPrimary ? 'PASS' : 'FLAG'}: ${g.skill} (${g.clientRaw}), providers: ${[...g.providers].join(', ') || 'none'}`);
   process.exit(g.hasPrimary ? 0 : 1);
 }
 
@@ -207,7 +207,7 @@ if (JSON_OUT) {
 }
 
 const pad = (s, n) => String(s).padEnd(n);
-console.log(`Research routing audit — ${ledgerPath}`);
+console.log(`Research routing audit: ${ledgerPath}`);
 console.log(`(scans logged research-skill runs; cannot see a research run that wrote no ledger line)`);
 console.log(`(primary = claude-deep-research, or its fallback claude-subagent-fanout; any third-party AI label FLAGS; no-AI-API rule, 2026-09-22)\n`);
 if (!runGroups.length) {
@@ -223,9 +223,9 @@ console.log('\nPer-client primary-research coverage:');
 for (const c of clientCoverage.values()) {
   console.log(`  ${c.anyPrimary ? '[ok]  ' : '[FLAG]'} ${pad(c.raw, 24)} ${c.researchRuns} research run(s), compliant primary logged: ${c.anyPrimary ? 'YES' : 'NO'}`);
 }
-console.log(`\nSummary: ${runGroups.length} research-skill run(s) — ${runGroups.length - flagged.length} PASS, ${flagged.length} FLAG.`);
+console.log(`\nSummary: ${runGroups.length} research-skill run(s), ${runGroups.length - flagged.length} PASS, ${flagged.length} FLAG.`);
 if (flagged.length) {
-  console.log('FLAG = no primary research pass logged for that research-skill run — likely routing drift');
+  console.log('FLAG = no primary research pass logged for that research-skill run: likely routing drift');
   console.log('(a bare inline WebSearch or a DiscoGen per-row pass is not a primary). Run the /deep-research primary and log it.');
   console.log('A run whose ledger lines name a third-party AI provider also FLAGS, even beside a Claude primary: the no-AI-API rule allows none.');
 }

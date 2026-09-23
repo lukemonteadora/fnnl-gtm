@@ -39,9 +39,9 @@ Do not turn untrue, unsafe or non-compliant paths into user-facing options. Offe
 
 When asking the user, use the Claude Desktop native Interactive Inputs / Choice Prompts pattern from /clarification-first: recommended option first, short choices, and Custom answer last when a custom answer is plausible.
 
-## Flow Map (orientation only — `/cold-email-kickoff` is the authority)
+## Flow Map (orientation only, `/cold-email-kickoff` is the authority)
 
-This is a high-level map so a newcomer can see the shape of the workflow. It is **not** the operating checklist and is intentionally not detailed — `/cold-email-kickoff` owns the exact steps, order, and gates. If this map and `/cold-email-kickoff` ever disagree, kickoff is correct.
+This is a high-level map so a newcomer can see the shape of the workflow. It is **not** the operating checklist and is intentionally not detailed: `/cold-email-kickoff` owns the exact steps, order, and gates. If this map and `/cold-email-kickoff` ever disagree, kickoff is correct.
 
 **The shape in one sentence:** Buyer and pain, then the offer, then the list built to fit that offer, then the copy.
 
@@ -79,8 +79,8 @@ Never put client passwords, JWTs, domain export payloads, purchased-domain JSON,
 
 ## What To Do Next
 
-For both guided execution and a full launch, run `/cold-email-kickoff` — it is the single entry point.
+For both guided execution and a full launch, run `/cold-email-kickoff`. It is the single entry point.
 
 ## Activity Log Protocol
 
-Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short — record status, not raw output. Full protocol: `client-activity-log.md`.
+Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short: record status, not raw output. Full protocol: `client-activity-log.md`.

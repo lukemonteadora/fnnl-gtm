@@ -17,13 +17,13 @@ Do not turn failed or unsafe paths into user-facing options. If this skill's QA 
 
 When asking the user, use the Claude Desktop native Interactive Inputs / Choice Prompts pattern from /clarification-first: recommended option first, short choices, and Custom answer last when a custom answer is plausible.
 
-Things break. When they do, you need a playbook — not panic. This skill is the triage decision tree.
+Things break. When they do, you need a playbook, not panic. This skill is the triage decision tree.
 
 ## The five incident types
 
 | Symptom | Most likely cause | First action | Fix time |
 |---|---|---|---|
-| Reply rate dropped sharply | Deliverability — emails in spam | Run spam placement test | 1-14 days |
+| Reply rate dropped sharply | Deliverability: emails in spam | Run spam placement test | 1-14 days |
 | Bounce rate spiked >3% | Bad list OR domain reputation | Check bounce types | 1-3 days |
 | Domain blacklisted | Shared IP bad actor OR your domain got flagged | Check blacklists, rotate if needed | 7-30 days |
 | Inbox blocked in warmup | Warmup network flagged sending patterns | Pause, investigate, maybe replace | 1-7 days |
@@ -53,7 +53,7 @@ Are ALL campaigns dropping, or just one?
   One → campaign-specific (targeting, copy, list)
 ```
 
-### Step 3: Fleet-wide drop — check these in order
+### Step 3: Fleet-wide drop (check these in order)
 
 1. **Spam placement test** through the locked sending platform's available tooling. Run it via `/email-deliverability-audit` when the locked platform has its own placement test; if it has none, use an external seed-list placement tool and say which one was used.
    - If inbox placement <70% → real deliverability issue, skip to Step 4
@@ -71,7 +71,7 @@ Are ALL campaigns dropping, or just one?
    - If bounce >3% → list quality degraded
    - If bounce <1% but reply rate low → emails landing in spam (Step 1 result)
 
-### Step 4: You have a spam-placement problem — what to do
+### Step 4: You have a spam-placement problem (what to do)
 
 **Before you rank senders or shift volume, apply the anti-gaming caution.** Concentrating inboxes onto a domain that looks like a winner contaminates the very comparison used to call it a winner: that domain may simply be sitting on an easier list or a better offer. Require real volume, a genuinely comparable assignment, and a full reply-lag window before ranking domains or sender cohorts against each other, and revisit the ranking once you have changed what sends through them. This applies anywhere in this playbook where sending capacity moves between domains or inboxes. Full caution in `eric-deliverability-doctrine.md`.
 
@@ -180,12 +180,12 @@ Send the campaign's email 1 to a fresh @gmail.com account (yours, not in the cam
 - Images / inline images → remove them
 - Heavy HTML styling → simplify, fewer tags
 - Marketing-style phrases ("click here", "act now", "limited time") → remove
-- Unsubscribe in header (List-Unsubscribe) — actually helps deliverability, but formatting must be correct
+- Unsubscribe in header (List-Unsubscribe), actually helps deliverability, but formatting must be correct
 - Mass signature blocks with logos → simplify to text-only
 
 ### Step 3: A/B test
 
-Create two versions — your current and a stripped-down version. Send 50 leads each. Check which has better reply rate after 7 days.
+Create two versions: your current and a stripped-down version. Send 50 leads each. Check which has better reply rate after 7 days.
 
 ## The 72-hour "total failure" checklist
 
@@ -194,10 +194,10 @@ If NOTHING is working and you don't know why:
 1. **Pause all campaigns.** Stop damage.
 2. **Audit:** run `/email-deliverability-audit` full suite
 3. **Spam test:** run the locked platform's placement test, or an external seed-list tool if it has none, on 2 sender subsets
-4. **Check SPF/DKIM/DMARC on every domain** — if ANY are missing, fix before resuming
+4. **Check SPF/DKIM/DMARC on every domain**: if ANY are missing, fix before resuming
 5. **Check the locked mailbox provider health dashboard**. If the provider's IPs or workspace are in trouble, everyone on that pool may be affected.
 6. **Reduce volume 75%** for the restart
-7. **Use a known-good copy** — don't launch new copy during recovery
+7. **Use a known-good copy**: don't launch new copy during recovery
 8. **Watch reply rate daily** for 7 days post-restart
 
 ## When to call in experts
@@ -208,7 +208,7 @@ If NOTHING is working and you don't know why:
 
 ## What to do next
 
-**Re-run `/email-deliverability-audit over the last 7 days of send data` in 7 days** to confirm recovery. Domain/inbox reputation rebuilds slowly — don't re-audit before the 7-day window.
+**Re-run `/email-deliverability-audit over the last 7 days of send data` in 7 days** to confirm recovery. Domain/inbox reputation rebuilds slowly. Don't re-audit before the 7-day window.
 
 Meanwhile: continue the weekly rhythm via `/cold-email-weekly-rhythm`, which catches new issues as they emerge.
 
@@ -216,7 +216,7 @@ Meanwhile: continue the weekly rhythm via `/cold-email-weekly-rhythm`, which cat
 
 ## Related skills
 
-- `/email-deliverability-audit` — the diagnostic suite you run first
+- `/email-deliverability-audit`: the diagnostic suite you run first
 - Inbox manager for the locked `run_state.sending_platform` (whichever pack `/stack-setup` activated, otherwise the platform's native sender settings): tag, rotate, and retire work
 - Domain setup flow for the locked `run_state.infrastructure_stack` (whichever registrar plus mailbox-provider pack `/stack-setup` activated, otherwise those providers' own consoles): used to replace a burned domain
 - Positive-reply scoring for the locked `run_state.sending_platform` (whichever pack `/stack-setup` activated, otherwise the platform's own reply export): used to confirm recovery
@@ -224,8 +224,8 @@ Meanwhile: continue the weekly rhythm via `/cold-email-weekly-rhythm`, which cat
 
 ## The 1% rule sanity check
 
-After fixes, give it at least 200 sends at your normal volume. If reply rate is still <1% — there's a deeper issue. Start the playbook over.
+After fixes, give it at least 200 sends at your normal volume. If reply rate is still <1%, there's a deeper issue. Start the playbook over.
 
 ## Activity Log Protocol
 
-Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short — record status, not raw output. Full protocol: `client-activity-log.md`.
+Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short: record status, not raw output. Full protocol: `client-activity-log.md`.

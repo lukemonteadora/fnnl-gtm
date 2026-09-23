@@ -29,7 +29,7 @@ Before packaging the DOCX, read the source `variants.yaml` and confirm the senda
 
 Stop and route back to `/campaign-copywriting` if the copy fails. Do not silently rewrite copy inside this DOCX skill.
 
-This also inherits the **verified-list gate** (`verified-list-gate.md`): the `variants.yaml` it packages must have been produced by `/campaign-copywriting` under that gate (verified slice + list grade ≥ B + locked strategy). Confirm that upstream before packaging — do not package copy for a slice that never had a verified list.
+This also inherits the **verified-list gate** (`verified-list-gate.md`): the `variants.yaml` it packages must have been produced by `/campaign-copywriting` under that gate (verified slice + list grade ≥ B + locked strategy). Confirm that upstream before packaging. Do not package copy for a slice that never had a verified list.
 
 Hard-stop examples include em dashes, double hyphens, mid-sentence dash separators, colon-as-runway sentences, comma-wrapped company descriptors, weak CTAs, repeated generic new-thread CTA deliverables, unconfirmed CTA deliverables, a broken sequence shape (two emails by default, a third only in a small market or as a logged arm, never more than three touches, and Email 1 missing any of its declared variants, three by default: A, B and C; Aaron process alignment, operator directive 2026-09-22, supersedes the two-thread 4-step structure), follow-up-reference openers, goodbye or fake wrap-up emails, or links and calendar links in emails 1-3 without explicit user override.
 
@@ -137,7 +137,7 @@ powershell -ExecutionPolicy Bypass -File scripts\campaign_docx_presentation.ps1 
   -OutputName "First 3 Campaign Launch Overview - Client Name.docx"
 ```
 
-**Google Doc (when configured).** After the DOCX renders, also create/update a native Google Doc so the client never has to upload it — gated on the one-time setup in `reference/gdoc-export-setup.md`; the script exits `2` and is safely skipped if creds are not set:
+**Google Doc (when configured).** After the DOCX renders, also create/update a native Google Doc so the client never has to upload it: gated on the one-time setup in `reference/gdoc-export-setup.md`; the script exits `2` and is safely skipped if creds are not set:
 
 ```powershell
 node scripts\docx_to_gdoc.mjs --in "profiles\<business-slug>\First 3 Campaign Launch Overview - Client Name.docx" --title "First 3 Campaign Launch Overview - Client Name"
@@ -214,4 +214,4 @@ Do not ask about sending platform, upload, or spintax in this DOCX step unless t
 
 ## Activity Log Protocol
 
-Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short — record status, not raw output. Full protocol: `client-activity-log.md`.
+Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short: record status, not raw output. Full protocol: `client-activity-log.md`.

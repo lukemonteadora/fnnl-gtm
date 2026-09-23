@@ -57,7 +57,7 @@ If a live campaign actually hits a deliverability problem, diagnose it as a real
 
 ---
 
-## Allowed in the Body — Risk-Reversal & Plain-Offer Vocabulary (use sparingly)
+## Allowed in the Body: Risk-Reversal & Plain-Offer Vocabulary (use sparingly)
 
 Aaron ranks casual risk elimination above personalization as what *"really works in 2026"* (`aaron-examples.md` §5), while the offer itself stays his 80/20 (doctrine §3). (This line used to call risk reversal "the single strongest lever", which overstated his position.) It is built from ordinary words that are safe to use in the body:
 
@@ -192,7 +192,7 @@ For a COLD list, do not imply the reader saw a prior email at all: most never re
 
 ## Fake-Familiarity / Warmth Bans (cold list)
 
-A cold prospect has no relationship with you, so casual warmth fakes a relationship that does not exist — the costume without the body, worse than being direct. Personality goes INSIDE the first relevant line (a point of view plus spoken rhythm), never in a warmup before it.
+A cold prospect has no relationship with you, so casual warmth fakes a relationship that does not exist (the costume without the body), worse than being direct. Personality goes INSIDE the first relevant line (a point of view plus spoken rhythm), never in a warmup before it.
 
 Banned (any cold email or cold follow-up):
 
@@ -204,7 +204,7 @@ Banned (any cold email or cold follow-up):
 - Any phrase implying shared history or that the reader already knows who you are
 - Any warmup sentence placed before the first relevant line
 
-Said-out-loud test: read the first two lines aloud — would a busy person who knows this world say it to a peer? If it reads like a brochure or a textbook, rewrite. (Full rule + examples: `/campaign-copywriting` Human Voice, Not Fake Warmth; `cold-email-copy-best-practices.md`.)
+Said-out-loud test: read the first two lines aloud. Would a busy person who knows this world say it to a peer? If it reads like a brochure or a textbook, rewrite. (Full rule + examples: `/campaign-copywriting` Human Voice, Not Fake Warmth; `cold-email-copy-best-practices.md`.)
 
 ---
 
@@ -244,7 +244,7 @@ Flag and route back to `/campaign-copywriting` when any line does any of these, 
 - **Leads with generic industry pain** before the signal ("Most companies at your stage struggle to hit pipeline targets..." then the signal bolted on after).
 - **Buries the signal** behind a pitch ("We help B2B companies scale their outbound pipeline. I noticed you're hiring an SDR.").
 - **Uses the signal as a flattery bridge** into a pitch ("...that is really impressive, and it made me think you might be dealing with some scaling challenges we could help with").
-- **Recites raw scraped data as a line (surveillance)** — a headcount or department count read back at the prospect ("you have 14 people in Sales", "you have 10 SDRs"), or named individual employees ("I saw Mike and Laura on your team"). A scraped count is a targeting input, not a copy line; lead with what it means. Department headcount in particular is a filter, never the first sentence (see `/campaign-copywriting` Signal Angle Library, department-headcount caveat).
+- **Recites raw scraped data as a line (surveillance):** a headcount or department count read back at the prospect ("you have 14 people in Sales", "you have 10 SDRs"), or named individual employees ("I saw Mike and Laura on your team"). A scraped count is a targeting input, not a copy line; lead with what it means. Department headcount in particular is a filter, never the first sentence (see `/campaign-copywriting` Signal Angle Library, department-headcount caveat).
 
 The full six-mode guidance lives in `/campaign-copywriting` (Signal-First Anti-Patterns); take the test from it, not example lines.
 
@@ -252,7 +252,7 @@ The full six-mode guidance lives in `/campaign-copywriting` (Signal-First Anti-P
 
 ---
 
-## Buzzword & Jargon-Metaphor Bans (plain vocabulary, Hormozi tone) — HARD RULE (2026-07-12)
+## Buzzword & Jargon-Metaphor Bans (plain vocabulary, Hormozi tone): HARD RULE (2026-07-12)
 
 Cold copy must sound like a plain-spoken operator talking to a peer, not a marketing brochure. The list below is the house's; the principle is also Aaron's own (no jargon and no self-declared uniqueness, doctrine §9, examples §8). Ban buzzwords and jargon-metaphors dressed up as insight; say the plain thing instead. This is a voice/clarity rule, not a deliverability rule: these words don't trip spam filters, they just read as corporate filler.
 
@@ -292,7 +292,7 @@ Rule of thumb: **the user has to do something explicit for the sequence to stop*
 
 ## Safe Replacement Patterns
 
-These are style preferences, not a hard-fail scan (there is no enumerated blocklist behind them anymore) — they read better and sound less like an ad, which is worth doing regardless of any spam-filter effect.
+These are style preferences, not a hard-fail scan (there is no enumerated blocklist behind them anymore). They read better and sound less like an ad, which is worth doing regardless of any spam-filter effect.
 
 | Hype / Risky Phrasing | Preferred |
 |---|---|
@@ -331,7 +331,7 @@ These are style preferences, not a hard-fail scan (there is no enumerated blockl
 Before approving any copy:
 
 - [ ] Email 1 subject is 2 to 4 lowercase words with 0 to 2 variables and no deceptive framing (no `FW:` or fake thread). It is not bland or generic, and it keeps raw statistics, percentages, hype, and the offer out of the subject (house). (operator-approved Aaron alignment, 2026-09-21) "your [the offer's own object]" (Sep 21 "your trial") and `fyi {{first_name}}` (examples §3) are normal options that pass the relevance test (Aaron process alignment, operator directive 2026-09-22).
-- [ ] Scan for buzzwords / jargon-metaphors (`leak`/`leakage`, `unlock`, `leverage`, `streamline`, `optimize`, `seamless`, `synergy`, `empower`, `robust`, `game-changer`, `frictionless`, `turnkey`) — rewrite to plain vocabulary (HARD RULE). No source citations in the body (`(MGI Research)`, `(Gartner)`).
+- [ ] Scan for buzzwords / jargon-metaphors (`leak`/`leakage`, `unlock`, `leverage`, `streamline`, `optimize`, `seamless`, `synergy`, `empower`, `robust`, `game-changer`, `frictionless`, `turnkey`): rewrite to plain vocabulary (HARD RULE). No source citations in the body (`(MGI Research)`, `(Gartner)`).
 - [ ] A real quantified value exists in the locked offer record. In Email 1 the "number in the offer" is the deliverable's own quantity, turnaround, or effort number (house rule, B15); any benchmark or cost-of-inaction figure goes to the P.S. as its single proof or relevance point, or to a follow-up. A no-number version passes only as a labeled arm, when the number makes the line less conversational (Sep 21; Aaron process alignment, operator directive 2026-09-22). No fabricated number and no storytelling preamble.
 - [ ] No segment or acronym label said AT the reader (`MSPs lose...`, `for SaaS companies like you`, `as a fintech...`). Speak to "you" (not the company-name variable, B5) and attribute benchmarks to their cause, not their category (HARD RULE). Value or loss named simply (revenue), not vague and not over-listed.
 - [ ] Copy is PLAIN and value-first: no buzzwords / jargon-metaphors; no story-telling preamble before the offer; the deliverable leads the offer sentence, with no benchmark or setup line before it (HARD RULE, B15, see `/campaign-copywriting` + `cold-email-copy-best-practices.md`). A real industry term the buyer uses (e.g. `true-up`) is fine.
@@ -378,4 +378,4 @@ Do not show the off-path platform. Provider drift after QA is how campaigns get 
 
 ## Activity Log Protocol
 
-Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short — record status, not raw output. Full protocol: `client-activity-log.md`.
+Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short: record status, not raw output. Full protocol: `client-activity-log.md`.

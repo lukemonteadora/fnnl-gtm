@@ -116,7 +116,7 @@ These are the exact filter names the Prospeo API accepts. When you describe your
 | Has Email | `person_contact_details` | `{ email: ["VERIFIED"] }` |
 | Has Phone | `person_contact_details` | `{ mobile: ["TRUE"] }` |
 | Exact Title Match | `person_job_title` | `{ include: [...], match_only_exact_job_titles: true }` |
-| Funding | `company_funding` | `{ funding_date: 180, stage: ["Series A"], last_funding: { min: "1M-5M" } }` — for "recently raised Series X" targeting; see `/prospeo-search-api` for the full date/amount/stage enum buckets |
+| Funding | `company_funding` | `{ funding_date: 180, stage: ["Series A"], last_funding: { min: "1M-5M" } }` (for "recently raised Series X" targeting; see `/prospeo-search-api` for the full date/amount/stage enum buckets) |
 | Duplicate control | `person_duplicate_control` | `{ hide_people_from_all_my_lists: true, hide_people_already_exported_before: true }` |
 
 ### Location Format
@@ -558,4 +558,4 @@ Next: `/campaign-copywriting`, then upload with the skill that matches locked `r
 
 ## Activity Log Protocol
 
-Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short — record status, not raw output. Full protocol: `client-activity-log.md`.
+Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short: record status, not raw output. Full protocol: `client-activity-log.md`.

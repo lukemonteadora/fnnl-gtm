@@ -44,7 +44,7 @@ Verify the overlay by diffing a couple of the copied files against the source.
 
 ## Steps
 
-### Step 0 — Confirm the target
+### Step 0: Confirm the target
 
 Ask once, with sensible pre-fills:
 
@@ -53,14 +53,14 @@ Ask once, with sensible pre-fills:
 - **Disk location**, defaulting to a sibling of the source: `<parent>/<Company> GTM System`.
 - **GitHub account and visibility**, defaulting to the current `gh auth status` account and **private**, because the repo will eventually hold client data. Offer a different account only if raised.
 
-### Step 1 — Preflight (verify live, never trust memory)
+### Step 1: Preflight (verify live, never trust memory)
 
 1. `gh auth status` must show a login with `repo` scope. If not, stop. Authentication is the user's to do.
 2. `git -C "<source>" status --short` in full, to build the overlay list above.
 3. `git -C "<source>" remote get-url origin`.
 4. Confirm the target folder does not exist. **Never overwrite.**
 
-### Step 2 — Clone, then overlay
+### Step 2: Clone, then overlay
 
 ```
 git clone <origin-url> "<target-dir>"
@@ -69,7 +69,7 @@ git -C "<target-dir>" remote remove origin
 
 Then apply the Step-1 overlay. State plainly that secrets and client data are absent because they were never committed.
 
-### Step 3 — Scan the committed remainder
+### Step 3: Scan the committed remainder
 
 Run `node scripts/new_gtm_workspace.mjs --scan --dir "<target>"`. It greps for this company's and its clients' identifiers **and for hardcoded Google resource ids**, then reports in buckets:
 
@@ -78,7 +78,7 @@ Run `node scripts/new_gtm_workspace.mjs --scan --dir "<target>"`. It greps for t
 - **RESET.** Operator-identity files (`CLAUDE.md`, `README.md`, the credential registry, the start-here docs). Rewrite to the new company, keep the structure.
 - **FLAG.** Illustrative client mentions inside skills. **Never blind find-replace these**; that corrupts skills. Genericize them by reading each in context.
 
-### Step 4 — Scope to cold outbound only (HARD RULE)
+### Step 4: Scope to cold outbound only (HARD RULE)
 
 A forked workspace carries **only** the cold-outbound system and the infrastructure it depends on. The `.gitignore` does not exclude the rest, so the clone **will** contain it. Remove explicitly:
 
@@ -91,19 +91,19 @@ A forked workspace carries **only** the cold-outbound system and the infrastruct
 
 **Do not over-strip.** When a name is ambiguous, read the `SKILL.md` frontmatter and `git grep` whether any cold-outbound skill references it. A referenced file is part of the system. Follow-up, reply-scoring, and pre-call nurture copy all belong to cold outbound despite lifecycle-sounding names.
 
-### Step 5 — Reset the stack to empty (this is what makes the fork reusable)
+### Step 5: Reset the stack to empty (this is what makes the fork reusable)
 
 The new company has not chosen tools. Do not hand them this company's stack as a default. Three things carry a stack, and all three must be reset:
 
 1. **`stack-contract.yaml`**: rewrite with every slot `tool: null`, `status: not_chosen`, and empty the `approved_stack` block (`tools: []`, `approved_exceptions: []`, no `held_tool` fields). An approved list left behind would govern the new company's choices with this company's tools. Keep the `run_state_field` mappings exactly; 50+ skills read those field names.
-2. **`.mcp.json`** — empty the `mcpServers` object. Move the connector definitions to `_vendor-library/mcp-connectors.json` as an activatable catalogue. An auto-connecting MCP server **is** a declared stack, and it is the easiest one to overlook.
-3. **`scripts/.env.example`** — strip every tool key. Keep the run-identity and safety variables. The credential registry stays as a *catalogue* of which env vars each known provider needs, explicitly marked as "not a stack".
+2. **`.mcp.json`**: empty the `mcpServers` object. Move the connector definitions to `_vendor-library/mcp-connectors.json` as an activatable catalogue. An auto-connecting MCP server **is** a declared stack, and it is the easiest one to overlook.
+3. **`scripts/.env.example`**: strip every tool key. Keep the run-identity and safety variables. The credential registry stays as a *catalogue* of which env vars each known provider needs, explicitly marked as "not a stack".
 
 Then **park, do not delete, the vendor integrations.** Move brand-specific skills to `_vendor-library/skills/<vendor>/` and their scripts to `_vendor-library/scripts/<vendor>/`. Because Claude Code only loads from `.claude/skills/`, a parked pack is inert. The new workspace genuinely ships stack-free, but nothing working is thrown away, and `/stack-setup` can activate a pack in one step if the new company happens to use that tool.
 
 Write a `_vendor-library/README.md` that inventories the packs, says plainly they came from a different company's accounts and are **scaffolds rather than verified integrations**, and documents activation and deactivation.
 
-### Step 6 — Reset identity and doctrine
+### Step 6: Reset identity and doctrine
 
 Rewrite `CLAUDE.md` for the new company. Beyond the name, it must carry:
 
@@ -112,7 +112,7 @@ Rewrite `CLAUDE.md` for the new company. Beyond the name, it must carry:
 
 Also reset `README.md` and `LEARNINGS.md`.
 
-### Step 7 — Create the repo (GATED outward step)
+### Step 7: Create the repo (GATED outward step)
 
 Only after explicit confirmation of account, name, and **private** visibility:
 
@@ -120,7 +120,7 @@ Only after explicit confirmation of account, name, and **private** visibility:
 2. **Fresh single-commit history.** Do not carry the source history; it contains the scratch data you stripped in Step 4.
 3. `git -C "<target>" push -u origin <branch>`
 
-### Step 8 — Hand-off
+### Step 8: Hand-off
 
 Report: folder location, repo URL if created, what was deleted / reset / parked / flagged, that the stack is empty by design, and the remaining work. Then state the boundaries plainly:
 

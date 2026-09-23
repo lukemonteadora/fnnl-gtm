@@ -99,15 +99,15 @@ Once locked:
 - Launch 3-10 parallel Task sub-agents (one per variant x batch).
 - Merge results by `lead_id`.
 
-**No-duplicate-output guard (HARD RULE — the safe fan-out contract from `/autonomous-execution-policy` section 9).** Parallel agents can't see each other's work, so fanning out without a guard produces duplicates. Enforce all three layers, every run:
+**No-duplicate-output guard (HARD RULE, the safe fan-out contract from `/autonomous-execution-policy` section 9).** Parallel agents can't see each other's work, so fanning out without a guard produces duplicates. Enforce all three layers, every run:
 
-1. **Disjoint inputs.** Partition leads so every `lead_id` goes to exactly one agent×variant. Verify the batches cover the whole slice with zero overlap before launch — no lead personalized twice.
+1. **Disjoint inputs.** Partition leads so every `lead_id` goes to exactly one agent×variant. Verify the batches cover the whole slice with zero overlap before launch. No lead personalized twice.
 2. **Disjoint output targets.** Each agent writes its own `/tmp/personalization-<batch-id>.json` (or `/tmp/prewrite-<batch-id>.json`), never a shared file, then you merge by `lead_id`. This is already the pattern below; never collapse it to one shared output file (concurrent writes double-append or clobber).
-3. **Post-merge uniqueness check.** After merging, scan for convergent duplicates — different leads that got near-identical lines (the "Repetition across leads" failure in Quality checks below). De-dupe by content and re-run the offending batch with an explicit diversity instruction. Partitioning stops overlap; only this step catches convergence.
+3. **Post-merge uniqueness check.** After merging, scan for convergent duplicates: different leads that got near-identical lines (the "Repetition across leads" failure in Quality checks below). De-dupe by content and re-run the offending batch with an explicit diversity instruction. Partitioning stops overlap; only this step catches convergence.
 
    **Scope under B13 (operator-approved Aaron alignment, 2026-09-21).** Run the uniqueness check on the per-lead generated values (the slicing research fields and the `service_offered` / `own_best_client` values), where convergence is a real failure. The body columns carry the slice's shared text, so identical body text across rows is by design; check the bodies instead against the approved text (every row must match it apart from the filled values). A human reviews the first 20 filled per-contact variable values before the list scales; if more than 3 of 20 are vague, awkward or wrong, refine the research prompt first (Aaron process alignment, operator directive 2026-09-22).
 
-After the merge, verify the row count and coverage against the input slice before reporting done — a dropped or double-counted batch is the silent partial the verify-before-done rule exists to catch.
+After the merge, verify the row count and coverage against the input slice before reporting done: a dropped or double-counted batch is the silent partial the verify-before-done rule exists to catch.
 
 ## When to use
 
@@ -432,4 +432,4 @@ If you're reading this directly, return to whichever skill sent you here.
 
 ## Activity Log Protocol
 
-Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short — record status, not raw output. Full protocol: `client-activity-log.md`.
+Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short: record status, not raw output. Full protocol: `client-activity-log.md`.

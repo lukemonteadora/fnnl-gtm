@@ -36,11 +36,11 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue — never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work — never idle.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue. Never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work. Never idle.
 
 ## Activity Log Protocol
 
-Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short — record status, not raw output. Full protocol: `client-activity-log.md`.
+Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short: record status, not raw output. Full protocol: `client-activity-log.md`.
 
 ## When To Use
 
@@ -124,7 +124,7 @@ Every Lead Source Plan must separate the stack into five roles:
 1. **Workflow layer: the list workbench by default** (`run_state.list_workbench`, resolved from the stack contract). The working list lives in a workbench table so the operator can watch it fill live instead of receiving a blind CSV. The session sources and enriches with FNNL's own API-keyed tools, combines, scores, and dedupes, then pushes finished rows into the table through its inbound webhook. It never spends the workbench's own credits (zero-workbench-credit HARD RULE, CLAUDE.md section 7). The operator creates the table in the workbench UI, since the session cannot create tables or columns there. **Fallback: Claude Code native.** If no workbench is locked, or the client's table and webhook are not set up yet, the session builds the CSV directly and says so in the plan. RevCode (no API, so manual and human-in-the-loop), spreadsheets, scripts, APIs, or MCP tools remain allowed when they fit better (full rule in `/lead-list-tech-stack-research`). Whatever the surface, the CSV the downstream skills read is an export of the working list, with the same canonical columns, so nothing downstream changes.
 2. **Source-of-truth signal:** the public source where the campaign proof actually lives.
 3. **Collection tool:** the best tool for collecting that signal, such as DiscoLike, GetLatka, Serper, Spider Cloud, Scrap.io, Apify, Trigify, a database, or a custom parser.
-4. **Contact discovery + enrichment:** discover real named people from a contact database with a **current-employer field** (A-Leads `advanced_search`, DiscoLike `generate-contacts`, or a people-DB — never `search-contacts` index mode, which fabricates names; ⛔ and **never from a LinkedIn/Google search via Serper + an AI title-picker**, banned 2026-07-17 because Google's cached snippets carry no employment-currency signal and yield retired/departed people — see `/email-waterfall`) so every row has a real first + last name **who still works there**; then, for rows with no email, the FINDER = **A-Leads `find_email` (find) + Deliverable.co (verify + catch-all) first (HARD RULE), BetterContact ONLY on the residue** (no email found, or `undeliverable`/`catch_all`/`risky`/`unknown`), with Prospeo/WizLeads/Blitz further fallback. If a row already has an email, it is **verified first with Deliverable.co** (verify + catch-all in one), not re-found — that ordering and the Deliverable.co verify routing are owned by `/email-waterfall`'s Verification Doctrine. Never discover or enrich contacts through the list workbench's own built-in search or enrichment, because those spend the workbench's credits (zero-workbench-credit HARD RULE); contacts come from FNNL's own keyed tools and are pushed into the workbench.
+4. **Contact discovery + enrichment:** discover real named people from a contact database with a **current-employer field** (A-Leads `advanced_search`, DiscoLike `generate-contacts`, or a people-DB; never `search-contacts` index mode, which fabricates names; ⛔ and **never from a LinkedIn/Google search via Serper + an AI title-picker**, banned 2026-07-17 because Google's cached snippets carry no employment-currency signal and yield retired/departed people; see `/email-waterfall`) so every row has a real first + last name **who still works there**; then, for rows with no email, the FINDER = **A-Leads `find_email` (find) + Deliverable.co (verify + catch-all) first (HARD RULE), BetterContact ONLY on the residue** (no email found, or `undeliverable`/`catch_all`/`risky`/`unknown`), with Prospeo/WizLeads/Blitz further fallback. If a row already has an email, it is **verified first with Deliverable.co** (verify + catch-all in one), not re-found: that ordering and the Deliverable.co verify routing are owned by `/email-waterfall`'s Verification Doctrine. Never discover or enrich contacts through the list workbench's own built-in search or enrichment, because those spend the workbench's credits (zero-workbench-credit HARD RULE); contacts come from FNNL's own keyed tools and are pushed into the workbench.
 5. **QA and verification:** `/icp-prompt-builder`, /email-waterfall, and `/list-quality-scorecard`.
 
 Do not collapse these roles into Prospeo because Prospeo has good contact data. Prospeo is usually a contact database or enrichment layer. It is the source only when title, company, technology, job-change, or Prospeo-native data is the real source of truth.
@@ -213,10 +213,10 @@ Use this structure. The header block and bold-label format are **required**: the
 ```markdown
 # Lead Source Plan - <Campaign Name>
 
-**Campaign:** <Campaign name — must match campaign slug and campaign-strategy.md row>
+**Campaign:** <Campaign name: must match campaign slug and campaign-strategy.md row>
 **Date:** <YYYY-MM-DD>
-**ICP:** <Exact titles, company type, size, geography — must match client-profile.yaml hard filters>
-**Offer:** <Offer / lead magnet name — must match lead-magnets.md locked choice>
+**ICP:** <Exact titles, company type, size, geography: must match client-profile.yaml hard filters>
+**Offer:** <Offer / lead magnet name: must match lead-magnets.md locked choice>
 **Sending platform:** <The locked `run_state.sending_platform`. If that slot is empty, stop and route to /stack-setup rather than naming one here>
 
 ---
@@ -231,7 +231,7 @@ Use this structure. The header block and bold-label format are **required**: the
 ## Source Stack
 
 - **Workflow layer:** <the list workbench by default (rows pushed in by webhook, zero workbench credits); Claude Code native CSV if no workbench table is ready; RevCode or equivalent if used>
-- **Source-of-truth signal:** <The specific observable signal that proves fit — job posting, hire trigger, association directory entry, etc.>
+- **Source-of-truth signal:** <The specific observable signal that proves fit: job posting, hire trigger, association directory entry, etc.>
 - **Collection tool:** <Which tool pulls the initial list>
 - **Contact enrichment:** <Which tool finds the person after the company is qualified>
 - **QA and verification:** <Verifier + list quality scorecard reference>
@@ -241,7 +241,7 @@ Use this structure. The header block and bold-label format are **required**: the
 ## Primary Source Path
 
 - **Source family:** <Category: hiring trigger / association directory / regulator registry / named account / maps / etc.>
-- **Specific collection source or tool:** <Exact tool and method — LinkedIn Jobs, SZZ directory, Google Maps, A-Leads, etc.>
+- **Specific collection source or tool:** <Exact tool and method: LinkedIn Jobs, SZZ directory, Google Maps, A-Leads, etc.>
 - **Contact enrichment layer:** <Real-named discovery first from a source with a current-employer field, never an index/pattern mode; then for no-email rows the email finder, then the verifier of record (verify plus catch-all). HARD RULE: the waterfall enricher runs ONLY on the residue (no email found, or undeliverable / catch-all / risky / unknown), and existing-email rows go verify-first per `/email-waterfall`. Name the actual tools from `stack-contract.yaml`.>
 - **Exact signal:** <The specific observable thing that puts a company on this list>
 - **Target geography:** <Countries, regions, or cities>

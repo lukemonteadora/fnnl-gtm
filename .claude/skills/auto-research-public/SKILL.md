@@ -127,7 +127,7 @@ Stop if the list grade is below B.
 
 ### 4. Write copy
 
-**List Gate (assert; do not assume Step 3 ran).** Before any copy, confirm the verified-list gate (`verified-list-gate.md`) for this slice: `leads.verified.csv` exists and is non-empty, the slice passed `/list-quality-scorecard` at grade B+, and the offer/strategy are locked (Hard Prerequisites above). If any fails, STOP and route to `/email-waterfall` → `/list-quality-scorecard` — never write copy before the verified list exists.
+**List Gate (assert; do not assume Step 3 ran).** Before any copy, confirm the verified-list gate (`verified-list-gate.md`) for this slice: `leads.verified.csv` exists and is non-empty, the slice passed `/list-quality-scorecard` at grade B+, and the offer/strategy are locked (Hard Prerequisites above). If any fails, STOP and route to `/email-waterfall` → `/list-quality-scorecard`. Never write copy before the verified list exists.
 
 First confirm the Offer Architecture gate from `/campaign-copywriting` passes for the locked offer: SQL vs MQL framing, the easy-to-say-yes-to test, and a named risk reversal. If it does not pass cleanly, fix the offer before any copy is written.
 
@@ -237,4 +237,4 @@ Leave run_state.status.upload_stage unset. Do not report a draft as created.
 
 ## Activity Log Protocol
 
-Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short — record status, not raw output. Full protocol: `client-activity-log.md`.
+Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short: record status, not raw output. Full protocol: `client-activity-log.md`.
