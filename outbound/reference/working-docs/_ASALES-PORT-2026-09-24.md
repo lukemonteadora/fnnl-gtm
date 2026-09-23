@@ -4,6 +4,8 @@
 
 This is history, not live doctrine. Upstream SHAs refer to the upstream repo; FNNL SHAs to this one. Upstream vendor names appear below only to say what was not ported.
 
+**Cutoff.** The range is upstream `56ff4a2c..7cd876cc`, the commits that existed when the operator asked for the port. Two tool-neutral upstream commits landed while it ran and are NOT included: `0a8b65dc` (four phase checkpoints replace the per-fork stops for new clients: `auto_execute` plus `review_protocol: phase_checkpoints`, and DEEPEN becomes a checkpoint-2 option instead of a loop) and `5424e887` (checkpoints recorded in `run_state.checkpoints` so a resumed run never skips one). They supersede this port's `review_gates` default for new clients upstream; whether FNNL follows is an operator decision.
+
 ## Decisions made with the operator on 2026-09-24
 
 1. FNNL's 38 uncommitted in-flight edits were committed first as a baseline (`72c72d2`), unchanged.
