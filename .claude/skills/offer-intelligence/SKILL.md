@@ -308,7 +308,7 @@ Once the vectors have written their batches, run `/market-evidence` in `synthesi
 |---|---|
 | PASS | Continue to the Intersection step, working from the clusters |
 | DEEPEN | Run Stage 2 on the gaps the deepen brief names, and only those (a new `deepen-<n>` run folder; the routes the brief names: a targeted `/deep-research` pass, WebSearch, WebFetch, the browser pane, or an operator paste), then re-run synthesize. At most two loops; after the second, the verdict becomes PASS with low-confidence labels, or HOLD |
-| HOLD | Under `review_gates`, show the operator the verdict and its reasons and wait for their decision before continuing. Under `auto_execute`, continue to the Intersection step with every cluster labelled low confidence, the HOLD reasons at the top of the brief, and the missing evidence (usually call recordings) requested from the client and logged PENDING |
+| HOLD | Under `review_gates`, present it with its reasons at Gate 2 (the offer-step review defined in `/cold-email-kickoff`), where the operator decides, and wait for that decision before continuing. Under `auto_execute`, continue to the Intersection step with every cluster labelled low confidence, the HOLD reasons at the top of the brief, and the missing evidence (usually call recordings) requested from the client and logged PENDING |
 
 Staged depth follows `market-evidence-standard.md` section 8. Research here runs on Claude Code alone and spends nothing, so the stages bound effort and time, not money. Weak clusters are never dropped; they are labelled and ranked.
 
@@ -466,7 +466,7 @@ The rows below are not a summary. They are the working input the next skill inve
 
 ### What to do next (discovery mode)
 
-Hand off to `/lead-magnet-brainstorm` once `/market-evidence synthesize` has returned its verdict (PASS, or HOLD carried forward with its labels). Discovery and candidate generation are one continuous offer motion split across two skills, so this mode is not finished until the handoff is usable as-is.
+Hand off to `/lead-magnet-brainstorm` once `/market-evidence synthesize` has returned its verdict (PASS, or HOLD carried forward with its labels: under `auto_execute` directly, under `review_gates` only once the operator decides so at Gate 2). Discovery and candidate generation are one continuous offer motion split across two skills, so this mode is not finished until the handoff is usable as-is.
 
 **What carries forward, by section name.** `/lead-magnet-brainstorm` opens by reading these five, and reads them rather than rebuilding them:
 
@@ -778,7 +778,7 @@ Only add `offer_validation_run` and `offer_validation_path` when validation mode
 - **Listing Reddit as researched when nothing was read.** The harness cannot read Reddit, and operator paste is the only route. Report the pasted threads and the quotes they gave, or write "Reddit: unread". A platform named in a list is not a platform read.
 - **Treating the persona research as buyer pain.** Vector 0 is a model's educated guess about the persona. It tells you where to look and what words to search with. Only a real buyer saying it, in public or on a client call, makes it pain.
 - **Typing counts by hand.** "Appeared in 12 threads" comes from `evidence_ledger.mjs stats`, never from a tally kept in the session. Hand counts drift and double-count syndicated quotes.
-- **Building offers before the Research QA verdict.** The Intersection step and the Candidate Generation Input wait for `/market-evidence synthesize`. A HOLD is carried forward with its labels, never skipped silently.
+- **Building offers before the Research QA verdict.** The Intersection step and the Candidate Generation Input wait for `/market-evidence synthesize`. A HOLD is carried forward with its labels (under `review_gates`, after the operator's Gate 2 decision), never skipped silently.
 - **Redoing research that already exists.** Step 0 reads the ledger and any older research first; a refresh fills gaps, it does not restart.
 - **Reading the ad creative instead of the ad angle.** Fifty variations of one angle is the finding. The headline wording and the imagery are the advertiser optimizing around something already proven, not the proof itself.
 
@@ -803,7 +803,7 @@ Only add `offer_validation_run` and `offer_validation_path` when validation mode
 
 ## What to do next
 
-- **Discovery mode complete** (the Research QA verdict is PASS, or HOLD carried forward with labels): Hand off to `/lead-magnet-brainstorm`. It reads the brief at `profiles/<business-slug>/offer-intelligence.md`, starting from its `Candidate Generation Input` block. Nothing list-side or data-side has run at this point, and none of it is needed for the handoff.
+- **Discovery mode complete** (the Research QA verdict is PASS, or HOLD carried forward with labels, which under `review_gates` needs the operator's Gate 2 decision first): Hand off to `/lead-magnet-brainstorm`. It reads the brief at `profiles/<business-slug>/offer-intelligence.md`, starting from its `Candidate Generation Input` block. Nothing list-side or data-side has run at this point, and none of it is needed for the handoff.
 - **Validation - Go:** Proceed to `/campaign-strategy`. Offer is locked in `client-profile.yaml`. New offer arms are optional; the default test is segments and data sources plus positioning variants of this offer (Aaron, Apr 13).
 - **Validation - Iterate:** Rewrite using ICP language from Vector 3, re-score once, then route the rewrite to `/lead-magnet-brainstorm` as a cell in a fresh multi-offer flight. The market reads it, not the desk score (Aaron process alignment, operator directive 2026-09-22; supersedes "repeat until score hits 6+").
 - **Validation - Swap or Swap (Contrarian):** Route the new offer through `/lead-magnet-brainstorm` into a fresh multi-offer flight run as simultaneous cells, with list and copy frozen; `/experiment-design` formalizes the offer-only hypothesis (Aaron process alignment, operator directive 2026-09-22; supersedes a one-offer swap).

@@ -88,7 +88,7 @@ These are the headings and labels the producing skills write today: `/offer-inte
 | Field | File | What it drives | Owner (route a gap here) |
 |---|---|---|---|
 | A "Recommended direction" section with `**Primary:**`, `**Secondary:**` and `**Rank lower:**` lines | `offer-intelligence.md` | Appendix A (the directions the research ranked lower) | `/offer-intelligence` |
-| `## Fulfillment plan`, `## Validation arms` and `## Every candidate` | `lead-magnets.md` | Sections 1 and 2 (the offers under test: the first-wave offers, launched together as equal cells across the whole qualified list, and any arms beyond the first-wave offer count, which queue) and Appendix A (the candidates under `## Every candidate` that are outside the test set, each with its plain reason) | `/lead-magnet-brainstorm` |
+| `## Fulfillment plan`, `## Validation arms` and `## Every candidate` | `lead-magnets.md` | Sections 1 and 2 (the offers under test: the first-wave offers, launched together and placed by fit across the whole qualified list (each offer where its own fit filters pass, equal cells on shared ground), and any arms beyond the first-wave offer count, which queue) and Appendix A (the candidates under `## Every candidate` that are outside the test set, each with its plain reason) | `/lead-magnet-brainstorm` |
 | Campaign names in the campaign-strategy.md table | `campaign-strategy.md` | Slide 3 grid | `/campaign-strategy` |
 
 **How to match them.** Check them exactly this way, so a hand check and a scripted check give the same answer:
