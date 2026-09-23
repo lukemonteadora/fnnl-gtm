@@ -5,7 +5,7 @@ description: Cross-cutting policy for running the coldoutbound flow with minimal
 
 # Autonomous Execution Policy
 
-The operator wants this flow to run **hands-free with as little back-and-forth as possible** (operator directive). This policy is the single source of truth for *when to proceed vs stop*. Where any other skill's older "ask at every material fork" wording conflicts with this, **this policy wins** for runs where `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`).
+The operator wants this flow to run **hands-free with as little back-and-forth as possible** (operator directive). This policy is the single source of truth for *when to proceed vs stop*. Where any other skill's older "ask at every material fork" wording conflicts with this, **this policy wins** for runs where `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at `/cold-email-kickoff`'s four phase checkpoints; `review_gates` is opt-in).
 
 ## Stack Resolution (read before any tool step)
 
@@ -22,19 +22,32 @@ Roles this skill uses: sending platform, mailbox provider, email verifier, water
 `/stack-setup`.** Never substitute a guessed vendor, and never hardcode a tool name into
 an artifact this skill writes.
 
+## 0. Phase checkpoints: the default way a run stops (operator directive 2026-09-24)
+
+The operator wants a client onboarded, researched, offered and built into paused drafts in one sitting, with the same steps and far fewer stops. So a new client gets `execution_mode: auto_execute` plus `review_protocol: phase_checkpoints`:
+
+- **Inside a phase, never stop for a minor call.** Every skill runs its `auto_execute` branch: take the recommended default, record it, keep going, and list it at the next checkpoint under "Calls I made" so the operator can reverse it.
+- **Stop once at the end of each of the four phases** in `/cold-email-kickoff` ("How a run stops"): Onboard, Research, Offer, List to drafts. A checkpoint is a short plain-words summary plus one native prompt carrying every question the phase needs (at most four, recommended answer first). The last checkpoint is the launch review before the operator presses Start in the sending platform.
+- **Front-load the operator-only facts.** Anything a later phase would otherwise stop for (the speed-to-lead owner and booking link for Gate D, an opt-out ruling when the geography includes Canada, the UK or Ireland, which `/campaign-copywriting` otherwise holds copy for under `auto_execute` too, whether sending infrastructure is already handled elsewhere while the contract defers it) is asked at checkpoint 1.
+- **Client asks never hold the flow.** They are batched into one `client-asks.md` message that the operator sends (Claude never sends it). Only the specific item that cannot happen without the answer waits.
+- **An empty or `deferred` infrastructure or sending-platform slot never holds phases 1 to 3.** It stops only the step that uses that tool (CLAUDE.md section 1).
+- **The hard stops in section 3 still stop mid-phase**, the moment they are hit, one at a time, while unblocked work continues. So do the one-time approval of the infrastructure setup total (section 2) and the context sweep upload stop in `/cold-email-kickoff` Step 6.
+
+`/cold-email-kickoff` and `/continue-client` own the four stops and record each one in `run_state.checkpoints`. `review_protocol: per_phase_gates` with a `review_gates_list` is honored exactly as written, `none` runs straight to paused drafts, and a profile with no `review_protocol` behaves as its `execution_mode` always did. An existing profile keeps its settings until the operator changes them.
+
 ## 1. Under `auto_execute`: proceed, don't ask
 
 Under `execution_mode = auto_execute`:
 
 - **Pick the strongest option, record it, proceed.** Offer, launch campaign, mailbox mix, billing period, sender persona, domain candidates, source workflow: choose the best per the skill's own rubric, write it to `run_state`/profile, and keep going. The one exception is the offer: lock the whole test set `/lead-magnet-brainstorm` returns (a primary plus ranked validation arms), send the first-wave offers together, placed by fit (equal cells on shared ground), and let `/campaign-strategy`'s flip criterion pick the winner in market, because Aaron tests three or four offers rather than picking one in advance (doctrine §5; operator directive 2026-09-22). Then the winner goes to the rest of the TAM immediately, with no client scale-review gate: `/offer-test-slate`'s scale review is a results report, and only an offer whose deliverable the client literally supplies stays capped at the client's confirmed capacity (Aaron process alignment, operator directive 2026-09-22; supersedes the scale review as a volume gate, 2026-09-22). Do not pause to have the operator pick.
 - **The whole-TAM first wave is the default.** A new client's first wave is the whole qualified TAM at full volume, with the offer test inside it (`/cold-email-kickoff` First-Wave Default). A slice-first launch happens only on the operator's explicit request, never as an autonomous choice (Aaron process alignment, operator directive 2026-09-22).
-- **The Research QA gate never pauses a run** (`/market-evidence` synthesize, `market-evidence-standard.md` section 7; added 2026-09-23). A DEEPEN verdict runs at most two targeted research loops, and after them the verdict is PASS with low-confidence labels, or HOLD. A HOLD proceeds to `/lead-magnet-brainstorm` with every cluster labelled low confidence, the HOLD reasons flagged at the top of the report, and the missing evidence (usually call recordings) requested from the client and logged PENDING. Never a silent block, never a silent pass. Under `review_gates` the verdict is shown instead at Gate 2 (the offer-step review defined in `/cold-email-kickoff`), where the operator decides on a HOLD.
+- **The Research QA gate never pauses a run** (`/market-evidence` synthesize, `market-evidence-standard.md` section 7; added 2026-09-23). A DEEPEN verdict runs at most two targeted research loops, and after them the verdict is PASS with low-confidence labels, or HOLD. A HOLD proceeds to `/lead-magnet-brainstorm` with every cluster labelled low confidence, the HOLD reasons flagged at the top of the report, and the missing evidence (usually call recordings) requested from the client and logged PENDING. Never a silent block, never a silent pass. Under `review_gates` the verdict is shown instead at Gate 2 (the offer-step review defined in `/cold-email-kickoff`), where the operator decides on a HOLD. Under `review_protocol: phase_checkpoints` no deepen loop runs on its own: research is one run, and the verdict, any deepen brief and any HOLD reasons go to checkpoint 2, where the operator picks between building offers and one targeted deepen pass.
 - **`/market-evidence` feedback runs without asking** (added 2026-09-23). `/cold-email-weekly-rhythm` runs it at each arm read and at least every two weeks while a wave is live, turning replies and call notes into evidence rows and a dated results review. It reads live campaigns and never edits them, never touches an arm's `status`, `read` or `flight`, and never moves the offer-validation flip.
 - **Capacity is sized to the volume, never trimmed** (Aaron process alignment, operator directive 2026-09-22; supersedes the capacity trim at launch). The run files `run_state.capacity_request` (the daily sends that first-touch the whole TAM in about one Monday-to-Friday sending week), and the fleet `/mailbox-mix-strategy` sizes, or the pool group `/mailbox-pool-staging` assigns, is sized to it, inside the setup total the operator approves (section 2). If the fleet delivers less than `daily_sends_needed`, the wave still covers the whole TAM at the allocated rate and the runway stretches; report days to cover. Offers and TAM rows are never cut to fit (`/cold-email-kickoff` Steps 4 and 6).
 - **Report, don't gate.** State what you chose and why in one line, then continue. The operator can correct in flight.
 - **Never re-ask a recorded decision.** If it's already in `run_state`, `client-profile.yaml`, `campaign-plan.md`, the profile, a saved memory, or the operator's latest message: use it silently. (Persona, mailbox mix, `billing = Monthly`, locked offer/campaign, domain list, etc.)
 
-`execution_mode = review_gates` (the default) keeps the per-fork confirmations; `auto_execute` applies only where a confirmed intake form or an explicit operator instruction sets it.
+`execution_mode = review_gates` keeps the per-fork confirmations and is opt-in, set by a confirmed intake form or an explicit operator instruction. A new client gets `auto_execute` with `review_protocol: phase_checkpoints` (section 0; operator directive 2026-09-24, replacing the 2026-09-23 ruling that `review_gates` is the default). An existing profile keeps its mode until the operator changes it.
 
 ## 2. Spend: a standing budget, never asked
 
@@ -64,7 +77,7 @@ When a hard stop is hit, surface it crisply with the exact thing needed, and (pe
 
 ## 4. Bundle the unavoidable asks
 
-When you genuinely must ask (a hard stop, or run start), **batch every needed decision into one interaction** with pre-filled recommended answers (native Interactive Inputs). Don't drip one question per step. One upfront batch >> five mid-run prompts.
+When you genuinely must ask (a hard stop, or run start), **batch every needed decision into one interaction** with pre-filled recommended answers (native Interactive Inputs). Don't drip one question per step. One upfront batch >> five mid-run prompts. Under `phase_checkpoints` that one interaction is the checkpoint prompt at the end of the phase (section 0).
 
 ## 5. Don't idle-wait: interleave (memory: `dont-idle-wait-interleave`)
 

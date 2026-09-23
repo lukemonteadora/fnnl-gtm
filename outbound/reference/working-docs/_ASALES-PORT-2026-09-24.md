@@ -4,10 +4,11 @@
 
 This is history, not live doctrine. Upstream SHAs refer to the upstream repo; FNNL SHAs to this one. Upstream vendor names appear below only to say what was not ported.
 
-**Cutoff.** The range is upstream `56ff4a2c..7cd876cc`, the commits that existed when the operator asked for the port. Two tool-neutral upstream commits landed while it ran and are NOT included: `0a8b65dc` (four phase checkpoints replace the per-fork stops for new clients: `auto_execute` plus `review_protocol: phase_checkpoints`, and DEEPEN becomes a checkpoint-2 option instead of a loop) and `5424e887` (checkpoints recorded in `run_state.checkpoints` so a resumed run never skips one). They supersede this port's `review_gates` default for new clients upstream; whether FNNL follows is an operator decision.
+**Cutoff.** The range is upstream `56ff4a2c..5424e887`. The first pass stopped at `7cd876cc` (the commits that existed when the operator asked); `0a8b65dc` and `5424e887` landed while it ran, and the operator chose to port them too (2026-09-24), after the session that made them went idle.
 
 ## Decisions made with the operator on 2026-09-24
 
+0. Follow upstream's phase checkpoints: new clients run `auto_execute` with `review_protocol: phase_checkpoints` (four stops, one per phase); `review_gates` is opt-in. This supersedes the `review_gates` default ported in `f423594`.
 1. FNNL's 38 uncommitted in-flight edits were committed first as a baseline (`72c72d2`), unchanged.
 2. The context sweep and the client intel feed use **generic read-only sources** (whatever Slack, email, calendar, Drive/docs, Notion or notetaker-recap-email connectors the session has), always name the account searched, and **nothing is scheduled**. These sources are client context, not stack tools (CLAUDE.md section 7; `stack-contract.yaml` `approved_stack.context_sources_note`).
 
@@ -23,6 +24,8 @@ This is history, not live doctrine. Upstream SHAs refer to the upstream repo; FN
 | `538672f` | List production: targeting spec, waterfall planner, six-dimension list QA, MillionVerifier verify cache |
 | `025c23d` | Client context sweep first; on-demand client intel feed |
 | `46f92f9` | Claude-native benchmark (`outbound/evals/`); skill-change hygiene |
+| `45ee3a5` | Fixes from three independent coverage audits; this manifest |
+| phase-checkpoint commit | Upstream `0a8b65dc` + `5424e887`: four phase checkpoints for new clients |
 
 ## Every upstream commit in range
 
@@ -75,6 +78,8 @@ Disposition: **Ported** (tool-neutral, re-expressed in role vocabulary), **Conce
 | `c369a052` | Don't pin unconfirmed sheet fields to one tab | Ported (generic form) | `025c23d` |
 | `e09f14aa` | Client research ledger | Skipped: client-specific | none |
 | `7cd876cc` | Client offer-slate deck module | Skipped: client-specific | none |
+| `0a8b65dc` | Four phase checkpoints replace the per-fork stops for new clients | Ported (FNNL keeps its context sweep, Step 6 upload stop, deferred infrastructure and hard stops; the contract's execution defaults updated) | phase-checkpoint commit |
+| `5424e887` | Record phase checkpoints so a resumed run never skips one | Ported | phase-checkpoint commit |
 
 ## Beyond the diff (FNNL-only fixes made on the way)
 

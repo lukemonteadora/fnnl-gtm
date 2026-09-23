@@ -1,6 +1,6 @@
 ---
 name: client-intake-form
-description: "Single-session client intake skill. Runs a pre-fill discovery pass that opens with the mandatory client context sweep (the client's Slack channels and DMs, email, calendar, docs, Notion and local files, through whatever read-only connectors the session has, with any blocklist written straight to suppression), then reads the stack contract for the tool in each capability slot, reads .env, scrapes the website, and checks existing profiles and the client intel feed. It produces a partially pre-populated intake form for the user to confirm or correct, then writes profiles/<business-slug>/intake-form.md and profiles/<business-slug>/client-profile.yaml. Use this before /cold-email-kickoff to eliminate back-and-forth questions. Supports execution_mode: auto_execute (system picks top recommendations without pausing) or review_gates (current behavior)."
+description: "Single-session client intake skill. Runs a pre-fill discovery pass that opens with the mandatory client context sweep (the client's Slack channels and DMs, email, calendar, docs, Notion and local files, through whatever read-only connectors the session has, with any blocklist written straight to suppression), then reads the stack contract for the tool in each capability slot, reads .env, scrapes the website, and checks existing profiles and the client intel feed. It produces a partially pre-populated intake form for the user to confirm or correct, then writes profiles/<business-slug>/intake-form.md and profiles/<business-slug>/client-profile.yaml. Use this before /cold-email-kickoff to eliminate back-and-forth questions. Supports execution_mode auto_execute with review_protocol phase_checkpoints (the default since 2026-09-24, hands-free inside each phase with one stop at the end of each of the four phases) or review_gates (opt-in, which presents options and waits at each gate)."
 ---
 
 # Client Intake Form
@@ -17,7 +17,7 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue. Never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work. Never idle.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at `/cold-email-kickoff`'s four phase checkpoints; `review_gates` is opt-in), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue. Never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work. Never idle.
 
 ## Activity Log Protocol
 
@@ -229,11 +229,14 @@ offer_validation_evidence: [N/A or describe evidence]
 
 ## Execution Preferences
 
-execution_mode: review_gates
-# review_gates (default) = system presents options and waits for your selection at each gate
-#   (offer selection, campaign selection, copy direction). Safe default; matches every other entry path.
-# auto_execute = OPT-IN. System picks top-ranked recommendations at each gate without pausing.
-#   Only set this if you explicitly want hands-off auto-selection.
+execution_mode: auto_execute
+review_protocol: phase_checkpoints
+# auto_execute + phase_checkpoints (default, operator directive 2026-09-24) = the run is hands-free inside
+#   each phase and stops once at the end of each of the four phases (onboard, research, offer, list to
+#   paused drafts), with every question for that phase in one prompt. Matches every other entry path.
+# review_gates = OPT-IN. System presents options and waits for your selection at each gate
+#   (offer selection, campaign selection, copy direction).
+# review_protocol: none = no checkpoints, straight to paused drafts.
 
 campaign_approval_brief_needed: no
 # yes = generate a client-facing campaign approval brief before list build
@@ -250,6 +253,21 @@ mailbox_mix: auto_recommend
 
 mailbox_mix_custom: [leave blank unless mailbox_mix = custom]
 # Specify mix if mailbox_mix = custom. E.g.: 70_google_30_microsoft
+
+## Reply Handling and Compliance (optional: anything left blank is asked at checkpoint 1 under the default, otherwise at Gate D or copy)
+
+speed_to_lead_owner: [leave blank if not decided]
+# The named person who calls interested replies within the 5-minute target (Gate D). Named by the operator, never inferred.
+# source: a context sweep candidate, if found, confirm or correct
+
+booking_link: [leave blank if not known]
+# The calendar or qualification-page link interested replies are sent to. /lifecycle-copy reads it for Gate D. Never invented.
+
+legal_or_compliance_limits: [leave blank if none]
+# Compliance limits on how the email is sent, separate from deliverable_constraints (which limits claims).
+# When the geography includes Canada, the UK or Ireland, record the per-client opt-out ruling here: the default stands
+#   (the one-click List-Unsubscribe header alone), a plain-text opt-out line in the body, or a visible unsubscribe link.
+#   This is a compliance flag, not legal advice.
 ```
 
 ## Step 3: Validate the Completed Form
@@ -268,7 +286,9 @@ When the user returns the completed form, run validation before writing any file
 - `headcount_min` and `headcount_max` span more than 5000 employees: note this is a wide range and `/lead-source-strategy` may recommend splitting into sub-campaigns.
 - `geography` includes markets known to have weak database coverage (e.g., Southeast Asia, sub-Saharan Africa): note that `/lead-source-strategy` will need to research local sources carefully.
 - `credentials_ready = partial` or `no`: warn that setup phases will stall without credentials.
-- `execution_mode = auto_execute`: the user has opted into hands-off auto-selection of offer and campaign. Confirm once that they intend the system to choose without pausing at those gates.
+- `execution_mode = auto_execute` with `review_protocol: none`: the user has opted out of the phase checkpoints too. Note in one line that the run will go straight to paused drafts, with Start still theirs. The default pair (`auto_execute` plus `phase_checkpoints`) needs no confirmation.
+- `speed_to_lead_owner` or `booking_link` blank: note in one line that checkpoint 1 asks for it under `phase_checkpoints`, so phase 4 (Gate D) never stops for it; under `review_gates`, Gate D asks. Never fill either from inference.
+- `geography` includes Canada, the UK or Ireland with `legal_or_compliance_limits` holding no opt-out ruling: note that checkpoint 1 asks for the ruling under `phase_checkpoints`, and that `/campaign-copywriting` holds copy until one is recorded.
 - `client_comms.slack.status = unavailable`: Slack was never read for this client. Say so at the top of the confirmation, not the bottom, and note that `/continue-client` retries the check on the next resume. `none_found` only holds for the workspace that was searched, so name it.
 - Any other `context_sweep` source at `blocked` (Slack DMs, email, Drive; a core source with no connector in the session counts as blocked): say so at the top of the confirmation with the account it tried and the one-line fix. `/continue-client` retries it. Research and lists never wait on it, but while a core source (Slack channels, Slack DMs, email, Drive) stays blocked and not `waived_by_operator`, the draft upload stops and asks (`client-context-sweep.md`). Only the operator waives a source.
 - `context_sweep.unresolved_blocklist_names` above zero: a blocklist name has no domain yet, so it cannot block its company before email spend. List the names at the top and resolve them before list work.
@@ -327,6 +347,8 @@ proof:
   case_studies: <value or null>   # keep the company website/domain + sub-industry / what-they-sell group written into each entry; these are the lookalike seeds /tam-build reads
   hard_numbers: <value or null>
   naming_constraints: <value or null>
+capability_boundary:     # top-level, not inside run_state
+  legal_or_compliance_limits: <[] or the form's legal_or_compliance_limits>   # checkpoint 1 writes the Canada, UK or Ireland opt-out ruling here; /campaign-copywriting Step 1 item 0a reads it
 client_comms:            # top-level, deliberately not inside run_state. Written by the client Slack check (client-slack-check.md)
   slack:
     status: <harvested | none_found | unavailable | operator_says_none | waived_by_operator>
@@ -345,7 +367,10 @@ context_sweep:           # top-level, not inside run_state. Written by the clien
   unresolved_blocklist_names: <n>
   notes_file: context-sweep.md
 run_state:
-  execution_mode: <auto_execute | review_gates>
+  execution_mode: <auto_execute | review_gates>   # default auto_execute (operator directive 2026-09-24)
+  review_protocol: <phase_checkpoints | none>     # default phase_checkpoints
+  speed_to_lead_owner: <value or null>   # operator-named; null is asked at checkpoint 1 and read at Gate D
+  booking_link: <value or null>          # null is asked at checkpoint 1; read by /lifecycle-copy for Gate D
   spend_ceiling_usd: 100   # the standing budget per client run, never asked (operator directive 2026-09-22)
   campaign_approval_brief_needed: <yes | no>
   offer_slate_approval: <optional | required>   # read by /offer-test-slate; default optional
@@ -398,7 +423,7 @@ After writing both files, print:
 Intake form saved to: profiles/<business-slug>/intake-form.md
 Client profile saved to: profiles/<business-slug>/client-profile.yaml
 
-Execution mode: <auto_execute | review_gates>
+Execution mode: <auto_execute | review_gates>, <phase_checkpoints | none>
 Spend budget: $100 per client run (standing, never asked)
 Context sweep: <N of M sources read (account or workspace per source), K constraints, B blocklist rows written to suppression, notes in context-sweep.md | BLOCKED: <source>, <one-line fix>, retry at next resume>
 Slack: <N channels read in <workspace>, notes in slack-context.md | none found in <workspace> | NOT READ: <reason>, retry at next resume>
@@ -409,7 +434,7 @@ It will read this intake form and skip the interview phase.
 
 ## What downstream skills do with this form
 
-- `/cold-email-kickoff`: checks for `intake-form.md` at Step 1. If found, reads it, skips infrastructure questions, sets `execution_mode` from form. This is the single entry-point orchestrator.
+- `/cold-email-kickoff`: checks for `intake-form.md` at Step 1. If found, reads it, skips infrastructure questions, and sets `execution_mode` and `review_protocol` from the form. Under `phase_checkpoints`, checkpoint 1 never re-asks what the confirmed form already answers. This is the single entry-point orchestrator.
 - `/icp-onboarding`: checks for `icp.source: intake_form` in `client-profile.yaml`. If found, skips all interview questions and returns to caller.
 - `/lead-magnet-brainstorm`: checks `run_state.execution_mode`. If `auto_execute`, locks the test set (the top-ranked sendable offer as the primary plus every qualifying candidate as ranked validation arms) without pausing, then `/offer-test-slate` shows it to the client (approval optional, per `offer_slate_approval`).
 - `/campaign-strategy`: checks `run_state.execution_mode`. If `auto_execute`, selects top-recommended campaign without pausing.

@@ -26,11 +26,11 @@ Honest scope (read first):
 3. **Check balance.** Live-balance providers → call the endpoint and use the returned figure. Ledger-only providers → read `scripts/api-balance-ledger.md`. For a ledger-only provider, show `balance: <ledger figure or "n/a, estimate-only">` and rely on its provider-side hard limit. Do not fabricate an OK/⛔ you can't verify, and do not assume a provider is live-balance just because its slot is filled.
 4. **Decide + preview.** Show the operator the preview block below and one of:
    - ✅ sufficient balance and the run's total stays inside its budget (`run_state.spend_ceiling_usd`, a standing $100 per client run, never asked) → run it and report the charge. The standing budget is the confirmation (`/autonomous-execution-policy` section 2).
-   - ⚠️ a key is under $10 → warn, recommend top-up, ask whether to proceed anyway.
+   - ⚠️ a key is under $10 → warn and recommend a top-up. Under `review_gates`, ask whether to proceed anyway. Under `auto_execute` (the new-client default since 2026-09-24), proceed when the balance still covers the estimated cost and report the warning at the next checkpoint; a balance below the estimate is the ⛔ block below.
    - ⛔ the run's total would go over its budget → **stop** and ask the operator to raise the budget for this client.
    - ⛔ a key is below the estimated cost → **block**; require top-up before running.
    - Mailbox infrastructure (domains, mailbox capacity) is outside the $100 data budget. It runs only against the setup total the operator approved for that setup.
-5. **Run** when the verdict allows it: a ✅ inside the budget runs straight away, and anything else waits for the operator.
+5. **Run** when the verdict allows it: a ✅ inside the budget runs straight away, and so does a ⚠️ under `auto_execute` whose balance covers the estimate; anything else waits for the operator.
 6. **Report + decrement.** After the run, show actuals (or estimate-as-actual), then subtract from the ledger and note the new balance.
 
 ### Pre-run preview block (always show this before running)
@@ -44,7 +44,7 @@ Est. cost         : $<low>–$<high>   (basis: <credits/records/emails/images>)
 Threshold         : $10/key (balance warning)
 Run budget        : $<spent so far> + $<this run, high> of $<spend_ceiling_usd>  <within / OVER>
 Verdict           : <PROCEED / WARN-low-balance / STOP-over-budget / BLOCK-topup-required>
-Proceed? (asked only on WARN or STOP; a PROCEED inside the budget just runs)
+Proceed? (asked only on STOP, or on WARN under review_gates; a PROCEED inside the budget just runs)
 ```
 
 ### Post-run report block (always show this after running)

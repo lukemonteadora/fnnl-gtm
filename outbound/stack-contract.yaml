@@ -1051,14 +1051,17 @@ operations:
 # =============================================================================
 # 7. EXECUTION DEFAULTS
 #    Not tools. These are the workspace-level settings a new client's
-#    run_state inherits. The mode default is conservative (review_gates).
+#    run_state inherits. New clients run hands-free inside each phase and
+#    stop at four phase checkpoints (operator decision 2026-09-24).
 #    Spend runs on a standing budget per client run that is never asked.
 # =============================================================================
 
 execution_defaults:
 
-  execution_mode: review_gates      # review_gates | auto_execute
+  execution_mode: auto_execute      # auto_execute | review_gates (review_gates is opt-in since 2026-09-24)
   run_state_field_execution_mode: run_state.execution_mode
+  review_protocol: phase_checkpoints   # phase_checkpoints | per_phase_gates | none; stops only at /cold-email-kickoff's four checkpoints
+  run_state_field_review_protocol: run_state.review_protocol
   spend_ceiling_usd: 100            # standing budget per client run, never asked (operator directive 2026-09-22)
   run_state_field_spend_ceiling: run_state.spend_ceiling_usd
   notes: >

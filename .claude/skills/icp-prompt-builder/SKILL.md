@@ -37,7 +37,7 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue. Never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work. Never idle.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at `/cold-email-kickoff`'s four phase checkpoints; `review_gates` is opt-in), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue. Never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work. Never idle.
 
 ## Activity Log Protocol
 
@@ -144,7 +144,9 @@ Company | Qualified | Signal Supported | Confidence | Reason
 
 ### 5. Collect Corrections
 
-Ask:
+**Under `auto_execute` (the new-client default since 2026-09-24), do not ask.** An independent sub-agent that never saw the prompt's reasons labels the same stratified rows (two 10-row rounds, 20 in all). Lock when it agrees with the prompt's `qualified` call (or its `fit_status` call, for the TAM fit-gate use) on at least 17 of 20 and no hard exclusion was scored as qualified (or as anything but `bad`, for the TAM fit-gate use). On disagreement, fix the prompt and re-run, at most two rounds; a third disagreement stops and asks, because a fit prompt that an independent reader keeps overruling would spend the budget on the wrong companies. Report the agreement count at the next checkpoint (`/cold-email-kickoff`, "How a run stops"). The same pattern as `/lead-scoring`'s `auto_execute` calibration.
+
+Under `review_gates`, ask:
 
 ```text
 Which rows are wrong?
@@ -164,7 +166,8 @@ If the user gives zero corrections, count that as one approved round.
 The prompt is locked only when:
 
 - Two consecutive 10-row rounds have zero corrections, or
-- The user explicitly says to lock it
+- The user explicitly says to lock it, or
+- Under `auto_execute`, the independent sub-agent check in step 5 passes
 
 One correction resets the approval streak.
 
@@ -222,7 +225,7 @@ If the user has a separate deterministic scoring script or spreadsheet workflow,
 ## Common Mistakes
 
 - Scoring 50 at once. It hides errors.
-- Letting the model self-approve. The user must approve.
+- Letting the prompt that scored the rows judge them. Under `review_gates` the user approves; under `auto_execute` an independent sub-agent that never saw the reasons does (step 5).
 - Ignoring negative examples.
 - Treating soft triggers as hard filters.
 - Accepting a claimed signal without `evidence_url` or a strong source note.

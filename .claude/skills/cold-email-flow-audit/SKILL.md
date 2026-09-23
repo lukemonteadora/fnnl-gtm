@@ -37,7 +37,7 @@ Artifacts carry no version stamp, so there is nothing to version-diff. The only 
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`), proceed without pausing: run the audit, apply the delegated fixes, and re-verify. Never re-ask a decision already in `run_state`, `client-profile.yaml`, the activity log, memory, or the operator's latest message. Spend runs against the standing budget in `run_state.spend_ceiling_usd` ($100 per client run, never asked, in either execution mode): auto-approve within it. Stop only for the hard stops below. On a long async wait (an enrichment or copy regen), background-poll and interleave other productive work. Never idle.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at `/cold-email-kickoff`'s four phase checkpoints; `review_gates` is opt-in), proceed without pausing: run the audit, apply the delegated fixes, and re-verify. Never re-ask a decision already in `run_state`, `client-profile.yaml`, the activity log, memory, or the operator's latest message. Spend runs against the standing budget in `run_state.spend_ceiling_usd` ($100 per client run, never asked, in either execution mode): auto-approve within it. Stop only for the hard stops below. On a long async wait (an enrichment or copy regen), background-poll and interleave other productive work. Never idle.
 
 ## Material Decision Rule
 

@@ -56,7 +56,7 @@ Ask before choices that affect spend beyond an approved budget, provider routing
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue - never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work - never idle.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at `/cold-email-kickoff`'s four phase checkpoints; `review_gates` is opt-in), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue - never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work - never idle.
 
 ## Activity Log Protocol
 
@@ -87,9 +87,9 @@ profiles/<business-slug>/offer-intelligence.md
 **Check the Research QA verdict first** (`research_artifacts.qa_verdict` in `client-profile.yaml`, or the Research QA section of `_research/pain-clusters.md`; `market-evidence-standard.md` section 7):
 
 - **PASS**: proceed.
-- **DEEPEN with loops remaining**: route back to `/offer-intelligence` Stage 2 rather than building offers on research the gate says is thin.
+- **DEEPEN with loops remaining**: route back to `/offer-intelligence` Stage 2 rather than building offers on research the gate says is thin. Under `review_protocol: phase_checkpoints`, the operator has already ruled at checkpoint 2: when the operator chose to build offers, proceed with the gap's clusters labelled low confidence.
 - **PASS with low-confidence labels after two loops**: proceed, carrying each cluster's label into every candidate that relies on it.
-- **HOLD**: the step depends on the mode (operator decision 2026-09-23, Aaron pre-launch gap audit; matches the Research QA gate in `/cold-email-kickoff`). Under `review_gates`, the operator decides at Gate 2 (the offer-step review defined in `/cold-email-kickoff`): do not build offers on a HOLD until that decision is made, and follow it when one is already recorded. Under `auto_execute`, proceed with every cluster labelled low confidence, the HOLD reasons at the top of the report, and each cluster's label carried into every candidate that relies on it.
+- **HOLD**: the step depends on the mode (operator decision 2026-09-23, Aaron pre-launch gap audit; matches the Research QA gate in `/cold-email-kickoff`). Under `review_gates`, the operator decides at Gate 2 (the offer-step review defined in `/cold-email-kickoff`): do not build offers on a HOLD until that decision is made, and follow it when one is already recorded. Under `review_protocol: phase_checkpoints`, the operator has already ruled at `/cold-email-kickoff` checkpoint 2: follow that answer. Under plain `auto_execute`, proceed with every cluster labelled low confidence, the HOLD reasons at the top of the report, and each cluster's label carried into every candidate that relies on it.
 - **No verdict** (a brief written before the research layer landed, 2026-09-24): run `/market-evidence synthesize` first; it seeds the evidence ledger from the existing brief and research files.
 
 If the brief exists, load these five sections **by name** and work from them:
@@ -104,7 +104,7 @@ If the brief exists, load these five sections **by name** and work from them:
 
 Also load `profiles/<business-slug>/client-profile.yaml` if it exists. If it contains `offer.client_suggested_lead_magnet`, include that suggestion as Candidate A and preserve any `offer.client_suggested_lead_magnet_details` as delivery context.
 
-If the offer-intelligence brief does not exist, ask whether to run `/offer-intelligence` discovery mode first using a native choice prompt:
+If the offer-intelligence brief does not exist, under `auto_execute` run `/offer-intelligence` discovery first (the recommended answer) without asking. Under `review_gates`, ask using a native choice prompt:
 
 ```text
 No offer-intelligence brief exists yet. What should I do?
@@ -117,7 +117,7 @@ D. Custom answer
 
 ## Intake
 
-Ask one at a time using Claude Desktop native Interactive Inputs / Choice Prompts. When the profile, website, or offer-intelligence brief gives a likely answer, pre-fill it as the recommended option.
+Under `auto_execute` (the new-client default since 2026-09-24), do not ask: answer each item from the profile, the website and the offer-intelligence brief, and put any item none of them answers on the next checkpoint. Under `review_gates`, ask one at a time using Claude Desktop native Interactive Inputs / Choice Prompts. When the profile, website, or offer-intelligence brief gives a likely answer, pre-fill it as the recommended option.
 
 1. What do you sell, in one sentence?
 2. What problem did your best customer have before buying?
@@ -531,7 +531,7 @@ Whichever mode applies, the primary offer and every validation arm must clear th
 
 - `auto_execute`: select the highest-ranked candidate that clears the checks and can send today as the primary, and every other qualifying candidate as ranked validation arms (preferring a different bucket for arm 1), all automatically. Do not pause for input. Run the Signal-Capability Check on each; if one fails (nothing in the contract can obtain the signal it depends on), drop the signal dependency or move down the ranking and re-check, still without pausing. Report: "Auto-selected offer: [name] (score: X/7), plus validation arms: [name (score), ...]. First wave: max(3, qualified contacts / 2,000) of these, capped at [N] qualifying, launched together once the TAM gives the count. Reason: [one-sentence rationale tied to ICP pain]. Signal dependency: [none, or the signal plus its ruling]." If fewer than three offers qualify, or no arm survives, say so in the report (Lock One Primary Plus Validation Arms); for a validated Go offer, `validation_arms: []` is normal and the report says "validated Go offer". Then write the list definition (disqualifiers, inclusion filters, title stack), the scale notes and qualification rules, and the fulfillment plan, proceed to Save Output, and hand the test set to `/offer-test-slate` (slate mode).
   - **Archetype K under `auto_execute` (reworked 2026-09-22).** A tool may be auto-locked as an arm like any other candidate: building it for the test is agency work in Claude Code (K2), so no human funding commitment is needed. Putting it live on a subdomain is a live-system change, so that one deploy step pauses for the operator per `/autonomous-execution-policy`, and the tool arm is not scheduled into a flight until it is live.
-- `review_gates` (default): display all ranked candidates with the recommended primary and validation arms marked. Ask the operator to choose the primary and confirm the arms before saving. Do not continue to strategy or copy until a selection is made.
+- `review_gates` (opt-in since 2026-09-24): display all ranked candidates with the recommended primary and validation arms marked. Ask the operator to choose the primary and confirm the arms before saving. Do not continue to strategy or copy until a selection is made.
 
 ## Offer-Fit Disqualifiers (produced HERE at offer lock, consumed by `/tam-build`)
 

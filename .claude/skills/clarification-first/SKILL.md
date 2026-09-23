@@ -11,7 +11,7 @@ Do not use it for short answers or obvious single-step requests.
 
 ## Interaction Policy
 
-This skill defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`), proceed without pausing: pick the strongest option per the rubric, record it to `run_state`/profile, and continue. Never re-ask a decision already in `run_state`, `client-profile.yaml`, `campaign-plan.md`, memory, or the latest operator message. Spend runs against the standing budget in `run_state.spend_ceiling_usd` ($100 per client run, never asked, in either execution mode): auto-approve within it. Stop only for the hard-stops in the policy. On a long async wait, background-poll and move to other productive work. Never idle.
+This skill defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at `/cold-email-kickoff`'s four phase checkpoints; `review_gates` is opt-in), proceed without pausing: pick the strongest option per the rubric, record it to `run_state`/profile, and continue. Never re-ask a decision already in `run_state`, `client-profile.yaml`, `campaign-plan.md`, memory, or the latest operator message. Spend runs against the standing budget in `run_state.spend_ceiling_usd` ($100 per client run, never asked, in either execution mode): auto-approve within it. Stop only for the hard-stops in the policy. On a long async wait, background-poll and move to other productive work. Never idle.
 
 ## Activity Log Protocol
 
@@ -47,7 +47,7 @@ Under autonomous execution (`execution_mode = auto_execute`), the `/autonomous-e
 
 ## Questions
 
-Ask no more than three questions at once.
+Ask no more than four questions at once (the native prompt's limit). At a phase checkpoint under `review_protocol: phase_checkpoints` (`/cold-email-kickoff`, operator directive 2026-09-24), that one prompt carries every question the phase needs, with related facts grouped into one multi-part question before a second prompt is ever used.
 
 Use Claude Desktop native Interactive Inputs / Choice Prompts for every user-facing question unless the user explicitly asks for a freeform interview.
 

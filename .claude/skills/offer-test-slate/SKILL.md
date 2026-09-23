@@ -61,7 +61,7 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`), proceed without pausing: author and render the slate, record it, and continue the flow. Claude never sends the deck to the client. The operator sends it, and records the send date and any client response (see State fields). Stop only for the policy's hard-stops.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at `/cold-email-kickoff`'s four phase checkpoints; `review_gates` is opt-in), proceed without pausing: author and render the slate, record it, and continue the flow. Claude never sends the deck to the client. The operator sends it, and records the send date and any client response (see State fields). Stop only for the policy's hard-stops.
 
 `run_state.offer_slate_approval` decides whether the flow waits for the client:
 
@@ -107,9 +107,9 @@ If `lead-magnets.md` has no ranked candidates, `/lead-magnet-brainstorm` has not
    - Every quote in "What we found" is verbatim from a real call, review or post on file. Never fabricate or tidy a quote, and never present a public quote as coming from the client's own calls.
    - Every number traces to a saved artifact. Where the artifacts do not hold a reason, write `Not captured in current artifacts.` rather than inventing one.
    - Plain words for a sharp outsider: gloss a specialist term the first time it appears; describe offers by what the prospect gets.
-6. **Render.** Default is a presentation built on the locked design library (see Rendering). When the operator wants a document or a simple list instead, render the same Markdown to DOCX. Always keep the Markdown as the source of record.
+6. **Render.** Default is a presentation built on the locked design library (see Rendering). When the operator wants a document or a simple list instead, render the same Markdown to DOCX. Always keep the Markdown as the source of record. **Under `review_protocol: phase_checkpoints` (the new-client default since 2026-09-24), stop at the Markdown:** the deck is built only when the operator asks for it (offer it in one line at checkpoint 3), so rendering and slide QA never sit on the path to the list.
 7. **Record** `offer.test_slate` in `client-profile.yaml` (see State fields) and log it.
-8. **Hand it to the operator** with one line on what it is, the path, and the "Needs your OK" asks. Then continue the flow per `run_state.offer_slate_approval`.
+8. **Hand it to the operator** with one line on what it is, the path, and the "Needs your OK" asks. Then continue the flow per `run_state.offer_slate_approval`; under `review_protocol: phase_checkpoints`, the flow first stops at `/cold-email-kickoff` checkpoint 3 and continues only after the operator answers it.
 
 ### Slate template (client-facing Markdown)
 

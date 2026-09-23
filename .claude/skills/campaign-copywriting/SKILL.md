@@ -1,6 +1,6 @@
 ---
 name: campaign-copywriting
-description: Creates cold email copy through a stepwise confirmation process. Use when writing email campaigns from a campaign strategy document, website, or client context. Every initial cold email must follow outreach-copy-framework.md, and every subject line, opener, body, CTA, follow-up, and YAML variant must pass spam-word-checker.md and cold-email-copy-best-practices.md before being shown, approved, serialized, or uploaded.
+description: Creates cold email copy through a stepwise flow, confirmed step by step under review_gates and picked and recorded without stops under auto_execute. Use when writing email campaigns from a campaign strategy document, website, or client context. Every initial cold email must follow outreach-copy-framework.md, and every subject line, opener, body, CTA, follow-up, and YAML variant must pass spam-word-checker.md and cold-email-copy-best-practices.md before being shown, approved, serialized, or uploaded.
 ---
 
 # Campaign Copywriting Skill
@@ -45,7 +45,7 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue. Never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work. Never idle. Autonomy does NOT relax the Copy QA Gate: `spam-word-checker.md` and `cold-email-copy-best-practices.md` remain HARD gates: every variant must still pass both before it is shown, approved, serialized, or uploaded, regardless of execution mode.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at `/cold-email-kickoff`'s four phase checkpoints; `review_gates` is opt-in), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue. Never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work. Never idle. Autonomy does NOT relax the Copy QA Gate: `spam-word-checker.md` and `cold-email-copy-best-practices.md` remain HARD gates: every variant must still pass both before it is shown, approved, serialized, or uploaded, regardless of execution mode.
 
 ---
 
@@ -411,7 +411,7 @@ Not relaxed by `auto_execute`. This is a missing-source-material input gate, mod
 
 ## How This Skill Works
 
-This skill operates like a structured intake flow. Confirm key decisions before final copy is produced.
+This skill operates like a structured intake flow. Under `review_gates`, confirm key decisions before final copy is produced. Under `auto_execute` (the new-client default since 2026-09-24), steps 1 to 3 run without a stop: pick the recommended direction, first-line strategy and structure, record them in `copy.md`, then write the final copy. Every QA gate below still applies in full, and the operator reviews the copy at the launch review (`/cold-email-kickoff` checkpoint 4).
 
 The single-thread 2-to-3-step flow:
 
@@ -627,7 +627,7 @@ Use structure language, not unreviewed body copy.
 
 ## Step 4: Output Final Copy
 
-Only output final copy after the user confirms the structure **and the List Gate passes** (verified slice + grade B or better and list-QA PASS + locked strategy; see List Gate). If the gate is not satisfied, STOP here: do not serialize `variants.yaml`.
+Only output final copy after the structure is settled (confirmed by the user under `review_gates`, picked and recorded under `auto_execute`) **and the List Gate passes** (verified slice + grade B or better and list-QA PASS + locked strategy; see List Gate). If the gate is not satisfied, STOP here: do not serialize `variants.yaml`.
 
 Before presenting final copy:
 
@@ -1634,7 +1634,7 @@ Reading note (added 2026-09-21, Aaron alignment; the weights are unchanged): "Pr
 ## Final Reminders
 
 1. Work stepwise.
-2. Present strategy options before final copy.
+2. Present strategy options before final copy under `review_gates`; under `auto_execute`, record the picked options in `copy.md` instead.
 3. Run the Copy QA Gate before showing any copy.
 4. Use `spam-word-checker.md` as the formatting, CTA, opener, and voice source of truth.
 5. Use `cold-email-copy-best-practices.md` as the writing quality source of truth.
@@ -1649,7 +1649,9 @@ Reading note (added 2026-09-21, Aaron alignment; the weights are unchanged): "Pr
 
 ## What To Do Next
 
-After `variants.yaml` is written and the final copy passes QA, ask once:
+**Under `auto_execute` (the new-client default since 2026-09-24), neither menu below is asked:** the DOCX packs and the approval brief are made only on request, and the run continues straight to the variation and paused-draft upload steps below.
+
+Under `review_gates`, after `variants.yaml` is written and the final copy passes QA, ask once:
 
 ```text
 Choose the DOCX presentation pack next step.
