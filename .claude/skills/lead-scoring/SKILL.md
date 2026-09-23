@@ -109,10 +109,10 @@ Treat adjacent but marketable companies as `fit_status = maybe`, not `bad`.
 Eligibility requires:
 
 - No explicit exclusion.
-- `market_points + offer_points > 0`.
-- `role_points > 0`.
+- `market_points + offer_points > 0` when both tiers are classified. Both classified as `none` is `no_plausible_customer_relationship`.
+- `role_points > 0` when the role tier is classified. A classified `unrelated` is `no_plausible_buying_relationship`.
 
-When those conditions pass, clamp a raw score below 2.0 to 2.0. This keeps the full marketable range at 2.0 to 10.0. Rows that fail the conditions stay in the scored output with `send_eligible = false` and a machine-readable `exclusion_reason`.
+A blank tier is unknown evidence, never a zero verdict. It earns no points and lowers confidence, but it never makes a row ineligible, so a row with a blank market and offer, or a blank role, stays eligible and the report counts it. When those conditions pass, clamp a raw score below 2.0 to 2.0. This keeps the full marketable range at 2.0 to 10.0. Rows that fail the conditions stay in the scored output with `send_eligible = false` and a machine-readable `exclusion_reason`.
 
 ## Build the client rubric
 

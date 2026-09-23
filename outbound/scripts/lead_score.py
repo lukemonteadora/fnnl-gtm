@@ -5,6 +5,11 @@ AI or a human first maps messy row evidence into the controlled tier columns
 defined by the client's lead-scoring rubric. This script owns only validation,
 point arithmetic, exclusions, confidence, ranking, and report generation.
 It performs no network calls and never reveals or verifies an email.
+
+A blank tier is unknown evidence: it earns no points and lowers confidence, but
+it never excludes a row. Only explicit exclusions, fit_status=bad, suppression,
+a missing contact identity, and a classified zero relationship (market and offer
+both `none`, or role `unrelated`) make a row ineligible.
 """
 
 from __future__ import annotations
@@ -475,8 +480,12 @@ def score_companies(
             tier, value, is_present = component_value(row, component, rubric, f"company {domain}")
             tiers[component], points[component], present[component] = tier, value, is_present
 
+        # A blank tier is missing evidence, not a negative verdict. Only a market and
+        # offer that were both classified and both score zero rule out a customer.
+        zero_relationship = points["market"] + points["offer"] <= 0
+        relationship_classified = present["market"] and present["offer"]
         exclusion = explicit_exclusion(row, rubric)
-        if not exclusion and points["market"] + points["offer"] <= 0:
+        if not exclusion and zero_relationship and relationship_classified:
             exclusion = "no_plausible_customer_relationship"
         eligible = not exclusion
         company_score = sum(points.values())
@@ -499,7 +508,12 @@ def score_companies(
                 "scored_at": scored_at,
             }
         )
-        row["_score_meta"] = {"tiers": tiers, "points": points, "present": present}
+        row["_score_meta"] = {
+            "tiers": tiers,
+            "points": points,
+            "present": present,
+            "relationship_unknown": zero_relationship and not relationship_classified,
+        }
         scored.append(row)
         by_domain[domain] = row
     return scored, by_domain
@@ -565,7 +579,8 @@ def score_contacts(
             exclusion = suppression_reason(row, suppression)
         if not exclusion and not person_identity(row):
             exclusion = "missing_contact_identity"
-        if not exclusion and points["role"] <= 0:
+        # A blank role is unknown and stays eligible; only a classified `unrelated` excludes.
+        if not exclusion and present["role"] and points["role"] <= 0:
             exclusion = "no_plausible_buying_relationship"
 
         company_points = company["_score_meta"]["points"]
@@ -615,7 +630,12 @@ def score_contacts(
                 "scored_at": scored_at,
             }
         )
-        row["_score_meta"] = {"tiers": tiers, "points": points, "identity": person_identity(row)}
+        row["_score_meta"] = {
+            "tiers": tiers,
+            "points": points,
+            "identity": person_identity(row),
+            "relationship_unknown": company["_score_meta"]["relationship_unknown"] or not present["role"],
+        }
         scored.append(row)
 
     confidence_rank = {"high": 3, "medium": 2, "low": 1}
@@ -665,6 +685,7 @@ def build_report(
     exclusions = Counter(row["exclusion_reason"] for row in ineligible)
     staggered = sum(row["same_wave_eligible"] == "false" for row in eligible)
     company_eligible = sum(row["company_send_eligible"] == "true" for row in company_rows)
+    unknown_relationship = sum(row["_score_meta"]["relationship_unknown"] for row in eligible)
 
     lines = [
         "# Lead Scoring Report",
@@ -677,6 +698,7 @@ def build_report(
         "",
         f"- Companies: {len(company_rows)} total, {company_eligible} eligible.",
         f"- Contacts: {len(contact_rows)} total, {len(eligible)} eligible, {len(ineligible)} excluded.",
+        f"- Eligible contacts on an unclassified relationship (blank market and offer, or blank role): {unknown_relationship}. Missing evidence lowers confidence and never excludes.",
         f"- Same-wave cap: {rubric['same_wave_contact_cap']} contacts per company; {staggered} eligible contacts held for a later company stagger.",
         "- Every eligible score from P1 through P5 remains in the outreach queue.",
         "",
@@ -748,7 +770,7 @@ def main(argv: list[str] | None = None) -> int:
         contact_clean = strip_meta(contact_scored)
         write_csv(args.company_output, append_headers(company_headers, COMPANY_OUTPUT_COLUMNS), company_clean)
         write_csv(args.contact_output, append_headers(contact_headers, CONTACT_OUTPUT_COLUMNS), contact_clean)
-        report = build_report(args.rubric, company_clean, contact_clean, rubric, scored_at)
+        report = build_report(args.rubric, company_scored, contact_scored, rubric, scored_at)
         args.report.parent.mkdir(parents=True, exist_ok=True)
         args.report.write_text(report, encoding="utf-8")
 
