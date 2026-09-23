@@ -1,0 +1,23 @@
+# VOC extraction benchmark: raw source text -> evidence-ledger rows (market-evidence-standard.md section 3).
+# The production job: the small-model extraction sub-agents in /offer-intelligence and /market-evidence feedback,
+# handed voc-extraction/prompt.md as their instruction.
+#
+# Run it through the runner (README.md): prepare writes one packet per case, the session fans the packets out to
+# Agent-tool sub-agents on the tier under test, and grade runs the checks below over the saved answers.
+#   node outbound/evals/run_eval.mjs prepare voc-extraction --tier haiku
+#   node outbound/evals/run_eval.mjs grade voc-extraction <run-id>
+# Public cases live in cases.yaml (committed, authors reduced to roles). Client-confidential cases, such as call
+# excerpts or replies, go in cases.local.yaml, which is gitignored and picked up by the same pattern.
+suite: voc-extraction
+builder: voc                      # the lib/prompt.js function that builds each case's message pair
+required_vars: [source_text, gold]
+cases:
+  pattern: "cases*.yaml"          # every matching file is loaded, except the example file below
+  example: cases.example.yaml     # synthetic smoke-test cases, used only with --example
+checks:                           # metric name -> the lib/checks.js function that decides it
+  - { metric: schema, fn: vocSchema }
+  - { metric: verbatim, fn: vocVerbatim }
+  - { metric: grounding, fn: vocGrounding }
+  - { metric: blank_discipline, fn: vocBlankDiscipline }
+  - { metric: labels, fn: vocLabels }
+  - { metric: recall, fn: vocRecall }

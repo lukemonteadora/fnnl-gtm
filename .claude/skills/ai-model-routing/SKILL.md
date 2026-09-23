@@ -58,7 +58,25 @@ Sub-agents are routed by job, not all run on the top model. Every Task/Agent cal
 | Clustering, comparing competitors, building competitor cards | mid (`"sonnet"`) for large or multi-segment sets; the session otherwise | `/market-evidence synthesize` on more than about 150 ledger rows |
 | Synthesis, offers, strategy, QA verdicts, opportunity scores, copy | the session's strongest model (omit `model` so the sub-agent inherits it, or do the work in the session) | The Research QA verdict; `/lead-magnet-brainstorm`; `/campaign-copywriting` |
 
-**Moving a recurring job down a tier needs proof first.** Before a job moves from the session to `sonnet`, or from `sonnet` to `haiku`, run a 20-row agreement check: have the candidate tier answer the same 20 rows the session (or the operator) already answered, compare, and lock in the cheaper tier only if agreement holds. Otherwise stay one tier up. Once `outbound/evals/` exists in this workspace, the move also needs a pass on the benchmark described in `outbound/evals/README.md`. Re-run the check when a job's inputs change.
+**Moving a recurring job down a tier needs proof first.** Before a job moves from the session to `sonnet`, or from `sonnet` to `haiku`, run a 20-row agreement check: have the candidate tier answer the same 20 rows the session (or the operator) already answered, compare, and lock in the cheaper tier only if agreement holds. Otherwise stay one tier up. The move also needs a pass on the benchmark described in `outbound/evals/README.md`. Re-run the check when a job's inputs change.
+
+## Model Benchmarks (Claude-native, 2026-09-24)
+
+**The rule.** Never ask "which model is best?". Ask "which Claude Code tier does THIS workflow well enough?", and answer it with a benchmark on our own work. The harness is `outbound/evals/`: its `README.md` is the operator guide and `BENCHMARKS.md` is the dated decision log. It calls no model API and holds no key: a script cannot launch sub-agents, so `run_eval.mjs prepare` writes the case packets and a fan-out plan, the session runs the sub-agents on the tier under test (the Agent tool's `model`), and `run_eval.mjs grade` scores the answers on disk.
+
+- **What is benchmarked.** The repeated jobs where a cheaper tier would help most: `voc-extraction` (raw source to ledger rows), `competitor-card` (one competitor page to card fields) and `company-fit` (a client's locked `/icp-prompt-builder` prompt on one company row). Reply tagging joins once replies are stored on disk.
+- **Who is compared.** Claude tiers only (`haiku`, `sonnet`, the session's own model), and canonical prompt versions before and after an edit. No other model family, ever (the no-AI-API rule).
+- **How it scores.** Deterministic checks only (`outbound/evals/lib/checks.js`): valid schema, quotes verbatim from the source, no invented competitors, customers or prices, fields left blank when the source is silent, and agreement with gold labels. No model grades another. Gold labels carry a `label_status`, and only `client` and `operator` labels count as ground truth.
+- **Local only.** Cases hold client research, so cases built from client data (`cases.local.yaml`) and every raw result stay on this machine (gitignored).
+
+**Moving a job down a tier** needs both halves:
+
+1. On its suite (`--repeat 3`), the cheaper tier **matches** the current one on `verbatim`, `grounding` and `blank_discipline` (the hallucination checks) and is **within 5 points** on the rest.
+2. The 20-row agreement check on live work ([Model tiers for sub-agents](#model-tiers-for-sub-agents) above) still passes.
+
+Record the decision in `BENCHMARKS.md`, then edit the route here.
+
+**Canonical prompts are benchmarked in place.** `outbound/evals/voc-extraction/prompt.md` is the instruction every extraction sub-agent is handed (in `/offer-intelligence` and `/market-evidence`), and `outbound/evals/competitor-card/prompt.md` is the instruction for reading one competitor page in Vector 1. The `company-fit` suite reads each client's locked prompt from its profile folder. Because production and the benchmark read the same file, an edit to one of these prompts goes through the before-and-after loop in `outbound/evals/README.md`, and the commit message says what the scores did.
 
 ## When To Use This
 
@@ -367,6 +385,7 @@ Everything in this pipeline runs today, with no AI key and no activated pack:
 - **Evidence ledger:** `outbound/scripts/research/evidence_ledger.mjs`. `ingest` validates sub-agent batch files, dedupes, assigns evidence IDs and appends to `_research/evidence.csv` (the only way rows get in); `stats` computes per-cluster counts and the mechanical Research QA checks. Plain code: no network, no AI, no key.
 - **Research QA gate:** `/market-evidence synthesize`, per `market-evidence-standard.md` section 7 (the `stats` half plus the judged half; PASS / DEEPEN / HOLD).
 - **Research-routing audit:** `scripts/research/research_routing_check.mjs` checks that each research-skill run logged a primary in the ledger, counting both `claude-deep-research` and `claude-subagent-fanout` as a primary.
+- **Benchmarks:** `outbound/evals/run_eval.mjs` (`prepare`, then the session's sub-agent fan-out, then `grade`), per [Model Benchmarks](#model-benchmarks-claude-native-2026-09-24). Plain code, no model call.
 - **Headshots:** `scripts/generate_inbox_profiles.py`, run by `/mailbox-profile-generator` (the one approved AI exception).
 
 The scripts that used to call AI provider APIs were archived on 2026-09-22 (see `outbound/_archive/no-ai-api-2026-09-22/MANIFEST.md`). Nothing in this pipeline calls them, and none is to be restored as a research, crunch, or copy path.

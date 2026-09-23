@@ -1,0 +1,47 @@
+# SYNTHETIC CASES, FOR RUNNER SMOKE TESTS ONLY. NOT A BENCHMARK.
+#
+# Both sources below were written by hand for this file. The people, companies and products in them are
+# invented, and the URLs use the reserved example.com domain. They exist so `run_eval.mjs prepare --example`
+# and `grade` can be tried end to end without touching client research. They are loaded ONLY with --example,
+# never mixed into a real run, and a run on them is never logged to BENCHMARKS.md.
+#
+# Case 1 is a positive case (a buyer describing a real-looking problem). Case 2 is a negative control: a vendor
+# promoting its own product in a forum thread, which the canonical prompt says must return [].
+
+- id: synthetic-ops-manager-invoice-reconciliation
+  description: "SYNTHETIC: forum post by an operations manager on hand-reconciling carrier invoices (positive case)"
+  vars:
+    client_context: "Synthetic client: a vendor selling accounts-payable automation to freight brokerages and logistics firms."
+    platform: "forum.example.com (forum post, synthetic)"
+    source_url: "https://forum.example.com/t/1001"
+    source_date: "2026-09-01"
+    source_author: "Operations manager"
+    source_text: |
+      Ops manager at a 40-person freight brokerage here. Since we signed the grocery-chain contract in March our carrier invoices roughly doubled, and we still reconcile every one of them by hand in a shared spreadsheet. Two of us spend most of Friday matching invoice lines to load confirmations.
+
+      We trialled LedgerLoop for a month but it could not read the scanned PDFs half our carriers send, so we went back to the spreadsheet. Last quarter we paid two carriers late because a mismatch sat unnoticed for three weeks, and one of them now wants payment upfront.
+    gold:
+      label_status: synthetic
+      evidence_type_any: [forum_post]
+      source_class_any: [buyer_quote]
+      persona_any: ["ops manager", "operations manager"]
+      must_blank: [desired_outcome]
+      must_fill: [pain, workaround, consequence, trigger]
+      key_quotes: ["we still reconcile every one of them by hand in a shared spreadsheet", "it could not read the scanned PDFs half our carriers send"]
+      competitors: ["LedgerLoop"]
+      max_rows: 5
+      expect_empty: false
+
+- id: synthetic-vendor-promo-negative-control
+  description: "SYNTHETIC: a vendor founder promoting their own product in the same thread (negative control, must return [])"
+  vars:
+    client_context: "Synthetic client: a vendor selling accounts-payable automation to freight brokerages and logistics firms."
+    platform: "forum.example.com (forum reply, synthetic)"
+    source_url: "https://forum.example.com/t/1001#reply-4"
+    source_date: "2026-09-02"
+    source_author: "unknown"
+    source_text: |
+      Founder of LedgerLoop here. We just shipped automatic PDF parsing for carrier invoices, and brokerages on our Growth plan now close their books in half a day. Happy to set anyone in this thread up with a free 30-day trial, just DM me.
+    gold:
+      label_status: synthetic
+      expect_empty: true

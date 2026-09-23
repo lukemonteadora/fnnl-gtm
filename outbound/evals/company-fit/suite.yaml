@@ -1,0 +1,18 @@
+# Company-fit benchmark: a client's LOCKED /icp-prompt-builder prompt applied to one company row. The production
+# job: /tam-build and /icp-prompt-builder scoring at scale on mid-model sub-agents.
+#   node outbound/evals/run_eval.mjs prepare company-fit --tier haiku
+#   node outbound/evals/run_eval.mjs grade company-fit <run-id>
+# The prompt and the company rows are client data, so every case lives in cases.local.yaml (gitignored). Each
+# case points at the client's prompt file in its profile folder (vars.icp_prompt_file, relative to outbound/),
+# so a re-tuned prompt is benchmarked in place. Gold verdicts come only from operator or client decisions
+# (gold.basis says which). Never put the gold verdict, or a model's earlier fit label, inside vars.company:
+# the company object is handed to the sub-agent as-is.
+suite: company-fit
+builder: fit
+required_vars: [icp_prompt_file, company, gold]
+cases:
+  pattern: "cases*.yaml"
+  example: cases.example.yaml     # none ship: a fit case needs a real client prompt
+checks:
+  - { metric: schema, fn: fitSchema }
+  - { metric: verdict, fn: fitVerdict }

@@ -1,0 +1,56 @@
+# SYNTHETIC CASES, FOR RUNNER SMOKE TESTS ONLY. NOT A BENCHMARK.
+#
+# Both pages below were written by hand for this file. The companies, customers and prices are invented, and the
+# URLs use the reserved example.com domain. They are loaded ONLY with `run_eval.mjs prepare competitor-card
+# --example`, never mixed into a real run, and a run on them is never logged to BENCHMARKS.md.
+#
+# Case 1 is a pricing page with published prices, named customers and a free trial (archetype H). Case 2 is a
+# homepage with no prices, no customer names (only a line about logos) and nothing but "Book a demo", so the
+# correct card leaves the price, customer and front-end offer fields empty.
+
+- id: synthetic-pricing-page-free-trial
+  description: "SYNTHETIC: pricing page with two plans, three named customers and a free trial"
+  vars:
+    page_url: "https://tallyfold.example.com/pricing"
+    date_read: "2026-09-24"
+    page_text: |
+      Tallyfold
+      Carrier invoices, reconciled before lunch.
+      Tallyfold matches every carrier invoice to its load confirmation automatically, for freight brokerages with 10 to 200 staff.
+      Pricing
+      Starter
+      $149/month
+      Up to 500 invoices a month
+      Growth
+      $399/month
+      Up to 2,500 invoices a month
+      Start your free 14-day trial
+      Trusted by Northgate Freight, Blue Mesa Logistics and Harbor Line Brokerage
+      Download the 2026 Freight Payables Benchmark
+      Book a demo
+    gold:
+      label_status: synthetic
+      archetype_any: [H]
+      pricing_public: true
+      customers: ["Northgate Freight", "Blue Mesa Logistics", "Harbor Line Brokerage"]
+      front_end_offer_present: true
+
+- id: synthetic-homepage-demo-only
+  description: "SYNTHETIC: homepage with no prices, no customer names and only a demo call to action"
+  vars:
+    page_url: "https://quillmark.example.com/"
+    date_read: "2026-09-24"
+    page_text: |
+      Quillmark
+      AP automation for mid-market logistics.
+      Stop chasing paper. Quillmark routes, codes and approves every supplier invoice.
+      Loved by finance teams at leading 3PLs
+      Finance teams report faster month-end close and fewer late supplier payments
+      Book a demo
+      Contact sales
+    gold:
+      label_status: synthetic
+      archetype_any: [none]
+      pricing_public: false
+      customers: []
+      front_end_offer_present: false

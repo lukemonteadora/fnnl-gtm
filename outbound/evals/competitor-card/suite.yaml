@@ -1,0 +1,17 @@
+# Competitor card benchmark: one competitor page -> the page-level card fields (market-evidence-standard.md
+# section 10). The production job: the /offer-intelligence Vector 1 sub-agent that reads one fetched competitor
+# page, handed competitor-card/prompt.md as its instruction.
+#   node outbound/evals/run_eval.mjs prepare competitor-card --tier sonnet
+#   node outbound/evals/run_eval.mjs grade competitor-card <run-id>
+# Each case freezes the page text it was built from (page_text), so a rerun tests the model, not a changed
+# website. Page text is public, so cases normally live in cases.yaml; cases.local.yaml is there if one is not.
+suite: competitor-card
+builder: card
+required_vars: [page_url, page_text, gold]
+cases:
+  pattern: "cases*.yaml"
+  example: cases.example.yaml
+checks:
+  - { metric: schema, fn: cardSchema }
+  - { metric: grounding, fn: cardGrounding }
+  - { metric: labels, fn: cardLabels }

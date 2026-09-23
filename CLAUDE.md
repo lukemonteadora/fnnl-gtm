@@ -94,7 +94,7 @@ The read-first / write-after activity-log protocol itself still applies in full.
 
 | Path | Contents |
 |---|---|
-| `.claude/skills/` | The 60 active skills (56 owned here, plus the 4 mirrored persona-consult skills). Claude Code loads these live. |
+| `.claude/skills/` | The 62 active skills (58 owned here, plus the 4 mirrored persona-consult skills). Claude Code loads these live. |
 | `.claude/settings.json`, `.claude/hooks/` | Project hooks. Today one: `clay-credit-guard.mjs`, which enforces the zero-Clay-credit rule (section 7). |
 | `outbound/` | Everything the skills read and write. Detailed below. |
 | `_vendor-library/` | Parked tool integrations. **Nothing here loads**, by construction. |
@@ -112,6 +112,7 @@ Two rules keep that honest. Anything a skill needs at runtime lives under `outbo
 | `scripts/` | Automation scripts, `.env` (gitignored), `credential-registry.json` |
 | `memory/` | Skill state files |
 | `reference/` | Every doc a skill *reads*: copy doctrine, rubrics, client-facing templates, setup guides |
+| `evals/` | The Claude-native benchmark (added 2026-09-24): the canonical prompts recurring sub-agent jobs run on (VOC extraction, competitor cards), deterministic checks, the runner, and `BENCHMARKS.md`, the dated decision log. Cases built from client data (`*.local.yaml`) and raw results are gitignored. Guide: `outbound/evals/README.md`. |
 
 ### Path-resolution rule
 
@@ -219,7 +220,7 @@ Skills refer to this as the zero-workbench-credit rule and name the role ("the l
 
 - **Research** is a logged primary pass through the `/deep-research` harness. Thin spots get a second targeted `/deep-research` or WebSearch/WebFetch pass, never another provider. `run_state.research_routing` is `claude_deep_research` (the primary); if the harness fails, a declared flat fan-out of 4 to 8 Claude research sub-agents runs instead and is logged as `claude-subagent-fanout` (a provenance label in `ai_research_provider` and the run ledger, not a second routing value).
 - **Bulk classification and crunching** run as Claude sub-agents fanned out per `/personalization-subagent-pattern`. Deterministic filters stay in plain code.
-- **Sub-agents run on a model tier.** The Agent tool's `model` setting picks which Claude model a sub-agent uses inside Claude Code; it is not an API call and needs no key. `haiku` does mechanical extraction and tagging, `sonnet` does clustering, comparison and judgment on one item at a time, and the session's own (strongest) model does synthesis, offers and copy. Moving a recurring job down a tier needs a 20-row agreement check against answers the session or the operator already gave (and, once `outbound/evals/` exists, the benchmark in `outbound/evals/README.md`).
+- **Sub-agents run on a model tier.** The Agent tool's `model` setting picks which Claude model a sub-agent uses inside Claude Code; it is not an API call and needs no key. `haiku` does mechanical extraction and tagging, `sonnet` does clustering, comparison and judgment on one item at a time, and the session's own (strongest) model does synthesis, offers and copy. Moving a recurring job down a tier needs a 20-row agreement check against answers the session or the operator already gave (and the benchmark in `outbound/evals/README.md`).
 - **The built-in browser pane is Claude-native (added 2026-09-24).** It is a capability of the Claude desktop app, not a vendor, so it fills no stack slot and needs no key. Use it read-only (`navigate`, then `get_page_text`) for pages WebFetch cannot render, such as the Meta and LinkedIn ad libraries. Never log in to a site through it. Never use Claude in Chrome for research, because that extension acts inside the operator's real browser with their own sign-ins. When the session has no browser pane, the page is logged as unread.
 - **Critique and second opinions** (`/roast`, `/consultant`) are differentiated Claude sub-agent personas, plus the advisor reviewer when available.
 - **Final copy** is written in the native session (a clean-packet sub-agent is fine). There is no API copy path and no fallback branch.
@@ -266,6 +267,15 @@ Email, the calendar, Drive and docs, Notion and notetaker recap emails are, like
 - **FNNL clients only.** The same cross-agency guard as the sweep: an item is filed only under a client with an FNNL profile, everything about any other company is dropped and counted in the run report, and the internal-domains list that marks "who is us" is a setting (`--internal-domains`, or `outbound/profiles/_intel/config.yaml`), never hardcoded.
 
 The full protocol (sources, routing, the item schema, the read contract for skills) is `outbound/reference/client-intel-feed.md`.
+
+### Changing skills and prompts: benchmark it, then commit it (2026-09-24)
+
+Git and the benchmark are how the skill library changes safely, so every material change can be explained, measured and rolled back.
+
+- **Before a material skill or prompt change, check `git status`.** Another session may have uncommitted edits in flight, so never sweep them into your commit. Stage explicit paths only (never `git add -A`), and check `git diff --cached --name-status` before every commit.
+- **A change to a canonical prompt, or a move of a recurring sub-agent job to a cheaper model tier,** goes through the loop in `outbound/evals/README.md`: run the suite before, change, run it after, and keep the change only if the hallucination checks (verbatim, grounding, blank discipline) hold and the rest stays within 5 points, plus the 20-row agreement check in `/ai-model-routing`. Log the decision in `outbound/evals/BENCHMARKS.md` and say in the commit message what the scores did. A change that only looks more sophisticated is not kept.
+- **After a verified improvement, commit it** with a clear message (what changed, why, what proved it). This repo has no remote, so there is nothing to push.
+- **Never commit** `.env` files, API keys or tokens, client data (`profiles/`, `*.csv`, `outbound/evals/**/*.local.yaml`, `outbound/evals/results/`). `.gitignore` covers each of these; check `git check-ignore -v <path>` when unsure.
 
 ### Secrets
 

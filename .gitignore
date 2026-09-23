@@ -57,3 +57,9 @@ __pycache__/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# ── Benchmarks (outbound/evals) ─────────────────────────────────────────────
+# Raw outputs and cases built from client data never leave the machine.
+# The harness, canonical prompts, public cases and BENCHMARKS.md are committed.
+outbound/evals/results/
+outbound/evals/**/*.local.yaml
