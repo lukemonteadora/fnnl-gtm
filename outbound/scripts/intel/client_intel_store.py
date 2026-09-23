@@ -33,8 +33,12 @@ Commands
   roster                      Build profiles/_intel/roster.json (clients, domains,
                               aliases, Slack channel classes) from the client
                               profiles plus profiles/_intel/roster-overrides.json.
-  state                       Print profiles/_intel/state.json (cursors, last run).
-  state-set --json FILE       Merge cursors / last-run fields into the state.
+  state                       Print profiles/_intel/state.json (cursors, last run,
+                              per-client refresh stamps).
+  state-set --json FILE       Merge cursors / last-run fields / per-client refresh
+                              stamps ({"clients": {slug: {"refreshed_at": ISO}}},
+                              written by a single-client run) into the state, then
+                              re-render the feeds whose "Last synced" line moved.
   ingest --items FILE         Validate, scrub, dedupe, apply the cross-agency
          [--run-id ID]        guard, append items, write meeting files, re-render
          [--dry-run]          every touched feed. --dry-run validates only.
@@ -564,10 +568,37 @@ def load_state() -> dict:
     return read_json(STATE_FILE, {"version": 1, "cursors": {"slack": {}}, "runs": []})
 
 
+def last_synced(target: str, st: dict | None = None) -> str | None:
+    """When a target's feed was last refreshed: the newer of the global last_run_at
+    (a full run) and the client's own clients.<slug>.refreshed_at (a single-client run).
+
+    The agency feed has only the global stamp. Returns the stamp as written, or None.
+    """
+    st = load_state() if st is None else st
+    stamps = [st.get("last_run_at")]
+    if target not in SPECIAL_TARGETS:
+        stamps.append(((st.get("clients") or {}).get(target) or {}).get("refreshed_at"))
+    stamps = [s for s in stamps if s]
+    if not stamps:
+        return None
+    dated = [(parse_ts(str(s)), s) for s in stamps]
+    dated = [d for d in dated if d[0]]
+    return max(dated, key=lambda d: d[0])[1] if dated else stamps[0]
+
+
 def cmd_state_set(path: Path) -> None:
     patch = read_json(path, None)
     if not isinstance(patch, dict):
         raise SystemExit("state-set: JSON object expected")
+    clients = patch.get("clients") or {}
+    if not isinstance(clients, dict) or not all(isinstance(v, dict) for v in clients.values()):
+        raise SystemExit('state-set: "clients" must be {slug: {"refreshed_at": ISO, ...}}')
+    unknown = sorted(s for s in clients if s not in set(known_targets()))
+    if unknown:  # the cross-agency guard: a stamp only for a client with a profile folder here
+        raise SystemExit(f"state-set: no profile folder for {unknown}; use a slug from roster.json")
+    bad = sorted(s for s, v in clients.items() if v.get("refreshed_at") and not parse_ts(str(v["refreshed_at"])))
+    if bad:
+        raise SystemExit(f"state-set: refreshed_at is not an ISO timestamp for {bad}")
     st = load_state()
     cur = st.setdefault("cursors", {"slack": {}})
     for k, v in (patch.get("cursors") or {}).items():
@@ -578,11 +609,22 @@ def cmd_state_set(path: Path) -> None:
     for k in ("last_run_at", "last_run_id", "last_run_status", "backfill_done"):
         if k in patch:
             st[k] = patch[k]
+    for slug, stamp in clients.items():
+        st.setdefault("clients", {}).setdefault(slug, {}).update(stamp)
     if patch.get("run"):
         st.setdefault("runs", []).append(patch["run"])
         st["runs"] = st["runs"][-60:]
     write_json(STATE_FILE, st)
-    print(json.dumps({"ok": True, "state": str(STATE_FILE)}, indent=2))
+    # ingest renders before the stamps move, so re-render here to keep "Last synced" true.
+    # A stamped client is rendered even with no items yet, so its feed is no longer missing.
+    # A full run re-renders every feed or ledger that exists, and creates no new feed.
+    rerender = set(clients)
+    if "last_run_at" in patch:
+        rerender |= {t for t in known_targets() + list(SPECIAL_TARGETS)
+                     if target_dirs(t)[1].exists() or target_dirs(t)[0].exists()}
+    for t in sorted(rerender):
+        render_target(t)
+    print(json.dumps({"ok": True, "state": str(STATE_FILE), "rerendered": sorted(rerender)}, indent=2))
 
 
 # --------------------------------------------------------------------------- ingest
@@ -825,7 +867,7 @@ def render_target(target: str) -> Path:
     out = [
         f"# Client Intel: {name} (live feed)",
         "",
-        f"**Last synced:** {st.get('last_run_at', 'never')}. **Items on file:** {len(items)}"
+        f"**Last synced:** {last_synced(target, st) or 'never'}. **Items on file:** {len(items)}"
         f" (first {min((it['occurred_at'][:10] for it in items), default='n/a')}). "
         "**Sources:** meeting recap emails, calendar, Slack and local files, read through the session's "
         "read-only connectors (each run's digest names the accounts and workspace read).",

@@ -56,6 +56,7 @@ made a decision, finished a workstream. Skip trivia (reading a file, a single se
 - **Workstreams:**
   - Infra (domains/mailboxes/sending): <one-line status>
   - ICP / targeting: <status>
+  - Research: <research_stage> · QA <verdict, date> · top clusters <IDs> · last feedback <date> · detail in _research/pain-clusters.md
   - Lead sources / lists: <status>
   - Offer / lead magnet: <status>
   - Copy / sequences: <status>

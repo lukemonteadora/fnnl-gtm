@@ -264,7 +264,7 @@ Every `Task`/`Agent` call in this pattern takes a `model` parameter; set it per 
 - **`model: "sonnet"`** for per-lead research that needs judgment: reading a prospect's or company's site to answer a structured question (for example sourcing `service_offered` or `own_best_client` from the prospect's own site), fit scoring with a locked prompt (the at-scale pass in `/icp-prompt-builder`), or any slicing-field research where the source is ambiguous enough to need real reasoning.
 - **Inherit the session's model** (omit `model`) when the job is synthesis, offer or copy work, or when the agreement check below shows a smaller model loses quality on that specific job.
 
-Before moving a recurring job down a tier (sonnet to haiku, or session default to sonnet), run a 20-row agreement check: have the candidate tier score or fill the same 20 rows the session (or the operator) already answered, and compare. Lock in the cheaper tier only if agreement holds; otherwise stay one tier up. The move also needs a pass on its benchmark (`outbound/evals/README.md`). This is the same check `/icp-prompt-builder` runs before it drops to haiku.
+Before moving a recurring job down a tier (sonnet to haiku, or session default to sonnet), run a 20-row agreement check: have the candidate tier score or fill the same 20 rows the session (or the operator) already answered, and compare. Lock in the cheaper tier only if agreement holds; otherwise stay one tier up. Where a suite exists for the job, the move also needs a pass on its benchmark (`outbound/evals/README.md`); a job without a suite still needs the 20-row agreement check. This is the same check `/icp-prompt-builder` runs before it drops to haiku.
 
 ### 7. Error handling
 

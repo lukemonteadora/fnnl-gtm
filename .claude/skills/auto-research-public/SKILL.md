@@ -127,7 +127,7 @@ Stop if the list grade is below B.
 
 ### 4. Write copy
 
-**List Gate (assert; do not assume Step 3 ran).** Before any copy, confirm the verified-list gate (`verified-list-gate.md`) for this slice: `leads.verified.csv` exists and is non-empty, the slice passed `/list-quality-scorecard` at grade B+, and the offer/strategy are locked (Hard Prerequisites above). If any fails, STOP and route to `/email-waterfall` → `/list-quality-scorecard`. Never write copy before the verified list exists.
+**List Gate (assert; do not assume Step 3 ran).** Before any copy, confirm the verified-list gate (`verified-list-gate.md`) for this slice: `leads.verified.csv` exists and is non-empty, the slice passed `/list-quality-scorecard` at grade B or better and a list-QA PASS (`verified-list-gate.md`), and the offer/strategy are locked (Hard Prerequisites above). If any fails, STOP and route to `/email-waterfall` → `/list-quality-scorecard`. Never write copy before the verified list exists.
 
 First confirm the Offer Architecture gate from `/campaign-copywriting` passes for the locked offer: SQL vs MQL framing, the easy-to-say-yes-to test, and a named risk reversal. If it does not pass cleanly, fix the offer before any copy is written.
 

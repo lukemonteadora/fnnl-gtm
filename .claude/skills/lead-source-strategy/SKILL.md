@@ -68,7 +68,7 @@ Read:
 - `profiles/<business-slug>/client-profile.yaml`
 - Client website URL, if available
 - onboarding form responses or call notes, if available
-- `profiles/<business-slug>/client-intel.md` (the client intel feed, read right after the activity log's CURRENT STATE): Needs attention and Open items in full, plus Recent activity tagged `list` or `icp`, for exclusions, DNC (do-not-contact) lists, and segments the client asked to add or drop. A meeting or Slack item is a hypothesis: it never silently overwrites an operator-confirmed value or a locked decision, and a conflict goes to the operator (under `auto_execute`, a conflict touching offer, list, copy or launch stops this step and asks). A missing feed, or a `last_run_at` in `profiles/_intel/state.json` older than 2 days, is a one-line flag at the top of the plan, never a blocker; offer `/client-intel-sync <client>` for a fresh pull. Protocol: `client-intel-feed.md`.
+- `profiles/<business-slug>/client-intel.md` (the client intel feed, read right after the activity log's CURRENT STATE): Needs attention and Open items in full, plus Recent activity tagged `list` or `icp`, for exclusions, DNC (do-not-contact) lists, and segments the client asked to add or drop. A meeting or Slack item is a hypothesis: it never silently overwrites an operator-confirmed value or a locked decision, and a conflict goes to the operator (under `auto_execute`, a conflict touching offer, list, copy or launch stops this step and asks). A do-not-contact list is the one exception, whether the feed or the context sweep found it: it goes into `suppression-list.csv` at once as `client_blocklist` rows (`client-context-sweep.md`, *Blocklists: from found to enforced*), because suppression can only narrow who gets emailed, and it is reported at the top of the plan. A missing feed, or one that is stale by the rule in `client-intel-feed.md`, is a one-line flag at the top of the plan, never a blocker; offer `/client-intel-sync <client>` for a fresh pull. Protocol: `client-intel-feed.md`.
 - any source preferences or blocked sources in `client-profile.yaml`
 - target geography fields from `client-profile.yaml`, including countries, states, regions, cities, and excluded markets
 - any capability, proof, delivery, legal, or compliance constraints from the profile
@@ -261,7 +261,7 @@ Use this structure. The header block and bold-label format are **required**: the
 
 - **Source family:** <Fallback category>
 - **Specific collection source or tool:** <Fallback tool>
-- **Contact enrichment layer:** <Fallback enrichment path>
+- **Contact enrichment layer:** <Same waterfall from the stack contract; name any gap-fill step that was skipped at run time, with the reason>
 - **Live arm:** <yes (runs from launch in parallel, disjoint rows, `source_arm` = <tag>) | no (held in reserve)>
 - **When to switch:** <For a live arm: "n/a, running as a live arm". For a reserve source: the specific trigger condition to move to it>
 

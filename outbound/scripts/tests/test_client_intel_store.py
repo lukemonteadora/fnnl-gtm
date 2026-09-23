@@ -271,6 +271,49 @@ class StoreTest(unittest.TestCase):
         self.assertEqual(st["cursors"]["email_after_epoch"], 5)
         self.assertEqual(st["last_run_at"], "x")
 
+    def test_single_client_run_stamps_its_own_freshness_and_the_header_shows_the_newer(self):
+        store.cmd_ingest(self.items([_meeting()]), "run-f")
+        self.assertIn("**Last synced:** never.", self.feed())
+        old, new = "2026-09-01T10:00:00+00:00", "2026-09-23T08:00:00+00:00"
+        full = self.tmp / "full.json"
+        full.write_text(json.dumps({"cursors": {"slack": {"C1": "1.0"}, "slack_checked_at": old},
+                                    "last_run_at": old}), encoding="utf-8")
+        store.cmd_state_set(full)
+        self.assertIn(f"**Last synced:** {old}.", self.feed())  # a full run re-renders the header
+        one = self.tmp / "one.json"
+        one.write_text(json.dumps({"clients": {"acme": {"refreshed_at": new, "run_id": "run-s"}}}), encoding="utf-8")
+        store.cmd_state_set(one)
+        st = store.load_state()
+        self.assertEqual(st["clients"]["acme"]["refreshed_at"], new)
+        # A single-client stamp moves no global field: not last_run_at, not a cursor, not slack_checked_at.
+        self.assertEqual((st["last_run_at"], st["cursors"]["slack"], st["cursors"]["slack_checked_at"]),
+                         (old, {"C1": "1.0"}, old))
+        self.assertIn(f"**Last synced:** {new}.", self.feed())  # the client stamp is newer
+        self.assertEqual(store.last_synced("beta-co", st), old)  # other clients keep the global stamp
+        self.assertEqual(store.last_synced("agency", st), old)  # the agency feed ignores client stamps
+        # A stamped client with no items yet still gets a feed, so it stops reading as missing.
+        stamp = self.tmp / "beta.json"
+        stamp.write_text(json.dumps({"clients": {"beta-co": {"refreshed_at": new}}}), encoding="utf-8")
+        store.cmd_state_set(stamp)
+        self.assertIn(f"**Last synced:** {new}.", self.feed("beta-co"))
+        # A later full run is newer than the client stamp, so the header follows it.
+        later = "2026-09-24T09:00:00+00:00"
+        full.write_text(json.dumps({"last_run_at": later}), encoding="utf-8")
+        store.cmd_state_set(full)
+        self.assertIn(f"**Last synced:** {later}.", self.feed())
+        self.assertIn(f"**Last synced:** {later}.", self.feed("beta-co"))  # a feed with no ledger yet too
+        # A slug without a profile folder is refused and nothing is written.
+        before = store.STATE_FILE.read_text(encoding="utf-8")
+        bad = self.tmp / "bad.json"
+        bad.write_text(json.dumps({"clients": {"other-agency-client": {"refreshed_at": new}}}), encoding="utf-8")
+        with self.assertRaises(SystemExit):
+            store.cmd_state_set(bad)
+        bad.write_text(json.dumps({"clients": {"acme": {"refreshed_at": "yesterday"}}}), encoding="utf-8")
+        with self.assertRaises(SystemExit):
+            store.cmd_state_set(bad)
+        self.assertEqual(store.STATE_FILE.read_text(encoding="utf-8"), before)
+        self.assertFalse((store.PROFILES / "other-agency-client").exists())
+
     # ------------------------------------------------------------------ cross-agency guard
 
     def test_cross_agency_items_are_dropped_counted_and_never_stored(self):

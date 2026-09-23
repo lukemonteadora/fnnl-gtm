@@ -17,7 +17,7 @@
 // even when the same cell also names a Claude primary or says "deep research": under the rule no
 // third-party AI provider is a valid route, as primary or as helper.
 // It FLAGS any research-skill run that logged NEITHER, i.e. a run that appears to have skipped a
-// real primary pass (drifted to a bare inline WebSearch / a DiscoGen per-row pass / nothing).
+// real primary pass (drifted to a bare inline WebSearch / a data tool's per-row AI pass / nothing).
 //
 // AUDITABILITY NOTE: Claude native /deep-research is Anthropic-billed, so it does NOT move any
 // third-party credit balance. The ledger line + activity-log entry are what keep the run auditable
@@ -226,7 +226,7 @@ for (const c of clientCoverage.values()) {
 console.log(`\nSummary: ${runGroups.length} research-skill run(s), ${runGroups.length - flagged.length} PASS, ${flagged.length} FLAG.`);
 if (flagged.length) {
   console.log('FLAG = no primary research pass logged for that research-skill run: likely routing drift');
-  console.log('(a bare inline WebSearch or a DiscoGen per-row pass is not a primary). Run the /deep-research primary and log it.');
+  console.log("(a bare inline WebSearch or a data tool's per-row AI pass is not a primary). Run the /deep-research primary and log it.");
   console.log('A run whose ledger lines name a third-party AI provider also FLAGS, even beside a Claude primary: the no-AI-API rule allows none.');
 }
 process.exit(flagged.length ? 1 : 0);

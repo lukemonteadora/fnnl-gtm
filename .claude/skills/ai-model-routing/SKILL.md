@@ -58,7 +58,7 @@ Sub-agents are routed by job, not all run on the top model. Every Task/Agent cal
 | Clustering, comparing competitors, building competitor cards | mid (`"sonnet"`) for large or multi-segment sets; the session otherwise | `/market-evidence synthesize` on more than about 150 ledger rows |
 | Synthesis, offers, strategy, QA verdicts, opportunity scores, copy | the session's strongest model (omit `model` so the sub-agent inherits it, or do the work in the session) | The Research QA verdict; `/lead-magnet-brainstorm`; `/campaign-copywriting` |
 
-**Moving a recurring job down a tier needs proof first.** Before a job moves from the session to `sonnet`, or from `sonnet` to `haiku`, run a 20-row agreement check: have the candidate tier answer the same 20 rows the session (or the operator) already answered, compare, and lock in the cheaper tier only if agreement holds. Otherwise stay one tier up. The move also needs a pass on the benchmark described in `outbound/evals/README.md`. Re-run the check when a job's inputs change.
+**Moving a recurring job down a tier needs proof first.** Before a job moves from the session to `sonnet`, or from `sonnet` to `haiku`, run a 20-row agreement check: have the candidate tier answer the same 20 rows the session (or the operator) already answered, compare, and lock in the cheaper tier only if agreement holds. Otherwise stay one tier up. Where a suite exists for the job, the move also needs a pass on the benchmark described in `outbound/evals/README.md`; a job without a suite still needs the 20-row agreement check. Re-run the check when a job's inputs change.
 
 ## Model Benchmarks (Claude-native, 2026-09-24)
 
@@ -69,9 +69,9 @@ Sub-agents are routed by job, not all run on the top model. Every Task/Agent cal
 - **How it scores.** Deterministic checks only (`outbound/evals/lib/checks.js`): valid schema, quotes verbatim from the source, no invented competitors, customers or prices, fields left blank when the source is silent, and agreement with gold labels. No model grades another. Gold labels carry a `label_status`, and only `client` and `operator` labels count as ground truth.
 - **Local only.** Cases hold client research, so cases built from client data (`cases.local.yaml`) and every raw result stay on this machine (gitignored).
 
-**Moving a job down a tier** needs both halves:
+**Moving a job down a tier** needs both halves where a suite exists for the job; a job without a suite moves on half 2 alone:
 
-1. On its suite (`--repeat 3`), the cheaper tier **matches** the current one on `verbatim`, `grounding` and `blank_discipline` (the hallucination checks) and is **within 5 points** on the rest.
+1. Where a suite exists for the job, on that suite (`--repeat 3`) the cheaper tier **matches** the current one on `verbatim`, `grounding` and `blank_discipline` (the hallucination checks) and is **within 5 points** on the rest.
 2. The 20-row agreement check on live work ([Model tiers for sub-agents](#model-tiers-for-sub-agents) above) still passes.
 
 Record the decision in `BENCHMARKS.md`, then edit the route here.

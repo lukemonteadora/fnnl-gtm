@@ -156,6 +156,10 @@ integration packs sit inert in `_vendor-library/` until `/stack-setup` activates
 - `dall-e-3` did NOT exist on the key in use ("The model 'dall-e-3' does not exist"). **`gpt-image-1`** worked
   and returns base64 (no URL). Do NOT pass `response_format`, which `gpt-image-1` rejects with
   "Unknown parameter: 'response_format'".
+- **A models-list 200 does not prove the key can generate.** An OpenAI models-list call can return 200 while
+  a real image call fails with 429 "no credits remaining". Confirm credits on the OpenAI billing dashboard
+  before the headshot run (the headshot is FNNL's one approved AI exception, so it is the only run this
+  applies to).
 
 ### Primeforge (mailbox provider)
 

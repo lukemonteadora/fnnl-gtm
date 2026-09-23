@@ -226,7 +226,8 @@ Every research read runs on Claude Code's built-in tools. No read route is a pai
 | Capterra | WebFetch | Readable | 2026-09-22 |
 | Hacker News (Algolia search API) | WebFetch | Readable | 2026-09-22 |
 | YouTube (search, comments, transcripts) | WebFetch, the browser pane | Untested | |
-| Ad libraries (Meta, LinkedIn, Google, TikTok) | The browser pane | Untested | |
+| Meta, LinkedIn ad libraries | The browser pane | Readable | 2026-09-23 |
+| Google Ads Transparency, TikTok | The browser pane | Untested | |
 | Quora | none (policy) | Operator paste only | |
 | LinkedIn posts | WebSearch; the intent-signals data tool for engagers | Public posts only where search returns them; the rest is operator paste | |
 

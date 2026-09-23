@@ -196,6 +196,10 @@ which tools FNNL chose:
    yet in `scripts/.env`, ask the operator to add it there (never in chat) and wait. `/preflight-credentials`
    deliberately never checks it (the registry marks it `on-demand`), so a kickoff PASS says nothing about
    it. Skip it entirely when the persona is a real person with a real photo.
+   **Confirm OpenAI credits before the headshot run.** An OpenAI models-list call can return 200 while a real
+   image call fails with 429 "no credits remaining", so a 200 from the models list proves nothing about
+   whether the key can generate. Check the balance on the OpenAI billing dashboard before the run. The
+   headshot is FNNL's one approved AI exception, so this is the only AI credit check in the flow.
 2. **The mailbox provider key**, for applying the avatar. This is whichever tool fills the
    `mailbox_provider` slot in `outbound/stack-contract.yaml`. A split fleet across two
    providers needs both providers' keys.
