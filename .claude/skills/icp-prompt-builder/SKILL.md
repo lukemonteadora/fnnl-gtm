@@ -29,7 +29,7 @@ The loop below is identical for both; only the input sample and the place it run
 
 When this skill reaches a material fork, name the realistic options, recommend the strongest path, and explain why the main alternatives are weaker before committing.
 
-Ask before choices that affect spend, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
+Ask before choices that affect spend beyond an approved budget, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
 
 Do not turn failed or unsafe paths into user-facing options. If this skill's QA rules or stop gates reject a path, filter it out and explain the blocker only when useful.
 
@@ -59,7 +59,7 @@ source,source_type,source_url,evidence_url,signal,fit_reason,source_confidence
 
 ## AI/API Routing
 
-The tuning loop stays on Claude Code Task sub-agents (the default this skill already mandates). AI/API routing applies only to (a) optional web-grounded context that helps judge fit — Perplexity per `ai-model-routing.md` — and (b) the optional at-scale scoring implementation this skill already permits, where OpenAI is the structured-output choice and DeepSeek handles cheap large-context description crunch. Do not swap the tuning sub-agents for a raw API key. Preserve the canonical source fields above (`evidence_url`, `source_confidence`, `signal`).
+Everything AI in this skill runs inside Claude Code (no-AI-API rule, operator directive 2026-09-22). The tuning loop and the at-scale scoring pass both run on Claude Code Task sub-agents, fanned out per `/personalization-subagent-pattern` (disjoint batches, one output file per agent, post-merge dedup). Optional web-grounded context that helps judge fit comes from WebSearch/WebFetch inside those sub-agents, or from a `/deep-research` pass when a whole segment needs it. No outside AI provider, API key, or list-workbench AI column scores or crunches descriptions. Deterministic filters stay in plain code. Preserve the canonical source fields above (`evidence_url`, `source_confidence`, `signal`).
 
 ## The Loop
 
@@ -195,7 +195,7 @@ Default path:
 5. Preserve `source`, `source_type`, `source_url`, `evidence_url`, `signal`, `fit_reason`, and `source_confidence`.
 6. Save the classified list as `leads.fit-reviewed.csv`, then invoke `/lead-scoring` to produce `campaigns/<campaign-slug>/leads.scored.csv` before `/email-waterfall`.
 
-If the user has a separate scoring script, API pipeline, or spreadsheet workflow, use that only after the prompt is locked.
+If the user has a separate deterministic scoring script or spreadsheet workflow, use that only after the prompt is locked. An AI-provider API pipeline or a list-workbench AI column is not an option (no-AI-API rule); a bigger list gets more sub-agent batches, not a different engine.
 
 ## Recommended Flow
 

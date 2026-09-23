@@ -150,6 +150,9 @@ integration packs sit inert in `_vendor-library/` until `/stack-setup` activates
 
 ### Image generation (OpenAI)
 
+- **Still current for FNNL.** OpenAI is the one approved AI exception (operator directive 2026-09-22):
+  headshots only, asked for at infrastructure setup, never at kickoff or preflight. Every other AI provider
+  is retired under the no-AI-API rule, so this is the only AI API gotcha that still applies.
 - `dall-e-3` did NOT exist on the key in use ("The model 'dall-e-3' does not exist"). **`gpt-image-1`** worked
   and returns base64 (no URL). Do NOT pass `response_format`, which `gpt-image-1` rejects with
   "Unknown parameter: 'response_format'".

@@ -33,7 +33,7 @@ Recurring cadence is `/cold-email-weekly-rhythm`. If you would rather browse tha
 
 ## How a client flows through the system
 
-1. **Intake** (`/client-intake-form`, `/icp-onboarding`, `/client-onboarding-call-summarizer`) captures who they sell to and what they sell.
+1. **Intake** (`/client-intake-form`, `/icp-onboarding`, `/client-onboarding-call-summarizer`) captures who they sell to and what they sell. It always checks Slack for any channel about the client first (`outbound/reference/client-slack-check.md`), so nothing the team already knows gets re-asked.
 2. **Strategy** (`/lead-source-strategy`, `/offer-intelligence`, `/lead-magnet-brainstorm`, `/offer-test-slate`, `/campaign-strategy`) decides where the list comes from, which offers to test (shown to the client as an offer test plan, approval optional), and which campaigns to run.
 3. **List** (`/data-point-discovery`, `/tam-build`, `/lead-scoring`, `/email-waterfall`, `/list-quality-scorecard`) builds the target universe cheaply, scores it, reveals contact details only for leads worth paying for, and gates on quality before anything sends.
 4. **Copy** (`/campaign-copywriting`, `/outreach-copywriting`, `/spam-word-checker`, `/social-proof-bank`) writes and QAs the sequences.

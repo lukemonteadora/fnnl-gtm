@@ -18,8 +18,12 @@ This skill needs two things from FNNL's stack, and it does not assume either one
 
 - **The mailbox provider** (the `mailbox_provider` slot in `outbound/stack-contract.yaml`),
   because that is where the avatar gets applied.
-- **The AI image model** used for the headshot. That routing is owned by `/ai-model-routing`, so read the
-  model from there (and from the contract's AI routing entry, if one has been recorded).
+- **The AI image model** used for the headshot. This is the ONE AI API call left in the flow (no-AI-API
+  rule, operator directive 2026-09-22): OpenAI `gpt-image-1`, headshots only, the operator-approved
+  exception for the `image_generation` slot. No other AI provider is used here: the logo fetch is plain web
+  scraping or Claude's built-in WebSearch/WebFetch, never an AI call. **Its key is asked for
+  only when this step runs, or when the operator says to start setting up cold-email infrastructure**,
+  never at onboarding, intake, kickoff, preflight, stack setup or workspace creation.
 
 **If the `mailbox_provider` slot is empty, stop and route the operator to `/stack-setup`.** Do not pick a
 provider or a model because a worked example below happens to name one. A tool recorded as `chosen` is not proven; only `live`
@@ -78,7 +82,7 @@ kept only so the detail is not lost.
 Naming a tool below does not put it in FNNL's stack. The stack lives in `stack-contract.yaml`, and an empty
 slot means run `/stack-setup`. The matching integration packs sit inert in `_vendor-library/`.
 
-- **Image model:** `dall-e-3` did NOT exist on the OpenAI key in use. **`gpt-image-1`** worked and returns
+- **Image model (still current: this is FNNL's approved headshot exception):** `dall-e-3` did NOT exist on the OpenAI key in use. **`gpt-image-1`** worked and returns
   base64. Do NOT pass `response_format` (it is rejected).
 - **Primeforge apply (worked via MCP, hands-free):** `primeforge_update_mailbox({id, profilePictureUrl})`
   accepts an **external** URL. Primeforge **hotlinks** it, so keep the hosted file live; no S3 upload needed.
@@ -187,7 +191,11 @@ background, waxy skin, over-sharp eyes, name tag, badge, signage, or visible tex
 **Do not hardcode key names from this file.** Two keys are needed, and their exact variable names depend on
 which tools FNNL chose:
 
-1. **The AI image key**, for generating the headshot. The model is routed by `/ai-model-routing`.
+1. **The headshot image key** (`OPENAI_API_KEY`: OpenAI, headshots only, asked for at infrastructure
+   setup). **This step is where it is requested.** When a generated headshot is needed and the key is not
+   yet in `scripts/.env`, ask the operator to add it there (never in chat) and wait. `/preflight-credentials`
+   deliberately never checks it (the registry marks it `on-demand`), so a kickoff PASS says nothing about
+   it. Skip it entirely when the persona is a real person with a real photo.
 2. **The mailbox provider key**, for applying the avatar. This is whichever tool fills the
    `mailbox_provider` slot in `outbound/stack-contract.yaml`. A split fleet across two
    providers needs both providers' keys.
@@ -195,8 +203,9 @@ which tools FNNL chose:
 Resolve the actual variable names this way: look up the chosen tool in `stack-contract.yaml`, then read that
 provider's declared env var name(s) from `outbound/scripts/credential-registry.json`
 (a catalogue of "if you chose tool X, these are its variables", not a declaration of FNNL's stack). Copy
-`scripts/.env.example` to a local ignored `scripts/.env` and fill in those names. Confirm they resolve by
-running `/preflight-credentials`, which scopes the check to the locked `run_state` path.
+`scripts/.env.example` to a local ignored `scripts/.env` and fill in those names. Confirm the mailbox
+provider key resolves by running `/preflight-credentials`, which scopes the check to the locked `run_state`
+path (the headshot key is not part of that check, see item 1).
 
 If the `mailbox_provider` slot is empty, stop and run `/stack-setup` rather than guessing a key name.
 

@@ -79,10 +79,12 @@ const RESOURCE_IDS = [
 // role: 'default' (keep) | 'inherited' (swap out for the default) | 'needs-skill' (declarative)
 const TOOLS = [
   { name: 'Claude', role: 'default', terms: ['claude', 'anthropic'] },
-  { name: 'OpenAI', role: 'default', terms: ['openai'] },
-  { name: 'DeepSeek', role: 'default', terms: ['deepseek'] },
-  { name: 'Grok (xAI)', role: 'default', terms: ['grok', 'xai'] },
-  { name: 'Perplexity', role: 'default', terms: ['perplexity', 'pplx'] },
+  // No-AI-API rule (operator directive 2026-09-22): Claude Code is the only AI; OpenAI stays for sender
+  // headshots only; the other AI providers are marked 'inherited' so any reference gets swapped out.
+  { name: 'OpenAI', role: 'default', terms: ['openai'] }, // headshots only, key asked for at infrastructure setup
+  { name: 'DeepSeek', role: 'inherited', terms: ['deepseek'] },
+  { name: 'Grok (xAI)', role: 'inherited', terms: ['grok', 'xai'] },
+  { name: 'Perplexity', role: 'inherited', terms: ['perplexity', 'pplx'] },
   { name: 'Spaceship', role: 'default', terms: ['spaceship'] },
   { name: 'Zapmail', role: 'default', terms: ['zapmail'] },
   { name: 'Smartlead', role: 'default', terms: ['smartlead'] },

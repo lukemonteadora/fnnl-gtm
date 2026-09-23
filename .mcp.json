@@ -1,3 +1,10 @@
 {
-  "mcpServers": {}
+  "mcpServers": {
+    "millionverifier": {
+      "command": "node",
+      "args": [
+        "outbound/scripts/mcp/millionverifier_mcp.mjs"
+      ]
+    }
+  }
 }

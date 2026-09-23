@@ -9,9 +9,11 @@
 > - **The signals as data points** (what to collect, obtainability) → `/data-point-discovery`, collected at `/tam-build` Layer 1 and `/email-waterfall` Layer 2.
 > - **Acquisition paths / tool routing** → `/lead-list-tech-stack-research`.
 >
-> **Tool-status note (FNNL Agency).** Read this before acting on any tool name below. This playbook was written against a **previous company's tool stack**, and it still names that company's tools throughout (Prospeo, LeadMagic, A-Leads, DiscoLike, Spider Cloud, Serper, Apify, DeepSeek, WizLeads, Trigify and the rest). **FNNL Agency has not chosen its tools yet. None of these is in use here, none is keyed, and none is a default.** Treat every brand name in this doc as an illustrative example of a tool that could fill the capability being described, never as a statement about what FNNL has.
+> **Tool-status note (FNNL Agency).** Read this before acting on any tool name below. This playbook was written against a **previous company's tool stack**, and it still names that company's tools throughout (Prospeo, LeadMagic, A-Leads, DiscoLike, Spider Cloud, Serper, Apify, WizLeads, Trigify and the rest). **FNNL Agency has not chosen its tools yet. None of these is in use here, none is keyed, and none is a default.** Treat every brand name in this doc as an illustrative example of a tool that could fill the capability being described, never as a statement about what FNNL has.
 >
-> **The live answer for any capability is `stack-contract.yaml`**, which ships with every slot at `tool: null`, `status: not_chosen`. Before running a path below, read the matching slot (`lead_data.contact_discovery`, `lead_data.contact_enrichment`, `web.crawl`, `web.search`, `ai.bulk_classification`, and so on). If the slot you need is still empty, stop and run `/stack-setup` rather than assuming a vendor. A slot marked `chosen` is not yet proven; only `live` means a real call against FNNL's own account has succeeded.
+> **The live answer for any capability is `stack-contract.yaml`**, whose `approved_stack` block is the closed list of FNNL's tools (operator directive 2026-09-22). A slot at `not_chosen` or `held` declares nothing, and a tool outside the approved list needs explicit operator approval before any path uses it. Before running a path below, read the matching slot (`lead_data.contact_discovery`, `lead_data.contact_enrichment`, and so on). If the slot you need is still empty, stop and run `/stack-setup` rather than assuming a vendor. A slot marked `chosen` is not yet proven; only `live` means a real call against FNNL's own account has succeeded.
+>
+> **No AI model on an API key (no-AI-API rule, operator directive 2026-09-22).** Every "classification model" step below is done by Claude Code sub-agents fanned out over disjoint batches per `/personalization-subagent-pattern`; the old `ai.bulk_classification` slot is retired. In FNNL the search and crawling capabilities (`web.search`, `web.crawl`) are the harness's own WebSearch and WebFetch.
 >
 > **What survives the stack change is the whole point of this doc:** which buying signals are worth chasing, what each one proves, how to detect it, what it costs to obtain, and what no substitute path can give you. That reasoning is tool-independent. Only the routing is not.
 >
@@ -183,7 +185,7 @@ A company database with department-level filtering lets you set minimum and maxi
 
 **Option 1: Crawl LinkedIn company "People" pages (best for a known account list)**
 
-LinkedIn's company "People" tab shows a department breakdown with headcounts. URL pattern: `linkedin.com/company/[company-slug]/people/`. Use the crawling capability (`web.crawl`) with JavaScript rendering enabled, since the page is JS-rendered (in Spider Cloud that is `request: 'chrome'`), extract the raw HTML, then pass it through the bulk-classification model (`ai.bulk_classification`) to parse department labels and their counts. Run at 40 concurrent workers. Viable for 100 to 500 accounts per run. LinkedIn rate limits apply above that, so spread runs across sessions or days to avoid blocks.
+LinkedIn's company "People" tab shows a department breakdown with headcounts. URL pattern: `linkedin.com/company/[company-slug]/people/`. Use the crawling capability (`web.crawl`) with JavaScript rendering enabled, since the page is JS-rendered (in Spider Cloud that is `request: 'chrome'`), extract the raw HTML, then have Claude Code sub-agents parse the department labels and their counts in disjoint batches. Run at 40 concurrent workers. Viable for 100 to 500 accounts per run. LinkedIn rate limits apply above that, so spread runs across sessions or days to avoid blocks.
 
 **Option 2: Sales Navigator company cards plus an exporter (manual per account but exportable)**
 
@@ -248,11 +250,11 @@ Sales Navigator includes headcount growth percentage filters on its Advanced and
 
 **Option 3: Crawl LinkedIn company pages (directional only)**
 
-LinkedIn shows headcount trend language on some company pages, for example "38% growth in the last 2 years." A crawler with JavaScript rendering can extract that text, and the bulk-classification model can sort it into growing, flat, or declining. Use this as a directional tag, not a precise percentage. It is a snapshot of what LinkedIn shows today, not a historical rate you can control for window length.
+LinkedIn shows headcount trend language on some company pages, for example "38% growth in the last 2 years." A crawler with JavaScript rendering can extract that text, and a Claude Code sub-agent can sort it into growing, flat, or declining. Use this as a directional tag, not a precise percentage. It is a snapshot of what LinkedIn shows today, not a historical rate you can control for window length.
 
 **Option 4: News search (directional, no numbers)**
 
-For accounts already in your list, run a search query per company: `"[company]" "hiring" OR "expanding" OR "growing team"` for growth signals, or `"[company]" "layoffs" OR "restructured" OR "reduced headcount"` for decline. The search capability (`web.search`) returns news articles, and the classification model turns them into growth or decline tags. No percentage numbers. Works best for companies with media coverage, and is close to useless for small or private companies.
+For accounts already in your list, run a search query per company: `"[company]" "hiring" OR "expanding" OR "growing team"` for growth signals, or `"[company]" "layoffs" OR "restructured" OR "reduced headcount"` for decline. The search capability (`web.search`, the harness's WebSearch) returns news articles, and a Claude Code sub-agent turns them into growth or decline tags. No percentage numbers. Works best for companies with media coverage, and is close to useless for small or private companies.
 
 **When to use each:**
 - Building a TAM account list from scratch → the company-discovery tool's own growth endpoint during Layer 1, since it is usually already paid for
@@ -319,7 +321,7 @@ Search for `site:crunchbase.com "[company name]"` to get the Crunchbase company 
 
 **Option 4: Classify the company description (last resort, unreliable)**
 
-Contact and company databases often return a free-text company description that sometimes states the founding year. Pass that text to the classification model with the prompt: "Extract the founding year from this company description. Return the year as a number. If not mentioned, return null." Works on maybe 30 to 40 percent of rows. Free if the description was already pulled. Do not rely on it as a primary source.
+Contact and company databases often return a free-text company description that sometimes states the founding year. Have a Claude Code sub-agent read that text with the instruction: "Extract the founding year from this company description. Return the year as a number. If not mentioned, return null." Works on maybe 30 to 40 percent of rows. Free if the description was already pulled. Do not rely on it as a primary source.
 
 **Recommended order:**
 Company-profile data first → a bulk Crunchbase extractor for gaps → search plus crawl for remaining blanks → description extraction as cleanup.
@@ -332,7 +334,7 @@ Nothing meaningful. Founded year is the easiest signal here to obtain without a 
 
 ## 5. Ads Intelligence
 
-**Capability needed:** an ads-intelligence lookup that returns, per company, which paid platforms it is currently advertising on. (LeadMagic's Ads Intelligence endpoint is one example. There is no slot for this in `stack-contract.yaml`, so it is either part of what `lead_data.intent_signals` buys or it is assembled from `web.crawl` and `ai.bulk_classification` as below.)
+**Capability needed:** an ads-intelligence lookup that returns, per company, which paid platforms it is currently advertising on. (LeadMagic's Ads Intelligence endpoint is one example. There is no slot for this in `stack-contract.yaml`, so it is either part of what `lead_data.intent_signals` buys or it is assembled from `web.crawl` and a Claude Code sub-agent extraction as below.)
 
 ### What It Proves
 
@@ -384,7 +386,7 @@ Google Ads Transparency Center (`adstransparency.google.com`) is also public. An
 
 **Option 3: Direct crawl (cheaper for confirm/deny on a large list)**
 
-Both registries are ordinary web pages, so the crawling capability with JavaScript rendering can fetch them and the classification model can decide: running ads, or not. This is cheaper per row than a scraping actor, but less reliable on pages with heavy anti-bot protection. Test the crawl on 20 rows before scaling. If quality holds, crawl the bulk and reserve the actor for the rows the crawl fails on.
+Both registries are ordinary web pages, so the crawling capability with JavaScript rendering can fetch them and a Claude Code sub-agent can decide: running ads, or not. This is cheaper per row than a scraping actor, but less reliable on pages with heavy anti-bot protection. Test the crawl on 20 rows before scaling. If quality holds, crawl the bulk and reserve the actor for the rows the crawl fails on.
 
 **Full substitute workflow:**
 1. Account list from the company-discovery tool (Layer 1)
@@ -526,7 +528,7 @@ Most companies post jobs through an applicant tracking system with a public URL,
 
 (In Spider Cloud those two modes are `request: 'http'` and `request: 'chrome'`. Any crawler filling `web.crawl` should expose the same distinction, and if it does not, assume you are paying rendering cost on every page.)
 
-Extract role title, full JD text, department, requirements, technologies mentioned, and team size references. Pass the extracted text to the classification model to pull out pain-language variables: what specific problem this JD describes, what tools they mention, what the team looks like. Output a structured `email_opener` column ready for upload to the sending platform.
+Extract role title, full JD text, department, requirements, technologies mentioned, and team size references. Have Claude Code sub-agents pull pain-language variables out of the extracted text: what specific problem this JD describes, what tools they mention, what the team looks like. Output a structured `email_opener` column ready for upload to the sending platform.
 
 **Step 2a: Finding the ATS URLs, via search**
 
@@ -546,7 +548,7 @@ Some smaller companies post exclusively on LinkedIn without a dedicated ATS. For
 1. Job-posting-title filter (`job_posting_title` or the equivalent on the chosen tool) → 500 companies hiring SDRs (targeting layer, usually included in an existing subscription)
 2. Search → find Lever/Greenhouse/Workable URLs for each company → roughly $0.001 per query
 3. Crawl in plain HTTP mode → JD pages → extract full text → cheap per page
-4. Classification model → extract pain-language variables → a structured `email_opener` column
+4. Claude Code sub-agent extraction → pain-language variables → a structured `email_opener` column
 5. LinkedIn Jobs actor → fill the rows with no ATS page found
 
 This delivers actual JD content for copy personalization. It is not as fast as one API call per company, but it produces the same output (pain language in the buyer's own words) at a lower per-row cost on most lists.
@@ -608,11 +610,11 @@ If the list originates from a Sales Navigator search, the export already include
 
 **Option 2: Crawl the LinkedIn profile URLs (bulk enrichment)**
 
-Where the list holds LinkedIn URLs, crawl each profile page with JavaScript rendering enabled and extract the work-history section, then have the classification model parse the raw text into structured fields: `previous_company`, `previous_title`, `tenure_years`, `certifications_mentioned`. Viable for 100 to 500 high-value contacts where the personalization payoff justifies the crawl cost. LinkedIn anti-scraping protections bite at higher volumes, so run at 20 to 30 concurrent workers and spread runs across days for lists above 200 profiles.
+Where the list holds LinkedIn URLs, crawl each profile page with JavaScript rendering enabled and extract the work-history section, then have Claude Code sub-agents parse the raw text into structured fields: `previous_company`, `previous_title`, `tenure_years`, `certifications_mentioned`. Viable for 100 to 500 high-value contacts where the personalization payoff justifies the crawl cost. LinkedIn anti-scraping protections bite at higher volumes, so run at 20 to 30 concurrent workers and spread runs across days for lists above 200 profiles.
 
 **Option 3: Classify the bio or headline text you already have (fast qualifier, partial signal)**
 
-Contact databases usually return a bio or headline field (A-Leads calls it `member_description`), and it often names a previous company or a certification. Have the classification model scan the whole batch with a prompt like: "Does this bio mention working at [specific target company] or holding [specific certification]? Return `true` or `false`." Use it as a cheap pre-filter to decide which contacts deserve a full profile crawl, instead of crawling everyone.
+Contact databases usually return a bio or headline field (A-Leads calls it `member_description`), and it often names a previous company or a certification. Have Claude Code sub-agents scan the whole batch (disjoint slices) with an instruction like: "Does this bio mention working at [specific target company] or holding [specific certification]? Return `true` or `false`." Use it as a cheap pre-filter to decide which contacts deserve a full profile crawl, instead of crawling everyone.
 
 **Option 4: Search-result snippets (fast, rough, for small lists)**
 
@@ -621,7 +623,7 @@ Query `"[first name] [last name]" "[current company]" site:linkedin.com`. The se
 **Recommended order for a 200-person campaign slice:**
 1. Bio/headline text → classification qualifier → flag contacts with relevant background keywords
 2. Profile crawl with JavaScript rendering → only for flagged contacts (maybe 30 to 60 of the 200)
-3. Classification model structure extraction → `previous_company`, `tenure`, `certification` columns
+3. Claude Code sub-agent structure extraction → `previous_company`, `tenure`, `certification` columns
 4. For contacts sourced from Sales Nav, use the export → work history is already there
 
 ### What the Substitutes Do Not Cover
@@ -632,7 +634,7 @@ Email-to-profile matching is the real gap. A profile-lookup endpoint can take an
 
 ## 9. Who They Sell To (the sold-to axis)
 
-**Capability needed:** nothing new, in the normal case. The sold-to axis is classifiable from text the TAM build already captures, using the bulk-classification model (`ai.bulk_classification`). A company database with native sold-to filters at search time is the premium shortcut (Prospeo v2 exposes these, for example), and it is the only way to filter *before* the list is built.
+**Capability needed:** nothing new, in the normal case. The sold-to axis is classifiable from text the TAM build already captures, using Claude Code sub-agents in the TAM build's fit pass. A company database with native sold-to filters at search time is the premium shortcut (Prospeo v2 exposes these, for example), and it is the only way to filter *before* the list is built.
 
 ### What It Proves
 
@@ -766,4 +768,4 @@ Launch as many of these signal campaigns as your warmed sending capacity support
 
 ---
 
-*Tools named as examples in this doc, none of them FNNL's: A-Leads, DiscoLike, WizLeads, Spider Cloud, Serper, Apify, Trigify, LeadsFriday, BetterContact, Deliverable.co, DeepSeek, RevCode, Blitz, GetLatka, Scrap.io, Prospeo, LeadMagic, Apollo, Sales Navigator. They illustrate what a capability looks like when a tool fills it. Which tool FNNL actually uses for each capability is recorded in `stack-contract.yaml` and nowhere else.*
+*Tools named as examples in this doc, none of them FNNL's: A-Leads, DiscoLike, WizLeads, Spider Cloud, Serper, Apify, Trigify, LeadsFriday, BetterContact, Deliverable.co, RevCode, Blitz, GetLatka, Scrap.io, Prospeo, LeadMagic, Apollo, Sales Navigator. They illustrate what a capability looks like when a tool fills it. Which tool FNNL actually uses for each capability is recorded in `stack-contract.yaml` and nowhere else.*

@@ -7,7 +7,7 @@ description: "Fire-and-forget anti-sycophancy council. Spins up a panel of diffe
 
 Pull Claude out of agreement mode and let a **council** tear into an idea, then deliver one graded verdict and the cheapest next move - **without** a back-and-forth. Models are documented yes-men: they fail to push back on how you framed something far more often than a person would, and it gets *worse* the more they know about you and the longer the conversation runs. Roast fixes that by force: separate adversarial personas, each with its own clean context, each told to attack from one specific angle, synthesized by a judge that has to rule.
 
-**This is the autonomous sibling of `/consultant`.** Same anti-sycophancy spirit, same model machinery, opposite UX:
+**This is the autonomous sibling of `/consultant`.** Same anti-sycophancy spirit, same critic machinery, opposite UX:
 
 - **`/roast`** - fire-and-forget. Fans out parallel persona sub-agents, returns a verdict, requires no dialogue. Use it inside `/goal`/autonomous runs, or when you just want the graded answer.
 - **`/consultant`** - interactive. Goes back and forth with you in real rounds and converges with you in the loop. Use it when the dialogue is the deliverable.
@@ -21,9 +21,9 @@ Spin each persona up as its **own sub-agent with a clean context** (the `Agent` 
 - **Contrarian** - only job is to find the fatal flaw. Why does this fail, who already does it better, what kills it in month one. Scores harshly.
 - **Expansionist** - the biggest honest upside. If this works, how big, what's the wedge, what's the 10x version.
 - **First-principles thinker** - no outside context, no analogies, pure logic from the unit economics and the mechanism. Does the math actually work.
-- **Deep researcher** - pulls **real** market data and competitor pricing off the web. Use the research path the stack already prefers: Perplexity via `ai_router` (skeptical, cited - see `/consultant`) and/or DiscoLike for competitor/company reality. Open the citations; don't relay an uncited claim.
+- **Deep researcher** - pulls **real** market data and competitor pricing off the web with WebSearch, then WebFetch on the best sources (skeptical and cited, see `/consultant`). Where competitor or company reality is worth a paid data call, add the stack contract's company-discovery tool (spend routes through `/api-cost-governance`). Open the citations; don't relay an uncited claim. (no-AI-API rule, operator directive 2026-09-22: no outside research engine or AI provider; the whole council runs on Claude sub-agents.)
 - **Buyer** - role-plays the **target customer / ICP** and says straight up whether they'd pay, and what would make them pay. **Altitude rule (HARD):** this is ONE strategic read of the *offer* from the buyer's point of view. It is NOT a per-contact reply-probability loop and must never become one (memory: `recipient-simulation-narrowed-to-platitude-read`). If the idea is tied to a known client, anchor this persona to that client's locked ICP in `client-profile.yaml`.
-- **Judge** - takes all five findings and rules. Does not do its own research; it weighs and decides. On a material call, get the judge an independent reasoner read too (`gpt-5.1` / `o3` via `ai_router`, per `/consultant`) so even the synthesis isn't Claude grading Claude.
+- **Judge** - takes all five findings and rules. Does not do its own research; it weighs and decides. Run it as its own fresh sub-agent that wrote none of the persona findings. On a material call, also get the `advisor` tool's read of the draft verdict (when the session has one), so the synthesis faces a second, stronger reviewer. Every council member is Claude, so the council shares one model family's blind spots: say so in the verdict rather than overstating its independence.
 
 ### Before the council runs: three quick intake questions
 
@@ -39,10 +39,10 @@ These mirror the inputs the council scores against. Under `execution_mode = auto
 
 Roast differs from `/consultant` only in being parallel and non-interactive. Everything else is shared, so reuse it rather than re-authoring:
 
-- **The model calls** - the `ai_router.mjs` invocations for the reasoner critic and the Perplexity fact-check are specified in `/consultant` ("The calls"). Use them as-is, including the reasoning-token rule (`--max-tokens ≥ 4000` or a reasoning model returns empty).
+- **The critic calls** - the critic sub-agent template and the WebSearch/WebFetch fact-check are specified in `/consultant` ("The calls"). Use them as-is: each persona gets the same distilled brief plus one line fixing its angle.
 - **Judge the outside read, don't parrot it** - every persona/model objection gets weighed against what you actually know (the files, the locked decisions) before it reaches the verdict. A model can't see the operator's stack and is confidently wrong sometimes; keep the true kernel, flag the overreach.
 - **Read before you judge** (`brutal-review-read-files-first`) - if the idea leans on a real file, offer, or number, read it before the council rules on it.
-- **Failure handling** - if a persona's model call errors transiently, degrade to another reasoner or the `advisor` tool and keep the council going; never let one dead sub-agent kill the run.
+- **Failure handling** - if a persona sub-agent errors or returns empty, re-spawn it once, then degrade to the `advisor` tool and keep the council going; never let one dead sub-agent kill the run.
 
 ## The verdict (the output)
 
@@ -58,7 +58,7 @@ Deliver one scannable brief in the house style (lead with the point, no spaced e
 
 ## When the idea is GTM / tied to a client
 
-- Anchor the buyer persona to the locked ICP; pull offer/competitor reality from `/offer-intelligence` and DiscoLike rather than re-deriving it.
+- Anchor the buyer persona to the locked ICP; pull offer/competitor reality from `/offer-intelligence` and the stack contract's company-discovery tool rather than re-deriving it.
 - A GREEN-LIGHT or RESHAPE here is a natural feed into `/offer-intelligence` (validation) and `/lead-magnet-brainstorm`; the cheapest-test line is the pre-build gate those skills reference.
 - Follow the activity-log protocol if it's a specific client: read CURRENT STATE first, append a one-line entry with the verdict after.
 
@@ -70,4 +70,4 @@ Deliver one scannable brief in the house style (lead with the point, no spaced e
 - Parroting a web result or a model objection without checking it against the real files/decisions.
 - Manufacturing a fake objection to look rigorous, then folding to "but overall it's great". If it's strong, say so and sharpen it.
 - Using `/roast` when the user clearly wants to argue it out in real time - that's `/consultant`.
-- Starving a reasoning model's token budget so it returns empty (≥4000).
+- Handing a persona a thin brief. It sees only what you give it: the idea, the locked constraints and the three intake answers.

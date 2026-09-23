@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__(6f92ce0c-92ee-412c-8734-2c3d04e774d8__.*|.*[Cc][Ll][Aa][Yy].*|.+__(search-companies|search-contacts|search-contacts-by-name|load-more-search-results|render-search-results|find-and-enrich-.*|add-company-data-points|add-contact-data-points|run_subroutine|run_subroutine_direct|ask-question-about-accounts|query-objects))",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/clay-credit-guard.mjs\"",
+            "timeout": 10,
+            "statusMessage": "Checking the zero-Clay-credit rule"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,11 +1,11 @@
 ---
 name: stack-setup
-description: Define FNNL Agency's cold outbound tech stack and process, then wire the whole system to it. Interviews the operator capability by capability (registrar, mailbox provider, sending platform, company discovery, contact enrichment, email verification, AI routing, CRM, reporting, deliverables), writes the answers into outbound/stack-contract.yaml, activates any matching integration pack from _vendor-library/ into .claude/skills/, regenerates scripts/.env.example with only the credentials the chosen stack actually needs, and reports what is still missing. Also captures FNNL's own process overrides (onboarding steps, approval gates, reporting cadence, deliverable format). Run this FIRST, before onboarding any client. Triggers - "stack setup", "set up our stack", "what tools do we use", "wire up the stack", "configure the system", "/stack-setup". NOT for onboarding a client (that is /cold-email-kickoff), and NOT for resuming a client (/continue-client).
+description: Define FNNL Agency's cold outbound tech stack and process, then wire the whole system to it. Interviews the operator capability by capability (registrar, mailbox provider, sending platform, company discovery, contact enrichment, email verification, CRM, reporting, deliverables; never AI slots, which are Claude Code native under the 2026-09-22 no-AI-API rule), writes the answers into outbound/stack-contract.yaml, activates any matching integration pack from _vendor-library/ into .claude/skills/, regenerates scripts/.env.example with only the credentials the chosen stack actually needs, and reports what is still missing. Also captures FNNL's own process overrides (onboarding steps, approval gates, reporting cadence, deliverable format). Run this FIRST, before onboarding any client. Triggers - "stack setup", "set up our stack", "what tools do we use", "wire up the stack", "configure the system", "/stack-setup". NOT for onboarding a client (that is /cold-email-kickoff), and NOT for resuming a client (/continue-client).
 ---
 
 # Stack Setup (define FNNL Agency's tools and process, then wire the system to them)
 
-This workspace ships with **no tech stack**. Every skill is written against a capability role ("the sending platform"), not a brand. This skill is what turns those roles into real tools.
+This workspace shipped with **no tech stack**, and FNNL's own approved stack is now recorded in the contract's `approved_stack` block (see below). Every skill is written against a capability role ("the sending platform"), not a brand. This skill is what turns those roles into real tools.
 
 Run it once when you learn FNNL's stack, and again whenever a tool changes.
 
@@ -27,11 +27,20 @@ Tool choice changes cost, list quality, and what the system can automate, so it 
 
 **Capability truth.** Never record a tool as `live`, and never tell the operator the system can drive it, until a real call against that tool has succeeded. A tool the operator *named* is `chosen`. A tool with a key in `.env` is still only `chosen`. It becomes `live` when something actually ran. Writing `live` on an untested tool is the single failure that makes this whole system untrustworthy downstream, because every later skill treats `live` as permission to proceed unattended.
 
+## The approved stack governs every choice (operator directive 2026-09-22)
+
+FNNL has named a closed list of tools, recorded in the contract's `approved_stack` block. From now on this skill fills slots **from that list**, not from the open market:
+
+- **Options come from the approved list first.** When a slot needs a tool, the realistic options are the approved tools that can do the job, checked against each tool's full surface (MCP tool list and API docs), not only the slot it was first chosen for.
+- **An outside tool is an exception, never a default.** If no approved tool can do the job, say so, name the missing capability, and present any outside candidate labelled "OUT OF STACK, needs operator approval". Record it in `approved_stack.approved_exceptions` (tool, need, date, who approved) **before** writing it into a slot, activating its pack, or adding its key.
+- **Changing the list itself is an operator directive.** Update `approved_stack` first, then the slots, then `scripts/.env.example` and `scripts/credential-registry.json` (approved tools carry `trigger: {always: true}` there so `/preflight-credentials` checks them on every run; the sending platform is checked through its `sending_platform` slot instead, and the headshot image exception stays `on-demand` so it is never checked at preflight).
+- **`held` slots** hold tools recorded before the list existed that the operator did not approve. Treat them like `not_chosen`. On an update run, ask the operator whether to approve each one as an exception or clear it; do not quietly promote one back to `chosen`. **Exception: a held AI or research tool** (in `research_provider` or the web `search` / `crawl` slots) is retired by the no-AI-API rule (Step 2.3), so recommend clearing it rather than offering it as an exception.
+
 ---
 
 ## Step 0: Read the current contract
 
-Read `stack-contract.yaml` and report the current state in one short table: slot, tool, status. If slots are already filled, this is an update run, so ask which slots the operator wants to revisit rather than re-interviewing everything.
+Read `stack-contract.yaml` and report the current state in one short table: slot, tool, status. Read the `approved_stack` block first and report it at the top. If slots are already filled, this is an update run, so ask which slots the operator wants to revisit rather than re-interviewing everything.
 
 If the file is missing, stop. Something stripped it; do not invent a replacement.
 
@@ -51,7 +60,7 @@ Record the answers in `process_overrides.notes`.
 
 ## Step 2: Walk the capability slots
 
-Go layer by layer, in this order. The order is deliberate: infrastructure decisions constrain the data decisions, and both constrain what the AI layer is asked to do.
+Go layer by layer, in this order. The order is deliberate: infrastructure decisions constrain the data decisions. There is no AI layer to interview (Step 2.3).
 
 ### 2.1 Sending infrastructure
 
@@ -82,17 +91,17 @@ For `email_verification`, ask explicitly whether the tool reports catch-all as i
 
 `intent_signals` is genuinely optional. If FNNL is not buying intent data, set it to `n/a` so downstream skills stop offering it as a path.
 
-### 2.3 AI and research
+### 2.3 AI and research (not interviewed: no-AI-API rule, operator directive 2026-09-22)
 
-Ask about `research_provider`, `bulk_classification`, `copywriting`, `image_generation`.
+**Do not ask about `research_provider`, `bulk_classification` or `copywriting`.** Those slots are retired: the only AI is Claude Code itself. Research is the `/deep-research` harness plus Claude's built-in WebSearch/WebFetch, bulk classification is Claude Code sub-agents fanned out per `/personalization-subagent-pattern`, and final copy is written in the native session. None of them needs a tool, a key, or a slot, so never report them as gaps.
 
-Push back if the operator wants one model for everything. The cheap model that can classify 40,000 companies is almost never the model you want writing final copy, and using the premium model for bulk classification is where TAM-scale costs run away. Recommend splitting at minimum between a cheap bulk slot and a quality copy slot, and say why.
+Record `research_routing` as `claude_deep_research`, its only value, and cross-check it against `/ai-model-routing`.
 
-Record the routing policy in `research_routing` and cross-check it against `/ai-model-routing`.
+**Do not ask about `image_generation` here either.** It is the one AI exception: OpenAI, headshots only, asked for at infrastructure setup, an operator-approved exception recorded 2026-09-22 (if `approved_stack.approved_exceptions` does not carry it yet, add that entry before filling the slot). It is filled, and its key added to the credential surface, only when the operator says to start setting up cold-email infrastructure, or when `/mailbox-profile-generator` actually runs. A stack-setup run that is only defining tools leaves it untouched.
 
-### 2.4 Web access
+### 2.4 Web access (not interviewed)
 
-Ask about `search` and `crawl`. Both are usually cheap and both unblock research and signal detection, so if the operator has no preference, say that these are low-cost enablers and recommend filling them.
+**Do not ask about `search` or `crawl`.** Web search and page fetch are Claude Code's built-in WebSearch and WebFetch, so the third-party web slots are retired with the other AI slots (no-AI-API rule, 2026-09-22). Leave them unfilled and do not report them as gaps.
 
 ### 2.5 Operations
 
@@ -150,7 +159,7 @@ If a chosen tool has **no** matching pack, say so plainly and record it as a cap
 
 ## Step 6: Regenerate the credential surface
 
-1. Rewrite `scripts/.env.example` so it lists exactly the credential names the chosen stack needs, and nothing else. Names and placeholders only.
+1. Rewrite `scripts/.env.example` so it lists exactly the credential names the chosen stack needs, and nothing else. Names and placeholders only. Never add an AI-provider key (no-AI-API rule, 2026-09-22). The one exception, the headshot key (`OPENAI_API_KEY`, headshots only), stays as a blank line marked "asked for at infrastructure setup", and the registry keeps it `on-demand` so `/preflight-credentials` never flags it.
 2. Update `scripts/credential-registry.json` to match, so `/preflight-credentials` scopes its checks to the real stack.
 3. Tell the operator to put real values in `scripts/.env`, which is gitignored and must never be committed.
 4. Run `/preflight-credentials` and report which keys resolve and which are still missing.
@@ -164,7 +173,7 @@ Never ask the operator to paste a key into the chat, and never write a real key 
 Give the operator a short, scannable report:
 
 1. **The stack**, one line per filled slot: capability, tool, status.
-2. **Still empty**, listing each unfilled slot and what it blocks. Be concrete: "no email verification chosen, so bounce risk is unmanaged and `/list-quality-scorecard` cannot gate on deliverability."
+2. **Still empty**, listing each unfilled slot and what it blocks. Be concrete: "no email verification chosen, so bounce risk is unmanaged and `/list-quality-scorecard` cannot gate on deliverability." Leave the retired AI and web slots off this list, and do not list `image_generation` or its key as missing before infrastructure setup starts.
 3. **Activated packs**, and which chosen tools have no pack (the capability gaps).
 4. **Credentials**, which resolve and which are missing.
 5. **Process overrides captured**, and which were left at the built-in default.

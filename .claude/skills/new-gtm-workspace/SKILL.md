@@ -95,7 +95,7 @@ A forked workspace carries **only** the cold-outbound system and the infrastruct
 
 The new company has not chosen tools. Do not hand them this company's stack as a default. Three things carry a stack, and all three must be reset:
 
-1. **`stack-contract.yaml`** — rewrite with every slot `tool: null`, `status: not_chosen`. Keep the `run_state_field` mappings exactly; 50+ skills read those field names.
+1. **`stack-contract.yaml`**: rewrite with every slot `tool: null`, `status: not_chosen`, and empty the `approved_stack` block (`tools: []`, `approved_exceptions: []`, no `held_tool` fields). An approved list left behind would govern the new company's choices with this company's tools. Keep the `run_state_field` mappings exactly; 50+ skills read those field names.
 2. **`.mcp.json`** — empty the `mcpServers` object. Move the connector definitions to `_vendor-library/mcp-connectors.json` as an activatable catalogue. An auto-connecting MCP server **is** a declared stack, and it is the easiest one to overlook.
 3. **`scripts/.env.example`** — strip every tool key. Keep the run-identity and safety variables. The credential registry stays as a *catalogue* of which env vars each known provider needs, explicitly marked as "not a stack".
 
