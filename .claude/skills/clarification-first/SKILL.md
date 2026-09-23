@@ -11,7 +11,7 @@ Do not use it for short answers or obvious single-step requests.
 
 ## Interaction Policy
 
-This skill defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the operator's default), proceed without pausing: pick the strongest option per the rubric, record it to `run_state`/profile, and continue — never re-ask a decision already in `run_state`, `client-profile.yaml`, `campaign-plan.md`, memory, or the latest operator message. Spend runs against the standing budget in `run_state.spend_ceiling_usd` ($100 per client run, never asked, in either execution mode): auto-approve within it. Stop only for the hard-stops in the policy. On a long async wait, background-poll and move to other productive work — never idle.
+This skill defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`), proceed without pausing: pick the strongest option per the rubric, record it to `run_state`/profile, and continue — never re-ask a decision already in `run_state`, `client-profile.yaml`, `campaign-plan.md`, memory, or the latest operator message. Spend runs against the standing budget in `run_state.spend_ceiling_usd` ($100 per client run, never asked, in either execution mode): auto-approve within it. Stop only for the hard-stops in the policy. On a long async wait, background-poll and move to other productive work — never idle.
 
 ## Activity Log Protocol
 

@@ -3,12 +3,11 @@
 > **Two copies of this file exist and must stay identical.**
 > `.claude/skills/campaign-approval-brief/docs/` (beside the skill) and
 > `outbound/reference/` (the data home the path rule resolves to).
-> They were already duplicated upstream and had silently diverged. Edit one, copy it
-> to the other in the same change, or the skill and the DOCX converter will disagree
-> about what the locked template says.
+> They were already duplicated upstream and had silently diverged. Edit one and copy
+> it to the other in the same change, so the two never drift apart again.
 
 
-This is the **authoring contract** for `/campaign-approval-brief`. The skill authors `profiles/<business-slug>/campaign-approval-brief.md` against the skeleton below, then renders it to a **locked 10-slide PPTX deck** via `scripts/approval-brief-pptx/` (see the SKILL.md section "The 10-Slide Contract" for the render pipeline and the Markdown-section → slide mapping). The old `scripts/brief_md_to_docx.ps1` DOCX render is **retired** (kept on disk for history); only the final render format changed (DOCX → PPTX). This file remains the single source of truth for the authored Markdown: **structure** (section order, fixed table columns/rows, role vocabulary) and the **plain writing voice** (the rules + the banned-in-client-prose list). The "DOCX" render steps further down are superseded, so follow the SKILL.md render pipeline.
+This is the **authoring contract** for `/campaign-approval-brief`. The skill authors `profiles/<business-slug>/campaign-approval-brief.md` against the skeleton below, then renders it to a **locked 10-slide PPTX deck** via `scripts/approval-brief-pptx/` (see the SKILL.md section "The 10-Slide Contract" for the render pipeline and the Markdown-section → slide mapping). The old `scripts/brief_md_to_docx.ps1` DOCX render is **retired** (kept on disk for history); only the final render format changed (DOCX → PPTX). This file remains the single source of truth for the authored Markdown: **structure** (section order, fixed table columns/rows, role vocabulary) and the **plain writing voice** (the rules + the banned-in-client-prose list).
 
 There is no gold-standard brief in this workspace yet, because no client has been onboarded. The skeleton at
 the bottom of this file plus the voice rules below ARE the standard until the first real brief exists. Once
@@ -23,31 +22,22 @@ one is written and approved, record it here as the reference:
 ## How To Use This File
 
 1. **Author** `profiles/<business-slug>/campaign-approval-brief.md` by copying the **Copy-Paste Markdown Skeleton** at the bottom of this file and filling it from saved artifacts only (never chat history, never invented decision history). Keep the section order, the fixed table columns/rows, and the plain voice exactly.
-2. **Render** to DOCX through the styling engine. Never hand-build the DOCX, and never use Pandoc:
-
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File scripts\brief_md_to_docx.ps1 `
-     -MarkdownPath "profiles\<business-slug>\campaign-approval-brief.md" `
-     -OutputDocx  "profiles\<business-slug>\Campaign Approval Brief - <Client>.docx"
-   ```
-
-3. **QA** the authored Markdown against this skeleton (structure first, then voice + banned terms) before rendering. The two QA gates in `SKILL.md` (steps 0 and 0.5) diff against this file.
+2. **Render** the deck through the SKILL.md pipeline (The 10-Slide Contract, Required Builder, QA): map the Markdown onto the locked slides, build the PPTX with `scripts/approval-brief-pptx/`, and QA every slide. Never hand-build the deck, and never point new work at the retired `scripts/brief_md_to_docx.ps1`.
+3. **QA** the authored Markdown against this skeleton (structure first, then voice + banned terms) before rendering. The QA steps in SKILL.md (structural conformance and the content text scan) check against this file.
 
 The reader meets the **campaigns** (Sections 2–3) before the **email mechanics** (Section 4). Put a `---` rule after the metadata block and between every section.
 
 ---
 
-## The Locked Visual Template (Design Tokens)
+## The Old DOCX Look (Design Tokens, Retired)
 
-The visual style is locked inside `scripts/brief_md_to_docx.ps1` (the CSS block). **Do not vary fonts, sizes, or colors per client.** These tokens document the RETIRED DOCX render so its look stays reproducible; the live deliverable is the PPTX deck, whose design rules live in `SKILL.md` ("PPTX Design Rules"). The hex values below are the ones baked into that script, carried over from a previous brand. **They are not FNNL Agency's brand colors.** When FNNL's palette is decided, update the accent in the PPTX design rules; there is no need to touch the retired script.
+These tokens styled the retired DOCX render (the CSS block in `scripts/brief_md_to_docx.ps1`) and are kept for history only. The deck's look is locked in `scripts/approval-brief-pptx/lib.mjs` (SKILL.md, PPTX Design Rules). The hex values below are the ones baked into that script, carried over from a previous brand. **They are not FNNL Agency's brand colors.** When FNNL's palette is decided, update the accent in the PPTX design rules; there is no need to touch the retired script.
 
 - **Font:** **Calibri** (Segoe UI / Arial fallback, all sans). A separate display face was deliberately not used, because it is not installed on the render box and the presentation renderers can't fall back through a CSS stack. **11 pt** body, **line-height 1.4**, near-black text **#1c1917**.
 - **Headings:** H1 **22 pt** accent (**#dd1729**), H2 **15 pt** accent, H3 **12.5 pt** accent.
 - **Tables:** full width, accent header (**#dd1729**) with white text, faint-tint zebra (**#fceaec**), white-smoke borders (**#e2e2e2**), padded cells.
 - **Copy previews:** off-white blockquotes (**#fafafa**) with an accent left border, one per email variant.
 - **Top metadata block:** muted slate-grey (**#5d6c7b**).
-
-If Word COM is unavailable, deliver the Markdown and say the DOCX could not be rendered.
 
 ---
 
@@ -61,15 +51,19 @@ Author in exactly this order. Headings must match verbatim. Do **not** hardcode 
 4. **`## 3. Campaign Details`**: one `### Campaign N: <Name> (<count>)` block per campaign. Each block is a two-column table with the **fixed rows** `Who we email / Why they're on this list / What we offer / How we build it / Expected volume / Copy`, followed by **2–3 bullets**: *why the signal matters*, *why this role (<plain label>)*, and *the main risk and how we handle it*, all in plain words, no vendor names, no filter syntax.
 5. **`## 4. How We Write & Personalize The Emails`**: **Step 1–4**, written once for all campaigns and placed **after** the campaigns:
    - **Step 1: The sequence.** Describe the short single-thread sequence: two emails per contact, three days apart, sent Monday to Friday (a third only for a small market or as a tested arm), three versions of the first email to test, reply stops the sequence (Aaron process alignment, operator directive 2026-09-22).
-   - **Step 2: What gets personalized.** A plain table with columns `What we mention | Example | Where it comes from`, with **no `{{braces}}`**.
-   - **Step 3: Per-company build (before send).** What the per-company research names, in plain words.
-   - A **quality-rule blockquote** (`>`): every personalized claim must point to something real; if we can't see it, we don't say it.
+   - **Step 2: What gets personalized.** A plain table with columns `What we mention | Example | Where it comes from`, with **no `{{braces}}`**. Each campaign has one approved body per email version, shared by everyone on that list. Per contact, only the first name (optional) and at most two sourced facts change, inside the offer sentence (`/campaign-copywriting` Hard Rule 34). A fact that is true of everyone on a list may be written into that list's shared body.
+   - **Step 3: Checking the per-contact facts.** A person reviews the first 20 filled-in facts before a list scales, and a contact with no sourced fact gets the approved version without it, never a guess.
+   - A **quality-rule blockquote** (`>`): every per-contact fact must be sourced; if we can't source it, we don't use it.
    - **Step 4: Load and send.** Light per-recipient variation (with the deliverability gloss), loaded as a **paused draft**, one consistent sender across the warmed mailboxes, nothing sends until the client starts it.
 6. **`## 5. Copy Preview`**: every saved variant from `variants.yaml` as blockquotes (one per email variant), **or** the standard pre-list-build placeholder when the brief is written before the list exists (its normal timing). Never invent copy here.
 7. **`## 6. What We Need From You`**: **strategic, client-facing decisions only** (approve offers/order, suppression list, proof/claims they're comfortable using, any asset-gate or budget decision, and the reply-readiness items only they can supply: who on their team calls an interested reply and the booking calendar, when their team takes those calls, plus the qualifying questions for a trial, service or custom-work offer they deliver). Open with "Mark any you want changed; silence means approved." **Exclude** all technical/internal setup (API keys, workspace IDs, verifier/mailbox/registrar/warmup setup, source-workflow build steps).
 8. **`## 7. What Happens Next`**: the operational sequence in plain language (no skill slugs, no vendor names) + a "Things we won't skip" line with the per-campaign stop gates.
 9. **`## 8. How We Protect Your Reputation`**: the deliverability and compliance guardrails in plain words.
-10. **`## Appendix A: Other Options We Considered`**: alternatives + rejected offers, listed **once** (never repeat an alternatives list inside campaign sections). If alternatives are not explicit in artifacts, write `Not captured in current artifacts.`
+10. **`## Appendix A: Other Options We Considered`**: the alternatives, listed **once** (never repeat an alternatives list inside campaign sections), in up to three groups:
+    - **Later-wave campaigns and slices** from `campaign-strategy.md`.
+    - **Offers considered and not in this test:** the candidates under `## Every candidate` in `lead-magnets.md` that sit outside the test set, plus the directions `offer-intelligence.md` ranked lower (its `**Rank lower:**` line, or the legacy `**Avoid:**` line), each with its plain reason. Ranked lower is never presented as ruled out. Every offer in the test, including any queued behind the first wave, belongs in Sections 1 and 2, not here.
+    - **Problems we heard and are not leading with**, only when `_research/pain-clusters.md` exists: the clusters no offer in the test answers (each offer's `cluster_ids` in `client-profile.yaml`, per segment where the client has `offer.segments`, say which clusters it answers), highest opportunity score first, with weak ones labelled rather than dropped. Write each one in the buyers' own words from the file. Copy each count from the file (it comes from the evidence ledger), never type or re-tally it by hand, and never turn it into a percentage. Keep each cluster's confidence label, and when the file's Research QA verdict is HOLD, say plainly that the research behind these is still thin. Never present a hypothesis (the client's or a model's guess about buyer pain) as something buyers said, and never print a cluster or evidence ID.
+    - If alternatives are not explicit in artifacts, write `Not captured in current artifacts.`
 11. **`## Appendix B: If You Want To Change Something`**: the four change → consequence lines (target / offer / source / wording).
 
 ### Plain role vocabulary (Section 2)
@@ -102,6 +96,7 @@ The prose is **graded, not just the structure**. Write everything so a smart per
 
 - **Internal vendor / tool names.** Build the list at scan time from every tool named in `outbound/stack-contract.yaml` (company discovery, contact enrichment, email verifier, registrar, mailbox provider, sending platform, CRM, research), plus any pack name under `_vendor-library/`, plus any other data, scraping or enrichment tool that appears in this client's artifacts. Describe what the tool *does* in plain words instead ("we look up and verify the right contact"). If the contract is still empty there may be nothing to scan for, which is fine.
 - **Raw syntax / fragments:** `segment_subtype`, `{{` (any merge-field braces), and any query, column, or filter fragment.
+- **Research reference IDs:** cluster IDs (`C-01`) and evidence IDs (`E-0001`) from the research files. Say what the buyers said, not the reference number.
 - **Skill slugs:** `/campaign-` (e.g. `/campaign-strategy`, `/campaign-copywriting`), `/tam-build`, or any `/skill-name`.
 - **Credit / quota counts** (API credits, token counts, per-tool quotas).
 - **The literal word "TAM"**: say "the full market / list / the companies we found" instead.
@@ -138,7 +133,7 @@ Copy everything between the rules below into `profiles/<business-slug>/campaign-
 
 **Who we're reaching.** <The audience and the decision-makers we target, in plain words.>
 
-**What we'll offer them.** <The offer in one plain sentence: what each prospect actually gets, and why it's useful on its own. If one offer across all lists, say so. When several offers are under test, say plainly that every company that fits is loaded in the first send, split evenly between the offers on every list so each offer gets a fair, equal share, and that as soon as one offer clearly wins, everyone not yet emailed gets the winning offer. List the offers in that first send, and any queued behind them, exactly as the offer slate (`offer-test-slate.md`) showed them, each with its buyer type; offers still in the test are never filed under "not selected".>
+**What we'll offer them.** <The offer in one plain sentence: what each prospect actually gets, and why it's useful on its own. If one offer across all lists, say so. When several offers are under test, say plainly that every company that fits is loaded in the first send, split evenly between the offers on every list so each offer gets a fair, equal share, and that as soon as one offer clearly wins, everyone not yet emailed gets the winning offer. List the offers in that first send, and any queued behind them, exactly as the offer slate (`offer-test-slate.md`) showed them, each with its buyer type; offers still in the test never go in Appendix A.>
 
 **<The unifying idea>.** <e.g. "Why three lists, one offer" or "One list, three offers, one winner": what's held constant and what that lets us learn.>
 
@@ -176,7 +171,7 @@ No company appears in more than one list, so the campaigns never compete for the
 | **Expected volume** | <N companies → every matching decision-maker at each, about <n> verified contacts> |
 | **Copy** | Drafted after the list is built |
 
-- **Why the signal matters:** <why the opener's premise is true and lands as expertise, not a pitch>.
+- **Why the signal matters:** <why this signal makes the list a good fit for the offer right now, in plain words>.
 - **Why this role (<plain label>):** <why it earns that role>.
 - **The main risk and how we handle it:** <the campaign's own main risk from its lead-source-plan, plus the mitigation>.
 
@@ -198,9 +193,9 @@ No company appears in more than one list, so the campaigns never compete for the
 | Their own best client, as the one our offer is for | "<example>" | Their own case studies or client list, with the page saved |
 | Why they're on this list, only when it is true of every company on it | <the shared reason, plain> | The list itself, so it is the same for everyone |
 
-**Step 3: Per-company build (before send).** <What the per-company research fills in from that company's own site (what they sell, who they sell to, or their own best client), so the offer names the right thing for that company. A company we can't confirm a fact for gets the version of the email without it.>
+**Step 3: Checking the per-contact facts.** Before a list scales, a person reviews the first 20 filled-in facts, and we tighten how we find them if more than 3 of the 20 are vague, awkward or wrong. A contact with no sourced fact gets the approved version of the email without it.
 
-> Quality rule: every personalised claim must point to something real on the company's own site. If we can't see it, we don't say it.
+> Quality rule: every per-contact fact must come from our list data or the company's own public site. If we can't source it, that contact gets the version without it. We never guess, and we never read someone's customer list, headcount or staff back to them.
 
 **Step 4: Load and send.** The copy is varied slightly per recipient (light wording variation that protects deliverability, meaning whether emails land in the inbox instead of spam), then loaded as a **paused draft** in your sending platform. All email comes from **<Sender persona>** (one consistent identity) across your <N> warmed mailboxes. Nothing sends until you start it.
 
@@ -234,7 +229,7 @@ If none of these companies are existing relationships, just tell us and we proce
 1. You approve this brief (<the decisions above>).
 2. We build and verify the decision-maker contact lists. Every contact is checked on its own, any that fail are removed, and then the list as a whole is graded.
 3. We write the copy and run it through our quality gates, then share it for your approval.
-4. We set up reply handling before anything sends (a reply for each kind of answer, a short call script, and the page someone sees after booking), then load the campaigns as **paused drafts** in your sending platform.
+4. We set up reply handling before anything sends (a reply for each kind of answer, a short call script, and the page someone sees after booking), then load the campaigns as **paused drafts**, ready for you to start.
 5. Once your mailboxes finish warming and pass deliverability checks, **you** start sending. Every company on the list goes into that first send on weekdays, we read the results daily in the first week, and the winning offer then goes to everyone not yet emailed.
 
 **Things we won't skip:** verified contacts only; copy passes our spam, best-practice and call-to-action checks; every contact checked and failing ones removed before the list is graded B or higher; reply handling ready before the first send; mailboxes confirmed warmed and authenticated before any real send.
@@ -243,7 +238,7 @@ If none of these companies are existing relationships, just tell us and we proce
 
 ## 8. How We Protect Your Reputation
 
-- No links or calendar invites in the first emails. Reply-only and low-friction.
+- No links or calendar invites in the first emails. We only ask for a reply, which keeps it low-friction.
 - One consistent sender (<Sender persona>) across every mailbox.
 - <Any client-specific compliance framing, e.g. healthcare/GDPR/no invented quotes>.
 - One-click unsubscribe, and complaint and bounce rates held to safe levels.
@@ -257,8 +252,11 @@ Evaluated and set aside for later waves:
 
 - **<Alternative campaign / slice>**: <one line on why it's a later wave>.
 
-**Offers considered and not selected** (only offers that will not be tested; offers in the test queue appear in Sections 1 and 2, not here):
-- **<Rejected offer>**: <why it wasn't chosen>.
+**Offers considered and not in this test:**
+- **<Offer or direction>**: <why it ranks lower, in plain words>.
+
+**Problems we heard and are not leading with:** <only when the research file exists; otherwise delete this group>
+- **"<the problem, in the buyers' own words>"**: <how often it came up, copied from the file, e.g. "came up in 6 discussions and 2 sales calls">, <its confidence, e.g. "still thin">. <One line on why no offer in this test leads with it.>
 
 <If alternatives are not explicit in artifacts, write: Not captured in current artifacts.>
 

@@ -41,7 +41,7 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the operator's default), proceed without pausing: summarize, write the notes, and continue — never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. There is no spend here, so no spend gate. On a long async wait, background-poll and move to other productive work — never idle.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`), proceed without pausing: summarize, write the notes, and continue — never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. There is no spend here, so no spend gate. On a long async wait, background-poll and move to other productive work — never idle.
 
 ## Activity Log Protocol
 

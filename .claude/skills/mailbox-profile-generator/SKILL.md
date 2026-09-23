@@ -112,7 +112,7 @@ slot means run `/stack-setup`. The matching integration packs sit inert in `_ven
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the operator's default), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue, and never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider or source-of-truth change, safety gates). Note that the HARD-RULE order-of-operations and profile-gate-before-import rules below are not relaxed by autonomy. On a long async wait, background-poll and move to other productive work, never idle.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue, and never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider or source-of-truth change, safety gates). Note that the HARD-RULE order-of-operations and profile-gate-before-import rules below are not relaxed by autonomy. On a long async wait, background-poll and move to other productive work, never idle.
 
 ## Activity Log Protocol
 

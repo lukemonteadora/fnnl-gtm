@@ -19,7 +19,7 @@ Do not turn untrue, unsafe or non-compliant paths into user-facing options. Offe
 
 ## Interaction Policy
 
-This skill defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the operator's default), proceed without pausing: pick the strongest option per the rubric, record it to `run_state`/profile, and continue — never re-ask a decision already in `run_state`, `client-profile.yaml`, `campaign-plan.md`, memory, or the latest operator message. Spend runs against the standing budget in `run_state.spend_ceiling_usd` ($100 per client run, never asked, in either execution mode): auto-approve within it. Stop only for the hard-stops in the policy. On a long async wait, background-poll and move to other productive work — never idle.
+This skill defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`), proceed without pausing: pick the strongest option per the rubric, record it to `run_state`/profile, and continue — never re-ask a decision already in `run_state`, `client-profile.yaml`, `campaign-plan.md`, memory, or the latest operator message. Spend runs against the standing budget in `run_state.spend_ceiling_usd` ($100 per client run, never asked, in either execution mode): auto-approve within it. Stop only for the hard-stops in the policy. On a long async wait, background-poll and move to other productive work — never idle.
 
 ## First-Wave Default: the whole TAM at full volume, with the offer test inside it
 
@@ -333,7 +333,7 @@ Then invoke `/lead-magnet-brainstorm`. It loads the discovery brief and `_resear
 
 If the onboarding form suggested a lead magnet, `/lead-magnet-brainstorm` treats it as Candidate A and generates at least 3 additional candidates. The client suggestion can win, but only after it scores higher than the alternatives.
 
-At the end of `/lead-magnet-brainstorm`, ranked candidates are available. Apply `run_state.execution_mode` (`auto_execute` is the recommended default for this operator, per operator directive):
+At the end of `/lead-magnet-brainstorm`, ranked candidates are available. Apply `run_state.execution_mode` as read from the profile; it defaults to `review_gates` and is never changed by this skill:
 
 - `auto_execute`: lock the test set automatically, exactly as `/lead-magnet-brainstorm`'s Execution Mode Gate defines it (the top-ranked offer that can send today as the primary, and every other qualifying candidate as ranked validation arms). Report: "Auto-selected offer: [name] (score: X/7), plus validation arms: [names]. Reason: [one-sentence rationale]." Write them to `profiles/<business-slug>/lead-magnets.md` and lock in `client-profile.yaml`. Do not pause for input.
 - `review_gates`: show every ranked candidate and wait for operator selection. Only then write the chosen primary and arms.
@@ -371,7 +371,7 @@ After the offer is locked (via Step 3A or 3B) and before the TAM is built, invok
 profiles/<business-slug>/data-point-catalog.md
 ```
 
-**Do not rename the two headings the approval deck parses.** `outbound/scripts/campaign_approval_brief.ps1` reads the literal strings `## Ranked Source Signals` and `- **Source risks:**` out of that catalog to build the client-facing approval deck, so both must stay byte-identical. Renaming either one silently empties a deck section while the script still exits 0. This is a naming guard on the catalog's headings, never a stop gate: do not halt a run over it.
+**Do not rename the catalog's `## Ranked Source Signals` heading.** `/campaign-strategy` and `/lead-source-strategy` find that section by name, and `/cold-email-flow-audit` treats a catalog without it as stale. The `- **Source risks:**` bullet beside it must stay present, bold and non-empty, because `/data-point-discovery`'s own definition-of-done checks for it. The exact format rules live in that skill's Output section. This is a naming guard on the catalog's headings, never a stop gate: do not halt a run over it.
 
 This is **discovery, not collection**: it spends nothing (the brainstorm runs in the Claude Code session, with no AI API call) and reveals/verifies no contacts. The catalog is the contract `/tam-build` collects against. One catalog covers all confirmed segments (per-segment sections when segments differ). On completion set `run_state.status.datapoint_stage: complete`.
 
@@ -576,9 +576,9 @@ D. Custom answer
 After setup completes, branch by `run_state.sending_platform` and `run_state.mailbox_provider`:
 
 - If the stack contract names an inbox-manager skill for the locked sending platform, invoke it and run its import-and-start-warmup workflow for mailboxes provisioned by the locked mailbox provider.
-- If it names none, or the skill it names is not present in `.claude/skills/`, stop after provisioning and use that platform's own import and warmup workflow. Invoke `/cold-email-inbox-tracker` only after the user confirms import and warmup in that platform. Never silently switch to a different sending platform.
+- If it names none, or the skill it names is not present in `.claude/skills/`, stop after provisioning and use that platform's own import and warmup workflow. Log the finished setup (with an inbox-setup tracker, if `/stack-setup` activated a pack that provides one (none ships in this workspace)) only after the user confirms import and warmup in that platform. Never silently switch to a different sending platform.
 
-Where an inbox-manager skill exists, it invokes `/cold-email-inbox-tracker` after import/connection, warmup, signatures, and insurance tagging are complete.
+Where an inbox-manager skill exists, it logs the finished setup (with an inbox-setup tracker, if `/stack-setup` activated a pack that provides one (none ships in this workspace)) after import/connection, warmup, signatures, and insurance tagging are complete.
 
 Then set:
 
@@ -593,7 +593,7 @@ Remind the user that real sending remains blocked until sender readiness is veri
 
 **Capacity check: confirm the fleet against the request (Aaron process alignment, operator directive 2026-09-22; supersedes the capacity trim at this step, 2026-09-22).** Read the daily sends the client's warmed, active fleet actually delivers (the fresh fleet or the assigned pool group, active rotation half only, at the per-mailbox rates `/mailbox-mix-strategy` records) through the inbox manager for the locked `run_state.sending_platform` (if `/stack-setup` activated a pack that provides one, otherwise that platform's own sender and warmup views), and write it to `run_state.capacity_request.allocated_daily_sends`. While the fleet is still warming, record its planned rate and confirm it at Gate A. Recompute `days_to_cover_tam` at that rate in Monday-to-Friday sending days and report it in one line ("Capacity: requested N sends a day, the fleet delivers M, whole TAM covered in D sending days"). Never recompute `daily_sends_needed` here; Step 4 owns it. Capacity is sized to the volume, never trimmed: if the fleet delivers less than `daily_sends_needed`, the wave still covers the whole TAM at the allocated rate and the runway stretches; report days to cover. Offers and TAM rows are never cut to fit. A shortfall is logged `PENDING capacity request: ...` with both numbers. A client with no warmed fleet yet (infrastructure deferred, or the fleet still warming) is also `PENDING capacity request`, with the reason stated: it never blocks the list, the copy or the paused draft, and Gate A owns the block at Start.
 
-If no launch campaign has been selected, apply `run_state.execution_mode` (`auto_execute` is the recommended default for this operator, per operator directive):
+If no launch campaign has been selected, apply `run_state.execution_mode` as read from the profile; it defaults to `review_gates` and is never changed by this skill:
 
 **When `tam/tam.scored.csv` exists, select a first-launch WAVE, not a single campaign** (Aaron process alignment, operator directive 2026-09-22; supersedes the signal-slice-only wave selection, the capacity trim and the P1-first queue here). Which wave depends on the offer's state:
 
@@ -729,6 +729,6 @@ Follow the Step 6 branch that matches `run_state`. This skill hands off cleanly 
 - The inbox manager named by the stack contract for the locked sending platform
 - The spintax and campaign-upload skills named by the stack contract for the locked sending platform
 - The reply-agent setup skill for the locked sending platform, only where the stack contract names one and `/stack-setup` activated it: an optional auto-drafting extra on top of the Gate D reply machine and the reply sweep, never a replacement for them
-- `/cold-email-inbox-tracker` - logs completed inbox setups after provider ACTIVE, sending-platform import, and warmup start
+- An inbox-setup tracker, if `/stack-setup` activated a pack that provides one (none ships in this workspace): logs completed inbox setups after provider ACTIVE, sending-platform import, and warmup start
 - The source-build skills for the tools the stack contract declares - selected only when `/lead-source-strategy` proves they match the campaign signal and target geography
 

@@ -5,7 +5,7 @@ description: Cross-cutting policy for running the coldoutbound flow with minimal
 
 # Autonomous Execution Policy
 
-The operator wants this flow to run **hands-free with as little back-and-forth as possible** (operator directive). This policy is the single source of truth for *when to proceed vs stop*. Where any other skill's older "ask at every material fork" wording conflicts with this, **this policy wins** for runs where `run_state.execution_mode = auto_execute` (the operator's default).
+The operator wants this flow to run **hands-free with as little back-and-forth as possible** (operator directive). This policy is the single source of truth for *when to proceed vs stop*. Where any other skill's older "ask at every material fork" wording conflicts with this, **this policy wins** for runs where `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`).
 
 ## Stack Resolution (read before any tool step)
 
@@ -34,7 +34,7 @@ Under `execution_mode = auto_execute`:
 - **Report, don't gate.** State what you chose and why in one line, then continue. The operator can correct in flight.
 - **Never re-ask a recorded decision.** If it's already in `run_state`, `client-profile.yaml`, `campaign-plan.md`, the profile, a saved memory, or the operator's latest message — use it silently. (Persona, mailbox mix, `billing = Monthly`, locked offer/campaign, domain list, etc.)
 
-`execution_mode = review_gates` keeps the older per-fork confirmations — use it only when the operator explicitly asks to be walked through.
+`execution_mode = review_gates` (the default) keeps the per-fork confirmations; `auto_execute` applies only where a confirmed intake form or an explicit operator instruction sets it.
 
 ## 2. Spend: a standing budget, never asked
 

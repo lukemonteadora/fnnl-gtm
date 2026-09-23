@@ -45,7 +45,7 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the operator's default), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue — never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work — never idle. Autonomy does NOT relax the Copy QA Gate: `spam-word-checker.md` and `cold-email-copy-best-practices.md` remain HARD gates — every variant must still pass both before it is shown, approved, serialized, or uploaded, regardless of execution mode.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue — never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work — never idle. Autonomy does NOT relax the Copy QA Gate: `spam-word-checker.md` and `cold-email-copy-best-practices.md` remain HARD gates — every variant must still pass both before it is shown, approved, serialized, or uploaded, regardless of execution mode.
 
 ---
 
@@ -781,7 +781,7 @@ The literal `subject: "..."` shown above is the live rule for both template and 
 
 Do not write YAML that contains unapproved copy, placeholder copy, failed copy, or copy that differs from the reviewed markdown.
 
-YAML body format must use block scalar syntax (`body: |`) with 10-space indented content. Inline escaped strings (`body: "line1\nline2"`) are not parsed correctly by the campaign approval brief script and must not be used.
+YAML body format must use block scalar syntax (`body: |`) with 10-space indented content. Inline escaped strings (`body: "line1\nline2"`) are not parsed correctly by the scripts that read `variants.yaml` line by line (for example `scripts/campaign_docx_presentation.ps1`, the sequence DOCX renderer) and must not be used.
 
 ---
 

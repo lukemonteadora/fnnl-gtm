@@ -32,7 +32,7 @@ The old DOCX render (`scripts/brief_md_to_docx.ps1`) is **retired** for this ski
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the operator's default), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue, and never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work, never idle.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue, and never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work, never idle.
 
 ## Activity Log Protocol
 
@@ -83,13 +83,25 @@ Every field must be present and non-empty before authoring. Each one feeds a spe
 
 ### Required profile-level fields
 
-| Field | File | What it drives |
-|---|---|---|
-| `**Primary:**` / `**Secondary:**` / `**Avoid:**` lines | `offer-intelligence.md` | Appendix A (options considered) |
-| `## Primary Offer` / `## Validation arms` / `## Every candidate` / `## Archived / Not Selected` | `lead-magnets.md` | Sections 1 and 2 (the offers under test: the first-wave offers, launched together as equal cells across the whole qualified list, and any arms beyond the first-wave offer count, which queue) and Appendix A (offers that will not be tested) |
-| Campaign names in campaign-strategy.md table | `campaign-strategy.md` | Slide 3 grid |
+These are the headings and labels the producing skills write today: `/offer-intelligence` (the "Recommended direction" block of its discovery brief), `/lead-magnet-brainstorm` (its Save Output section) and `/campaign-strategy` (its Output Format).
 
-If any required field is missing, print the STOP block (list each missing `**Label:**` field by campaign + any missing profile-level field), then route back to `/lead-source-strategy` Lead Source Plan Mode and re-run. Only proceed to authoring once all required fields are confirmed present.
+| Field | File | What it drives | Owner (route a gap here) |
+|---|---|---|---|
+| A "Recommended direction" section with `**Primary:**`, `**Secondary:**` and `**Rank lower:**` lines | `offer-intelligence.md` | Appendix A (the directions the research ranked lower) | `/offer-intelligence` |
+| `## Fulfillment plan`, `## Validation arms` and `## Every candidate` | `lead-magnets.md` | Sections 1 and 2 (the offers under test: the first-wave offers, launched together as equal cells across the whole qualified list, and any arms beyond the first-wave offer count, which queue) and Appendix A (the candidates under `## Every candidate` that are outside the test set, each with its plain reason) | `/lead-magnet-brainstorm` |
+| Campaign names in the campaign-strategy.md table | `campaign-strategy.md` | Slide 3 grid | `/campaign-strategy` |
+
+**How to match them.** Check them exactly this way, so a hand check and a scripted check give the same answer:
+
+- **`offer-intelligence.md`:** the section heading matches `^#{2,3}\s+(\d+\.\s+)?Recommended direction` (the producer writes `### Recommended direction for /lead-magnet-brainstorm`), and the section runs to the next heading of the same or a higher level. Inside it, one line must match each of `^\*\*Primary`, `^\*\*Secondary` and `^\*\*(Rank lower|Avoid)`. The label word is what counts, so `**Primary direction: …**` and `**Primary: <text>**` both pass. A block that describes its direction without these labelled lines does not. `**Avoid:**` is the old name of the Rank lower line (renamed 2026-09-22): accept it, and present its items in the brief as ranked lower, never as ruled out, because saturation never closes a direction.
+- **`lead-magnets.md`:** each of the three headings must be found in one of two ways: as `^## (Fulfillment plan|Validation arms|Every candidate)\s*$` anywhere in the file (level 2 is what `/lead-magnet-brainstorm` writes), or as `^### (Fulfillment plan|Validation arms|Every candidate)\s*$` inside a `## Segment: <label>` section. A multi-segment client's file carries one `## Segment: <label>` section per offer set, and the producer does not pin the heading level inside one, so the second form passes too. The retired `## Primary Offer` and `## Archived / Not Selected` headings do not count, because `/lead-magnet-brainstorm` no longer writes them.
+- **Which offers go out first and which wait** comes from `offer.validation_arms[].flight` in `client-profile.yaml` (per segment, `offer.segments[].validation_arms[].flight`: `1` is the first wave, `2` the next flight, unset is queued) and from `offer-test-slate.md`, not from `lead-magnets.md`.
+
+**Existing-offer validation path.** When `/offer-intelligence` validation mode rated an existing offer Go (`offer.offer_decision: go`), there may be no discovery brief and no brainstorm. In place of the offer-intelligence row, check the validation brief at `offer.offer_validation_path` (`profiles/<business-slug>/offer-validations/YYYY-MM-DD-offer-validation.md`) for `### Recommendation` and `### Locked offer`; the offer comes from `### Locked offer`. `lead-magnets.md` is optional on this path: when it carries `## Every candidate`, Appendix A reads it, and otherwise Appendix A's offer list says `Not captured in current artifacts.`
+
+**Optional, never a STOP: `_research/pain-clusters.md`** (written by `/market-evidence synthesize`, per `market-evidence-standard.md`). When it exists, Appendix A may cite the buyer problems it records that no offer in the test answers, under the rules in the template's Appendix A. Older clients may not have one yet, and its absence changes nothing.
+
+If anything required is missing, print the STOP block: each missing `**Label:**` field by campaign, and each missing profile-level heading or line by file. Then route each gap to the skill that writes it and re-run that skill: a lead-source-plan field to `/lead-source-strategy` Lead Source Plan Mode, an offer-intelligence line to `/offer-intelligence` (when the block exists but drifted from its labels, ask for that one block to be re-emitted from the research already on file; its Step 0 reads existing research and never redoes it), a lead-magnets.md heading to `/lead-magnet-brainstorm`, and the campaign table to `/campaign-strategy`. Only proceed to authoring once all required fields are confirmed present.
 
 ## Source Of Truth
 
@@ -100,6 +112,9 @@ profiles/<business-slug>/client-profile.yaml
 profiles/<business-slug>/data-point-catalog.md
 profiles/<business-slug>/offer-intelligence.md
 profiles/<business-slug>/lead-magnets.md
+profiles/<business-slug>/offer-test-slate.md                 # the offer slate the client saw (first wave and queue)
+profiles/<business-slug>/offer-validations/                  # existing-offer path only: the validation brief at offer.offer_validation_path
+profiles/<business-slug>/_research/pain-clusters.md          # optional; Appendix A may cite it (see the template)
 profiles/<business-slug>/campaign-strategy.md
 profiles/<business-slug>/campaign-plan.md
 profiles/<business-slug>/campaign-approval-brief.md          # the authored Markdown (deck content source)

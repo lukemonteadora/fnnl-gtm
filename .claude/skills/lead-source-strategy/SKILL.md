@@ -36,7 +36,7 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the operator's default), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue — never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work — never idle.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue — never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work — never idle.
 
 ## Activity Log Protocol
 
@@ -208,7 +208,7 @@ Write:
 profiles/<business-slug>/campaigns/<campaign-slug>/lead-source-plan.md
 ```
 
-Use this structure. The header block and bold-label format are **required** — the campaign approval brief script reads these exact `**Label:** value` patterns. Plain bullets without bold labels will produce "Not captured in current artifacts" throughout the approval brief.
+Use this structure. The header block and bold-label format are **required**: the `/campaign-approval-brief` pre-flight looks up these exact `**Label:** value` fields and stops when one is missing or blank, so plain bullets without bold labels block the approval brief.
 
 ```markdown
 # Lead Source Plan - <Campaign Name>
@@ -322,7 +322,7 @@ Campaign-specific fields:
 5. /campaign-copywriting
 ```
 
-**Critical format note:** Every label in `## Primary Source Path`, `## Backup Source Path`, and the optional `## Parallel Source Arms` must use `- **Label:** value` syntax (dash space double-asterisk Label colon double-asterisk space value). The campaign approval brief script parses these exact patterns. A plain `- Label: value` without bold will not be read.
+**Critical format note:** Every label in `## Primary Source Path`, `## Backup Source Path`, and the optional `## Parallel Source Arms` must use `- **Label:** value` syntax (dash space double-asterisk Label colon double-asterisk space value). The `/campaign-approval-brief` pre-flight looks up the `## Primary Source Path` labels in exactly this form, and the other two sections use it too so every plan reads the same way. A plain `- Label: value` without bold will not be found.
 
 ## Required CSV Fields
 

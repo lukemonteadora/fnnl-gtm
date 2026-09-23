@@ -1,6 +1,6 @@
 ---
 name: data-point-discovery
-description: "Catalog every data point worth collecting for THIS client before /tam-build runs. Maps where this market's data physically lives (directories, associations, marketplaces, job boards, public filings), exhaustively brainstorms conceivable company- and contact-level data points from the locked ICP/offer/industry, cross-checks each for obtainability against the capability roles the workspace's stack-contract.yaml actually names (/lead-list-tech-stack-research is the tool-fit backbone), classifies standard vs client-specific vs in-reserve, and ranks value-first (campaign value dominates over obtainability and cost). Outputs profiles/<slug>/data-point-catalog.md, the contract /tam-build collects against and /campaign-strategy slices on, and the file the client-facing approval deck reads its source section from. Discovery only: NO per-contact reveal, NO enrichment spend, only a small AI brainstorm gated by /api-cost-governance. Runs after the offer is locked (cold-email-kickoff Step 3.3) and before /tam-build."
+description: "Catalog every data point worth collecting for THIS client before /tam-build runs. Maps where this market's data physically lives (directories, associations, marketplaces, job boards, public filings), exhaustively brainstorms conceivable company- and contact-level data points from the locked ICP/offer/industry, cross-checks each for obtainability against the capability roles the workspace's stack-contract.yaml actually names (/lead-list-tech-stack-research is the tool-fit backbone), classifies standard vs client-specific vs in-reserve, and ranks value-first (campaign value dominates over obtainability and cost). Outputs profiles/<slug>/data-point-catalog.md, the contract /tam-build collects against and /campaign-strategy slices on, and one of the files the approval brief reads for background. Discovery only: NO per-contact reveal, NO enrichment spend, only a small AI brainstorm gated by /api-cost-governance. Runs after the offer is locked (cold-email-kickoff Step 3.3) and before /tam-build."
 ---
 
 # Data-Point Discovery (catalog, before the build)
@@ -77,7 +77,7 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the operator's default), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue — never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. The brainstorm has no metered spend to confirm, and any paid data-vendor call it triggers runs against the standing budget in `run_state.spend_ceiling_usd` ($100 per client run, never asked, in either execution mode). Stop only for the policy's hard-stops (spend over the approved ceiling, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work — never idle.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue — never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. The brainstorm has no metered spend to confirm, and any paid data-vendor call it triggers runs against the standing budget in `run_state.spend_ceiling_usd` ($100 per client run, never asked, in either execution mode). Stop only for the policy's hard-stops (spend over the approved ceiling, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work — never idle.
 
 ## Activity Log Protocol
 
@@ -321,7 +321,7 @@ At the **profile root** (it is an *input to* `/tam-build`, not a product of it).
 
 This catalog is the **exhaustive pre-collection menu** (the contract / superset). It is distinct from `/tam-build`'s `tam/tam-data-dictionary.md`, which is the **as-built subset** recording which catalog entries actually became `tam.csv` columns. Two artifacts, no collision.
 
-**This file also feeds the client-facing approval deck.** Since the retired source-signal artifact went away, `data-point-catalog.md` is the file `/campaign-approval-brief` reads the deck's source section from. That makes two of its strings machine-parsed and therefore not free-form (see the format warning below).
+**This file is also background for the approval brief.** `/campaign-approval-brief` lists `data-point-catalog.md` among its source files, but its pre-flight requires nothing from it, and the deck's source slides come from each campaign's `lead-source-plan.md`. Two of its strings are looked up by name by other skills, so they are not free-form (see the format warning below).
 
 **Catalog table columns:**
 
@@ -350,7 +350,7 @@ This catalog is the **exhaustive pre-collection menu** (the contract / superset)
 
 Plus a prose header: client, date, segments covered, AI provenance + brainstorm spend (from `/api-cost-governance`), and a one-paragraph "what `/tam-build` should collect this wave" summary (the `collect_now` set) — naming which `collect_now` columns are **scraped** (the only ones that cost a credit) versus **derived** (free, computed from the scraped ones), so the cost of the wave is visibly the scraped set alone.
 
-### Required file skeleton (two strings are machine-parsed: copy them byte-for-byte)
+### Required file skeleton (two strings are looked up by name: copy them byte-for-byte)
 
 Write the catalog in this shape. `## Market Source Landscape` and `## Ranked Source Signals` carry step (a) angle 4's findings; the big catalog table follows them.
 
@@ -376,11 +376,10 @@ AI provenance: ai_research_provider=<...>, ai_analysis_provider=<...> | Data-ven
 - Event / exhibitor-roster fit:
 - **Source risks:** <the real risks in this market's source landscape, in one or two plain sentences. NEVER leave this blank.>
 
-<!-- FORMAT WARNING. The bold "Source risks" label above and the "Ranked Source Signals"
-     heading below are parsed by outbound/scripts/campaign_approval_brief.ps1 to build the
-     CLIENT-FACING approval deck. Rename either, drop the bold, or leave the risks value
-     empty, and the deck silently loses a section while the script still exits 0. Keep the
-     first table column headed exactly "Rank", and keep exactly one table in that section. -->
+<!-- FORMAT WARNING. Other skills find the "Ranked Source Signals" heading below by name
+     (/campaign-strategy, /lead-source-strategy, /cold-email-flow-audit), so keep it exact.
+     Keep the bold "Source risks" label above and never leave its value empty: the
+     definition-of-done in Stop Gates checks both. -->
 
 ## Ranked Source Signals
 | Rank | Source family | Exact observable data point | Where it lives | Obtainable on our stack | Coverage | Why-now hypothesis | Risks |
@@ -391,26 +390,23 @@ AI provenance: ai_research_provider=<...>, ai_analysis_provider=<...> | Data-ven
 <the full ranked catalog table, columns per the list above>
 ```
 
-**Format warning: two strings in this file are parsed by a script, so they are not yours to reword.** `outbound/scripts/campaign_approval_brief.ps1` builds the client-facing approval deck by reading two literal strings out of `data-point-catalog.md`:
+**Format warning: two strings in this file are looked up by name, so they are not yours to reword.**
 
-- the heading `## Ranked Source Signals`, matched by `^##\s+Ranked Source Signals\s*$` (exact words, level-2, nothing appended)
-- the bullet `- **Source risks:** <value>`, matched by `^\-\s+\*\*Source risks:\*\*\s*(.+)$` (a top-level bullet, bold intact, and a **non-empty** value after the colon)
-
-**How this fails, and why it is worse than a crash.** The script's file reader returns empty on a missing file with no error, and the script still exits 0. So a renamed heading, an unbolded `- Source risks:`, or a bullet with nothing after the colon does not fail anything: the deck just quietly ships to a paying client with a section missing, and no log, exit code, or QA step anywhere reports it. Treat a silent pass as the failure mode you are guarding against.
+- the heading `## Ranked Source Signals` (exact words, level 2, nothing appended). `/campaign-strategy` reads this section before recommending campaign sources, `/lead-source-strategy` reuses it before running any new source research, and `/cold-email-flow-audit` treats a catalog without it as stale.
+- the bullet `- **Source risks:** <value>` (a top-level bullet, bold intact, and a **non-empty** value after the colon). No other skill reads it by name today. It is part of this catalog's definition-of-done (see Stop Gates).
 
 **Rules for anyone editing this template:**
 
-- **Do not rename the heading to match internal vocabulary.** It is a client-facing deck section meaning "here is where we will find your leads." The content under it is now data-point-and-source shaped, and tidying the wording to say "data points" buys nothing and breaks a client deliverable.
-- **Keep the first column headed exactly `Rank`.** This is load-bearing, not cosmetic. The script's table reader skips a row only when its first cell is literally one of `Campaign Name`, `Rank`, `Archetype`, `File`, so `Rank` is the only thing stopping the header row being read as data and printed in the client's deck as a bullet reading "Source family: Exact observable data point". Verified against the live script: renaming that column to `#` makes the header leak into the deck. Anyone pruning that skip-list in the script breaks this catalog.
-- **The deck prints columns 2 and 3 of each row** (source family, then the exact observable data point), so keep something real in both on every row. Extra columns to the right are free.
-- **Keep exactly one table under that heading.** The parser takes every pipe-shaped line in the section until the next `##`, so a second table there leaks its rows into the deck.
+- **Do not rename the heading to match internal vocabulary.** The content under it is data-point-and-source shaped, and tidying the wording to say "data points" buys nothing and breaks every skill that looks the section up by name.
 - **Never leave `Source risks` blank** to mean "no risks." Write the honest risk, or write that the market's sources are unusually clean and why.
-- If either string ever does need to change, change the regex in the script in the same commit and re-run it against a real catalog. Never one without the other.
+- If either string ever does need to change, grep `.claude/skills` for the old string and update every skill that names it in the same change. Never one without the others.
+
+The `Rank` first column and the single table under the heading are kept for readability. They were load-bearing only for the retired DOCX builder `campaign_approval_brief.ps1` (archived 2026-09-24 to `<outbound>/_archive/docx-approval-brief-2026-09-24/`), whose table reader no longer runs.
 
 ## Stop Gates
 
 - **No per-contact reveal or verification here.** If a step would reveal or verify a person's email/phone, stop — that is Layer 2, `/email-waterfall` on a live slice.
-- **Missing client-facing source section (definition-of-done).** The catalog is not done until it carries a populated `## Market Source Landscape`, a `## Ranked Source Signals` table with at least one real row, and a non-empty `- **Source risks:**` value, all byte-exact per the format warning above. These are read straight into a client-facing deck by a script that fails silently, so an absent or reworded section is REJECTED here rather than discovered by a client. **There is no route-back on this gate**: the landscape is produced in step (a) angle 4 of this very skill, so a missing one means finish the step, never wait on another skill.
+- **Missing source section (definition-of-done).** The catalog is not done until it carries a populated `## Market Source Landscape`, a `## Ranked Source Signals` table with at least one real row, and a non-empty `- **Source risks:**` value, all byte-exact per the format warning above. `/campaign-strategy` and `/lead-source-strategy` look the source section up by name and `/cold-email-flow-audit` marks a catalog without it stale, so an absent or reworded section is REJECTED here rather than discovered downstream. **There is no route-back on this gate**: the landscape is produced in step (a) angle 4 of this very skill, so a missing one means finish the step, never wait on another skill.
 - **Missing offer research (new-offer path).** If `offer-intelligence.md` does not exist on a new-offer path, the brainstorm would ignore the richest market/ICP evidence — route back to `/offer-intelligence` discovery mode before cataloging. On an evidence-backed existing-offer path, read the latest `offer-validations/*.md` brief instead.
 - **Brainstorm spend over ceiling.** The brainstorm itself carries no metered AI spend (no-AI-API rule, operator directive 2026-09-22). If it triggers a paid data-vendor call whose `/api-cost-governance` estimate meets or exceeds `run_state.spend_ceiling_usd`, stop and confirm.
 - **No offer lock.** If no offer set is locked (neither `offer.lead_magnet` / CTA direction nor any `offer.segments` entry), `campaign_value` cannot be scored — route back to `/lead-magnet-brainstorm` / `/offer-intelligence` first.
@@ -434,7 +430,7 @@ Run `/tam-build`. It collects the catalog across the broad marketable universe, 
 
 - `/cold-email-kickoff` - invokes this skill at Step 3.3 (after offer lock, before TAM build)
 - `/lead-source-strategy` - Lead Source Plan Mode, which runs much later (after `/campaign-strategy` and campaign selection) and owns the per-campaign source path plus the per-slice provenance fields. It is not an input to this skill and this skill does not wait on it
-- `/campaign-approval-brief` - builds the client-facing deck; reads `## Ranked Source Signals` and `- **Source risks:**` out of this skill's catalog (see the format warning in Output)
+- `/campaign-approval-brief` - builds the client-facing deck and lists this catalog among its source files, but its pre-flight requires neither `## Ranked Source Signals` nor `- **Source risks:**` (the deck's source slides come from each campaign's `lead-source-plan.md`)
 - `/lead-list-tech-stack-research` - obtainability backbone (tool-fit map, Layer-1/Layer-2 cost split)
 - `/stack-setup` - fills `stack-contract.yaml`; obtainability cannot be judged against an empty contract
 - `/ai-model-routing` - routes the brainstorm on Claude Code alone (`/deep-research` primary, WebSearch/WebFetch gap-fill, sub-agent crunch); records `ai_*_provider` provenance

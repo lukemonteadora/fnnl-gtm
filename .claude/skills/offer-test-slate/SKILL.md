@@ -61,7 +61,7 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the operator's default), proceed without pausing: author and render the slate, record it, and continue the flow. Claude never sends the deck to the client. The operator sends it, and records the send date and any client response (see State fields). Stop only for the policy's hard-stops.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (opt-in per client; the default is `review_gates`), proceed without pausing: author and render the slate, record it, and continue the flow. Claude never sends the deck to the client. The operator sends it, and records the send date and any client response (see State fields). Stop only for the policy's hard-stops.
 
 `run_state.offer_slate_approval` decides whether the flow waits for the client:
 
