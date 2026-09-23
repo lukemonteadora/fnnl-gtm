@@ -151,14 +151,16 @@ profiles/<business-slug>/suppression-list.csv
 | Column | Meaning |
 |---|---|
 | `email` | primary match key |
-| `company_domain` | domain-level match (used for `negative_hostile`: suppress the whole domain) |
+| `company_domain` | domain-level match (used for `negative_hostile` and for company-level rows: suppress the whole domain) |
 | `linkedin_url` | person match when email is absent |
 | `company_name` | fuzzy fallback match |
-| `reason` | `unsubscribe` / `negative_notfit` / `negative_hostile` / `bounce` / `manual` |
-| `source_campaign` | campaign slug that produced the suppression |
+| `reason` | `unsubscribe` / `negative_notfit` / `negative_hostile` / `bounce` / `client_blocklist` / `manual` |
+| `source_campaign` | campaign slug that produced the suppression (`context-sweep` for a blocklist the client context sweep found; `pipeline-sheet` for a contact the client's pipeline sheet shows as already booked) |
 | `date_added` | `YYYY-MM-DD` |
 
-If the file does not exist yet, treat it as empty (it is created on first write by the reply-scoring skills). Match on `email` first, then `linkedin_url`, then `company_domain` (the whole domain when the reason is `negative_hostile`), then `company_name` fuzzy. Drop every match **before** spending on enrichment or verification. Never pay to enrich someone you cannot contact.
+`client_blocklist` (added 2026-09-24) marks a do-not-contact list the client or the team supplied (existing customers, current clients, competitors, partners, deals already in their pipeline), wherever it was found. The client context sweep (`client-context-sweep.md`) writes those rows at once, because suppression can only narrow who gets emailed. A company row carries a resolved `company_domain` and leaves `email` and `linkedin_url` blank, so it suppresses the whole domain; it keeps `company_name` too. A blocklisted name the sweep could not resolve to a domain can match only on the `company_name` fuzzy fallback, so it is counted in the `context_sweep:` block's `unresolved_blocklist_names` until its domain is found, and the upload stops while that count is above zero (`/cold-email-kickoff` Step 6). Contacts already booked, taken from the client's pipeline sheet when one is recorded, are person rows with `reason: manual` and `source_campaign: pipeline-sheet`, refreshed append-only before `/lead-scoring` and again before upload. Never remove a `client_blocklist` or `pipeline-sheet` row without the operator.
+
+If the file does not exist yet, treat it as empty (it is created on first write by the reply-scoring skills or the client context sweep). Match on `email` first, then `linkedin_url`, then `company_domain`, then `company_name` fuzzy. A person-level row (it carries an `email` or a `linkedin_url`) suppresses only that person, never their colleagues. A company-level row (no `email`, no `linkedin_url`) suppresses the whole company domain, and so does any `negative_hostile` row. `scripts/lead_score.py` and `scripts/list_qa.py` both apply this domain rule. Drop every match **before** spending on enrichment or verification. Never pay to enrich someone you cannot contact.
 
 ## Verification Doctrine. HARD RULE (operator standard, updated 2026-06-16)
 

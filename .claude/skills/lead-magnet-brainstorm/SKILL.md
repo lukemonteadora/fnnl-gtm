@@ -66,6 +66,8 @@ Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURR
 
 If `client-profile.yaml`, an onboarding form, call notes, or the operator includes a client-suggested lead magnet, treat it as Candidate A. Do not confirm it as the answer.
 
+An offer or lead magnet the client suggested in a meeting or in Slack counts as a client suggestion under this rule, exactly like one in call notes. At the read-state step, right after the activity log's CURRENT STATE, read `profiles/<business-slug>/client-intel.md`: Needs attention and Open items in full, plus Recent activity tagged `offer`. A suggestion found there is a hypothesis: it never silently overwrites a locked offer or an operator-confirmed value, and a conflict goes to the operator (under `auto_execute`, it stops this step and asks). A missing feed, or a `last_run_at` in `profiles/_intel/state.json` older than 2 days, is a one-line flag at the top of the report, never a blocker; offer `/client-intel-sync <client>` for a fresh pull. Protocol: `client-intel-feed.md`.
+
 Always generate at least 3 additional candidates before scoring, spread across Aaron's three buckets (Generate Candidates below). The client suggestion may win, but it must beat the alternatives on the same rubric and pass the same gates.
 
 ## AI/API Routing

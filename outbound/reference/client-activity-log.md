@@ -16,6 +16,11 @@ from the template below.
 
 1. **READ FIRST.** Before doing anything for a client, open `profiles/<client>/activity-log.md` and read the
    **CURRENT STATE** block (top). That tells you where things stand so you never redo work or lose the thread.
+   Then, when it exists, read **`profiles/<client>/client-intel.md`**: its *Needs attention* and *Open items*
+   sections carry what was said about the client in meetings and Slack since the work was last touched (the on-demand
+   `/client-intel-sync` feed, protocol `client-intel-feed.md`). The activity log says where the work stands; the
+   feed says what the client and the team have said since. A missing or stale feed is a one-line flag, never a
+   blocker. A feed item that conflicts with a locked decision is raised with the operator, never silently applied.
 2. **WRITE AFTER.** After any material step (something **newly built, updated, confirmed-already-exists, left pending,
    blocked, completed, or cancelled**), do both:
    - **Append** a one-line entry to the top of the `LOG` section (newest first).
@@ -31,7 +36,9 @@ made a decision, finished a workstream. Skip trivia (reading a file, a single se
 ```
 
 - **AREA**: the skill or workstream, e.g. `infra`, `icp`, `lead-source`, `offer`, `lead-magnet`, `copy`, `campaign`,
-  `list-qa`, `tracker`, `deliverability`.
+  `list-qa`, `tracker`, `deliverability`, `context-sweep` (the first-step onboarding sweep of every client-context
+  source, `client-context-sweep.md`), `slack-context` (the client Slack check inside it, `client-slack-check.md`),
+  `client-intel` (the on-demand meeting and Slack feed written by `/client-intel-sync`, `client-intel-feed.md`).
 - **STATUS** (fixed vocab): `CREATED` · `UPDATED` · `EXISTS` (was already there, no action needed) · `PENDING`
   (started, not finished / time-gated) · `BLOCKED` (needs something, say what) · `DONE` (workstream complete) ·
   `CANCELLED` · `NOTE` (decision/observation).
@@ -53,6 +60,8 @@ made a decision, finished a workstream. Skip trivia (reading a file, a single se
   - Offer / lead magnet: <status>
   - Copy / sequences: <status>
   - Campaigns (on the locked sending platform): <status>
+  - Context sweep: <k>/7 sources read · <blocked core sources, or "none"> · context-sweep.md
+  - Client intel (meetings + Slack): synced <date> · <k> need attention · <m> open items · client-intel.md
 - **Key refs:** <profile yaml, infra-setup-state.md, tracker link, workspace ids>
 
 ## 📜 LOG  (newest first)

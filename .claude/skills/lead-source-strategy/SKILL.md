@@ -68,6 +68,7 @@ Read:
 - `profiles/<business-slug>/client-profile.yaml`
 - Client website URL, if available
 - onboarding form responses or call notes, if available
+- `profiles/<business-slug>/client-intel.md` (the client intel feed, read right after the activity log's CURRENT STATE): Needs attention and Open items in full, plus Recent activity tagged `list` or `icp`, for exclusions, DNC (do-not-contact) lists, and segments the client asked to add or drop. A meeting or Slack item is a hypothesis: it never silently overwrites an operator-confirmed value or a locked decision, and a conflict goes to the operator (under `auto_execute`, a conflict touching offer, list, copy or launch stops this step and asks). A missing feed, or a `last_run_at` in `profiles/_intel/state.json` older than 2 days, is a one-line flag at the top of the plan, never a blocker; offer `/client-intel-sync <client>` for a fresh pull. Protocol: `client-intel-feed.md`.
 - any source preferences or blocked sources in `client-profile.yaml`
 - target geography fields from `client-profile.yaml`, including countries, states, regions, cities, and excluded markets
 - any capability, proof, delivery, legal, or compliance constraints from the profile

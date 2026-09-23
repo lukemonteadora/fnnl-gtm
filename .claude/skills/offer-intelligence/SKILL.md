@@ -82,7 +82,8 @@ This skill runs at `pass_depth = deep` on the single research path in `/ai-model
 - `profiles/<business-slug>/slack-context.md`, when the client Slack check (`client-slack-check.md`) found anything: what the client and the team said in Slack about the buyers, won and lost deals, competitors and objections, plus any call-recording links. A recording or transcript linked there goes through the First-Party Call Vector like any other recording. A Slack message itself is client-stated, the same class as `buyer_pain_hypothesis`: never tag it `first_party_call`
 - Client website URL
 - Competitor names or URLs - ask if not already in the profile. Target 5 to 10, see the sample-size floor in Vector 1
-- **Research that already exists** - the `research_artifacts:` block in `client-profile.yaml`, everything in `profiles/<business-slug>/_research/`, an older `offer-intelligence.md`, `offer-validations/`, and any older research folder kept in another shape (for example `research/`, `_research-raw/` or `first-party-calls/`). Step 0 reads these first so no research is repeated
+- **Research that already exists** - the `research_artifacts:` block in `client-profile.yaml`, everything in `profiles/<business-slug>/_research/`, an older `offer-intelligence.md`, `offer-validations/`, `context-sweep.md` (what onboarding's client context sweep found in Slack channels and DMs, email, Drive, the calendar, Notion and local files: its Resources Found are research that already exists, and its Constraints & Instructions register bounds every offer; if it is missing, run the sweep per `client-context-sweep.md` before any new research), and any older research folder kept in another shape (for example `research/`, `_research-raw/` or `first-party-calls/`). Step 0 reads these first so no research is repeated
+- **The client intel feed**: `profiles/<business-slug>/client-intel.md` and the meeting recaps it links. Step 0 reads it too, before any new research: Needs attention and Open items in full, plus Recent activity tagged `offer` or `icp`, and the meeting notes and feedback items. What the client or the team said in a meeting or in Slack is client-stated, the same class as `slack-context.md` above (never `first_party_call`, which only an actual recording or transcript of a buyer call earns), and it becomes evidence only as ledger rows written the normal way (`market-evidence-standard.md`), never lifted straight into `evidence.csv`. It is a hypothesis: it never silently overwrites an operator-confirmed value or a locked decision, and a conflict goes to the operator (under `auto_execute`, a conflict touching offer, list, copy or launch stops this step and asks). A missing feed, or one that is stale by the rule in `client-intel-feed.md`, is a one-line flag at the top of the report, never a blocker; offer `/client-intel-sync <client>` for a fresh pull. Protocol: `client-intel-feed.md`
 
 This mode has no list-side or data-side prerequisite of any kind. Proceed from the client profile, the client website, the client's own call recordings, and public buyer voice. Do not route back to `/lead-source-strategy` or `/data-point-discovery` to satisfy this mode: both run after the offer locks.
 
@@ -92,7 +93,7 @@ This mode has no list-side or data-side prerequisite of any kind. Proceed from t
 
 **Step 0 - Research scope: reuse what exists, never redo it**
 
-Before any new research, read what the client already has (the "Research that already exists" input above) and decide the scope of this run:
+Before any new research, read what the client already has (the "Research that already exists" input above, `context-sweep.md` included, plus the client intel feed) and decide the scope of this run:
 
 | Situation | Scope | Run folder |
 |---|---|---|

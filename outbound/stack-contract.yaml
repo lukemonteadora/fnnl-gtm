@@ -173,6 +173,18 @@ approved_stack:
     (operator directive 2026-09-22), together with those three slots, whose
     jobs Claude Code now does natively. Its research is kept as history in
     those slots' notes.
+  context_sources_note: >
+    Operator ruling 2026-09-24: Slack, email, the calendar, Drive and docs,
+    Notion and notetaker recap emails are READ-ONLY CLIENT-CONTEXT SOURCES,
+    not stack tools. The client context sweep
+    (outbound/reference/client-context-sweep.md) and the client intel feed
+    (/client-intel-sync) read whatever of these connectors a session actually
+    has, and name the account searched every time. They fill no slot in this
+    contract, are never credentialed or spent on, and need no
+    approved_exceptions entry, so the six-tools rule above never blocks the
+    sweep or the feed. No notetaker API is keyed: meeting recaps are read as
+    recap emails. Slack was ruled the same way on 2026-09-22
+    (outbound/reference/client-slack-check.md section 1).
 
 # =============================================================================
 # 1. SENDING INFRASTRUCTURE

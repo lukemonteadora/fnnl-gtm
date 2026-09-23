@@ -4,6 +4,8 @@
 
 **The rule in one line:** always check, never silently skip, never block. If Slack can be read, read it and store the findings. If it can't, log the gap loudly, keep onboarding moving, and retry at the next resume.
 
+**Since 2026-09-24 this is source 1 of a wider sweep.** The client context sweep (`client-context-sweep.md`, HARD RULE) runs first at every onboarding. Beyond these channels it also searches Slack DMs and group DMs (a targeted search, never a whole DM history), email, Drive and shared docs, the calendar, local files and Notion, applies any blocklist to `suppression-list.csv` at once, and holds the draft upload while a core source is blocked. This file stays the detailed procedure for the Slack channel read inside it, and the sweep's own rules (the cross-agency guard, the gates, the `context_sweep:` block) live there.
+
 ---
 
 ## 1. What Slack is here, and what it is not
@@ -17,10 +19,14 @@
 | Where | What happens |
 |---|---|
 | `/client-intake-form` Step 1, `/icp-onboarding` pre-fill pass, `/cold-email-kickoff` Step 1 pre-fill pass | Whichever runs first for a client does the full check (sections 3 to 6). The others read `client_comms.slack` and `slack-context.md` and do not repeat the search. |
-| `/continue-client` Step 2 | If `client_comms.slack.status` is missing, `not_checked` or `unavailable`: run the full check. If channels were already found: read only the messages newer than `read_through` in those known channels (no new search), and append what changed. |
+| `/continue-client` Step 2 | If `client_comms.slack.status` is missing, `not_checked` or `unavailable`: run the full check. If channels were already found: read only the messages newer than `read_through` in those known channels (no new search), and append what changed. Skip even that delta read when the client intel feed is fresh (see below). |
 | Operator asks ("check Slack for <client>") | Full check, standalone. |
 
-A check already recorded as `harvested`, `none_found` or `operator_says_none` is not repeated at onboarding. It is re-run only on an operator request, or when the operator names a channel the check missed.
+**It runs first at onboarding.** The check is part of the context sweep's first step (`client-context-sweep.md`), so it runs before the website scrape and before any question is asked. What it finds is pre-fill for everything after it.
+
+A check already recorded as `harvested`, `none_found`, `operator_says_none` or `waived_by_operator` is not repeated at onboarding. It is re-run only on an operator request, or when the operator names a channel the check missed.
+
+**Skip the re-read when the client intel feed is fresh.** `/client-intel-sync` (run on demand, never scheduled) keeps a feed of what was said about each client since onboarding, in `profiles/<slug>/client-intel.md` (protocol `client-intel-feed.md`). When the feed's last successful Slack pass (`cursors.slack_checked_at` in `profiles/_intel/state.json`) is under 2 days old and the client's channels are in the feed's roster, a resume reads that feed instead of re-reading the channels. The full check in this file is still the onboarding baseline for a new client, because the feed only covers a short recent window at its first run.
 
 ## 3. Step 1: find the channels
 
@@ -35,6 +41,8 @@ A check already recorded as `harvested`, `none_found` or `operator_says_none` is
 ## 4. Step 2: read
 
 - Read the **full history** of each confirmed channel, thread replies included, plus pinned items, bookmarks and canvases. For a `mention` hit, read the whole thread around the mention, not only the matching message.
+- **A DM or group-DM hit (`dm_group`) is never read whole.** Read only the messages that name the client and the thread around each one, the same targeted rule as the sweep's DM search (source 2 in `client-context-sweep.md`). A DM or channel about keys, passwords or credentials is never read or recorded.
+- **FNNL clients only.** Keep only what is about this client. A message or thread about any other company is dropped, never stored or summarized, and the count of dropped items goes in the report (the cross-agency guard in `client-context-sweep.md`).
 - **Long history:** split it into date ranges and fan the ranges out across sub-agents per `/personalization-subagent-pattern` (one range per agent, one output file per agent), then merge and de-duplicate in the session.
 - **Shared files and links:** record each one's title, link, date and what it appears to be. Open it only through a read tool already connected in the session (for example a connected docs connector). Never download an attachment without the operator's explicit OK. A link that cannot be opened is listed as unreadable, with the reason, so it can be chased.
 - **Read only.** The check never posts, replies, reacts, creates a channel, invites anyone or sends a DM. Anything that should go to the client is drafted for the operator to send.
@@ -48,6 +56,10 @@ Map every finding to the same field groups the onboarding skills collect (the sh
 - **People:** the client-side contacts and their roles (who approves, who owns the list) and the FNNL-side owner.
 - **Open loops:** anything promised or requested and never delivered (for example a list referenced but never attached).
 - **Sending constraints:** sender names, domains, compliance limits, banned words, markets or accounts that must not be touched.
+- **Lead-quality feedback on booked meetings:** which meetings the client said were good or bad, and why. It is the best ICP evidence there is, and it also feeds `/market-evidence feedback` once the client is live.
+- **The billing and booked-meeting rule as discussed:** what counts as a billable booked meeting (for example a qualified meeting that actually takes place), any no-show or dispute window, and any price per meeting mentioned. Record it as discussed, with date and author; the operator confirms it before it changes the profile.
+- **Who handles interested replies:** the person the client or the team named for calling or answering interested replies. It is a candidate for `run_state.speed_to_lead_owner` only, never set without the operator (Gate D in `/cold-email-kickoff`).
+- **Blocklists:** a do-not-contact or exclusion list shared in Slack is written to `suppression-list.csv` at once by the context sweep (`reason: client_blocklist`), because suppression only narrows who is emailed. See "Blocklists" in `client-context-sweep.md`.
 
 **Treatment rules (these hold in every execution mode):**
 
@@ -57,6 +69,8 @@ Map every finding to the same field groups the onboarding skills collect (the sh
 - **Secrets never leave Slack.** If a password, API key, token or login appears, never copy it into any file, the profile, the log or chat. Record only "credential shared in #<channel> on <date>" under Flags, and tell the operator to move it into `outbound/scripts/.env` themselves.
 - **Personal data:** keep the business-contact details the work needs (name, role, company). Leave unrelated personal chatter out.
 - **Conflicts are surfaced, never resolved silently.** When Slack disagrees with the intake form or the profile, write both values with their dates under Conflicts. The newest dated statement is a lead, not a verdict: the operator confirms before the profile changes.
+- **Precedence, in order:** an operator-confirmed profile value, then the intake form, then the newest of the call notes and Slack (any disagreement flagged), then inference from the website. Slack never silently overwrites an operator-confirmed value. The wider sweep extends the third tier to email, Drive and the client intel feed (`client-context-sweep.md`).
+- **Slack content never goes into a skill, a reference doc or a commit.** It is written only into the client's gitignored profile folder (`slack-context.md`, the `client_comms.slack` block, the pre-fill, the activity log), and never pasted into an outside service.
 
 ## 6. Step 4: store
 
@@ -102,14 +116,17 @@ Map every finding to the same field groups the onboarding skills collect (the sh
    ```yaml
    client_comms:
      slack:
-       status: not_checked      # not_checked | harvested | none_found | unavailable | operator_says_none
+       status: not_checked      # not_checked | harvested | none_found | unavailable | operator_says_none | waived_by_operator
        workspace: null          # the workspace actually searched; a none_found only holds for this workspace
        channels: []             # [{name, id, kind: shared|internal|dm_group|mention, confirmed: true|false}]
        search_terms: []         # every term searched, so a none_found can be audited
        checked_on: null         # YYYY-MM-DD of the last check
        read_through: null       # timestamp of the newest message read; the next read starts after it
        notes_file: null         # slack-context.md once written
+       waived_note: null        # only with waived_by_operator: the operator's words and the date
    ```
+
+   The context sweep reads this block as its source 1 and mirrors it into `context_sweep.sources.slack_channels` (the mapping is in `client-context-sweep.md`).
 
 3. **Pre-fill.** Fold the findings into the calling skill's pre-fill map with a source label such as `source: slack (#<channel>, <date>)`. They are confirm-or-correct suggestions, exactly like website-scrape pre-fills.
 
@@ -123,11 +140,12 @@ Map every finding to the same field groups the onboarding skills collect (the sh
 - **Connector absent or not authorized:** set `status: unavailable`. Tell the operator in one line that the Slack connector needs authorizing (claude.ai connector settings, or `/mcp` in an interactive terminal), and offer the paste route: the operator can paste channel text or an export, and it is processed through sections 5 and 6 exactly the same way. Onboarding continues. `/continue-client` retries the check on the next resume.
 - **Wrong workspace connected:** also `unavailable`, with the workspace that was connected named, and the same paste offer.
 - **Never mark `none_found` when the search did not actually run,** and never for a workspace other than the one searched.
+- **`operator_says_none` and `waived_by_operator` are different answers.** `operator_says_none` is a fact from the operator: this client has no Slack channel to find. `waived_by_operator` is a decision by the operator to skip the check for this client even though Slack was not read (for example because the connector can't be authorized), recorded with the operator's note and the date in `waived_note`. Only the operator can waive the check, in chat. Never self-waive, and `auto_execute` never waives anything. Both statuses end the retries; neither counts as `none_found`.
 - **Put the gap at the top of the run's report,** not at the bottom. A client whose Slack was never read is a known blind spot, and the operator should see it first.
 
 ## 8. What "done" means
 
-The check is done when `client_comms.slack.status` is `harvested`, `none_found` or `operator_says_none`, with the workspace and search terms recorded, and the activity log carries the line. `unavailable` is a logged, flagged gap, not done. Report the evidence, not only the verdict: "Slack: workspace <X>, searched [<terms>], 2 channels, 140 messages read, notes in slack-context.md."
+The check is done when `client_comms.slack.status` is `harvested`, `none_found`, `operator_says_none` or `waived_by_operator` (the last with the operator's note), with the workspace and search terms recorded, and the activity log carries the line. `unavailable` is a logged, flagged gap, not done. It never holds the research, but in the context sweep it is a core source still `blocked`, so it holds the draft upload in `/cold-email-kickoff` Step 6 until Slack is read or the operator waives the check. Report the evidence, not only the verdict: "Slack: workspace <X>, searched [<terms>], 2 channels, 140 messages read, notes in slack-context.md."
 
 ## 9. Who reads the output
 
@@ -136,3 +154,4 @@ The check is done when `client_comms.slack.status` is `harvested`, `none_found` 
 - `/offer-intelligence`: buyer language and recording links (client-stated class, never `first_party_call`).
 - `/social-proof-bank`: named customers, results, case studies and triggers mentioned in Slack.
 - `/continue-client`: the delta read on resume, and any new decision, veto or exclusion that changes a locked field (surfaced to the operator, never applied silently).
+- The client context sweep (`client-context-sweep.md`): this check is its source 1, summarized in `context-sweep.md` with a link to `slack-context.md`.

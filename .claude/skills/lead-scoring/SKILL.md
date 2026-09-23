@@ -17,7 +17,7 @@ Read:
 - `profiles/<business-slug>/data-point-catalog.md`
 - `profiles/<business-slug>/tam/tam.csv`
 - `profiles/<business-slug>/tam/contacts.csv`
-- `profiles/<business-slug>/suppression-list.csv`, when present
+- `profiles/<business-slug>/suppression-list.csv`, when present. **First refresh its booked-contact rows** when the client's `context_sweep:` block records a pipeline sheet (`sources.drive.pipeline_sheet` with a link: the booked-meetings log kept for this client; open it from that link or the client directory row's link, never by a title search alone, per `client-context-sweep.md` source 4). Add everyone it shows as booked as a person row (`reason: manual`, `source_campaign: pipeline-sheet`, today's `date_added`), append-only and de-duplicated on email and LinkedIn URL, so anyone already booked is dropped, then update `booked_pipeline.rows_in_suppression` and `booked_pipeline.last_refreshed_at` in the same block. Write the `linkedin_url` wherever the sheet has one: `contacts.csv` usually carries no revealed email at this step, so only a LinkedIn match can drop a booked person here. An email-only row can match only once the email is revealed, so `scripts/list_qa.py` (run by `/list-quality-scorecard` before upload) catches it. Contact details go only into `suppression-list.csv`, never into the scoring report. Blocking a booked contact's whole company is a targeting question for the operator, not a row written here. With no pipeline sheet recorded there is nothing to refresh. A sheet that cannot be read is a flag in the scoring report, not a stop.
 - The locked offer and confirmed segment definitions
 
 Write:

@@ -27,7 +27,8 @@ Here `<outbound>` is the root of this skill library - resolve it to wherever the
 
 - A raw transcript: a discovery call, sales call, onboarding / kickoff call, or "go for a walk and talk" voice memo. Accepts pasted text or Fathom / Otter / Zoom / Teams / Granola exports (full, partial, or fragmented).
 - Optional: the business slug / name, if known. If it is not stated, infer it from the company named in the transcript, or ask once.
-- **Not Slack.** Slack channels and pasted Slack threads are read by the client Slack check (`client-slack-check.md`), which writes `slack-context.md` in this same field-map shape, so do not re-summarize them here. A call recording or transcript that check finds linked in Slack does come here.
+- **Not Slack, email or shared files.** Slack channels and pasted Slack threads are read by the client Slack check (`client-slack-check.md`), which writes `slack-context.md` in this same field-map shape, and the rest of the client context sweep (`client-context-sweep.md`: Slack DMs, email, the calendar, docs and local files) writes `context-sweep.md` the same way, so do not re-summarize them here. A call recording or transcript either one finds (linked in Slack, attached to an email, sitting in a Drive folder) does come here.
+- A client meeting found by the client intel feed. `/client-intel-sync` (run on demand) files notetaker recap emails under `profiles/<business-slug>/_intel/meetings/` and lists them in `client-intel.md` (protocol: `client-intel-feed.md`). A recap is the notetaker's summary, not a transcript, so it is context here, never a substitute. When the feed shows an onboarding or discovery call and the full transcript is reachable, run the transcript through this skill to write the onboarding notes.
 
 Works inside Claude Code, with no API spend for the summarization. For a very long transcript, split it into ordered chunks and fan them out across Claude Code sub-agents per `/personalization-subagent-pattern` (one chunk per agent, one output file per agent), then merge and de-duplicate the findings in the session; the output schema below is unchanged. No outside AI provider is used (no-AI-API rule, operator directive 2026-09-22).
 
@@ -120,5 +121,7 @@ Hand the notes to onboarding:
 - `/icp-onboarding` - consumes these notes as pre-fill; this skill answers many of its interview questions in advance
 - `/client-intake-form` - same; folds these notes into its pre-fill map
 - `/personalization-subagent-pattern` - the sub-agent fan-out (disjoint chunks, merge, dedupe) for very long transcripts
-- `client-slack-check.md` - the Slack sibling of this skill: reads the client's Slack channels and writes `slack-context.md` in the same field-map shape
+- `client-slack-check.md` - the Slack sibling of this skill: reads the client's Slack channels and writes `slack-context.md` in the same field-map shape, so read both together and flag where a call and the channel disagree
+- `client-context-sweep.md` - the mandatory first onboarding step that runs the Slack check plus Slack DMs, email, the calendar, docs and local files, and hands any call transcript it finds to this skill
+- `/client-intel-sync` - files meeting recaps from notetaker emails into `client-intel.md` on demand (a recap is a summary, not a transcript); when the feed shows an onboarding or discovery call and the full transcript is reachable, this skill turns it into onboarding notes
 - `anthropic-skills:ai-meeting-summarizer` - the personal, action-item version; use that for your own internal meetings, this one for client onboarding

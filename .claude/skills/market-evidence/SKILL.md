@@ -48,7 +48,7 @@ Before client work, **read** `profiles/<client>/activity-log.md` (its CURRENT ST
 | `profiles/<slug>/_research/evidence.csv`, `pain-clusters.md`, `competitors-and-ads.md`, `market-sample.md` | `client-profile.yaml`: `research_artifacts:` and `run_state.status.research_stage` |
 | `profiles/<slug>/offer-intelligence.md`, `lead-magnets.md` | `lead-magnets.md` evidence lines and `offer.validation_arms[].feedback_ids` / `feedback_summary` (feedback mode) |
 | The sending platform's reply surface (feedback mode, only once the stack contract's sending-platform slot is `live`), and reply labels in the `reply-scoring-core.md` classes when a reply-scoring pass already ran this cycle | `activity-log.md` |
-| `profiles/<slug>/client-intel.md` (feedback mode: the daily client intel feed, `client-intel-feed.md`) | Nothing: feed items reach `evidence.csv` only through `evidence_ledger.mjs ingest` |
+| `profiles/<slug>/client-intel.md` (feedback mode: the client intel feed, `client-intel-feed.md`) | Nothing: feed items reach `evidence.csv` only through `evidence_ledger.mjs ingest` |
 
 This skill makes no paid call and runs no primary research pass, so it writes no line in `scripts/api-balance-ledger.md`.
 
