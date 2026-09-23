@@ -405,7 +405,7 @@ def explicit_exclusion(row: dict[str, Any], rubric: dict[str, Any]) -> str:
 
 
 def load_suppression(path: Path | None) -> dict[str, set[str]]:
-    result = {"email": set(), "linkedin_url": set(), "hostile_domain": set()}
+    result = {"email": set(), "linkedin_url": set(), "hostile_domain": set(), "company_domain": set()}
     if path is None or not path.exists():
         return result
     _, rows = read_csv(path)
@@ -418,8 +418,13 @@ def load_suppression(path: Path | None) -> dict[str, set[str]]:
             result["email"].add(email)
         if linkedin:
             result["linkedin_url"].add(linkedin)
+        # A person-level entry never suppresses colleagues. negative_hostile blocks
+        # the whole domain, and so does a company-level entry (no email, no
+        # LinkedIn), such as a client blocklist row. Matches list_qa.py.
         if domain and reason == "negative_hostile":
             result["hostile_domain"].add(domain)
+        elif domain and not (email or linkedin):
+            result["company_domain"].add(domain)
     return result
 
 
@@ -433,6 +438,8 @@ def suppression_reason(row: dict[str, Any], suppression: dict[str, set[str]]) ->
         return "suppression:linkedin_url"
     if domain and domain in suppression["hostile_domain"]:
         return "suppression:negative_hostile_domain"
+    if domain and domain in suppression.get("company_domain", ()):
+        return "suppression:company_domain"
     return ""
 
 

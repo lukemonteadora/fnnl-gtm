@@ -1,0 +1,202 @@
+# Targeting spec template (list production)
+#
+# What this is: the one machine-readable contract that says WHO a list build may
+# target: which companies fit, which people at them fit, in what buyer priority,
+# and how many campaign-ready contacts each account needs. Every list-production
+# script reads it (title_classify.py, list_waterfall.py, list_qa.py), and the
+# 25-account QA reviews it before any Phase B spend.
+#
+# Where it lives: copy to profiles/<business-slug>/targeting-spec.yaml.
+# Who writes it: /tam-build step 0 compiles it from inputs that already exist
+# (client-profile.yaml icp_hard_filters and segments, the locked offer's
+# offer.title_stack, offer.offer_fit_disqualifiers and offer.icp_inclusion, and
+# the lead-scoring rubric's persona mappings when they exist). It never invents
+# a buyer: every family, title and exclusion traces to one of those inputs or to
+# a 25-account QA finding, recorded under compiled_from and changes.
+#
+# FIT versus TIMING. Everything under account and buyers is FIT: "should this
+# company or person ever be targeted for this offer?" Timing signals live under
+# account.timing and are priority inputs, never gates, unless a campaign sets
+# timing.required. A good-fit account with no signal is still a good-fit account.
+#
+# Buyer priority. The role tiers below ARE the buyer priority. There is one scale:
+#   exact = buyer P1, strong = buyer P2, influencer = buyer P3,
+#   adjacent = buyer P4, weak = buyer P5, unrelated or excluded = not a buyer.
+# They feed /lead-scoring's role component directly (score_role_tier). Do not
+# confuse them with priority_tier (P1 to P5), which is the composite 10-point
+# lead score tier. Buyer priority is who to reach first at an account; the
+# lead score orders the whole list.
+#
+# Matching rules for every *_patterns list: case-insensitive, whole-word, on the
+# normalized title (lowercased, punctuation stripped, "&" and "/" read as "and").
+# A pattern may be several words ("revenue operations"). Keep patterns specific:
+# a bare "operations" pattern would catch "IT Operations Manager".
+
+schema_version: 1
+client: replace-with-client-slug
+spec_version: replace-with-client-slug-targeting-v1
+status: draft            # draft | locked. Scripts refuse a draft spec unless --allow-draft is passed.
+compiled_at: null        # ISO timestamp
+compiled_from: []        # e.g. ["client-profile.yaml#icp_hard_filters", "client-profile.yaml#offer.title_stack", "25-account QA round 1"]
+changes: []              # append-only: {date, change, reason, source}. Every QA fix to this spec is logged here.
+
+# ---------------------------------------------------------------------------
+# ACCOUNT FIT (company level)
+# ---------------------------------------------------------------------------
+account:
+  geography:
+    countries_in: []       # e.g. ["United States", "Canada"]. Empty = no geography gate.
+    countries_out: []
+  headcount:
+    min: null              # e.g. 20. Inclusive. null = no floor.
+    max: null              # e.g. 499. Inclusive. null = no ceiling.
+    borderline_pct: 15     # a count within this % of a bound is "borderline": kept, flagged WARNING, cross-checked when cheap
+  industries_in: []        # plain language. Feeds the keyword stack and the fit classify, never a provider taxonomy filter.
+  industries_out: []       # named exclusion list (mirrors client-profile.yaml industries_out / hard_no_categories)
+  business_model_in: []    # e.g. ["b2b saas", "managed services"]. Empty = no gate.
+  technographics_required: []   # only when the offer truly needs a tool on site; empty = none
+  exclusions:
+    domains: []            # exact domains never to target (client itself, partners, competitors)
+    competitor_domains: []
+    existing_customer_domains: []   # or point to a file below
+    existing_customers_file: null   # profiles/<slug>/existing-customers.csv (column company_domain)
+    internal_domains: []   # the agency's and client's own domains; emails on these are always suppressed
+  timing:
+    required: []           # empty = no timing gate (the default). Only a campaign that is literally built on a signal sets this.
+    preferred: []          # signals that raise priority, never gate
+
+# ---------------------------------------------------------------------------
+# BUYER FIT (person level)
+# ---------------------------------------------------------------------------
+buyers:
+  # How many campaign-ready contacts each account needs in the active wave. The
+  # waterfall stops working an account as soon as it has this many; it promotes the
+  # next approved person only when a higher-priority person's contact waterfall is
+  # exhausted. Mirrors lead-scoring's same_wave_contact_cap (default 2).
+  contacts_per_account: 2
+  # Density ceiling for the active wave. Rows above it stay in the stagger queue, never deleted.
+  max_contacts_per_account: 2
+  # People discovery: an account counts as "target person found" once this many
+  # people pass title fit. Below it, the next people-discovery provider runs for
+  # that account only. Usually equal to contacts_per_account.
+  min_target_persons_per_account: 2
+
+  work_email_required: true
+  personal_email_policy: fail     # fail | review | allow. Applies to gmail.com, outlook.com and the other consumer domains list_qa.py knows.
+  phone_required: false           # true only when the campaign calls or the client requires phone
+  catch_all_policy: holdback      # holdback (locked doctrine: verified catch-alls wait for domain maturity) | review
+
+  # Function families: WHAT the person does. A title must match a target family
+  # (or an explicit title below) to pass. Seniority alone never passes a title.
+  function_families:
+    - id: example_function
+      name: Example Function
+      include_patterns: ["example function", "example ops"]
+      exclude_patterns: []        # titles that contain an include pattern but are not this function
+
+  # Functions that are NOT targets for this offer. A title that matches one of
+  # these and no target family fails deterministically ("Head of Engineering"
+  # when the target is Revenue Operations). title_classify.py ships a built-in
+  # list (engineering, legal, compliance, HR, finance, IT, security, product,
+  # design, data, clinical, and more); this list ADDS to it, and any built-in
+  # family whose words overlap a target family is ignored automatically.
+  non_target_functions: []        # e.g. [{id: facilities, patterns: ["facilities", "maintenance"]}]
+
+  # Seniority ladder, highest first. The built-in patterns cover the common
+  # words; add client-specific ones here. owner_founder is separate from c_level
+  # because its authority depends heavily on company size.
+  # Some words mean different levels by industry, so the classifier leaves them
+  # unplaced: "administrator" runs the practice in healthcare (Practice or
+  # Hospital Administrator) but is an IT individual contributor elsewhere.
+  # Healthcare specs add {head: ["administrator"]}. Found on the first real run
+  # (a healthcare list, 2026-09-23), where guessing it wrong failed 12 buyers.
+  seniority_patterns: {}          # optional overrides, e.g. {vp: ["svp", "evp", "avp"]}
+
+  # Acronyms mean different things by industry. title_classify.py expands the
+  # common ones (CEO, COO, CRO, CMO as chief marketing officer, CIO, VP, GM...);
+  # override any of them here, e.g. healthcare: {cmo: "chief medical officer"}.
+  acronym_overrides: {}
+
+  # Explicit titles: exact normalized-title matches that bypass family logic.
+  # Put offer.title_stack variants here when they carry no function word
+  # ("Owner", "Managing Partner") or when one variant must land in a specific tier.
+  explicit_titles:
+    exact: []
+    strong: []
+    influencer: []
+    adjacent: []
+    weak: []
+
+  # Role tiers (buyer priority). Checked in order exact -> weak; the first rule
+  # that matches wins. A rule matches when the title's function is in `functions`
+  # (or the rule lists `any_function: true`) and its seniority is in `seniority`.
+  role_tiers:
+    exact:
+      - {functions: [example_function], seniority: [c_level, vp, head]}
+    strong:
+      - {functions: [example_function], seniority: [director]}
+    influencer:
+      - {functions: [example_function], seniority: [manager]}
+    adjacent: []
+    weak: []
+
+  # A title in a target family whose seniority is detected but listed in no rule
+  # (for example an analyst, when only manager and up are targeted) fails as
+  # below_seniority. Set to "review" to send those to the AI pass instead.
+  below_seniority_action: fail      # fail | review
+
+  # Generic executives: titles with a seniority word and no function word
+  # (CEO, President, Founder, Owner, Managing Director, General Manager). Their
+  # tier depends on company size, so it is set here rather than guessed.
+  generic_executive:
+    default_tier: adjacent          # tier when no size rule matches; "review" sends them to the AI pass
+    size_rules:
+      - {headcount_max: 50, tier: exact}      # at a small company the CEO usually owns the problem
+      - {headcount_max: 200, tier: strong}
+
+  # Company-size title differences for non-generic titles, applied after the
+  # tier rules. Each entry moves a matched tier up or down inside a headcount band.
+  size_overrides: []
+  # e.g. - {headcount_min: 1000, functions: [example_function], seniority: [manager], tier: adjacent}
+
+  # Global title exclusions: these fail every title that contains them, before
+  # any other rule. Keep the list conservative ("assistant" would also kill
+  # "Assistant Vice President", a real banking title; list the exceptions under
+  # exclusion_exceptions).
+  # Remove "consultant" and "advisor" when the ICP is itself an advisory or consulting firm.
+  title_exclusions: ["intern", "internship", "student", "trainee", "apprentice", "retired", "former", "ex", "volunteer", "board member", "advisor", "adviser", "consultant", "freelance", "contractor", "part time", "seeking", "looking for", "open to work"]
+  exclusion_exceptions: []          # normalized titles that must NOT be excluded despite a match
+
+  # Authority tier (lead-scoring's authority component), derived from seniority,
+  # optionally adjusted by company size. Emitted as score_authority_tier.
+  authority_by_seniority:
+    owner_founder: ideal
+    c_level: ideal
+    vp: ideal
+    head: decision_capable
+    director: decision_capable
+    manager: influencer
+    individual: none
+  authority_size_rules: []
+  # e.g. - {headcount_min: 1000, seniority: [head, director], authority: influencer}
+
+  # Contact-level exclusions beyond titles.
+  contact_exclusions:
+    linkedin_urls: []
+    emails: []
+    name_patterns: []               # e.g. test accounts
+
+# ---------------------------------------------------------------------------
+# LIST SHAPE EXPECTATIONS (what list_qa.py compares the finished list against)
+# ---------------------------------------------------------------------------
+expectations:
+  # A share above these on the finished campaign-ready list is a CRITICAL anomaly:
+  # the offending rows are quarantined, the anomaly leads the QA report, and the
+  # cause is fixed upstream (the QA failure loop in list-production-standard.md).
+  max_share_out_of_headcount_range: 0.05
+  max_share_out_of_geography: 0.03
+  max_share_non_target_function: 0.02
+  max_share_missing_headcount: 0.25   # above this, headcount cannot be trusted as a filter: WARNING and cross-check
+  # Soft expectations (WARNING only): minimum share of the list in the top two buyer tiers.
+  min_share_exact_or_strong: 0.40
+  headcount_bands: [[1, 19], [20, 99], [100, 249], [250, 499], [500, 999], [1000, null]]

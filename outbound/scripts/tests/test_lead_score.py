@@ -255,6 +255,36 @@ class LeadScoringTests(unittest.TestCase):
         self.assertEqual("suppression:linkedin_url", rows["suppressed.example"]["exclusion_reason"])
         self.assertTrue(all(row["lead_score"] == "" for row in rows.values()))
 
+    def test_company_level_suppression_blocks_the_domain_but_person_rows_keep_colleagues(self):
+        blocked_company = contact("blocked.example", first="Bea", last="Blocked")
+        blocked_person = contact("person.example", first="Pia", last="Person")
+        colleague = contact("person.example", first="Cal", last="Colleague")
+        hostile = contact("hostile.example", first="Hal", last="Hostile")
+        clean = contact("clean.example", first="Cleo", last="Clean")
+        status, _, error, _, output, _ = self.run_score(
+            [company(domain) for domain in
+             ("blocked.example", "person.example", "hostile.example", "clean.example")],
+            [blocked_company, blocked_person, colleague, hostile, clean],
+            suppression_rows=[
+                # a client blocklist row is company-level: a domain, no email, no LinkedIn
+                {"email": "", "linkedin_url": "", "company_domain": "blocked.example", "reason": "client_blocklist"},
+                # a person-level row names the person, so it never blocks their colleagues
+                {"email": "", "linkedin_url": blocked_person["linkedin_url"], "company_domain": "person.example",
+                 "reason": "unsubscribe"},
+                {"email": "", "linkedin_url": "", "company_domain": "hostile.example", "reason": "negative_hostile"},
+            ],
+        )
+        self.assertEqual(0, status, error)
+        rows = {row["first_name"]: row for row in read_csv(output)}
+        self.assertEqual("suppression:company_domain", rows["Bea"]["exclusion_reason"])
+        self.assertEqual("suppression:linkedin_url", rows["Pia"]["exclusion_reason"])
+        self.assertEqual("suppression:negative_hostile_domain", rows["Hal"]["exclusion_reason"])
+        for name in ("Bea", "Pia", "Hal"):
+            self.assertEqual("false", rows[name]["send_eligible"], name)
+        for name in ("Cal", "Cleo"):
+            self.assertEqual("", rows[name]["exclusion_reason"], name)
+            self.assertEqual("true", rows[name]["send_eligible"], name)
+
     def test_missing_evidence_gets_zero_points_and_low_confidence(self):
         status, _, error, _, output, _ = self.run_score(
             [company("missing.example", offer="", size="", geo="")],

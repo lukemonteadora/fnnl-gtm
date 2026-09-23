@@ -23,6 +23,10 @@ FNNL Agency has not chosen its tools, so there are no balances to track. `/stack
 
 Record the class in the `Source` column when you add a provider, so the skill knows whether it can verify or only estimate. Which class a provider falls in is a property of that vendor, checked when the slot is filled.
 
+### Recording a free live re-check
+
+The free balance and health calls for each of the six tools are listed in the "Live re-check" section of `outbound/reference/provider-capability-matrix.md`. When one runs against FNNL's own account, copy the figure it returned into `Balance (USD)` with its unit and date, set `Source` to `live: <the call>`, and add the same dated reading to that section. Never type a figure that did not come back from a call. Template: `| MillionVerifier | lead_data.email_verification | MILLIONVERIFIER_API_KEY | <credits> credits (live, YYYY-MM-DD) | live: millionverifier_get_credits (free) | n/a | <what the call showed> |`
+
 ## Ledger
 
 | Provider | Capability slot | Env var | Balance (USD) | Source | Last top-up | Notes |

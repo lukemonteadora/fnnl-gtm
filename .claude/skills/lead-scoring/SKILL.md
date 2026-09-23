@@ -163,6 +163,25 @@ score_authority_reason
 score_timing_reason
 ```
 
+**The role and authority tiers come from rules first (added 2026-09-24).** Before any sub-agent pass, run:
+
+```text
+python scripts/title_classify.py \
+  --spec profiles/<business-slug>/targeting-spec.yaml \
+  --contacts profiles/<business-slug>/tam/contacts.csv \
+  --companies profiles/<business-slug>/tam/tam.csv \
+  --out profiles/<business-slug>/tam/contacts.scoring-input.csv \
+  --ambiguous-out profiles/<business-slug>/tam/_work/ambiguous-titles.csv \
+  --emit-scoring-tiers
+```
+
+- **What it writes.** `score_role_tier`, `score_authority_tier` and their reasons for every title the targeting spec's rules can decide. It judges function and seniority separately, so a target seniority at a non-target function (Head of Engineering for a RevOps offer) is `unrelated`, never a buyer. The buyer tiers it emits (exact through weak) are the targeting spec's buyer priority, P1 through P5, and they feed this component directly. `contacts.csv` is only read, never overwritten.
+- **What goes to a sub-agent.** Only the distinct titles it marks ambiguous, from the `--ambiguous-out` queue. They go to a Claude Code sub-agent pass (the Agent tool's `model` setting, never a model API: the no-AI-API rule). Title fit is a judgment on one item, so per the `/ai-model-routing` model tiers it runs on `sonnet`, and the session settles any title the sub-agent marks unsure. The verdicts merge back through the same command with `--merge-ai <verdicts.csv>` added and the scoring input as both `--contacts` and `--out`. A title shared by 100 contacts costs one verdict.
+- **Missing titles.** A blank or still-ambiguous title stays a blank tier (unknown evidence), never `unrelated`, so the blank-tier rule in Hard exclusions above keeps the row eligible.
+- **Feeding the next run.** `--emit-explicit-titles` (with `--merge-ai`) writes the verdicts as a YAML snippet for review. The reviewed snippet is copied into the spec's `explicit_titles` and logged under its `changes`, so the next build decides those titles by rule.
+- **Persona mappings.** The rubric's `persona_mappings` should mirror the spec's tiers rather than restate a second title list.
+- **Everything else is unchanged.** The market, offer, size, geography and timing tiers stay sub-agent-interpreted as before, added to the same scoring input.
+
 Use the rubric's actual input-column mapping. Common source aliases include:
 
 - Company size: `headcount`, `headcount_range`, `headcount_band`, revenue, or ARR bands.
@@ -265,7 +284,7 @@ A tier of `none`, `unsupported`, or `unrelated` counts as present evidence when 
 Use a stratified sample that includes exact fits, adjacent fits, weak fits, missing-data rows, hard exclusions, wrong companies, and wrong titles.
 
 - Under `review_gates`, show the component points and reasons for two 10-row rounds. Lock only after two consecutive rounds need no correction or the operator explicitly locks it.
-- Under `auto_execute`, run the same sample checks and rubric validation. Auto-lock only when all schema and invariant checks pass. Stop on an invalid rubric, unsupported tier, missing company join, or unexplained exclusion.
+- Under `auto_execute`, run the same sample checks and rubric validation. Auto-lock only when all schema and invariant checks pass AND the independent rubric-lock check passes: a fresh Claude Code sub-agent that never saw the tier reasons judges the same stratified 20 rows and agrees with the role tier on at least 17 of them (added 2026-09-24: schema checks alone could lock a rubric that ranks the wrong people first). This is a check on the rubric, separate from the 20-row agreement check `/ai-model-routing` runs before moving a job down a model tier. On disagreement, fix the targeting spec or the rubric mapping and re-run, at most two rounds. Still under 17 of 20 after the second round means no auto-lock: `scoring_stage` stays `rubric_ready`, and the scoring report leads with the disagreements for the operator, because a wrong rubric would order the whole first wave's reveal spend. Stop on an invalid rubric, unsupported tier, missing company join, or unexplained exclusion.
 
 ## Refresh
 

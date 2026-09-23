@@ -1,6 +1,6 @@
 ---
 name: list-quality-scorecard
-description: Pre-send quality scorecard for a scored and verified lead list. Row-level first, it drops or quarantines failing rows (suppressed, duplicate, broken-name, bad-title, domain-mismatch) and grades the remainder, and it blocks the whole list only on a systemic failure (unverified rows, SERP-sourced or pattern-named contacts, exclusion or scoring leakage). Reports the P1 through P5 mix without penalizing adjacent lower-score leads. Run after /email-waterfall and before upload.
+description: Pre-send quality gate for a scored and verified lead list, run by scripts/list_qa.py. Row-level first, it judges every row on six dimensions (ICP fit, title and function fit, seniority and buyer fit, company and domain match, contact quality, suppression and risk), rejects, reviews, holds back or staggers the failures with a reason code, and grades the remainder on the nine-dimension scorecard. It also checks the shape of the list against the targeting spec (headcount, geography and title-mix anomalies, attributed to the source that caused them) and draws a stratified sample for an independent reviewer. It blocks the whole list only on a systemic failure (unverified rows, SERP-sourced or pattern-named contacts, exclusion or scoring leakage). Reports the P1 through P5 mix without penalizing adjacent lower-score leads. Run after /email-waterfall and before copy or upload.
 ---
 
 # List Quality Scorecard
@@ -63,15 +63,33 @@ A markdown scorecard saved to `profiles/<business-slug>/campaigns/<campaign-slug
 - **Pre-send checklist**
 - **P1 through P5 distribution**, median score, and low-confidence count
 
-It also rewrites the send file. The clean remainder is written back as `leads.verified.csv` (the file every downstream gate and the upload read), after the pre-scorecard file is kept as `leads.verified.pre-scorecard.csv` so every removal stays auditable. Quarantined rows go to `leads.review.csv` with `review_reason = scorecard_<check>` (add the `review_reason` column when the file does not carry one yet). Same-wave overflow rows go back to the stagger queue in the scored source file. Dropped rows (suppression matches, duplicate emails) leave the send file but stay in the pre-scorecard copy, so nothing is deleted. The list workbench's send-list table still holds the pre-scorecard rows, because a webhook push appends and cannot remove, so the scorecard states the removed count and the operator filters those rows there; the upload reads the local file either way.
+It also rewrites the send file. The clean remainder is written back as `leads.verified.csv` (the file every downstream gate and the upload read), after the pre-scorecard file is kept as `leads.verified.pre-scorecard.csv` so every removal stays auditable. Quarantined rows go to `leads.review.csv` with `review_reason = scorecard_<check>` (add the `review_reason` column when the file does not carry one yet). Same-wave overflow rows go back to the stagger queue in the scored source file. Dropped rows (suppression matches, duplicate emails) leave the send file but stay in the pre-scorecard copy, so nothing is deleted. The list workbench's send-list table gets the send file only after this QA (`list-production-standard.md` section 13), because a webhook push appends and cannot remove rows. If a table was pushed before QA anyway (an older run), the scorecard states the removed count and the operator filters those rows there; the upload reads the local file either way.
 
 ## AI/API Routing
 
 Grading this list runs in the Claude Code session (no-AI-API rule, operator directive 2026-09-22); no outside AI provider or API key is used. The scorecard math and letter-grade rules in this file remain the source of truth, and everything countable (fill rates, duplicates, verification status, score fields) is computed in plain code, not judged. ICP-fit and title-relevance judgment that needs reasoning is done by Claude in-session; on a large list, it and any free-text normalization of titles and industries fan out across Claude Code sub-agents per `/personalization-subagent-pattern` (disjoint row batches, one output file per agent, post-merge dedup). Record the validator in `ai_analysis_provider` (`claude-native`, or `claude-native (sub-agents)`) and the outcome in `qa_status`. Dimension 5 keys off the canonical `evidence_url` and `source_confidence` fields: keep those names.
 
-## Usage
+## Usage (scripts/list_qa.py, added 2026-09-24)
 
-Create the scorecard by reading the CSV directly or using the user's available spreadsheet/script tooling. Optional `client-profile.yaml` context lets the scorecard compare your list against declared ICP filters from `/icp-onboarding`.
+The checks below are implemented in code. The old `scripts/list_quality_scorecard.mjs` only wrote a report (it never rewrote the send file, had no domain-mismatch check, and hardcoded one client's titles), so it is superseded and archived (see Script Policy).
+
+```text
+python scripts/list_qa.py run --dir profiles/<slug>/campaigns/<campaign> --spec profiles/<slug>/targeting-spec.yaml \
+    --companies profiles/<slug>/tam/tam.csv --suppression profiles/<slug>/suppression-list.csv \
+    --active-leads <the sending platform's export of this client's leads>
+# an independent reviewer fills qa-sample.csv (see Manual stratified QA below), then:
+python scripts/list_qa.py score-sample --dir <campaign dir> --sample <campaign dir>/qa-sample.csv
+```
+
+Exit codes: 0 ran (read the verdict line), 2 input or spec error, 3 systemic block, 4 manual QA failed. The full rules (the six dimensions, severity, anomalies, outputs, report format and the fix loop) live in `outbound/reference/list-production-standard.md` sections 10 to 14 (row QA and the six-dimension gate, aggregate QA, manual stratified QA, outputs, and the QA report and fix loop). This skill keeps the grading rules and the decision of what happens next. `--active-leads` is the cross-campaign duplicate check; the upload gate under "What to do next" says when it is required.
+
+**The six-dimension gate (added 2026-09-24).** Before the grade, every row is judged separately on ICP fit, title and function fit, seniority and buyer fit, company and domain match, contact quality, and suppression and risk. A CRITICAL failure rejects the row (`leads.rejected.csv`, with its reason code). A REVIEW finding holds it (`leads.review.csv`, or the catch-all holdback). A WARNING ships with the flag recorded. A critical failure is never averaged away inside a blended score.
+
+**Aggregate anomaly QA (added 2026-09-24).** Rows can each look fine while the list as a whole is wrong: 48% of companies under a 20-employee floor, 22% engineering titles in a RevOps list, 18% outside a US-only geography. The script compares the input and the output against the targeting spec's `expectations`, and it attributes every anomaly to the source or provider that produced the offending rows. Anomalies lead the report and open the fix loop. They never block on their own, because the offending rows were already removed row by row.
+
+**Manual stratified QA (added 2026-09-24).** `qa-sample.csv` covers every buyer tier, size band, country, email source and source arm (25 rows under 1,000, 50 under 5,000, 100 above), plus five rejected rows as a false-negative control. The reviewer checks each row against the company's own site and public evidence of the person's current role (a team or leadership page, a press mention); LinkedIn pages are read only from an operator paste, never fetched. Under `auto_execute` the reviewer is a fresh Claude sub-agent that never saw the classifier's verdicts, so this adds no human pause. Under `review_gates` the operator sees the sample. A PASS needs 90% or more correct company, correct title and current employee, with no systematic miss. A FAIL goes to the fix loop before copy.
+
+Optional `client-profile.yaml` context still lets the grade compare the list against the declared ICP filters from `/icp-onboarding`, but the targeting spec is now the primary contract.
 
 ## Step 1: systemic blocks (the whole list fails)
 
@@ -87,7 +105,7 @@ When no systemic block fires, clean the file row by row, then compute the 9 dime
 
 - **Suppression match:** drop. `/email-waterfall` already stops before any paid spend on a suppressed row, so a match here is one added after that check (new unsubscribes and negative replies from live campaigns). It is removed, not a list failure.
 - **Duplicate email:** drop all but the highest-scored row.
-- **`same_wave_eligible != true`:** move back to the stagger queue (a later wave), never deleted.
+- **More rows at one company than the per-account cap:** move the lowest-priority extras to `leads.stagger.csv` (a later wave), never deleted. A row `/email-waterfall`'s planner wrote with `wave_slot = promoted_fallback` stays: it replaced a higher-priority person whose waterfall was exhausted, even when its original `same_wave_eligible` was false.
 - **Broken name fields on individual rows** (blank last name, all-caps, email-as-name, "Admin", "Info"): quarantine.
 - **Bad title** (Dimension 6 patterns) and **domain mismatch** (Dimension 8's domain-relevance check): quarantine. Role or generic mailboxes are not removed here; Dimension 7 grades their share.
 - **A row whose copy states a row-level signal it has no evidence for** (only when Dimension 5 applies): move it to the offer-led variant with no signal line, or quarantine it.
@@ -232,15 +250,21 @@ Pre-send checklist:
 
 ## Script Policy
 
-No bundled scorecard script is currently required for this skill. If the user adds one later, keep this doc honest: name the actual file and verify it exists before telling an operator to run it.
+`scripts/list_qa.py` is the implementation (tests in `scripts/tests/test_list_qa.py`). It rewrites `leads.verified.csv` to the campaign-ready rows after keeping the input as `leads.verified.pre-scorecard.csv`, and writes `leads.rejected.csv`, `leads.review.csv`, `leads.catchall-holdback.csv`, `leads.stagger.csv`, `list-qa-report.md` and `qa-sample.csv`. Re-running needs `--rerun`, which reads the pre-scorecard copy, so a second pass never grades an already-cleaned file. The retired `list_quality_scorecard.mjs` is archived at `outbound/_archive/list-qa-legacy-2026-09-24/` for history only; never run it.
 
 ## What to do next
 
-**If grade >= B:** `/campaign-copywriting` to write the emails. Then upload with locked `run_state.sending_platform`:
+**If grade >= B and the manual stratified QA passed:** `/campaign-copywriting` to write the emails, handing it the campaign-ready rows with their offer, segment, buyer tier (`title_buyer_priority`), function family and the signals each row actually carries. Then upload with locked `run_state.sending_platform`:
 
 - **Slot empty:** stop and route the operator to `/stack-setup`. Do not guess a platform.
 - **A pack is active for the locked platform:** use the campaign upload skill `/stack-setup` activated for it.
 - **No pack is active:** use that platform's native campaign create plus lead upload. If it exposes no such API, say so and hand the list over for a manual build.
+
+**Upload gate: what every upload path checks before import (added 2026-09-24).** FNNL has no separate upload skill, so these checks live here and bind whichever path runs: a pack's upload skill, the platform's native API, or the paused-draft upload in `/cold-email-kickoff`.
+
+- **The list gate is `verified-list-gate.md` condition 2:** grade B or better and a list-QA PASS (no systemic block in `list-qa-report.md`, and the manual stratified QA passed).
+- **Cross-campaign duplicate check before import.** Export this client's leads from the sending platform (the export tool of the pack `/stack-setup` activated for the locked `run_state.sending_platform`, or that platform's native lead export) and pass the file to `list_qa.py run --active-leads <export>`, so a person already active in another campaign is rejected before import. How the sending platform treats a re-imported email (updates the lead, duplicates it, or errors) and the column names of its lead export are both UNVERIFIED until checked on a live account, so the check runs before import instead of trusting the platform, and a zero-duplicate result counts only when the QA report shows the export's email column was read. If the report says the check was skipped, export and re-run it (`list_qa.py run --rerun ... --active-leads <export>`) before uploading. While no sending platform is live there is nothing to export: log the check as skipped, never faked.
+- **QA provenance columns are never imported.** `leads.verified.csv` carries scoring and list-QA provenance (`qa_*`, `*_norm`, `title_*`, `email_source`, `email_attempt_path`, `wave_slot*`, `person_id`) that stays in the canonical file for audit and results feedback. The upload maps only the named identity and copy fields into the platform. Those extra columns are never a reason to refuse the file.
 
 Only show the upload path matching the locked `run_state.sending_platform`.
 

@@ -1,0 +1,178 @@
+# Provider routing (list production)
+#
+# What this is: the ORDER in which FNNL's approved tools are tried for each
+# data field, plus the per-field success test, the inputs each rung needs, and
+# the depth knobs. It is read by scripts/list_waterfall.py (which plans the
+# queues and never calls a provider) and by the skills that run the list build
+# (/tam-build, /email-waterfall, /list-quality-scorecard).
+#
+# Who owns what (precedence: stack contract > this file > skill prose):
+#   - outbound/stack-contract.yaml owns WHICH tools are in the stack and the
+#     email ORDER. approved_stack rule 4 ("overlaps run cheapest-capable
+#     first") points to lead_data.contact_enrichment.notes, which records the
+#     email waterfall. This file is the machine-readable mirror of that order.
+#     A tool that is not in the approved six may not appear here, and Clay (the
+#     list workbench) and PlusVibe (the sending platform) are never providers.
+#   - THIS file turns the contract into rungs the planner can run. It must not
+#     re-order anything the contract records. To change the email order,
+#     change the contract first (an operator directive), then this file, then
+#     skill prose. test_list_waterfall.py fails if this file's email order and
+#     the contract's recorded order drift apart.
+#   - Anything here that the contract does NOT record is marked "unverified".
+#     It is a working default, not a decision.
+#
+# Status: the email order is the contract's (operator directive 2026-09-18,
+# verifier updated 2026-09-22). It is not benchmarked, and the contract itself
+# says cost evidence is asymmetric (Prospeo's pricing is unconfirmed), so it is
+# not yet proven cheapest-first. All four providers are `chosen` in the
+# contract, not `live`: none has made a real call on FNNL's own account.
+# When a benchmark or a contract change moves an order, update the order, set
+# that layer's `evidence:`, bump routing_version, and log the decision.
+
+schema_version: 1
+routing_version: 2026-09-24-contract-mirror
+status: contract_order_not_benchmarked
+
+providers:
+  aiark:
+    name: AI Ark
+    access: mcp_or_rest        # hosted MCP + REST, AI_ARK_API_KEY (stack contract approved_stack)
+    concurrency: untested      # unverified: the contract records no concurrency or rate limit
+    cost_note: "AI Ark pricing is vendor-confirmed per the contract (credits). Email finding MUST use /v1/people/email-finder, which charges 0 credits when no valid email is found. NEVER use the bulk /v1/people/export path: it bills 0.5 credits PER PROFILE EVEN ON A MISS (contact_enrichment.notes)"
+    endpoints:
+      company_discovery: "company_search (primary call). Resolve enums first with industry_search, technology_search and location_search; guessed values silently return wrong results. Page size default 25, max 100, 0-based pages; surface totalElements"
+      people_discovery: "people_search: titles, seniority, function and company linkage WITHOUT revealing email (qualify before paying for reveal)"
+      email_finder: "/v1/people/email-finder (0 credits on a miss)"
+      not_a_finder: "/v1/people/export is never a rung (0.5 credits per profile even on a miss)"
+    email_note: "labels CATCH_ALL as its own email type alongside SMTP, which is why it leads the email waterfall. Keep that label as its own column: it is a second catch-all signal, never the send gate (MillionVerifier's verdict is)"
+  prospeo:
+    name: Prospeo
+    access: mcp_or_rest        # MCP connector + REST, PROSPEO_API_KEY (stack contract approved_stack)
+    concurrency: untested      # unverified
+    cost_note: "charges nothing when no result is found; free re-enrichment within 90 days (contact_enrichment.notes). Pricing tiers are UNCONFIRMED (third-party only), so this order is not yet proven cheapest-first"
+    input_note: "REST bulk limit is 50 persons per request (contact_enrichment.notes); the MCP bulk_enrich_person tool takes 25 per call (live MCP schema read 2026-09-24). Documented minimum match is name plus a company identifier; LinkedIn-URL-alone is UNPROVEN"
+    email_note: "status is binary (VERIFIED / UNAVAILABLE) and collapses catch-all into valid. Read verification_method (SMTP / BOUNCEBAN) instead of status, and re-verify every email with MillionVerifier regardless"
+  getleads:
+    name: GetLeads
+    access: mcp                # hosted MCP, OAuth, no .env key; the REST API has no public docs (intent_signals.notes)
+    concurrency: untested      # unverified
+    cost_note: "two separate balances: PLAN CREDITS cover search, export and enrich (search_contacts bills 1 credit per record returned, 0 if none, live MCP schema 2026-09-24); PREPAID WALLET CASH covers only live scrapes. insufficient_wallet_cash is never 'out of credits'. FNNL's GetLeads plan tier is not recorded (unverified)"
+    role_note: "the contract's deliberate SECOND source for company discovery (the gap-fill when an AI Ark universe comes back thin) and the secondary contact source (company_discovery.notes, contact_discovery.notes). Not an email rung in the contract's waterfall"
+  millionverifier:
+    name: MillionVerifier
+    access: local_mcp_and_rest # outbound/scripts/mcp/millionverifier_mcp.mjs + REST, MILLIONVERIFIER_API_KEY; the key travels as a URL query parameter (vendor design), so scrub it from any error text
+    concurrency: untested      # unverified: no rate limit is recorded in the contract
+    cost_note: "credits per verification, deducted per real-time call; the bulk per-email rate is NOT confirmed (email_verification.notes)"
+
+layers:
+  # --- Company level ---------------------------------------------------------
+  company_discovery:
+    order: [aiark]             # the source-of-truth company universe (company_discovery.notes)
+    widening_topup: [getleads] # the gap-fill when an AI Ark universe comes back thin, before any third tool (company_discovery.notes)
+    success: "account passes the fit gate (fit_status good or maybe) AND the account QA in list_qa.py"
+    evidence: none_yet
+
+  headcount_crosscheck:
+    # Headcount decides ICP eligibility, so one provider's number is not trusted
+    # when it is missing, borderline, conflicting, or the pull shows a filter leak.
+    # Only those rows escalate; a confident in-range count is never re-bought.
+    # unverified: the contract records no headcount cross-check order. This order
+    # follows the company-discovery source of truth, then the contract's second
+    # source, then Prospeo's company filters (approved_stack also_covers).
+    trigger: [missing, borderline, conflicting]
+    order: [aiark, getleads, prospeo]   # aiark company_search; getleads employee_profiles_on_linkedin_min/max (live MCP schema 2026-09-24); prospeo company_headcount_range (live MCP schema 2026-09-24)
+    max_checks_per_account: 1
+    evidence: none_yet
+
+  # --- Person level ----------------------------------------------------------
+  people_discovery:
+    # Per account, in order, until the account holds min_target_persons_per_account
+    # people whose titles PASS title_classify.py. A provider returning people who
+    # all fail title fit counts as a miss for that account (PERSON_FOUND is not
+    # TARGET_PERSON_FOUND), so the next provider runs for that account only.
+    # AI Ark people_search is the contract's contact-discovery tool; GetLeads is
+    # the secondary contact source; Prospeo's search-time filters are usable as a
+    # secondary discovery source when a filter AI Ark lacks decides the slice
+    # (contact_discovery.notes, approved_stack also_covers). The contract names
+    # GetLeads as THE secondary source, so it runs before Prospeo; the relative
+    # order of those two is otherwise unverified.
+    order: [aiark, getleads, prospeo]
+    requires:
+      aiark: [company_domain]       # people_search, no email reveal; which company key it filters on is unverified
+      getleads: [company_domain]    # search_contacts domains[] + job_titles[], up to 100 rows per call (live MCP schema 2026-09-24)
+      prospeo: [company_domain]     # search_person filters.company.websites.include (live MCP schema 2026-09-24); 1 credit per page with results
+    retry_on_error: 1
+    evidence: "stack contract contact_discovery.notes and approved_stack; quality and cost unmeasured"
+
+  email:
+    # The contract's waterfall (lead_data.contact_enrichment.notes):
+    #   STEP 0 verify first any email the row already carries (the planner queues
+    #          it for the verifier before any finder rung);
+    #   STEP 1 AI Ark reveal across the whole survivor set;
+    #   STEP 2 MillionVerifier on everything AI Ark returned;
+    #   STEP 3 Prospeo ONLY on rows AI Ark left blank or MillionVerifier rejected
+    #          (invalid, unknown, error, disposable);
+    #   STEP 4 MillionVerifier on everything Prospeo returned.
+    # The planner stops a person at the first MillionVerifier `valid`.
+    order: [aiark, prospeo]
+    # A catch_all verdict is NOT a rejection: it goes to the holdback, never to
+    # Prospeo (contact_enrichment.notes step 3). `stop` ends that person's
+    # waterfall at a catch_all and writes the address to
+    # leads.catchall-holdback.csv. The script default is `continue`.
+    on_catch_all: stop
+    # "Never open Prospeo on a row AI Ark has not already attempted"
+    # (contact_enrichment.notes). An AI Ark outage observed in THIS run, logged
+    # with `plan --skip-provider aiark --skip-reason "<the error seen>"`, is the
+    # one sanctioned exception: it lets Prospeo open those rows.
+    requires_attempted:
+      prospeo: [aiark]
+    requires:
+      aiark: [first_name, last_name, company_domain]     # /v1/people/email-finder; its exact input fields are not recorded in the contract (unverified). The planner needs a real name on every finder rung anyway
+      prospeo: [first_name, last_name, company_domain]   # enrich-person minimum match: name plus a company identifier (contact_enrichment.notes); LinkedIn-URL-alone is unproven
+    # Buyer-priority depth: the most rungs a person of each role tier may use.
+    # Default is the full waterfall for every tier. Lower a tier only with a
+    # cost reason, and log it.
+    max_rungs_by_role_tier: {exact: 2, strong: 2, influencer: 2, adjacent: 2, weak: 2}
+    retry_on_error: 1
+    evidence: "stack contract lead_data.contact_enrichment.notes (operator directive 2026-09-18, verifier 2026-09-22); not benchmarked, and cheapest-first is not yet proven because Prospeo's pricing is unconfirmed"
+
+  # phone: deliberately NOT set. The stack contract records no confirmed phone
+  # source for AI Ark or Prospeo. (Prospeo's MCP schema, read 2026-09-24, offers
+  # mobile lookup at 10 credits per matched record, but that is not in the
+  # contract and not proven on FNNL's account.) With no phone layer, a targeting
+  # spec that sets buyers.phone_required stops the planner with a clear error.
+  # Add a phone layer here only after the contract records a phone source.
+
+  linkedin_backfill:
+    # unverified: the contract records no LinkedIn backfill order. This follows
+    # /email-waterfall's backfill routing: the contact-discovery source by name
+    # first, then the contact-enrichment tools, then the secondary contact
+    # source's email-to-LinkedIn batch lookup.
+    order: [aiark, prospeo, getleads]
+    requires:
+      aiark: [first_name, last_name, company_domain]      # unverified input fields
+      prospeo: [first_name, last_name, company_domain]    # enrich_person returns the full profile (live MCP schema 2026-09-24); unproven on FNNL's account
+      getleads: [email]                                   # getleads_get_linkedin_urls_from_emails_batch: work email in, LinkedIn URL out, 1 credit per success (live MCP schema 2026-09-24)
+    write_only_on: "name AND current company match; a wrong LinkedIn is worse than a blank one"
+    evidence: none_yet
+
+  verification:
+    provider: millionverifier             # the verifier of record (email_verification.notes); no source is exempt, including AI Ark's and Prospeo's own reveal-time checks
+    cli: scripts/millionverifier_verify.mjs   # under outbound/; the runner whose output list_waterfall.py record --layer verify reads
+    cache:
+      path: profiles/_cache/verify-cache.jsonl   # under outbound/, gitignored with profiles/
+      max_age_days: 90                     # a verdict older than this is re-verified (/email-waterfall's ~90-day revalidation prior; not a contract rule)
+    retry_transient: 1                     # a transient result is retried once, then counts as unknown
+    # Raw statuses (the verifier_raw_status column) that count as transient.
+    # MillionVerifier's own `error` result (resultcode 4) is transient here; a
+    # timeout or a rate limit on the call is too. A row whose email_status gate
+    # is `transient` is transient whatever its raw status. Never cached.
+    transient_raw_statuses: [error, timeout, rate_limited, ""]
+    gate_map:                              # MillionVerifier resultcode (result) -> gate (email_verification.notes)
+      1: valid                             # ok: the send file
+      2: catch_all                         # catch_all: the holdback (leads.catchall-holdback.csv), never Prospeo. NEVER collapse into ok or unknown
+      3: unknown                           # unknown: Prospeo gap-fill, then review
+      4: transient                         # error: retried per retry_transient, then unknown
+      5: invalid                           # disposable
+      6: invalid                           # invalid
+    evidence: stack_contract

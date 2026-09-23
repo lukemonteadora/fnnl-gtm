@@ -355,7 +355,7 @@ A campaign's whole list inherits a tiny set of shared copy: each Email 1 variant
 The list drives the message. So this skill must not produce sendable copy or write `variants.yaml` until the **verified-list gate** passes for this campaign slice (canonical definition: `verified-list-gate.md`). All three must hold:
 
 1. **Verified slice**: `profiles/<business-slug>/campaigns/<campaign-slug>/leads.verified.csv` exists and is non-empty (from `/email-waterfall`). **"Verified" is a hard standard, not "an email exists":** every sending email must be **third-party email-verified AND catch-all verified**, and every row must carry a **real first + last name** (the `/email-waterfall` Verification Doctrine). That standard is met EITHER by verify-first on an email the row already had (the email verifier: verify + catch-all in one call) OR by a waterfall enricher finder run (which delivers both at once). A waterfall is one valid path, not a universal requirement. Index/pattern-derived emails, fabricated-name rows, or a list that only passed a bare verifier with no catch-all check do NOT satisfy this: route back to `/email-waterfall`. Confirm `email_status = valid` on every send row (catch-all/risky live in `leads.review.csv`, never the send file).
-2. **List grade:** that slice passed `/list-quality-scorecard` at grade **B or better**.
+2. **List grade:** that slice passed `/list-quality-scorecard` at grade **B or better and a list-QA PASS** (`verified-list-gate.md`).
 3. **Locked strategy:** the campaign is a selected row in `campaign-strategy.md`, its `lead-source-plan.md` exists, `client-profile.yaml` `offer.lead_magnet` is locked (a real magnet, OR the `direct_offer` sentinel when the offer-first play uses a direct offer-led CTA and no magnet, per the CTA Hierarchy), and `run_state.sending_platform` is locked.
 
 If any condition fails, **STOP**: name the failed condition and route to its producer (`/email-waterfall` → `/list-quality-scorecard`, or `/campaign-strategy` / `/lead-source-strategy`). Do not write speculative or placeholder copy "to be filled once the list is ready"; you cannot write the message before the verified list exists. Autonomy never relaxes this (it is a hard-stop in `/autonomous-execution-policy`). The only exception is an explicit operator override for a re-run on an already-verified external list.
@@ -478,7 +478,7 @@ Record the SQL/MQL decision and the risk reversal in Step 3 before writing final
 
 ### What To Do Silently
 
-0. **Check the List Gate first** (see List Gate above): confirm `leads.verified.csv` exists for this slice, it passed `/list-quality-scorecard` at grade B+, and the strategy is locked. If any fails, STOP and route to the producer: do not start copy.
+0. **Check the List Gate first** (see List Gate above): confirm `leads.verified.csv` exists for this slice, it passed `/list-quality-scorecard` at grade B or better with a list-QA PASS (`verified-list-gate.md` condition 2), and the strategy is locked. If any fails, STOP and route to the producer: do not start copy.
 1. Read all provided context.
 2. Identify target audience.
 3. Identify the trigger or reason this audience is being contacted.
@@ -625,7 +625,7 @@ Use structure language, not unreviewed body copy.
 
 ## Step 4: Output Final Copy
 
-Only output final copy after the user confirms the structure **and the List Gate passes** (verified slice + grade B+ + locked strategy; see List Gate). If the gate is not satisfied, STOP here: do not serialize `variants.yaml`.
+Only output final copy after the user confirms the structure **and the List Gate passes** (verified slice + grade B or better and list-QA PASS + locked strategy; see List Gate). If the gate is not satisfied, STOP here: do not serialize `variants.yaml`.
 
 Before presenting final copy:
 
