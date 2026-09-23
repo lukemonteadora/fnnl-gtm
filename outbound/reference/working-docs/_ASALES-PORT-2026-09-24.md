@@ -25,7 +25,7 @@ This is history, not live doctrine. Upstream SHAs refer to the upstream repo; FN
 | `025c23d` | Client context sweep first; on-demand client intel feed |
 | `46f92f9` | Claude-native benchmark (`outbound/evals/`); skill-change hygiene |
 | `45ee3a5` | Fixes from three independent coverage audits; this manifest |
-| phase-checkpoint commit | Upstream `0a8b65dc` + `5424e887`: four phase checkpoints for new clients |
+| `ddd8705` | Upstream `0a8b65dc` + `5424e887`: four phase checkpoints for new clients |
 
 ## Every upstream commit in range
 
@@ -78,8 +78,8 @@ Disposition: **Ported** (tool-neutral, re-expressed in role vocabulary), **Conce
 | `c369a052` | Don't pin unconfirmed sheet fields to one tab | Ported (generic form) | `025c23d` |
 | `e09f14aa` | Client research ledger | Skipped: client-specific | none |
 | `7cd876cc` | Client offer-slate deck module | Skipped: client-specific | none |
-| `0a8b65dc` | Four phase checkpoints replace the per-fork stops for new clients | Ported (FNNL keeps its context sweep, Step 6 upload stop, deferred infrastructure and hard stops; the contract's execution defaults updated) | phase-checkpoint commit |
-| `5424e887` | Record phase checkpoints so a resumed run never skips one | Ported | phase-checkpoint commit |
+| `0a8b65dc` | Four phase checkpoints replace the per-fork stops for new clients | Ported (FNNL keeps its context sweep, Step 6 upload stop, deferred infrastructure and hard stops; the contract's execution defaults updated) | `ddd8705` |
+| `5424e887` | Record phase checkpoints so a resumed run never skips one | Ported | `ddd8705` |
 
 ## Beyond the diff (FNNL-only fixes made on the way)
 
