@@ -61,6 +61,8 @@ source,source_type,source_url,evidence_url,signal,fit_reason,source_confidence
 
 Everything AI in this skill runs inside Claude Code (no-AI-API rule, operator directive 2026-09-22). The tuning loop and the at-scale scoring pass both run on Claude Code Task sub-agents, fanned out per `/personalization-subagent-pattern` (disjoint batches, one output file per agent, post-merge dedup). Optional web-grounded context that helps judge fit comes from WebSearch/WebFetch inside those sub-agents, or from a `/deep-research` pass when a whole segment needs it. No outside AI provider, API key, or list-workbench AI column scores or crunches descriptions. Deterministic filters stay in plain code. Preserve the canonical source fields above (`evidence_url`, `source_confidence`, `signal`).
 
+**Model tier for scoring (the Task tool's `model` setting, not an API call; `/ai-model-routing`, Model tiers for sub-agents).** At-scale scoring (Applying At Scale below) runs the locked prompt on mid-model sub-agents (`model: "sonnet"`) by default. Drop to the small model (`model: "haiku"`) only after a **20-row agreement check**: have a haiku sub-agent score 20 rows the operator already confirmed during the tuning loop, compare its labels with the confirmed ones, and switch only if they agree. Otherwise stay on sonnet. Once `outbound/evals/` exists in this workspace, the switch also needs a pass on its benchmark (`outbound/evals/README.md`).
+
 ## The Loop
 
 ### 1. Gather Context
@@ -189,7 +191,7 @@ icp_qualification_prompt:
 Default path:
 
 1. Split the remaining list into batches of 20-50.
-2. Run Task sub-agents with the locked prompt.
+2. Run Task sub-agents with the locked prompt, `model: "sonnet"` by default (drop to `model: "haiku"` only after the 20-row agreement check described in AI/API Routing above).
 3. Keep every `good` and `maybe` row. Low confidence or an unsupported campaign signal may lower score confidence, offer points, or timing points. It is not a deletion rule.
 4. Exclude only `bad` rows and explicit hard exclusions, with a written reason.
 5. Preserve `source`, `source_type`, `source_url`, `evidence_url`, `signal`, `fit_reason`, and `source_confidence`.

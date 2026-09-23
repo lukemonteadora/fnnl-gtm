@@ -28,7 +28,12 @@ _warmup_off_ids.json
 **/scripts/_catchall_*
 **/scripts/_inboxing_*
 **/scripts/_delivaudit_*
-**/scripts/research/
+# Research scripts are tracked (evidence_ledger.mjs, research_routing_check.mjs,
+# README.md: the research layer's enforcement lives there). Only scratch and
+# raw captures in that folder stay local.
+**/scripts/research/_*
+**/scripts/research/*.json
+**/scripts/research/*.txt
 outputs/
 tmp/
 

@@ -70,11 +70,12 @@ Use this mode when you do not have a hypothesis yet and want the system to **pro
 - `profiles/<business-slug>/data-point-catalog.md` (the `/data-point-discovery` catalog. Under the Collection Scope rule in `/data-point-discovery`, the build collects firmographics, fit and offer-relevance fields, contacts and the free fields that come with the rows, and pays for a why-now or intent signal only when the offer or a live test needs it (Aaron process alignment, operator directive 2026-09-22; supersedes "the full obtainable signal set is collected up front"). So next-wave tests come from untested **combinations** of the columns actually collected, plus catalogued `in_reserve` points, each collected first when an approved test needs it)
 - `profiles/<business-slug>/experiments/*.yaml` and `*.json` (prior experiment plans, results, decisions)
 - `profiles/<business-slug>/retrospectives/*.md` (quarterly patterns, if any)
+- `profiles/<business-slug>/_research/pain-clusters.md` (from `/market-evidence`): the clusters a hypothesis cites, and the dated Market feedback log (what replies said, which clusters strengthened or broke, and the next tests feedback mode routed)
 
 Then it outputs **ranked single-variable experiment candidates grounded in columns that already exist**:
 
 1. **Mine the TAM for untested slices — `enrichment_tier = enriched` rows only.** Each candidate is a list-only experiment defined by populated TAM columns with enough rows that have not been tested yet (e.g. `has_demo_cta = true AND sales_ic_count = 0`, row count N). **Slice only `enriched` rows: a blank `gate_role = enrich` column on an enriched row is a real negative, but a blank on a `qualified_out` row is a gate-skip (never collected), not data — never build a slice on it.** (If a legacy `tam.csv` has no `enrichment_tier` column, treat all rows as eligible.) Never propose a slice with too few rows for the sample-size table below. Also mine `data-point-catalog.md` for `in_reserve` rows (catalogued but not yet collected): proposing one means **collecting that column first**, which routes through `/tam-build`'s tiering + `/api-cost-governance` as new Layer-1 spend (gated), not an automatic crawl.
-2. **Mine results for copy/offer variables.** From `experiments/*.json` and reply-scoring history, surface copy or angle variables worth a copy-only test against the current baseline. **Propose the offer queue first:** every queued arm (one beyond the first wave's offer count), still-reading arm, or arm parked at a winner pick with its read recorded as unresolved, in `offer.validation_arms` (and in each segment's set in `offer.segments`) (with `lead_magnet_client_ok` `not_needed` or `yes`), is an offer-only (type D) candidate against the current winner, ranked ahead of copy and list candidates. Then positioning variants of the current winner, then CTA, subject lines last (Aaron's test order, doctrine §5 step 9).
+2. **Mine results for copy/offer variables.** From `experiments/*.json`, reply-scoring history, and the Market feedback log's routed next tests, surface copy or angle variables worth a copy-only test against the current baseline. **Propose the offer queue first:** every queued arm (one beyond the first wave's offer count), still-reading arm, or arm parked at a winner pick with its read recorded as unresolved, in `offer.validation_arms` (and in each segment's set in `offer.segments`) (with `lead_magnet_client_ok` `not_needed` or `yes`), is an offer-only (type D) candidate against the current winner, ranked ahead of copy and list candidates. Then positioning variants of the current winner, then CTA, subject lines last (Aaron's test order, doctrine §5 step 9).
 3. **Rank by expected positive-reply lift × confidence × row availability.** Prefer candidates that isolate one variable and have the rows to reach significance.
 4. **One variable per candidate:** list-only, copy-only or offer-only, never two at once. Combined tests are only for genuinely new ICPs.
 5. **Human approval gate.** Present the ranked candidates (recommended first) and let the operator pick which to run. Do not auto-launch sends. Under `auto_execute`, you may auto-select the top candidate(s) for the next wave and write their plan files, but launching still goes through the upload skill's paused-draft + manual-start gate.
@@ -87,15 +88,17 @@ For each approved candidate, drop into **The Framework** below to write the full
 
 Every experiment starts with a one-sentence hypothesis:
 
-> "Targeting Heads of Marketing at 50-200 person B2B SaaS companies will get a higher positive reply rate than our current VP Sales baseline, because [reason]."
+> "Targeting Heads of Marketing at 50-200 person B2B SaaS companies will get a higher positive reply rate than our current VP Sales baseline, because [reason, citing its cluster or evidence IDs]."
 
 Or:
 
-> "Offering a free look-alike list of 100 companies shaped like their best client will get more time-agreed replies per 1,000 first touches than our current free teardown offer, because [reason]."
+> "Offering a free look-alike list of 100 companies shaped like their best client will get more time-agreed replies per 1,000 first touches than our current free teardown offer, because [reason, citing its cluster or evidence IDs]."
 
 (House example, conforms to Framework A: an offer-only test, the first rung of the test order below. The earlier question-opener example is archived at `outbound/_archive/aaron-alignment-2026-09-21/experiment-design--hypothesis-example-and-priority-order.md`; operator-approved Aaron alignment, 2026-09-21.)
 
 If you can't write the hypothesis in one sentence, you don't understand the experiment yet. Go back.
+
+**The "because" cites its evidence (added 2026-09-24).** The reason names the cluster IDs or evidence IDs in `_research/pain-clusters.md` that make the bet worth running, for example "because C-02 (9 sightings, including 2 lost-deal calls) shows finance leads already reconcile this by hand". Otherwise the hypothesis is labelled `unevidenced` (no cluster behind it yet) or `contrarian` (it bets against what the clusters say). A labelled bet still runs, the same way an unevidenced offer arm does (`market-evidence-standard.md` section 12): the label exists so the read can tell a failed hypothesis from an untested one. Record the citation or the label in the plan file's `evidence` field.
 
 ### Step 2: Identify the single variable
 
@@ -213,7 +216,7 @@ HIGH only if: experiment type isolates the variable AND sample size meets the mi
 - **Winner by >=20% lift, HIGH confidence:** adopt as new baseline. Document. Move to next experiment.
 - **Winner by 10-20% lift, HIGH confidence:** run a replication experiment with fresh leads. If it wins again, adopt.
 - **Winner by <10% lift:** inconclusive. Run bigger next time or drop.
-- **Loser:** document WHY you think it lost. Don't just move on - the loss is a learning.
+- **Loser:** document WHY you think it lost, in the plan file's `results` block (its `why` field), and hand the same reasoning to `/market-evidence` feedback so it lands in the Market feedback log of `_research/pain-clusters.md` (a loss can contradict a cluster, or show that an `unevidenced` bet failed). Don't just move on: the loss is a learning.
 - **Combined experiment winner:** do NOT adopt as a new baseline. Instead, split into single-variable follow-ups to figure out which part actually drove the lift.
 - **A winner must not lose on time-agreed replies per 1,000 first touches** (operator-approved Aaron alignment, 2026-09-21). An arm that wins on positive-reply rate but whose time-agreed replies are zero or clearly lag the control's is labeled farming interest (doctrine §4): do not adopt or scale it, and reshape it so it filters better (more specific) rather than killing it. "Clearly lag" has no numeric cut-off: it is judged against the other arm, and the operator confirms. The lift thresholds above are unchanged.
 
@@ -262,6 +265,7 @@ Schema:
 experiment:
   name: <short name>
   hypothesis: <one sentence>
+  evidence: <the cluster or evidence IDs its "because" cites, e.g. [C-02, E-0014], or unevidenced | contrarian>   # added 2026-09-24 (Step 1)
   type: offer-only | list-only | copy-only | combined
   variable: <what changes>
   constants: <list of what stays fixed>
@@ -288,6 +292,7 @@ results: <empty until the Step 6 read: floor met, then sequence plus grace>
   winner: null
   confidence: null
   decision: null
+  why: null    # the reasoning behind the decision; a loss is also handed to /market-evidence feedback (Step 8; added 2026-09-24)
   parked: []    # arms or variants still in HOLD at the winner pick: no new first touches, read recorded as unresolved (2026-09-22)
 ```
 
@@ -312,6 +317,7 @@ If you do not have 2,000+ leads per experiment arm, you cannot detect normal-siz
 - `/campaign-copywriting` - produces the copy variants this experiment tests
 - Campaign upload for the locked `run_state.sending_platform` - whichever pack `/stack-setup` activated, otherwise that platform's native campaign create plus lead upload
 - Positive-reply scoring for the locked `run_state.sending_platform` - whichever pack `/stack-setup` activated, otherwise that platform's native reply export
+- `/market-evidence`: holds the clusters a hypothesis's "because" cites (Step 1), and its feedback mode takes the reasoning behind a loss into the Market feedback log (Step 8)
 
 ## Activity Log Protocol
 

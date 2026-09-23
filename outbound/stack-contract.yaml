@@ -894,7 +894,13 @@ ai:
       valid run_state.research_routing value is claude_deep_research: the
       Claude native /deep-research harness runs the primary pass, and each run
       is logged in scripts/api-balance-ledger.md so
-      scripts/research/research_routing_check.mjs can audit it. The former
+      scripts/research/research_routing_check.mjs can audit it. If the harness
+      (anthropic-skills:deep-research, run through the Skill tool) is
+      unavailable or rate-limited, a declared flat fan-out of 4 to 8 Claude
+      research sub-agents runs instead. That run is logged as
+      claude-subagent-fanout, a provenance label for ai_research_provider and
+      the ledger, not a second routing value, and research_routing_check.mjs
+      accepts both labels. The former
       values third_party_ai and claude_native are retired; a profile still
       carrying one is run as claude_deep_research and the normalization is
       noted in the activity log. Status stays `chosen` until one FNNL client

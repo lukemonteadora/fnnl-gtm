@@ -82,12 +82,20 @@ profiles/<business-slug>/offer-intelligence.md
 
 **Discovery and candidate generation are one continuous offer motion split across two skills.** This skill is the second half of it, so it starts by reading what discovery already established rather than researching pain again. It runs no new web research of its own.
 
-If the brief exists, load these four sections **by name** and work from them:
+**Check the Research QA verdict first** (`research_artifacts.qa_verdict` in `client-profile.yaml`, or the Research QA section of `_research/pain-clusters.md`; `market-evidence-standard.md` section 7):
+
+- **PASS**: proceed.
+- **DEEPEN with loops remaining**: route back to `/offer-intelligence` Stage 2 rather than building offers on research the gate says is thin.
+- **HOLD, or PASS with low-confidence labels after two loops**: proceed, carrying each cluster's label into every candidate that relies on it.
+- **No verdict** (a brief written before the research layer landed, 2026-09-24): run `/market-evidence synthesize` first; it seeds the evidence ledger from the existing brief and research files.
+
+If the brief exists, load these five sections **by name** and work from them:
 
 1. **`Candidate Generation Input`** - the numbered persona + pain + open-archetype rows. **This is the primary input.** Generate candidates against these rows: each serious candidate answers a named pain for a named persona, in an archetype the saturation map left open. If the block carries the optional **cross-client priors** line (other clients' proven offers in this workspace, as patterns only), treat each prior as a hint about an offer shape worth trying, rebuilt around this client's real service and buyer; never carry another client's name, number or data into a candidate.
 2. **`Pain by persona`** - the full table behind those rows, including any prioritized persona with no pain evidence (a named gap, not a blank to fill by guessing).
 3. **`Saturation Map`** - the open, crowded, and saturated archetypes with their denominator.
 4. **`First-Party Buyer Voice`** and **`ICP Pain (in their words)`** - the buyer's exact words, which the offer gets written in.
+5. **`_research/pain-clusters.md`** - the clusters behind every row, with their counts, opportunity scores, Research QA labels and the Language bank (the verbatim buyer phrases per cluster). Every candidate names the clusters it answers (`market-evidence-standard.md` section 12).
 
 **Read these rows, do not rebuild them.** Do not re-derive pain, re-rank personas, or re-research the market here. If `Candidate Generation Input` is missing or empty, that is the signal that `/offer-intelligence` discovery mode has not actually finished: route back to it rather than reconstructing its findings inside this skill.
 
@@ -387,7 +395,7 @@ Score every candidate, including Candidate A, against the same 7-point offer rub
 
 | Criterion | Points | Meaning |
 |---|---:|---|
-| Addresses #1 ICP pain directly | 0-2 | Does it match the strongest pain from discovery, not just the client's internal pitch? |
+| Addresses #1 ICP pain directly | 0-2 | Does it answer the top-scoring cluster in `_research/pain-clusters.md` (2), or another well-evidenced cluster (1), not just the client's internal pitch? Name the cluster ID. A candidate that answers no cluster scores 0 here and is labelled `unevidenced` or `contrarian`, never dropped. |
 | Perceived value | 0-1 | Does it sound like something they would pay for, given free? (doctrine §3: *"it sounds like something that they would pay money for"*), ideally anchored to a real price or cost (inherent value). Delivery effort and scale never score here (operator directive 2026-09-22); they go in the scale note and the lock check. |
 | Proves competence | 0-1 | Does receiving it prove the client understands the problem? |
 | Low prospect friction | 0-1 | Can the prospect claim it in under 60 seconds? |
@@ -445,6 +453,17 @@ Aaron tests three or four offers at once and lets the market pick (doctrine §5;
 
 **After the wave, the market decides.** The winning arm becomes, or stays, `offer.lead_magnet` for scale, and arms that do not get proper responses are switched off inside the live campaign (doctrine §5 step 9: *"deactivat[e] the angles that don't get proper responses"*). `/campaign-strategy`'s flip criterion owns that read: each arm flips on its own pooled positive replies, and among PROVEN arms the winner is the one that does not lose on time-agreed replies per 1,000 first touches; a PROVEN arm that farms interest is reshaped to filter better, not scaled and not killed. At the winner pick (made on matched cell counts), arms still in HOLD stop receiving new first touches, their live sequences finish, the untouched TAM goes to the winner, and the parked arm's read is recorded as unresolved so it can return as a later test (Aaron process alignment, operator directive 2026-09-22; supersedes "another arm's win never retires it"). Losers are switched off by the DEAD line and by the winner pick, never by a ratio. Promotion re-uses a candidate that already passed every gate here, so it does not reopen offer work. **The winner goes to the rest of the TAM immediately, with no client scale-review gate.** `/offer-test-slate` scale review reports the results to the client and reviews the winner's `offer.qualification` rule: the client's capacity answer sets how many qualified yeses get the free unit each week, and the rest get the standard offer. Where the client literally supplies the deliverable, the client's confirmed capacity still caps sends for that offer (Deliverable at Send Scale carve-out). (Aaron process alignment, operator directive 2026-09-22; supersedes "before the winner scales, `/offer-test-slate` scale review records what running it at full volume takes; `/campaign-strategy` sizes the coverage wave to that answer", operator directive 2026-09-22.)
 
+### Offer QA at lock (market-evidence-standard.md section 12)
+
+Before the lock is written, check every locked offer: the primary and every arm, and, when the client has per-buyer-type offer sets, the primary and every arm of each `offer.segments` set:
+
+- It carries `cluster_ids`, `evidence_ids`, `evidence_strength` and `pain_angle`, or an explicit `unevidenced` or `contrarian` label with its reason.
+- Every cluster it cites exists in `_research/pain-clusters.md`, and its evidence IDs resolve in the evidence ledger (`_research/evidence.csv`).
+- No offer cites a `model_hypothesis` (a model's persona research, or the client's unverified `buyer_pain_hypothesis`) or a `competitor_claim` as its evidence.
+- An offer resting on a low-confidence cluster carries that label into its Evidence line and its slate entry.
+
+An unevidenced or contrarian offer still locks and runs as an arm; the label exists so the read-out can tell a failed hypothesis from an untested one. A missing Evidence line is fixed before lock, never waved through. This check adds no pause: under `auto_execute` it runs inside the lock.
+
 ## Offer sets per buyer type (operator decision 2026-09-22)
 
 When `/cold-email-kickoff` Step 2.5 confirms two or more buyer segments whose pain or offer fit genuinely differ, **each segment gets its own offer set**: its own primary, validation arms, disqualifiers, client-OK state, proven flag and scale review, generated from that segment's own `Candidate Generation Input` rows. One offer stretched across buyer worlds is urgent to nobody (Aaron defines one buyer per offer, doctrine §5 step 1). A single-segment client, or one whose segments share the same pain and offer fit, is unchanged: the top-level `offer` block is its one set and `offer.segments` is not written.
@@ -481,6 +500,9 @@ Paid next step, explained: <one or two plain sentences on the paid engagement th
 Build + fill: <none, or (archetype K): who builds and hosts it for the test, and the per-responder fill work>
 CTA direction: <plain-English ask direction for /campaign-copywriting, not final wording>
 Why it should work: <short reason tied to ICP pain>
+Evidence: <the cluster IDs it answers, 2 to 4 evidence IDs, the strongest tier behind it (strong / good / supporting), and the Language-bank phrase it borrows; or `unevidenced` / `contrarian` with the reason (market-evidence-standard.md section 12)>
+Pain angle: <one line in the buyer's words that the campaign cell will carry>
+Market feedback: <added after launch by /market-evidence feedback: dated reply IDs and counts (positive, objections by type, questions); blank before launch>
 Signal dependency: <none (needs no observable buyer signal - the common and preferred answer), or: the signal named in one line. On the primary and every arm, add the Signal-Capability Check ruling: declared live / declared but unproven (chosen) / not obtainable>
 Risks: <one reason this could fail>
 Offer score: X/7
@@ -565,6 +587,12 @@ After the offer is selected (by operator choice or auto_execute), update `client
 offer:
   lead_magnet: <top pick name>  # the PRIMARY offer; still the only field that means "locked"
   lead_magnet_details: <one sentence on what gets delivered, including any material eligibility the offer states up front ("for teams that fit X"), so copy carries it>
+  cluster_ids: [<C-xx>]         # 2026-09-24 (market-evidence-standard.md section 12): the pain clusters this offer answers; [] only when evidence_strength is unevidenced or contrarian
+  evidence_ids: [<E-xxxx>]      # 2 to 4 representative evidence-ledger rows behind it
+  evidence_strength: <strong | good | supporting | unevidenced | contrarian>
+  pain_angle: <one line in the buyer's words that the campaign cell carries>
+  feedback_ids: []              # written after launch by /market-evidence feedback: reply evidence IDs about this offer
+  feedback_summary: null        # one line, in the buyers' words, written by /market-evidence feedback
   lead_magnet_cta_direction: <plain-English ask direction with deliverable, usefulness, and delivery constraint, not final copy>
   lead_magnet_gap: <the loop the asset REOPENS - what the prospect still won't know after consuming it (Next-Step Gate). Required for any real magnet; omit only for `direct_offer`>
   lead_magnet_next_step: <the call / analysis that fills that gap - what the reply routes to>
@@ -597,6 +625,12 @@ offer:
       status: active            # active | deactivated (no proper responses in the wave) | farming_interest (PROVEN on positives but losing on time-agreed replies per 1,000; reshape to filter better, not scaled) | promoted (won; its fields now sit in the primary block above) | vetoed (the client asked us not to send it) | hold (still reading at the winner pick; stops receiving new first touches, its live sequences finish, its read is recorded as unresolved and it can return as a later test; Aaron process alignment 2026-09-22, supersedes "keeps its cell") | works (PROVEN but not the winner)
       lead_magnet: <arm name>
       lead_magnet_details: <one sentence on what gets delivered>
+      cluster_ids: [<C-xx>]       # same fields as the primary (market-evidence-standard.md section 12)
+      evidence_ids: [<E-xxxx>]
+      evidence_strength: <strong | good | supporting | unevidenced | contrarian>
+      pain_angle: <one line in the buyer's words>
+      feedback_ids: []            # /market-evidence feedback, after launch; never touches status, read or flight
+      feedback_summary: null
       lead_magnet_cta_direction: <plain-English ask direction, not final copy>
       lead_magnet_gap: <the arm's own unresolved motive (Next-Step Gate); omit only for `direct_offer`>
       lead_magnet_next_step: <the call / analysis that resolves it>
@@ -614,14 +648,14 @@ offer:
     - segment: <slug from the confirmed segment list; matches the `segment` column in tam.csv>
       label: <plain buyer-type name, as the client slate shows it>
       priority: 1                 # 1 = the segment the top-level offer block mirrors
-      lead_magnet: <this segment's primary>   # plus every other field of the primary block above
+      lead_magnet: <this segment's primary>   # plus every other field of the primary block above, including the evidence fields (cluster_ids, evidence_ids, evidence_strength, pain_angle, feedback_ids, feedback_summary)
       offer_fit_disqualifiers: []
-      validation_arms: []         # same shape as the top-level validation_arms
+      validation_arms: []         # same shape as the top-level validation_arms, evidence fields included
       offer_market_proven: false  # this segment's own flip (/campaign-strategy)
       scale_review: null          # this segment's own scale review (/offer-test-slate): a results report plus its winner's offer.qualification review, run alongside that segment's scale-up
 ```
 
-**Write the fulfillment plan and the arms into `lead-magnets.md` as well**, since the four fulfillment artifacts live there rather than in the YAML: a `## Fulfillment plan` heading with one block per locked offer (primary first, then each arm) carrying `Delivery reply:`, `Input needed after yes:`, `If they don't qualify:` and `Paid next step, explained:`, plus the offer's `Qualification:` line (the criteria, form fields and weekly cap in plain words, or "none, cheap asset"), a `## List definition` heading mirroring `icp_inclusion` and `title_stack` in plain words (The Offer Writes the List Definition), and a `## Validation arms` heading listing each arm, its bucket, its score, and why it was chosen (or, when `validation_arms: []`, why no second candidate survived). Also write an `## Every candidate` heading: the full ranked list with each candidate's score, labels, who honors a qualified yes, scale note and qualification line, including the ones not in the test set, because `/offer-test-slate` shows all of them to the client. The reply-agent setup skill for the locked sending platform and `/campaign-copywriting` read the fulfillment plan from there.
+**Write the fulfillment plan and the arms into `lead-magnets.md` as well**, since the four fulfillment artifacts live there rather than in the YAML: a `## Fulfillment plan` heading with one block per locked offer (primary first, then each arm) carrying `Delivery reply:`, `Input needed after yes:`, `If they don't qualify:` and `Paid next step, explained:`, plus the offer's `Qualification:` line (the criteria, form fields and weekly cap in plain words, or "none, cheap asset"), a `## List definition` heading mirroring `icp_inclusion` and `title_stack` in plain words (The Offer Writes the List Definition), and a `## Validation arms` heading listing each arm, its bucket, its score, and why it was chosen (or, when `validation_arms: []`, why no second candidate survived). Also write an `## Every candidate` heading: the full ranked list with each candidate's score, labels, who honors a qualified yes, scale note and qualification line, including the ones not in the test set, because `/offer-test-slate` shows all of them to the client. The reply-agent setup skill for the locked sending platform and `/campaign-copywriting` read the fulfillment plan from there. Every entry under `## Every candidate` and `## Validation arms` (and under each `## Segment: <label>` section) also carries its **Evidence**, **Pain angle** and (after launch) **Market feedback** lines, which makes `lead-magnets.md` the offer hypothesis register: every offer, the evidence it rests on, and what the market said to it (`market-evidence-standard.md` section 12).
 
 **When the wave picks a winner** (`/campaign-strategy` flip criterion), a winning arm's fields move into the primary block, the arm's `status` becomes `promoted`, and the previous primary is recorded as an arm with `status: deactivated`. Record the swap in the activity log. It re-uses fields that already passed every gate here, so it is not a new offer lock.
 
@@ -633,6 +667,7 @@ Do not save exact CTA example fields from this skill. Exact CTA copy belongs to 
 
 ## Common Mistakes
 
+- **An offer with no Evidence line, or one that hides a weak cluster.** Every candidate names the clusters it answers and their strength, or carries an `unevidenced` or `contrarian` label. A low-confidence cluster keeps its label on every offer built on it.
 - **Dropping or down-ranking an offer at ideation because the client might not want it, it needs a free trial, it takes effort, or it needs custom work per prospect.** Rank it on buyer pull, then at lock record who honors a qualified yes and show it is deliverable at send scale with a scale note or an `offer.qualification` rule (Deliverable at Send Scale).
 - **Promising every yes the free unit on a costly front end, or gating a cheap asset.** A trial, a service or custom work gets a disclosed qualification step after the yes, with its eligibility stated in the offer; a cheap asset goes to every yes (Aaron, Sep 21, cherry-pick; Aaron process alignment, operator directive 2026-09-22).
 - **Giving the primary a head start, or sizing the list to the offers.** Every first-wave offer is an equal cell in every first-wave campaign; the offer count follows the list (`max(3, floor(qualified_contacts / 2000))`, capped at the qualifying candidates), never the reverse (Aaron process alignment, operator directive 2026-09-22).

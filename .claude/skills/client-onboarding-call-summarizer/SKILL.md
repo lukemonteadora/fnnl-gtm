@@ -81,7 +81,7 @@ Use this structure (note: **no action-item section**):
 <the substance — concise bullets grouped by the field groups above (Business; Best customer / ICP; Pain & why-now; Offer clues; Proof; Capability boundary; Exclusions & constraints; Other). Only what was said or clearly implied.>
 
 ## In Their Own Words (verbatim quotes worth keeping)
-<exact phrases the client or their market used about pain, goals, or buying. These feed copywriting later. Quote, do not paraphrase.>
+<exact phrases the client or their market used about pain, goals, or buying. These feed copywriting later. Quote, do not paraphrase. Tag each quote by speaker: the client describing their own buyers is `client_material` (second-hand), and a buyer's own words on a recorded sales call are `sales_call` (`market-evidence-standard.md` section 2), so downstream research never counts the client's opinion as buyer pain.>
 
 ## Maps To Onboarding Fields
 | Onboarding field | What the call gave us | Confidence |

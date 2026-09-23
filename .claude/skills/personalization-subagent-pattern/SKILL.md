@@ -46,6 +46,8 @@ This skill runs entirely inside Claude Code via the Task tool. No AI-provider SD
 
 At very large scale (1,000+ leads), scale by running more Task sub-agent batches in waves (around 10 concurrent agents per wave), not by shipping the prompt to an API. The old optional API throughput path is retired. TUNING, normal campaign runs and very large runs all go through the Task tool.
 
+Cost and speed come from the model tier instead. Each Task call takes a `model` setting that picks which Claude model the sub-agent runs on inside Claude Code: a small model for mechanical fills, a mid model for per-lead judgment (see [Model routing per job](#model-routing-per-job-pass-model-on-every-task-call) below). That setting is not an API call and needs no key, so it stays inside the no-AI-API rule.
+
 ## AI/API Routing
 
 What *feeds* the sub-agents is Claude-native too (no-AI-API rule, operator directive 2026-09-22); the Task-tool default above stands. Per tier: the research that builds each lead's `company_description` and signal context comes from the `/deep-research` harness for segment-level context and from WebSearch/WebFetch run by the sub-agents themselves for per-company pages, with any bulk crunching done by more sub-agent batches. Data-vendor fields (firmographics, signals from the stack contract's tools) feed in as-is. The Task-tool sub-agents remain the generator for per-lead research fields and column fills. For high-tier or high-ACV leads, make the clean research packet that feeds the agent richer; for broad or low-tier leads, lean on lighter context (the vendor firmographics plus one homepage fetch). Use the lead's `deal_value_tier` from the TAM (the free derived contract-value estimate) as the tier signal for research depth only: it decides how rich a lead's research packet is when its slicing research needs one, and never whether a lead gets a per-contact Email 1 body, because Email 1 carries the slice's shared body (B13; operator-approved Aaron alignment, 2026-09-21; this used to let a `high` or `mid` tier justify a full per-contact written body). Never spend heavy research effort on a low-value lead. (Caveat: when the list's `deal_value_tier` is nearly constant, the ICP is uniform and tiering adds little, so keep depth consistent.) Final sendable copy still follows `/campaign-copywriting` (written in the native Claude Code session). Never replace Task sub-agents with an API key; there is no at-scale exception.
@@ -236,6 +238,7 @@ for each batch:
     Task(
       description: "Personalize batch <i> variant <v>",
       subagent_type: "general-purpose",
+      model: "haiku",  # mechanical fill against the locked shared body; use "sonnet" when the job needs judgment (see Model routing per job below)
       prompt: <template above with variant-specific angle>
     )
 
@@ -252,6 +255,16 @@ Task(description: "batch-1-variant-A", ...)
 Task(description: "batch-1-variant-B", ...)
 Task(description: "batch-1-variant-C", ...)
 ```
+
+### Model routing per job (pass `model` on every Task call)
+
+Every `Task`/`Agent` call in this pattern takes a `model` parameter; set it per job instead of leaving it on the session default (the tier table lives in `/ai-model-routing`, Model tiers for sub-agents):
+
+- **`model: "haiku"`** for mechanical work: filling a slice's shared, approved body into the `email_*` columns, sourcing a per-contact variable from text already on the row, tagging, normalization, and simple classification against a locked rubric.
+- **`model: "sonnet"`** for per-lead research that needs judgment: reading a prospect's or company's site to answer a structured question (for example sourcing `service_offered` or `own_best_client` from the prospect's own site), fit scoring with a locked prompt (the at-scale pass in `/icp-prompt-builder`), or any slicing-field research where the source is ambiguous enough to need real reasoning.
+- **Inherit the session's model** (omit `model`) when the job is synthesis, offer or copy work, or when the agreement check below shows a smaller model loses quality on that specific job.
+
+Before moving a recurring job down a tier (sonnet to haiku, or session default to sonnet), run a 20-row agreement check: have the candidate tier score or fill the same 20 rows the session (or the operator) already answered, and compare. Lock in the cheaper tier only if agreement holds; otherwise stay one tier up. Once `outbound/evals/` exists in this workspace, the move also needs a pass on its benchmark (`outbound/evals/README.md`). This is the same check `/icp-prompt-builder` runs before it drops to haiku.
 
 ### 7. Error handling
 

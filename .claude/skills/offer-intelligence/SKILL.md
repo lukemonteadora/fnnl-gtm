@@ -1,6 +1,6 @@
 ---
 name: offer-intelligence
-description: "Two-mode offer research skill. Discovery mode runs FIRST on the offer path, immediately after /icp-onboarding and before /lead-magnet-brainstorm, and requires no list-side or data-side work beforehand. It follows Aaron Shepherd's three-input research method and leads with buyer pain: the client's own won and lost sales-call recordings, five-layer persona desire research, real public complaints (Reddit, review sites, forums, with an honest record of which platforms were actually read), competitor offer saturation across 5 to 10 competitors, paid-ad angles from the Meta Ad Library and LinkedIn, and open archetypes, with every pain row mapped to the persona who feels it, so the brainstorm invents from evidence. It ends by handing /lead-magnet-brainstorm a named Candidate Generation Input block (persona + pain + open archetype rows) that candidate generation consumes directly instead of re-deriving pain. Obtainability and the list are worked out later, after the offer locks. Validation mode runs standalone when a live campaign underperforms and evaluates an existing offer against market evidence with a Go / Iterate / Swap decision."
+description: "Two-mode offer research skill. Discovery mode runs FIRST on the offer path, immediately after /icp-onboarding and before /lead-magnet-brainstorm, and requires no list-side or data-side work beforehand. It opens by reading the research that already exists (it never redoes research), grounds the work in a free 10 to 25 company research sample, and follows Aaron Shepherd's three-input research method, leading with buyer pain: the client's own won and lost sales-call recordings, five-layer persona desire research, real public complaints (Reddit, review sites, forums, with an honest record of which platforms were actually read), competitor cards and offer saturation across 5 to 10 competitors, paid-ad angles from the Meta Ad Library and LinkedIn read in the built-in browser pane, and job postings, with every pain row mapped to the persona who feels it, so the brainstorm invents from evidence. Every piece of evidence becomes a tiered, sourced row in the client's evidence ledger (market-evidence-standard.md). /market-evidence synthesize then counts, clusters, scores and gates it (Research QA: PASS, DEEPEN with at most two targeted loops, or HOLD) before the Intersection step hands /lead-magnet-brainstorm a named Candidate Generation Input block (persona + pain + open archetype rows citing cluster IDs) that candidate generation consumes directly instead of re-deriving pain. Obtainability and the list are worked out later, after the offer locks. Validation mode runs standalone when a live campaign underperforms and evaluates an existing offer against market evidence, including the replies it earned, with a Go / Iterate / Swap decision."
 ---
 
 # Offer Intelligence
@@ -18,7 +18,7 @@ Cold email operators default to two failure modes: (1) copying whatever offer th
 
 **In discovery mode**, it runs first on the offer path, immediately after `/icp-onboarding` and before the offer exists. It researches buyer pain and the market so that `/lead-magnet-brainstorm` invents from evidence, not from gut feel. The order of the whole chain is: buyer and pain, then the offer, then the list built to fit that offer, then the copy. Nothing in this mode waits on any list or data work.
 
-**Discovery mode is the research phase, and it does two jobs in order (Aaron process alignment, operator directive 2026-09-22).** First it **extends and clarifies what onboarding captured**: read what `/icp-onboarding` recorded, name what is thin, vague or missing (the buying function, the pain hypothesis, the competitors, the call library), and close those gaps from the client's site, the client, or the research itself. The intake ICP is a starting point, not a ceiling; the offer may later widen or narrow it. Then it **researches the vertical, the market and the ICP for real problems in the buyers' own words**: the client's won and lost sales calls first; then public opinion from the vertical on review sites, forums and public posts (Aaron, Sep 21: "mine demand, see what people are talking about ... the objections that people have"), with Reddit read only from an operator paste and X or LinkedIn posts only where WebSearch returns them, each gap logged (Vector 3); then competitor offers and what competitors fund in paid ads (the Meta Ad Library and LinkedIn ads, read with WebFetch and WebSearch). **Heavy competitor ad spend behind an offer is evidence of demand** (Aaron, Sep 21), never a reason to close an offer type. In an unfamiliar market, Claude sub-agents do the research (Aaron, Sep 21, reaches for Claude when the space is unfamiliar; here that is the `/deep-research` fan-out plus WebSearch and WebFetch in AI/API Routing, never another research provider). The output is a set of real, named problems with sources, which feeds the offer.
+**Discovery mode is the research phase, and it does two jobs in order (Aaron process alignment, operator directive 2026-09-22).** First it **extends and clarifies what onboarding captured**: read what `/icp-onboarding` recorded, name what is thin, vague or missing (the buying function, the pain hypothesis, the competitors, the call library), and close those gaps from the client's site, the client, or the research itself. The intake ICP is a starting point, not a ceiling; the offer may later widen or narrow it. Then it **researches the vertical, the market and the ICP for real problems in the buyers' own words**: the client's won and lost sales calls first; then public opinion from the vertical on review sites, forums and public posts (Aaron, Sep 21: "mine demand, see what people are talking about ... the objections that people have"), with Reddit read only from an operator paste and X or LinkedIn posts only where WebSearch returns them, each gap logged (Vector 3); then competitor offers and what competitors fund in paid ads (the Meta Ad Library and LinkedIn ads, read in the harness's built-in browser pane, with WebSearch only to find an advertiser's page). **Heavy competitor ad spend behind an offer is evidence of demand** (Aaron, Sep 21), never a reason to close an offer type. In an unfamiliar market, Claude sub-agents do the research (Aaron, Sep 21, reaches for Claude when the space is unfamiliar; here that is the `/deep-research` fan-out plus WebSearch, WebFetch and the built-in browser pane in AI/API Routing, never another research provider). The output is a set of real, named problems with sources, which feeds the offer. **Every piece of evidence is written as a row in the client's evidence ledger** (`_research/evidence.csv`, per `market-evidence-standard.md`), raw captures stay in the run folder, and the research does not hand off to offers until `/market-evidence synthesize` has counted, clustered, scored and checked it (the Research QA gate). The brief this skill writes is the synthesis on top of that ledger, never the only place the evidence lives.
 
 **In validation mode**, it runs after an offer is live - evaluating whether the offer is strong, weak, or invisible due to saturation, and deciding whether to keep it or swap it.
 
@@ -44,13 +44,13 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the operator's default), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue — never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work — never idle.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the operator's default), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue. Never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work. Never idle.
 
 ---
 
 ## Activity Log Protocol
 
-Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short — record status, not raw output. Full protocol: `client-activity-log.md`.
+Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short: record status, not raw output. Full protocol: `client-activity-log.md`.
 
 ## Mode: Discovery
 
@@ -64,15 +64,15 @@ This mode runs from the client profile, the client website, the client's own sal
 
 ### What this mode does
 
-Runs the First-Party Call Vector, then Vectors 0-4, then the Intersection step. No send data exists yet because no campaign exists. Builds a market signal brief covering buyer pain in the buyer's own words (first-party from the client's won and lost calls, then public), each pain mapped to the persona who feels it, a saturation map of which offer archetypes are overused in this space, and the open or contrarian archetypes that `/lead-magnet-brainstorm` should build toward.
+Runs Step 0 (research scope: reuse what exists) and the research sample, then the First-Party Call Vector and Vectors 0-4 with every item written to the evidence ledger, then `/market-evidence synthesize` and its Research QA gate, then the Intersection step. No send data exists yet because no campaign exists. Builds a market signal brief covering buyer pain in the buyer's own words (first-party from the client's won and lost calls, then public), each pain mapped to the persona who feels it, a saturation map of which offer archetypes are overused in this space, and the open or contrarian archetypes that `/lead-magnet-brainstorm` should build toward.
 
 Does **not** evaluate an offer or output a Go/Iterate/Swap decision. There is nothing to evaluate yet. The output is research that feeds invention.
 
 ### AI/API Routing
 
-> **Research Routing: HARD RULE (Claude deep-research primary, enforced; no-AI-API rule, operator directive 2026-09-22).** `run_state.research_routing` has exactly one value, **`claude_deep_research`**. If it is unset, set it to that and proceed. If it still holds a retired value (`third_party_ai`, or the bare-WebSearch `claude_native`), treat it as `claude_deep_research` and note the correction in the activity log. The primary research brain is the Claude native `/deep-research` fan-out harness (multiple sub-agents research every needed category in parallel, fetch real sources, adversarially verify each claim, and synthesize a cited report). Do NOT stop to ask, and do NOT satisfy the primary pass with a bare inline WebSearch. The primary pass MUST be an **actual `/deep-research` invocation** (inline WebSearch/WebFetch alone does NOT satisfy it): record `ai_research_provider = claude-deep-research` and append the run-log line to `api-balance-ledger.md` (a provenance record the wired check reads, not an AI spend row). A research step that finishes with **no `/deep-research` primary** is a **flagged violation** (run it, or get a fresh explicit OK to skip). **Wired check:** after the primary pass, run `node scripts/research/research_routing_check.mjs --skill offer-intelligence --client <business-slug> --json`. A `violation:true` / exit 1 means no logged primary; do not declare this research step done until it passes. No API key of any kind is needed: research runs only on Claude Code itself (the harness, its sub-agents, WebSearch and WebFetch), and no other AI provider is ever called. **Scope note:** the First-Party Call Vector sits outside this routing path entirely, because it reads client-supplied recordings and transcripts, spends nothing externally, and picks no engine. It does NOT satisfy or substitute for the `/deep-research` primary pass, so running it first leaves the primary-pass requirement and the wired check exactly where they were. Full rule: `/ai-model-routing`.
+> **Research Routing: HARD RULE (Claude deep-research primary, enforced; no-AI-API rule, operator directive 2026-09-22).** `run_state.research_routing` has exactly one value, **`claude_deep_research`**. If it is unset, set it to that and proceed. If it still holds a retired value (`third_party_ai`, or the bare-WebSearch `claude_native`), treat it as `claude_deep_research` and note the correction in the activity log. The primary research brain is the Claude native `/deep-research` fan-out harness (`anthropic-skills:deep-research`, run through the Skill tool: multiple sub-agents research every needed category in parallel, fetch real sources, adversarially verify each claim, and synthesize a cited report). When the harness is unavailable or rate-limited, its declared fallback is a flat fan-out of 4 to 8 research sub-agents from the same brief, logged as `claude-subagent-fanout`; that is still Claude Code, never another provider. Do NOT stop to ask, and do NOT satisfy the primary pass with a bare inline WebSearch. The primary pass MUST be an **actual `/deep-research` invocation, or its declared fan-out when the harness fails** (inline WebSearch/WebFetch alone does NOT satisfy it): record `ai_research_provider = claude-deep-research` (or `claude-subagent-fanout` when the fallback ran) and append the run-log line to `api-balance-ledger.md` (a provenance record the wired check reads, not an AI spend row). A research step that finishes with **no `/deep-research` primary** is a **flagged violation** (run it, or get a fresh explicit OK to skip). **Wired check:** after the primary pass, run `node scripts/research/research_routing_check.mjs --skill offer-intelligence --client <business-slug> --json`. A `violation:true` / exit 1 means no logged primary; do not declare this research step done until it passes. No API key of any kind is needed: research runs only on Claude Code itself (the harness, its sub-agents, WebSearch, WebFetch and the built-in browser pane), and no other AI provider is ever called. **Scope note:** the First-Party Call Vector sits outside this routing path entirely, because it reads client-supplied recordings and transcripts, spends nothing externally, and picks no engine. It does NOT satisfy or substitute for the `/deep-research` primary pass, so running it first leaves the primary-pass requirement and the wired check exactly where they were. Full rule: `/ai-model-routing`.
 
-This skill runs at `pass_depth = deep` on the single research path in `/ai-model-routing`, which is Claude Code native only (no-AI-API rule, operator directive 2026-09-22); there is no cheap/standard tier to pick. Assemble the research brief (goal, ICP, decision, output, freshness, confidence, source types, VOC?, assumptions, open questions). The Claude native `/deep-research` fan-out harness runs the primary broad pass (web-grounded competitor/ad/market research + cited source discovery via parallel sub-agents, adversarial verification, cited synthesis). Every data step names a capability role, never a vendor, and the stack contract says which tool fills it; a role whose slot is empty, `held` or `not_chosen` is skipped and noted, never filled with a plausible vendor. The AI roles are retired: there is no research-provider, bulk-classification or copywriting model slot to fill, and `web.search` / `web.crawl` are simply the harness's own WebSearch and WebFetch. The routing: WebSearch is a discovery helper that returns raw URLs, not a second research brain; raw page extraction → WebFetch; **persona desire research (Vector 0) → inside the `/deep-research` primary pass**; **ICP-pain VOC mining (Vector 3) → the VOC / Raw-Evidence pipeline**, run against the platforms Vector 3 lists as readable, with `source_class` kept (Reddit follows Vector 3's own Reddit rule: operator paste only); saturation synthesis and pain-language crunch → Claude Code sub-agents fanned out over disjoint batches per `/personalization-subagent-pattern` (each compresses its own slice of the raw dumps to its own output file before the main session synthesizes). The live X / social read no longer exists, so note that gap rather than filling it. After the primary pass, fill ONLY its gaps (thin / technical / multi-step coverage, weak or unsupported claims, missing counterexamples, overclaimed ICP, contradictions) with a second targeted `/deep-research` pass or a targeted WebSearch/WebFetch pass; never another AI provider, and never a duplicate broad pass. When the corpus is too big or references too many, use **scale mode**: WebSearch EMITS ranked URLs → sub-agents working disjoint URL batches read them with WebFetch and compress each batch → the main Claude Code session merges and synthesizes. Run the Validation Gate before the brief is finalized: a pain counts only at `frequency_count >= 3` independent `buyer_quote` sources, counterexamples kept. The brief this skill writes is research, not copy. Keep CTA wording out. Final copy is written later by `/campaign-copywriting` (Claude Code native, clean-packet sub-agent) and any CTA must still pass `spam-word-checker.md` and `cold-email-copy-best-practices.md`.
+This skill runs at `pass_depth = deep` on the single research path in `/ai-model-routing`, which is Claude Code native only (no-AI-API rule, operator directive 2026-09-22); there is no cheap/standard tier to pick. Assemble the research brief (goal, ICP, decision, output, freshness, confidence, source types, VOC?, assumptions, open questions). The Claude native `/deep-research` fan-out harness runs the primary broad pass (web-grounded competitor/ad/market research + cited source discovery via parallel sub-agents, adversarial verification, cited synthesis). Every data step names a capability role, never a vendor, and the stack contract says which tool fills it; a role whose slot is empty, `held` or `not_chosen` is skipped and noted, never filled with a plausible vendor. The AI roles are retired: there is no research-provider, bulk-classification or copywriting model slot to fill, and `web.search` / `web.crawl` are simply the harness's own WebSearch and WebFetch. The routing: WebSearch is a discovery helper that returns raw URLs, not a second research brain; raw page extraction → WebFetch, plus the harness's built-in browser pane (`mcp__Claude_Browser__navigate`, then `get_page_text`) for pages that render only client-side, such as the Meta and LinkedIn ad libraries. The browser pane is read-only here: never log in, decline non-essential cookies, and read one page at a time rather than across parallel sub-agents. Never fall back to Claude in Chrome for research, because it acts in the operator's real browser with their own sign-ins. **Persona desire research (Vector 0) → inside the `/deep-research` primary pass**; **ICP-pain VOC mining (Vector 3) → the VOC / Raw-Evidence pipeline**, run against the platforms Vector 3 lists as readable, with `source_class` kept (Reddit follows Vector 3's own Reddit rule: operator paste only); evidence extraction → sub-agents on a small model tier (the Agent tool's `model` setting, for example `haiku`) writing ledger batch files over disjoint batches of the raw captures per `/personalization-subagent-pattern` (one output file per agent, then a post-merge dedup); clustering, counting, scoring and the gate → `/market-evidence synthesize`. The live X / social read no longer exists, so note that gap rather than filling it. After the primary pass, fill ONLY its gaps (thin / technical / multi-step coverage, weak or unsupported claims, missing counterexamples, overclaimed ICP, contradictions) with a second targeted `/deep-research` pass or targeted WebSearch, WebFetch or browser-pane reads; never another AI provider, and never a duplicate broad pass. When the corpus is too big or references too many, use **scale mode**: WebSearch EMITS ranked URLs → sub-agents working disjoint URL batches read them with WebFetch and compress each batch → the main Claude Code session merges and synthesizes. The Validation Gate is the Research QA gate in `/market-evidence synthesize` (see "Evidence synthesis and the Research QA gate" below): a public pain still counts only at 3 or more independent `buyer_quote` sightings, now counted by `outbound/scripts/research/evidence_ledger.mjs stats` rather than by hand, counterexamples kept. The brief this skill writes is research, not copy. Keep CTA wording out. Final copy is written later by `/campaign-copywriting` (Claude Code native, clean-packet sub-agent) and any CTA must still pass `spam-word-checker.md` and `cold-email-copy-best-practices.md`.
 
 ### Inputs
 
@@ -82,12 +82,43 @@ This skill runs at `pass_depth = deep` on the single research path in `/ai-model
 - `profiles/<business-slug>/slack-context.md`, when the client Slack check (`client-slack-check.md`) found anything: what the client and the team said in Slack about the buyers, won and lost deals, competitors and objections, plus any call-recording links. A recording or transcript linked there goes through the First-Party Call Vector like any other recording. A Slack message itself is client-stated, the same class as `buyer_pain_hypothesis`: never tag it `first_party_call`
 - Client website URL
 - Competitor names or URLs - ask if not already in the profile. Target 5 to 10, see the sample-size floor in Vector 1
+- **Research that already exists** - the `research_artifacts:` block in `client-profile.yaml`, everything in `profiles/<business-slug>/_research/`, an older `offer-intelligence.md`, `offer-validations/`, and any older research folder kept in another shape (for example `research/`, `_research-raw/` or `first-party-calls/`). Step 0 reads these first so no research is repeated
 
 This mode has no list-side or data-side prerequisite of any kind. Proceed from the client profile, the client website, the client's own call recordings, and public buyer voice. Do not route back to `/lead-source-strategy` or `/data-point-discovery` to satisfy this mode: both run after the offer locks.
 
 ### Steps
 
 **How this maps to Aaron's research method (operator directive 2026-09-22).** Aaron researches an offer from three inputs and then intersects them (2026-06-22 and 2026-04-06 videos, doctrine §5): (1) deep research on what the buyer persona deals with every day, at a business level and a personal level; (2) 5 to 10 competitors' Meta ads, to see which angles already have money behind them; (3) the client's won and lost sales calls, for the buyer's exact words. Here, (1) is Vector 0 plus the complaint mining in Vector 3, (2) is Vectors 1 and 2, (3) is the First-Party Call Vector, and the Intersection step after Vector 4 is his "find the commonality, validate it, reword it" move. Vector 3 goes one step past Aaron: his step one is model-led research, and a model-generated pain is a hypothesis, not a fact (doctrine §5, step 1), so Vector 3 checks those hypotheses against what real buyers complain about in public.
+
+**Step 0 - Research scope: reuse what exists, never redo it**
+
+Before any new research, read what the client already has (the "Research that already exists" input above) and decide the scope of this run:
+
+| Situation | Scope | Run folder |
+|---|---|---|
+| No research on file (new client, new market) | Full Stage 1: every vector below | `_research/runs/<YYYY-MM-DD>-discovery/` |
+| Research exists but `research_artifacts.last_refreshed` is older than 90 days, or a new segment, market or offer direction starts | Refresh: re-run the stale or missing vectors only; carry the rest forward | `_research/runs/<YYYY-MM-DD>-refresh/` |
+| The Research QA gate returned DEEPEN | Targeted Stage 2: only the gaps its deepen brief names | `_research/runs/<YYYY-MM-DD>-deepen-<n>/` |
+| Research is current and passed the gate | Skip to the Intersection step; say so | none |
+
+**Older research is referenced, never moved.** When a client has research on file in an older shape (numbered research notes, a raw-capture folder, a `research/` folder, a folder of call transcripts, a buyer-voice table), extract its quotes and findings into ledger rows once, with `raw_ref` pointing at the original file and `collected_by: legacy-seed`, before new research starts. Then research only what the seeded ledger lacks. Record the original paths in `research_artifacts.legacy_files`.
+
+**Step 0.5 - The research sample (free)**
+
+Before drawing any conclusion, name 10 to 25 real companies that fit the ICP and write them to `_research/market-sample.md` (`market-evidence-standard.md` section 11): the client's named customers and case studies, competitors' named customers, employers found through job posts, and search results that match the ICP. It grounds persona research and job-post reading in real companies and makes the ICP-specificity check concrete. It is **not** the seed set (seeds are chosen for offer fit, after lock, by `/social-proof-bank`), and it triggers no paid lookup: no call to the company-discovery tool, the contact discovery tool or the contact enrichment tool before the offer locks. Build it from public pages with WebSearch and WebFetch.
+
+**How every vector records its evidence**
+
+Each vector's sub-agent writes its findings as ledger rows (`market-evidence-standard.md` section 3) to its own batch file, `_research/runs/<run>/batch-<vector>-<n>.json`, and saves any capture that cannot be re-fetched (an operator paste, a browser-pane page text, a transcript excerpt) in the same run folder. A short narrative note per vector (`<vector>-notes.md`) is optional working material. The orchestrator ingests the batches with `node outbound/scripts/research/evidence_ledger.mjs ingest --client <business-slug> --in outbound/profiles/<business-slug>/_research/runs/<run> --run <run>`, fixes any rejected row from its source, and never types rows or counts by hand. The ledger is written only through that script. The evidence types each vector produces:
+
+| Vector | `evidence_type` (tier) | `source_class` |
+|---|---|---|
+| First-Party Call Vector | `sales_call` (strong) for the buyer's own words; `client_material` (good) for the client describing their buyers | `first_party_call` |
+| Vector 0, persona desire | `model_hypothesis` (never counted) | `model_hypothesis` |
+| Vector 1, competitors | `competitor_claim` (supporting, context only); `competitor_case_study` (good) for named customer stories | `competitor_claim` |
+| Vector 2, paid ads | `ad` (supporting) | `competitor_claim` |
+| Vector 3, public complaints | `forum_post` or `review` (good); `social_post` or `video` (supporting); `purchase_behavior` (strong) when a buyer says they paid for, switched from or cancelled something | `buyer_quote` |
+| Vector 4, job postings | `job_post` (good) | `job_posting` |
 
 **First-Party Call Vector - the client's own won and lost sales calls**
 
@@ -148,6 +179,8 @@ Extract for each competitor:
 2. Which archetype it maps to (A-K from `/lead-magnet-brainstorm`)
 3. How long they appear to have been running it
 
+Also fill a **competitor card** for each one in `_research/competitors-and-ads.md` (`market-evidence-standard.md` section 10), researching only what helps a GTM decision: who they sell to, their main promise (their headline, verbatim), the front-end offer and its archetype, pricing model or visible price, named customers and case studies (each a `competitor_case_study` ledger row), their lead magnets, what their customers complain about (review rows from Vector 3, cited by evidence ID), their strengths as buyers describe them, and the gap they leave. Competitor marketing is `competitor_claim`: context, never proof. Read a competitor's pricing, case-study and customer pages one by one with WebFetch, and in the browser pane when a page renders only client-side.
+
 Build the saturation table. Head it with the denominator:
 
 **Competitors researched: [N]**
@@ -172,14 +205,17 @@ Read the **angle and the positioning, not the creative execution**. A competitor
 
 **Meta Ad Library (start here, it is public and needs no authentication)**
 
-- Search Meta's Ad Library by advertiser name or Facebook page for each competitor and adjacent brand. It is a public ad-transparency registry, so there is no login, no ad account, and no API key involved. Access detail and the bulk options (a ready-made scraping actor, or a direct crawl with JavaScript rendering, plus the equivalent Google Ads Transparency Center route) are documented in `signal-strategy-playbook.md` under the ads-intelligence substitutes.
+- Search Meta's Ad Library by advertiser name or Facebook page for each competitor and adjacent brand. It is a public ad-transparency registry, so there is no login, no ad account, and no API key involved. **Read it in the harness's built-in browser pane** (`mcp__Claude_Browser__navigate` to `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=<CC>&q=<advertiser>&search_type=keyword_unordered`, then `get_page_text` or a screenshot). The Ad Library is a client-side app: WebFetch gets a dropped connection or an empty shell, while the browser pane renders the ads and their copy (tested 2026-09-23). Read only: never log in, and decline non-essential cookies if a banner appears. Never fall back to Claude in Chrome, because it acts with the operator's real sign-ins. Use WebSearch only to find an advertiser's page name. Google's Ads Transparency Center is the equivalent public Google route and is read the same way in the browser pane. With many advertisers, read them one after another in the pane, not in parallel. Mark an advertiser unread only when the browser pane also fails, and say so; there is no scraper route outside the approved stack (`stack-contract.yaml`). Each angle becomes an `ad` row in the ledger, with its variation count and run length in `notes`.
+- **What the Meta library shows and hides.** Dynamic-creative ads show placeholders such as `{{product.brand}}` where the copy should be, so read the ad's cards or its detail view for the real text before naming the angle. For an active ad, compute days running from its start date. Spend and reach appear only on EU-targeted and political ads, so for most advertisers the money behind an angle is read from how long its ads have run and how many variations it has.
 - For each advertiser, group the active ads by distinct angle and count the variations behind each one. Ten to fifty variations of a single angle is the strongest read available in this vector: proven paid demand for that angle.
 - Note how long each angle has been running. Long-running plus many variations means real budget behind something that works.
 - Capture per angle: the problem it names, the promise, the offer or CTA type, the variation count, and how long it has run.
 
 **LinkedIn ads**
 
-- Search LinkedIn's ad library for the same competitor and adjacent brands
+- Search LinkedIn's ad library for the same competitor and adjacent brands. It is public with no login: open `https://www.linkedin.com/ad-library/search?accountOwner=<advertiser>` in the built-in browser pane and read it with `get_page_text`. WebFetch gets HTTP 403 there, but the browser pane renders the ads, including creator posts "Promoted by" the advertiser (tested 2026-09-23). The public ad library is a different surface from LinkedIn behind its login wall, which stays operator paste per the Vector 3 platform table. The same browser rules apply: read only, never log in, never Claude in Chrome.
+- `accountOwner` is a fuzzy name match that pulls in partners' and similarly named advertisers' ads, so once you have the advertiser's company ID from its ad-library URL, scope by `companyIds=<id>` instead. Use `keyword=<phrase>` in place of `accountOwner` to see who else pays to run an angle.
+- Dates, impressions and targeting appear only on EU-targeted ads, and the library gives no variant count. Count variations by reading the ads themselves, and write the run length as Unknown when no date is shown rather than guessing it.
 - Use web search `"[competitor]" linkedin ad OR sponsored OR "lead gen form"` only as a fallback when the ad library itself cannot be reached. A search-result proxy is weaker than the library, so mark anything sourced that way low confidence
 - Look for: what problem does the ad headline name? What CTA? What offer?
 
@@ -197,21 +233,24 @@ Extract: the 1-3 offer angles in this space that have real paid spend behind the
 
 This is the VOC layer, and it is where Vector 0's hypotheses meet real buyers. Go where this ICP complains and asks for help in public (Reddit, review sites, forums, community Q&A) and collect what they actually say. Run the **VOC / Raw-Evidence pipeline** defined in `/ai-model-routing`. Do NOT just "search and summarize", because a summary hides the sampling and launders marketing copy into "pain".
 
-**Where to look, and what this harness can actually read.** Tested from Claude Code on 2026-09-22. Retest any platform marked untested and log the result, because site blocking changes.
+**Where to look, and what this harness can actually read.** Tested from Claude Code on 2026-09-22 and 2026-09-23. Retest any platform marked untested and log the result, because site blocking changes.
 
 | Platform | Readable by the harness? | How to read it |
 |---|---|---|
-| Reddit | **No.** Web fetch, web search and the in-app browser all refuse reddit.com, direct requests return HTTP 403, and the free Reddit archive mirrors refuse agents | See the Reddit rule below |
-| Trustpilot | Yes, web fetch returns verbatim reviews | Web fetch on each competitor's review page |
-| Capterra | Yes, web fetch returns verbatim pros and cons | Web search limited to capterra.com to find the page, then web fetch |
+| Reddit | **No.** Web fetch, web search and the built-in browser pane all refuse reddit.com, direct and RSS requests are rate-limited (HTTP 429), and the free Reddit archive mirrors refuse agents | See the Reddit rule below |
+| Trustpilot | Yes, web fetch returns verbatim reviews | Web fetch on each competitor's review page. A review title ending in "…" is Trustpilot's own auto-title, not the reviewer's words, so quote the review body |
+| Capterra | Yes, web fetch returns verbatim pros and cons | Web search limited to capterra.com to find the page, then web fetch. Capterra mixes in syndicated Software Advice reviews: keep or drop them deliberately, and flag them so one review is never counted twice |
 | Hacker News | Yes, through its free public search API | `https://hn.algolia.com/api/v1/search?query=<terms>&tags=comment` |
-| G2 | **No**, HTTP 403 | Operator paste only |
-| App-store reviews, YouTube comments, niche industry forums | Untested | Try web fetch, then log readable or blocked |
+| G2 | **No**, HTTP 403, and a device check stops the browser pane too | Operator paste only. Check a pasted G2 quote against a Wayback Machine capture of the page (or the same review on another site) before it counts. Capterra usually covers the same product with cleaner fields, so read it first |
+| YouTube comments and transcripts | Untested | Test web fetch and the browser pane on one video, then log readable or blocked; operator paste is the fallback. Comments from buyers, not from the creator, are the `buyer_quote` rows |
+| App-store reviews, niche industry forums | Untested | Try web fetch, then log readable or blocked |
 | Quora, LinkedIn, Facebook groups | Expected login wall, untested | Operator paste only |
+
+**Test a route before trusting it.** Before a platform's rows count, prove the route against the platform itself: open 2 or 3 of the URLs it returned directly (in the browser pane or with web fetch) and confirm the quotes are really there, and run one fabrication probe (a nonsense query, or a source you know is empty) that must come back empty. **An empty result is not proof of absence:** a route can return nothing, with no error, for a page that plainly has content, so run the check before logging a platform as quiet. Log a dated verdict per platform (readable, partial or blocked) in the run folder, and flag this table for an update when a verdict changes.
 
 **The Reddit rule.** No tool in FNNL's approved stack reads Reddit, and the native harness is blocked from it, so **operator paste is the only Reddit route** (operator directive 2026-09-22):
 
-- **Operator paste (zero cost, works today).** Someone on the team reads the threads in their own browser and pastes the post and comment text together with each thread URL. Pasted text counts as `buyer_quote` rows exactly like a fetched page. To keep this to minutes, hand them a short reading list: the subreddits this persona most likely uses (a Vector 0 hypothesis, because the harness cannot search Reddit to confirm them) and the complaint queries below.
+- **Operator paste (zero cost, works today).** Someone on the team reads the threads in their own browser and pastes the post and comment text together with each thread URL. Pasted text counts as `buyer_quote` rows exactly like a fetched page, with the raw paste saved in the run folder because it cannot be re-fetched. To keep this to minutes, hand them a short reading list: the subreddits this persona most likely uses (a Vector 0 hypothesis, because the harness cannot search Reddit to confirm them) and the complaint queries below.
 
 If nothing was pasted, Reddit is **unread**: say so in the Signal Summary. Never claim Reddit coverage because Reddit appears in a platform list, and never write a Reddit quote from a search snippet, a model's summary, or memory.
 
@@ -219,10 +258,11 @@ If nothing was pasted, Reddit is **unread**: say so in the Signal Summary. Never
 
 1. **Live X / social read: not available.** That step is retired with the no-AI-API rule (operator directive 2026-09-22), and nothing replaces it. Where the web search in step 2 returns public X or LinkedIn posts, read and quote them like any other page; otherwise note the gap in the Signal Summary.
 2. **The harness's web search** finds the EXACT discussion and review URLs on the readable platforms above, using the complaint queries below. This hop returns URLs only. It must not summarize.
-3. **The harness's web fetch** reads each page to clean text, and you capture exact quotes. A page the fetch cannot read is logged as unread, never paraphrased from its search snippet.
+3. **The harness's web fetch** reads each page to clean text, and you capture exact quotes. When a page renders only client-side, try the built-in browser pane (read only, never signed in). A page neither can read is logged as unread, never paraphrased from its search snippet.
 4. Tag every quote with `source_class` (`buyer_quote` / `competitor_claim` / `analyst_claim` / `news`). Only `buyer_quote` counts as pain. A competitor landing page is positioning, not pain. A competitor's own customer complaining in a review is a `buyer_quote`.
 5. Tag every quote with the `persona` who voiced it, using the role or function the poster states about themselves. Pain is felt by a person, not by a company. Two personas inside one ICP often carry completely different pains, and flattening them into a single blob produces an offer that is mildly relevant to everyone and urgent to nobody. Where the stated role maps to an entry in `icp_soft_preferences.personas_to_prioritize`, use that entry's wording so the rows join cleanly. Where the role is genuinely not stated, write `persona: unknown` rather than guessing a role to fill the field.
-6. Tag what each complaint is about: `complaint_about: own_workflow` (a problem in how they work today) or `complaint_about: competitor:<name>` (a failure of a product or provider they already use). Competitor complaints are the gap finder for the Intersection step, because they show what the field's current offers leave unsolved.
+6. Tag what each complaint is about: `complaint_about: own_workflow` (a problem in how they work today) or `complaint_about: competitor:<name>` (a failure of a product or provider they already use). Competitor complaints are the gap finder for the Intersection step, because they show what the field's current offers leave unsolved. In the ledger, the competitor's name goes in `competitor_mentioned`; an own-workflow complaint leaves it blank.
+7. Write every quote as a ledger row with the full field set (`market-evidence-standard.md` section 3): alongside `exact_quote`, `source_url`, `source_date`, `persona` and `source_class`, fill `situation`, `pain`, `trigger`, `workaround`, `workaround_gap` (why the current workaround is not enough), `consequence`, `desired_outcome`, `alternative_considered`, `competitor_mentioned` and `objection` wherever the source says them, and leave them blank rather than infer them. Keep the buyer's wording: "We spend half of Monday cleaning the CRM" is the finding; "operational CRM inefficiency" is not.
 
 **Complaint queries.** Search in the words Vector 0 and the client's calls surfaced, never in the client's own jargon. Combine `[persona or job title] + [problem domain]` with three kinds of phrase:
 
@@ -234,7 +274,7 @@ Then read the 1-to-3-star reviews of each Vector 1 competitor on the readable re
 
 A question the ICP asks publicly in their own words = a problem they will trade their attention to solve. That problem is the lever your offer should pull.
 
-Extract: the 3-5 problems this ICP complains about in their own language, each as a verbatim `exact_quote` with its `source_url`, `persona`, `complaint_about`, `frequency_count` (how many independent `buyer_quote` sources voiced it), and any `counterexample`. A pain only graduates into the brief at `frequency_count >= 3` (Validation Gate in `/ai-model-routing`); record weaker ones as `confidence_score: low`. First-party call quotes are a separate, stronger class and never count toward this `frequency_count`, and neither do Vector 0 hypotheses. This exact phrasing feeds copywriting later and anchors the offer brainstorm.
+Extract: every usable quote as a ledger row (step 7). The 3-5 problems the brief reports are the top clusters `/market-evidence synthesize` forms from those rows, each with a verbatim `exact_quote`, its `source_url`, `persona`, `complaint_about` (`competitor_mentioned` in the ledger), and any counterevidence, and its `frequency_count` is the independent `buyer_quote` sighting count from `evidence_ledger.mjs stats`, never typed by hand. A pain only graduates into the brief at 3 or more independent sightings (the Research QA gate); weaker ones stay visible, labelled `confidence_score: low`. First-party call quotes are a separate, stronger class and never count toward this `frequency_count`, and neither do Vector 0 hypotheses. This exact phrasing feeds copywriting later and anchors the offer brainstorm.
 
 Sample before scaling: collect 20-30 quotes first; expand only if patterns are strong. If community signal is weak (niche market, hard-to-find ICP): note it, weight this vector low, lean more on Vectors 1 and 4.
 
@@ -254,17 +294,30 @@ Extract:
 3. What outcomes is the hire accountable for? (the ICP's pressure point - a good offer relieves it)
 4. Are multiple companies posting the same role? (recurring hire = systemic pain = strong offer angle)
 5. Which `persona` owns this problem? Use the role the hire reports into or works alongside, so a job-posting pain carries a persona like every other pain row and joins the pain-by-persona table.
+6. Write each posting as a `job_post` ledger row (`source_class: job_posting`), with the problem, the outcome the hire owns and the tools named in its fields. Prefer postings from the research-sample companies, and add new employers to the sample.
 
 Job postings represent budget decisions. A company spending $80K/year to hire for a problem will pay to solve it.
 
 ---
 
+**Evidence synthesis and the Research QA gate (`/market-evidence synthesize`)**
+
+Once the vectors have written their batches, run `/market-evidence` in `synthesize` mode. It ingests the batches, clusters the rows into problems in the buyers' own words, counts sightings with `evidence_ledger.mjs stats`, scores every cluster on the 8-factor opportunity rubric, and runs the Research QA gate (`market-evidence-standard.md` sections 5 to 7). Its outputs are `_research/pain-clusters.md` and a refreshed `research_artifacts:` block.
+
+| Verdict | What this skill does next |
+|---|---|
+| PASS | Continue to the Intersection step, working from the clusters |
+| DEEPEN | Run Stage 2 on the gaps the deepen brief names, and only those (a new `deepen-<n>` run folder; the routes the brief names: a targeted `/deep-research` pass, WebSearch, WebFetch, the browser pane, or an operator paste), then re-run synthesize. At most two loops; after the second, the verdict becomes PASS with low-confidence labels, or HOLD |
+| HOLD | Under `review_gates`, show the operator the verdict and its reasons and wait for their decision before continuing. Under `auto_execute`, continue to the Intersection step with every cluster labelled low confidence, the HOLD reasons at the top of the brief, and the missing evidence (usually call recordings) requested from the client and logged PENDING |
+
+Staged depth follows `market-evidence-standard.md` section 8. Research here runs on Claude Code alone and spends nothing, so the stages bound effort and time, not money. Weak clusters are never dropped; they are labelled and ranked.
+
 **Intersection - find the pain the inputs agree on (Aaron's commonality step)**
 
 Aaron does not pick a pain from any single input. He lays his three inputs side by side, looks for the commonality, validates it against the market, and rewords it in the buyer's language (2026-06-22). Do the same before writing the brief:
 
-1. **Line up the inputs.** Evidenced pain from Vectors 3 and 4 (with Vector 0 as the map of what to look for), competitor angles with paid spend behind them from Vector 2, and the buyer's own words from the First-Party Call Vector.
-2. **Pick the lowest-hanging pain:** the one with the strongest real evidence that a front-end offer can relieve quickly. In his experience it is "usually going to be around something revenue related". Treat that as his tendency, not a rule.
+1. **Line up the inputs.** The pain clusters from `/market-evidence synthesize`, ranked by opportunity score (they already combine Vectors 3 and 4 and the first-party calls, with Vector 0 as the map of what to look for), competitor angles with paid spend behind them from Vector 2, and the buyer's own words from the First-Party Call Vector.
+2. **Pick the lowest-hanging pain:** the cluster with the strongest real evidence (its opportunity score and its Research QA result) that a front-end offer can relieve quickly. Name it by cluster ID. In his experience it is "usually going to be around something revenue related". Treat that as his tendency, not a rule.
 3. **Validate it against paid spend.** If competitors already pay to advertise offers in this pain's category (Vector 2), the market has shown it cares. An unvalidated pain is not dropped. It is marked lower confidence.
 4. **Find the gap.** Name the part of the pain the competitors' ads do not address, using the `complaint_about: competitor:<name>` quotes from Vector 3 as evidence. His worked example: every clinical-ops staffing competitor pitched finding talent fast, but the research pain was interview load (a VP interviewing 30 candidates to find two good ones), so the offer became three pre-vetted clinical-ops candidates on the VP's desk in 14 days.
 5. **Reword it in the buyer's words** from the First-Party Buyer Voice section, or from Vector 3 quotes when the client has no recordings.
@@ -286,6 +339,7 @@ Save to `profiles/<business-slug>/offer-intelligence.md`:
 **Status:** Feeds /lead-magnet-brainstorm - no offer locked yet
 **Competitors researched:** [N] (floor is 5, see Vector 1)
 **First-party call recordings reviewed:** [N won / N lost, or "none available from client"]
+**Evidence base:** [ledger rows by tier (E-0001..E-nnnn); pain clusters in `_research/pain-clusters.md`; Research QA verdict and date; research sample of N companies in `_research/market-sample.md`]
 **Public complaint coverage:** [platforms read, with quotes per platform; platforms unread and why, e.g. "Reddit: unread, nothing pasted"]
 
 ---
@@ -301,7 +355,7 @@ If the client has no recordings, write exactly: "Client has no call recordings a
 ---
 
 ### ICP Pain (in their words)
-[3-5 bullets, each a verbatim `exact_quote` with its `source_url`, `persona`, `frequency_count`, and any `counterexample` from Vector 3 + 4. No paraphrasing - record how they actually describe the problem. Only pains at `frequency_count >= 3` independent `buyer_quote` sources are stated as pain; mark weaker ones `confidence_score: low` (Validation Gate, `/ai-model-routing`). First-party call quotes live in the section above and never count toward this `frequency_count`.]
+[3-5 bullets, one per top cluster from `_research/pain-clusters.md`: its cluster ID, a verbatim `exact_quote` with its evidence ID and `source_url`, the `persona`, its sighting count from `evidence_ledger.mjs stats` (never typed by hand), and any counterevidence. No paraphrasing - record how they actually describe the problem. Only pains at `frequency_count >= 3` independent `buyer_quote` sources are stated as pain; mark weaker ones `confidence_score: low` (the Research QA gate, `/market-evidence`). First-party call quotes live in the section above and never count toward this `frequency_count`.]
 
 ---
 
@@ -309,9 +363,9 @@ If the client has no recordings, write exactly: "Client has no call recordings a
 
 Every pain row carries the persona who feels it, so `/lead-magnet-brainstorm` and `/campaign-strategy` can aim the offer at a specific buyer instead of an averaged ICP.
 
-| Persona | Pain (their words) | Source class | Frequency or call outcome | Priority |
-|---|---|---|---|---|
-| [role] | [exact quote] | first_party_call / buyer_quote / job_posting | [N independent sources, or won/lost] | High / Med / Low |
+| Persona | Pain (their words) | Cluster | Source class | Frequency or call outcome | Priority |
+|---|---|---|---|---|---|
+| [role] | [exact quote] | [C-xx] | first_party_call / buyer_quote / job_posting | [N independent sightings, or won/lost] | High / Med / Low |
 
 **Prioritized personas from the ICP:** [`icp_soft_preferences.personas_to_prioritize` from `client-profile.yaml`]
 **Prioritized personas with no pain evidence found:** [list, or "none"]. A prioritized persona with no evidence is a gap to name out loud, not a blank to leave sitting.
@@ -362,7 +416,7 @@ Angles only. The creative execution is not the finding. Ten to fifty variations 
 | Benchmark / comparison | J | |
 | Purpose-built interactive tool | K | |
 
-> **Don't confuse H and K.** **H** is scoped access to the client's *actual paid product* (a trial, a free account) — its risk is product friction. **K** is a *purpose-built standalone* calculator or audit that is not the product at all: the prospect drops in their own numbers and gets an instant computed result. K runs as its own arm in any wave and is judged on time-agreed replies rather than positives (K1), and the agency builds it for the test (K2); both in `/lead-magnet-brainstorm`, reworked 2026-09-22. Score its saturation on whether this ICP is already being sent free calculators, not on the client's product.
+> **Don't confuse H and K.** **H** is scoped access to the client's *actual paid product* (a trial, a free account), and its risk is product friction. **K** is a *purpose-built standalone* calculator or audit that is not the product at all: the prospect drops in their own numbers and gets an instant computed result. K runs as its own arm in any wave and is judged on time-agreed replies rather than positives (K1), and the agency builds it for the test (K2); both in `/lead-magnet-brainstorm`, reworked 2026-09-22. Score its saturation on whether this ICP is already being sent free calculators, not on the client's product.
 
 **Saturated archetypes (rank lower, never closed):** [list, each with the gap competitors leave, or "no gap found"]
 **Crowded archetypes (proceed with caution):** [list]
@@ -397,11 +451,11 @@ Angles only. The creative execution is not the finding. Ten to fifty variations 
 
 The rows below are not a summary. They are the working input the next skill invents from, so each one must be filled from the sections above rather than restated loosely. Row 1 is the Intersection section's pain. For a multi-segment client (kickoff Step 2.5 confirmed two or more segments whose pain or offer fit differ), write one `Candidate Generation Input` block per segment, headed with the segment slug, so `/lead-magnet-brainstorm` builds each segment's own offer set (`offer.segments`, operator decision 2026-09-22).
 
-| # | Persona | Pain, in their words | Open archetype(s) to build for | Why this pairing |
-|---|---|---|---|---|
-| 1 | [persona from Pain by persona] | [exact quote, not paraphrase] | [letter(s) from Open archetypes] | [one line] |
-| 2 | | | | |
-| 3 | | | | |
+| # | Persona | Pain, in their words | Cluster (opportunity score) | Evidence strength | Open archetype(s) to build for | Why this pairing |
+|---|---|---|---|---|---|---|
+| 1 | [persona from Pain by persona] | [exact quote, not paraphrase, with its evidence ID] | [C-xx (n/16)] | [strong / good / supporting] | [letter(s) from Open archetypes] | [one line] |
+| 2 | | | | | | |
+| 3 | | | | | | |
 
 **Open archetypes still uncontested:** [letters + names from the Saturation Map's Open line]
 **Saturated (ranked lower, never closed):** [saturated archetypes, each with the gap competitors leave and the paid-ad spend behind it, which counts as demand evidence. Candidate generation may build toward one when it names that gap; it ranks below an equal-scoring open direction and never displaces a higher-scoring one (Aaron process alignment, operator directive 2026-09-22; supersedes "Closed to candidates", which contradicted this file's own never-filtered rule)]
@@ -412,14 +466,15 @@ The rows below are not a summary. They are the working input the next skill inve
 
 ### What to do next (discovery mode)
 
-Hand off directly to `/lead-magnet-brainstorm`. Discovery and candidate generation are one continuous offer motion split across two skills, so this mode is not finished until the handoff is usable as-is.
+Hand off to `/lead-magnet-brainstorm` once `/market-evidence synthesize` has returned its verdict (PASS, or HOLD carried forward with its labels). Discovery and candidate generation are one continuous offer motion split across two skills, so this mode is not finished until the handoff is usable as-is.
 
-**What carries forward, by section name.** `/lead-magnet-brainstorm` opens by reading these four, and reads them rather than rebuilding them:
+**What carries forward, by section name.** `/lead-magnet-brainstorm` opens by reading these five, and reads them rather than rebuilding them:
 
 1. **`Candidate Generation Input`** - the numbered persona + pain + open-archetype rows. This is the primary input: candidates are generated against these rows.
 2. **`Pain by persona`** - the full table behind those rows, including the prioritized personas with no pain evidence, which are named gaps rather than blanks.
 3. **`Saturation Map`** - the open, crowded, and saturated archetypes with the denominator, so archetype choice is bounded by evidence.
 4. **`First-Party Buyer Voice`** and **`ICP Pain (in their words)`** - the exact words the offer gets written in.
+5. **`_research/pain-clusters.md`** - the clusters behind every row, their counts and opportunity scores, the Research QA verdict, and the Language bank. Every candidate `/lead-magnet-brainstorm` builds cites the clusters it answers (`market-evidence-standard.md` section 12).
 
 Nothing else in this brief is a prerequisite for that handoff. If `Candidate Generation Input` is empty or missing, this mode has not actually finished, so complete it here rather than letting the next skill re-derive pain from scratch.
 
@@ -427,7 +482,7 @@ Nothing else in this brief is a prerequisite for that handoff. If `Candidate Gen
 
 ## Mode: Validation
 
-> **Research Routing: HARD RULE (Claude deep-research primary, enforced) applies here too.** Validation mode runs research (Vectors 1–4: competitor / ads / ICP-community / job-postings) and is often the path where `run_state.research_routing` is still **unset** (fresh diagnostic session). Apply the same gate as **AI/API Routing** above: `research_routing` has one value, `claude_deep_research` (set it if unset, and treat a retired `third_party_ai` or `claude_native` value as `claude_deep_research`), so the primary brain is the Claude native `/deep-research` fan-out harness. Do NOT stop to ask, and do NOT satisfy the primary pass with a bare inline WebSearch. The primary pass MUST be an **actual `/deep-research` invocation** (inline WebSearch/WebFetch alone does NOT satisfy it): record `ai_research_provider = claude-deep-research`, append the run-log line to `api-balance-ledger.md` (the provenance record the wired check reads), and run the same `research_routing_check.mjs` check with `--skill offer-intelligence`. Finishing with **no `/deep-research` primary** is a **flagged violation**. No API key of any kind is needed, and no other AI provider is ever called (no-AI-API rule, operator directive 2026-09-22). **Scope note:** validation mode runs the First-Party Call Vector first, and that vector sits outside this routing path entirely (client-supplied recordings, no external spend, no engine choice). It does NOT satisfy or substitute for the `/deep-research` primary pass on Vectors 1-4. Full rule: `/ai-model-routing`.
+> **Research Routing: HARD RULE (Claude deep-research primary, enforced) applies here too.** Validation mode runs research (Vectors 1–4: competitor / ads / ICP-community / job-postings) and is often the path where `run_state.research_routing` is still **unset** (fresh diagnostic session). Apply the same gate as **AI/API Routing** above: `research_routing` has one value, `claude_deep_research` (set it if unset, and treat a retired `third_party_ai` or `claude_native` value as `claude_deep_research`), so the primary brain is the Claude native `/deep-research` fan-out harness (`anthropic-skills:deep-research`), or its declared sub-agent fan-out (`claude-subagent-fanout`) when the harness is unavailable. Do NOT stop to ask, and do NOT satisfy the primary pass with a bare inline WebSearch. The primary pass MUST be an **actual `/deep-research` invocation, or its declared fan-out** (inline WebSearch/WebFetch alone does NOT satisfy it): record `ai_research_provider = claude-deep-research` (or `claude-subagent-fanout`), append the run-log line to `api-balance-ledger.md` (the provenance record the wired check reads), and run the same `research_routing_check.mjs` check with `--skill offer-intelligence`. Finishing with **no `/deep-research` primary** is a **flagged violation**. Thin sub-topics are filled exactly as in discovery mode (a targeted `/deep-research` pass, WebSearch, WebFetch or the browser pane), and extraction runs on small-model sub-agents writing ledger rows. No API key of any kind is needed, and no other AI provider is ever called (no-AI-API rule, operator directive 2026-09-22). **Scope note:** validation mode runs the First-Party Call Vector first, and that vector sits outside this routing path entirely (client-supplied recordings, no external spend, no engine choice). It does NOT satisfy or substitute for the `/deep-research` primary pass on Vectors 1-4. Full rule: `/ai-model-routing`.
 
 ### When to trigger
 
@@ -448,6 +503,7 @@ If validation mode is requested but the only offer fields are `offer.client_sugg
 - `profiles/<business-slug>/lead-magnets.md` - the existing offer to evaluate
 - The client's own won and lost sales-call recordings - the strongest evidence available for judging whether a live offer matches buyer reality. Request them if not already on file
 - `profiles/<business-slug>/offer-intelligence.md` - load if it exists from a prior discovery run (the First-Party Call Vector and Vectors 1-4 may already be done; only run Vector 5 when send data exists)
+- `profiles/<business-slug>/_research/` - the evidence ledger, the pain clusters and their Market feedback log, and the competitor cards, when they exist. Step 0 of discovery mode (reuse, never redo) applies here too
 - Client website URL
 - Competitor names or URLs
 - Live send data (optional) - reply rate and reply sentiment from current campaign
@@ -486,6 +542,8 @@ Then run the existing offer through four quick questions. They are the fast chec
 
 If a discovery brief already exists at `profiles/<business-slug>/offer-intelligence.md`: the First-Party Call Vector and Vectors 1-4 may already be done. Cross-reference the existing first-party buyer voice, pain-by-persona table, paid-ads angles, saturation map, and signal summary. Run Vector 5 only if a campaign is already live and send data exists.
 
+**When live replies exist, run `/market-evidence feedback` first,** so the replies enter the ledger as strong-tier evidence (objections, competitor mentions, timing reasons, confusion), **then `/market-evidence synthesize`** over the whole ledger. The Go / Iterate / Swap decision is then made on clusters that already include what the market said to this offer. Refresh only the vectors Step 0 finds stale or missing. This step stays dormant until the locked `run_state.sending_platform` is live and has sent: with no replies there is nothing to feed back, so go straight to synthesize.
+
 If no discovery brief exists: run the First-Party Call Vector, then Vectors 1-4. Then run Vector 5 only if a campaign is already live and send data exists.
 
 **First-Party Call Vector and Vectors 1-4** - same as discovery mode above. Run the First-Party Call Vector here whenever the client has recordings: validation mode's whole job is checking an offer against buyer reality, and the client's own won and lost calls are the closest thing to that reality on file. It is not a hard requirement, because some clients record nothing.
@@ -496,6 +554,7 @@ If no discovery brief exists: run the First-Party Call Vector, then Vectors 1-4.
 - Use the positive reply scoring skill for the locked `run_state.sending_platform`, if `/stack-setup` activated a pack that provides one (vendor packs ship their own, e.g. `/emailbison-positive-reply-scoring`).
   - If no pack is active, classify the replies from that platform's own inbox or reply export directly.
   - If neither exists, say so and score the replies by hand against the buckets below rather than implying coverage.
+- The replies themselves are evidence: once `/market-evidence feedback` has ingested them as `outbound_reply` rows (tier strong) with their objection, competitor and timing tags, the five buckets below are counted from the ledger rather than re-read by hand
 
 Classify replies into five buckets:
 
@@ -577,7 +636,7 @@ Re-score once to check the rewrite answers the finding, then let the market read
 
 **Swap:** Choose the market alternative or contrarian offer. If `offer.validation_arms` already holds an active arm that passed every `/lead-magnet-brainstorm` gate, that arm is the first swap candidate. Write the offer-only experiment hypothesis for `/experiment-design`. Any new offer goes through `/lead-magnet-brainstorm` (ranked with its labels and its honoring fields, with its four fulfillment artifacts written before it sends) and into a fresh multi-offer flight run as simultaneous cells, list and copy frozen, shown on the next `/offer-test-slate` (Aaron process alignment, operator directive 2026-09-22; supersedes a one-offer swap).
 
-Keep the CTA at **direction-level** here — a plain-English ask direction, not exact send copy. Exact CTA wording is deferred to `/campaign-copywriting`, which writes it later under the verified-list gate (`verified-list-gate.md`) and runs it through `spam-word-checker.md` + `cold-email-copy-best-practices.md`. Do not write exact CTA send phrasing to the validation brief or `client-profile.yaml` — this skill runs before any list exists.
+Keep the CTA at **direction-level** here: a plain-English ask direction, not exact send copy. Exact CTA wording is deferred to `/campaign-copywriting`, which writes it later under the verified-list gate (`verified-list-gate.md`) and runs it through `spam-word-checker.md` + `cold-email-copy-best-practices.md`. Do not write exact CTA send phrasing to the validation brief or `client-profile.yaml`, because this skill runs before any list exists.
 
 ---
 
@@ -612,7 +671,7 @@ Preserve the discovery brief at `profiles/<business-slug>/offer-intelligence.md`
 profiles/<business-slug>/offer-validations/YYYY-MM-DD-offer-validation.md
 ```
 
-Save the CTA at **direction-level** only (`lead_magnet_cta_direction` — a plain-English ask, not final copy), matching the Locked offer block below. Exact send copy is produced later by `/campaign-copywriting` under the verified-list gate (`verified-list-gate.md`). Do not save exact CTA send copy here.
+Save the CTA at **direction-level** only (`lead_magnet_cta_direction`, a plain-English ask, not final copy), matching the Locked offer block below. Exact send copy is produced later by `/campaign-copywriting` under the verified-list gate (`verified-list-gate.md`). Do not save exact CTA send copy here.
 
 ```markdown
 ## Offer Intelligence - [Business Name] (Validation)
@@ -624,6 +683,7 @@ Save the CTA at **direction-level** only (`lead_magnet_cta_direction` — a plai
 **Competitors researched:** [N] (floor is 5, see Vector 1)
 **First-party call recordings reviewed:** [N won / N lost, or "none available from client"]
 **Decision:** Go | Iterate | Swap | Swap (Contrarian)
+**Evidence base:** [ledger rows by tier, clusters used (IDs), replies ingested; Research QA verdict and date]
 
 ---
 
@@ -717,6 +777,9 @@ Only add `offer_validation_run` and `offer_validation_path` when validation mode
 - **Firing SATURATED off three competitors.** Three is not a field. Research 5 to 10, record the denominator, and mark the archetype INSUFFICIENT SAMPLE below 5 instead of guessing.
 - **Listing Reddit as researched when nothing was read.** The harness cannot read Reddit, and operator paste is the only route. Report the pasted threads and the quotes they gave, or write "Reddit: unread". A platform named in a list is not a platform read.
 - **Treating the persona research as buyer pain.** Vector 0 is a model's educated guess about the persona. It tells you where to look and what words to search with. Only a real buyer saying it, in public or on a client call, makes it pain.
+- **Typing counts by hand.** "Appeared in 12 threads" comes from `evidence_ledger.mjs stats`, never from a tally kept in the session. Hand counts drift and double-count syndicated quotes.
+- **Building offers before the Research QA verdict.** The Intersection step and the Candidate Generation Input wait for `/market-evidence synthesize`. A HOLD is carried forward with its labels, never skipped silently.
+- **Redoing research that already exists.** Step 0 reads the ledger and any older research first; a refresh fills gaps, it does not restart.
 - **Reading the ad creative instead of the ad angle.** Fifty variations of one angle is the finding. The headline wording and the imagery are the advertiser optimizing around something already proven, not the proof itself.
 
 ---
@@ -725,6 +788,7 @@ Only add `offer_validation_run` and `offer_validation_path` when validation mode
 
 | Skill | Relationship |
 |---|---|
+| `/market-evidence` | Called after the vectors (`synthesize`: clusters, counts, opportunity scores and the Research QA gate) and after launch (`feedback`: replies and calls become evidence, dormant until the sending platform is live). This skill collects; `/market-evidence` counts, checks and learns. Standard: `market-evidence-standard.md`. |
 | `/icp-onboarding` | Runs immediately before this skill. Produces the ICP, the value prop, `icp_soft_preferences.personas_to_prioritize` (the persona list every pain row maps against), `sales_call_library` (whether the client's won and lost recordings exist and where, which the First-Party Call Vector reads before asking the client for anything), and `buyer_pain_hypothesis` (the client's unverified belief about buyer pain, which this skill confirms or overturns). |
 | `/lead-source-strategy` | Runs in Lead Source Plan Mode AFTER campaign selection, far downstream of this skill. The chain is: buyer and pain, then the offer, then the list built to fit that offer, then the copy. Nothing it produces is a prerequisite here. |
 | `/lead-magnet-brainstorm` | Runs after discovery mode. Reads the offer-intelligence.md brief to anchor archetype selection, using the first-party buyer language, the pain-by-persona table, the paid-ads angles, and the ICP language from Vector 3. |
@@ -734,12 +798,12 @@ Only add `offer_validation_run` and `offer_validation_path` when validation mode
 | `/roast` | Optional fast pre-lock stress test of a candidate offer (hands-off council → green-light / reshape / kill + the single cheapest 48-hour validation test). Useful for a new or contrarian offer before committing build and spend; complements this skill's evidence-based Go/Iterate/Swap rather than replacing it. |
 | `/ask-aaron` | Optional persona consult for pressure-testing a candidate offer against Aaron Shepherd's diagnostic (is the buyer real and specific, is it a concrete deliverable or a service description, can every qualified yes be honored, his "easy for you to fulfill" applied at the planned send volume; the twenty-buyer figure was this system's safeguard, doctrine §13, and the deliverable-at-send-scale check sits at offer lock in `/lead-magnet-brainstorm`, Aaron process alignment, operator directive 2026-09-22) or choosing between offer cards. Advisory only; complements the evidence-based Go/Iterate/Swap here rather than replacing it. |
 | `/cold-email-kickoff` | Invokes this discovery mode immediately after `/icp-onboarding`, then `/lead-magnet-brainstorm`, then `/data-point-discovery` once the offer is locked. |
-| `/cold-email-weekly-rhythm` | If raw reply rate drops below 1% after 300+ sends on a running campaign, trigger validation mode (a look, not a verdict: calling the offer broken needs about 1,300 first-touch contacts per arm) before changing copy or list. |
+| `/cold-email-weekly-rhythm` | If a running campaign's raw reply rate drops below 1% after 300+ sends, its Monday 1% rule sends it to `/deliverability-incident-response` first; once that clears deliverability and the list, it opens validation mode here (a look, not a verdict: calling the offer broken needs about 1,300 first-touch contacts per arm) before copy or list change. Its cross-campaign offer diagnosis and `/market-evidence feedback`'s routing rules (repeated contradiction, `already_have` or `confusion` in replies) open validation mode too. |
 | `/email-deliverability-audit` | Run it first when a deliverability trigger fires: bounce above the house threshold, a placement-test flag (a trigger to investigate, never decisive alone), reply rate near 0.1%, or contacts-per-positive jumping. Open rate is never the trigger, because opens are not tracked in this system (open tracking stays off on the sending platform). Do not diagnose the offer while a trigger is open. |
 
 ## What to do next
 
-- **Discovery mode complete:** Hand off to `/lead-magnet-brainstorm`. It reads the brief at `profiles/<business-slug>/offer-intelligence.md`, starting from its `Candidate Generation Input` block. Nothing list-side or data-side has run at this point, and none of it is needed for the handoff.
+- **Discovery mode complete** (the Research QA verdict is PASS, or HOLD carried forward with labels): Hand off to `/lead-magnet-brainstorm`. It reads the brief at `profiles/<business-slug>/offer-intelligence.md`, starting from its `Candidate Generation Input` block. Nothing list-side or data-side has run at this point, and none of it is needed for the handoff.
 - **Validation - Go:** Proceed to `/campaign-strategy`. Offer is locked in `client-profile.yaml`. New offer arms are optional; the default test is segments and data sources plus positioning variants of this offer (Aaron, Apr 13).
 - **Validation - Iterate:** Rewrite using ICP language from Vector 3, re-score once, then route the rewrite to `/lead-magnet-brainstorm` as a cell in a fresh multi-offer flight. The market reads it, not the desk score (Aaron process alignment, operator directive 2026-09-22; supersedes "repeat until score hits 6+").
 - **Validation - Swap or Swap (Contrarian):** Route the new offer through `/lead-magnet-brainstorm` into a fresh multi-offer flight run as simultaneous cells, with list and copy frozen; `/experiment-design` formalizes the offer-only hypothesis (Aaron process alignment, operator directive 2026-09-22; supersedes a one-offer swap).
