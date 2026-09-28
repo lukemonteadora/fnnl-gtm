@@ -254,7 +254,7 @@ mailbox_mix: auto_recommend
 mailbox_mix_custom: [leave blank unless mailbox_mix = custom]
 # Specify mix if mailbox_mix = custom. E.g.: 70_google_30_microsoft
 
-## Reply Handling and Compliance (optional: anything left blank is asked at checkpoint 1 under the default, otherwise at Gate D or copy)
+## Reply Handling and Compliance (optional: anything left blank is resolved by the run first (speed-to-lead defaults to FNNL Agency, the booking link comes from the sweep) and asked at checkpoint 1 only if it still matters, otherwise at Gate D or copy)
 
 speed_to_lead_owner: [leave blank if not decided]
 # The named person who calls interested replies within the 5-minute target (Gate D). Named by the operator, never inferred.
@@ -369,8 +369,8 @@ context_sweep:           # top-level, not inside run_state. Written by the clien
 run_state:
   execution_mode: <auto_execute | review_gates>   # default auto_execute (operator directive 2026-09-24)
   review_protocol: <phase_checkpoints | none>     # default phase_checkpoints
-  speed_to_lead_owner: <value or null>   # operator-named; null is asked at checkpoint 1 and read at Gate D
-  booking_link: <value or null>          # null is asked at checkpoint 1; read by /lifecycle-copy for Gate D
+  speed_to_lead_owner: <value or FNNL Agency>   # FNNL default when blank (operator 2026-09-24); not asked; read at Gate D
+  booking_link: <value or null>          # null is filled from the context sweep; asked at checkpoint 1 only if the sweep finds none; read by /lifecycle-copy for Gate D
   spend_ceiling_usd: 100   # the standing budget per client run, never asked (operator directive 2026-09-22)
   campaign_approval_brief_needed: <yes | no>
   offer_slate_approval: <optional | required>   # read by /offer-test-slate; default optional

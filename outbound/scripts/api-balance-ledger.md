@@ -44,6 +44,14 @@ Add a row only after:
   3. a real call has succeeded (status: live).
 -->
 
+## Run log (research provenance, not AI spend)
+
+| Date | Skill | Provider(s) | Tokens | USD | Exact/Est | Balance |
+|---|---|---|---|---|---|---|
+| 2026-09-24 | offer-intelligence discovery (propfuel) | claude-subagent-fanout (deep-research harness unavailable) | n/a | 0.00 | n/a | n/a |
+| 2026-09-24 | data-point-discovery brainstorm (propfuel) | claude-subagent-fanout (deep-research harness unavailable; 5 research sub-agents + form990 pass) | n/a | 0.00 | n/a | n/a |
+| 2026-09-25 | tam-build Phase A (propfuel): company counts, 300-row sample pull, 98-row rework pull, 17-account buyer probe | AI Ark (FNNL key) | n/a | about 0.78 to 1.92 (195.5 credits at $0.004 to $0.0098, labelled estimate) | credits exact (live 60,099 to 59,903.5), USD est | 59,903.5 credits (live: GET /payments/credits, 2026-09-25) |
+
 ## Preventing a negative balance
 
 Setting a hard spend limit in each provider's own dashboard is a **required** one-time step, not an optional extra. This ledger cannot stop an overrun on a ledger-only provider, because it only knows what was last typed into it. The provider-side limit is the only real backstop.

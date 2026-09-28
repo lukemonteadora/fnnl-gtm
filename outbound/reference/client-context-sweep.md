@@ -83,7 +83,19 @@ An agency often keeps its own records on each client, and they hold the most use
 ## Blocklists: from found to enforced
 
 - **Write them to the suppression registry at once.** Every row of a list that the client or the team labels as do-not-contact, exclude, existing customers, current clients, competitors, partners or already-in-pipeline goes into `profiles/<slug>/suppression-list.csv` (schema owned by `/email-waterfall`) with `reason: client_blocklist`, `source_campaign: context-sweep`, and today's `date_added`. This is the safe direction, since it can only remove people from sending, so it does not wait for confirmation. It is reported at the top of the run report with the row count and the source.
-- **Company rows need a domain.** Leave `email` and `linkedin_url` blank so the row blocks the whole company, and keep `company_name` as well. When the client gave only company names, resolve each domain as the row is written (from the client's own file first, then a quick WebSearch or WebFetch lookup). A name-only row is caught only by the final list QA, after email spend, so resolve it now, and list any name that stays unresolved in the report (it counts toward `unresolved_blocklist_names`).
+- **Company rows need a domain.** Leave `email` and `linkedin_url` blank so the row blocks the whole company, and keep `company_name` as well. When the client gave only company names, resolve each domain as the row is written. A name-only row is caught only by the final list QA, after email spend, so resolve it now. **Work the whole ladder before a name counts as unresolved. Never hand the operator a "waive or resolve" question (operator directive 2026-09-24):**
+  1. The client's own file: other columns, other tabs, the other copy of the sheet.
+  2. WebSearch or WebFetch on the name, with the client's market as context. Fan the names out to a sub-agent when there are several.
+  3. The client's Slack channel, Drive and email for the name. A label like "X Opportunity" is often explained there.
+  4. **Same-name ambiguity** (several small firms share the name): suppress every plausible candidate. Over-suppressing a firm outside the ICP costs nothing.
+  5. **A bundle or category label** (for example "BOI and CPA Societies Opportunity"): suppress the whole plausible set of organisations, skipping any already on the list. For each organisation include:
+     - its current domain;
+     - its legacy domains;
+     - any domain changes, such as `.cpa` moves and mergers.
+
+     Tag these rows `source_campaign: context-sweep-inferred-<slug>`, so the group can be reversed once the client names the real set, and say in the report that the rows are inferred.
+
+  Only a name that survives all five steps counts toward `unresolved_blocklist_names`. Report each one in a single line that says what was tried.
 - **Person rows** carry the `email` or the `linkedin_url`, and block only that person.
 - **Our own booked pipeline** (the pipeline sheet, source 4) is written as person rows with `reason: manual` and `source_campaign: pipeline-sheet`, not `client_blocklist`, because it records FNNL's own bookings rather than a list the client supplied. Those rows are never removed: the refresh only appends.
 - **Ambiguous lists stay candidates.** If it is not clear whether a list is a blocklist or a target list, record it under Conflicts / Flags, do not write it, and ask the operator in one line.

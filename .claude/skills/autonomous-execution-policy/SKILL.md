@@ -28,7 +28,12 @@ The operator wants a client onboarded, researched, offered and built into paused
 
 - **Inside a phase, never stop for a minor call.** Every skill runs its `auto_execute` branch: take the recommended default, record it, keep going, and list it at the next checkpoint under "Calls I made" so the operator can reverse it.
 - **Stop once at the end of each of the four phases** in `/cold-email-kickoff` ("How a run stops"): Onboard, Research, Offer, List to drafts. A checkpoint is a short plain-words summary plus one native prompt carrying every question the phase needs (at most four, recommended answer first). The last checkpoint is the launch review before the operator presses Start in the sending platform.
-- **Front-load the operator-only facts.** Anything a later phase would otherwise stop for (the speed-to-lead owner and booking link for Gate D, an opt-out ruling when the geography includes Canada, the UK or Ireland, which `/campaign-copywriting` otherwise holds copy for under `auto_execute` too, whether sending infrastructure is already handled elsewhere while the contract defers it) is asked at checkpoint 1.
+- **Front-load the operator-only facts, after resolving what you can yourself (operator directive 2026-09-24).** Anything a later phase would otherwise stop for is settled at checkpoint 1. First the run resolves it from ground truth, as described under "Resolve it yourself first" in `/cold-email-kickoff`:
+  - The speed-to-lead owner defaults to FNNL Agency.
+  - The booking link comes from the context sweep.
+  - The sending pool is read from PlusVibe.
+
+  Only what survives the ask test is asked. That includes an opt-out ruling when the geography includes Canada, the UK or Ireland, which `/campaign-copywriting` otherwise holds copy for under `auto_execute` too. Keep the process lean: never ask a question the build can proceed without.
 - **Client asks never hold the flow.** They are batched into one `client-asks.md` message that the operator sends (Claude never sends it). Only the specific item that cannot happen without the answer waits.
 - **An empty or `deferred` infrastructure or sending-platform slot never holds phases 1 to 3.** It stops only the step that uses that tool (CLAUDE.md section 1).
 - **The hard stops in section 3 still stop mid-phase**, the moment they are hit, one at a time, while unblocked work continues. So do the one-time approval of the infrastructure setup total (section 2) and the context sweep upload stop in `/cold-email-kickoff` Step 6.

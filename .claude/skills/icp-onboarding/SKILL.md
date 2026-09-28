@@ -30,7 +30,14 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 
 Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at `/cold-email-kickoff`'s four phase checkpoints; `review_gates` is opt-in), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue - never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work - never idle.
 
-**Under `review_protocol: phase_checkpoints` (the new-client default, operator directive 2026-09-24) the interview does not run as a series of prompts.** Build the whole profile from the pre-fill map (the context sweep first, then the site, existing research and any form), take the recommended answer for every item the map covers, and hand the draft back to `/cold-email-kickoff` for checkpoint 1. Only the items the map cannot answer, plus the operator-only facts later phases need (the speed-to-lead owner and booking link, an opt-out ruling when the geography includes Canada, the UK or Ireland), go into that checkpoint's one prompt; the Steps 1 to 5 prompts below apply under `review_gates`. The answers land in `run_state.speed_to_lead_owner`, `run_state.booking_link` and `capability_boundary.legal_or_compliance_limits`.
+**Under `review_protocol: phase_checkpoints` (the new-client default, operator directive 2026-09-24) the interview does not run as a series of prompts.** Build the whole profile from the pre-fill map (the context sweep first, then the site, existing research and any form), take the recommended answer for every item the map covers, and hand the draft back to `/cold-email-kickoff` for checkpoint 1. Before anything reaches that prompt, resolve it yourself (operator directive 2026-09-24, detailed under "Resolve it yourself first" in `/cold-email-kickoff`):
+- The sending pool is read from PlusVibe.
+- The booking link comes from the sweep.
+- The speed-to-lead owner defaults to FNNL Agency.
+- Commercial admin fields (price, target, contract, pipeline sheet) are recorded `null` and never asked.
+- Unresolved blocklist names go through the sweep's resolution ladder.
+
+The one prompt then holds only the items that pass the ask test (a different answer changes targeting, offer, spend or launch, and the run cannot find or default it), plus an opt-out ruling when the geography includes Canada, the UK or Ireland. Everything else is written to `context-sweep.md` as non-blocking, and the run continues; the Steps 1 to 5 prompts below apply under `review_gates`. The answers land in `run_state.speed_to_lead_owner`, `run_state.booking_link` and `capability_boundary.legal_or_compliance_limits`.
 
 ## Activity Log Protocol
 
@@ -290,8 +297,8 @@ context_sweep:                    # top-level, not inside run_state. Written by 
 run_state:
   execution_mode: auto_execute   # new-client default (operator directive 2026-09-24); review_gates is opt-in (set by /client-intake-form or the operator). Never overwrite a value an existing profile carries
   review_protocol: phase_checkpoints   # new-client default: hands-free inside a phase, one stop at the end of each of kickoff's four phases
-  speed_to_lead_owner: null      # operator-named; asked at checkpoint 1 under phase_checkpoints, read at Gate D
-  booking_link: null             # asked at checkpoint 1 under phase_checkpoints; read by /lifecycle-copy for Gate D. Never invented
+  speed_to_lead_owner: FNNL Agency   # FNNL default (operator 2026-09-24): FNNL runs replies + booking, client excluded; not asked. Read at Gate D
+  booking_link: null             # taken from the context sweep (the client's scheduler link); asked only if the sweep finds none; read by /lifecycle-copy for Gate D. Never invented
   spend_ceiling_usd: 100         # the standing budget per client run (operator directive 2026-09-22); written automatically, never asked. Paid data steps inside it auto-approve.
   infrastructure_stack: <from stack contract|null>   # the contract's registrar + mailbox provider, lowercase, joined with an underscore
   registrar: <from stack contract|null>              # no default; declared by /stack-setup
