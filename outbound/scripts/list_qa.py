@@ -17,7 +17,9 @@ list_waterfall.py) and the client's targeting spec, then:
      rest to leads.rejected.csv, leads.review.csv, leads.catchall-holdback.csv
      and leads.stagger.csv (leads.verified.pre-scorecard.csv keeps the input);
   7. measures distributions and anomalies against the spec's expectations and
-     attributes each anomaly to the email source and source arm behind it;
+     attributes each anomaly to the email source and source arm behind it
+     (including a warning when one real employer sits behind several company
+     domains, which the per-company cap cannot see);
   8. grades the campaign-ready remainder on the nine scorecard dimensions;
   9. draws a stratified manual QA sample (qa-sample.csv) for an independent
      reviewer, scored later with the score-sample command.
@@ -1138,8 +1140,50 @@ def find_anomalies(rows: list[dict[str, Any]], ready: list[dict[str, Any]], ctx:
           "duplicate rows",
           "The waterfall let duplicates through. De-duplicate by email, LinkedIn and name plus domain before any "
           "enrichment spend (email waterfall, required order step 1).")
+    org = one_employer_many_domains(ready, ctx.max_contacts)
+    if org:
+        offenders = [r for _, rs, _, _ in org for r in rs]
+        groups = "; ".join(f"@{dom}: {len(rs)} contacts across {n_cos} company domains"
+                           + (f" and {n_offers} offers" if n_offers > 1 else "")
+                           for dom, rs, n_cos, n_offers in org[:5])
+        more = f" (and {len(org) - 5} more)" if len(org) > 5 else ""
+        out.append({"level": "WARNING", "key": "one_employer_many_domains", "count": len(offenders),
+                    "base": len(ready), "share": share(len(offenders), len(ready)), "limit": 0.0,
+                    "title": f"One real employer behind several company domains (same email domain), over the "
+                             f"{ctx.max_contacts or 'unset'}-per-company cap or on two offers: "
+                             f"{plural(len(org), 'employer')}, {plural(len(offenders), 'campaign-ready contact')} "
+                             f"({groups}{more})",
+                    "fix": "The per-company cap runs on company_domain, so one employer listed under brand sites, "
+                           "subdomains or sibling domains slips past it. Check the groups named above and trim each "
+                           "to the cap (move the extra rows to the stagger queue) before upload. Upstream, key the "
+                           "account density on the employer, not only on the company domain.",
+                    "attribution": attribution(offenders, ready, "rows behind one employer",
+                                               "the campaign-ready rows")})
     out.sort(key=lambda a: 0 if a["level"] == "CRITICAL" else 1)
     return out
+
+
+def one_employer_many_domains(ready: list[dict[str, Any]], cap: int | None
+                              ) -> list[tuple[str, list[dict[str, Any]], int, int]]:
+    """One real employer behind several company domains (a warning, never a removal).
+
+    The account-density cap (and any one-offer rule) runs on company_domain, so an employer listed under brand
+    sites, subdomains or sibling domains slips past both. Group the campaign-ready rows by the email's domain and
+    return each group that spans 2+ company domains AND either holds more rows than the cap or spans 2+ offers
+    (only when the rows carry an `offer` column). Personal mailbox domains are never grouped.
+    """
+    by_dom: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for r in ready:
+        dom = r.get("email_domain") or ""
+        if dom and dom not in CONSUMER_DOMAINS:
+            by_dom[dom].append(r)
+    found = []
+    for dom, rs in sorted(by_dom.items()):
+        n_cos = len({r["company_domain_norm"] for r in rs if r["company_domain_norm"]})
+        n_offers = len({clean(r.get("offer")) for r in rs} - {""})
+        if n_cos > 1 and ((cap is not None and len(rs) > cap) or n_offers > 1):
+            found.append((dom, rs, n_cos, n_offers))
+    return found
 
 
 # ---------------------------------------------------------------------------

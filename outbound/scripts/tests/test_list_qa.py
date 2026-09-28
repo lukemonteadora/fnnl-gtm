@@ -2,6 +2,7 @@ import contextlib
 import csv
 import importlib.util
 import io
+import json
 import sys
 import tempfile
 import unittest
@@ -439,6 +440,52 @@ class FixRegressionTest(unittest.TestCase):
         leak = [b for b in blocks if b["check"] == "scoring_leakage"]
         self.assertEqual(len(leak), 1)
         self.assertEqual({r["first_name"] for r in leak[0]["rows"]}, {"Bob", "Cy"})
+
+
+class OneEmployerManyDomainsTest(ListQATestBase):
+    """Ported 2026-09-28: one real employer behind several company domains slips past the per-company cap."""
+
+    def test_one_employer_behind_two_company_domains_is_a_warning_not_a_removal(self):
+        rows = [lead("Alice", "Abbott", "co01.com"),
+                lead("Hana", "Host", "hilton.com", "exact"),
+                lead("Hugo", "Host", "hilton.com", "strong"),
+                # a sibling brand domain whose buyer mails from the parent's domain: related, so it ships
+                lead("Holly", "Host", "hiltongrandvacations.com", "exact", email="holly@hilton.com"),
+                # personal mailboxes are never grouped, even across companies
+                lead("Gina", "Gmail", "co02.com", email="gina@gmail.com"),
+                lead("Gabe", "Gmail", "co03.com", email="gabe@gmail.com"),
+                lead("Gwen", "Gmail", "co04.com", email="gwen@gmail.com")]
+        spec = target_spec()
+        spec["buyers"]["personal_email_policy"] = "allow"
+        self.spec_path.write_text(yaml.safe_dump(spec, sort_keys=False), encoding="utf-8")
+        write_csv(self.dir / "leads.verified.csv", HEADER, rows)
+        code, out, err = self.run_qa()
+        self.assertEqual(code, 0, err)
+        ready = self.by_email("leads.verified.csv")
+        for email in ("hana@hilton.com", "hugo@hilton.com", "holly@hilton.com"):
+            self.assertIn(email, ready)      # a warning never removes a row
+        self.assertEqual(json.loads(out)["warning_anomalies"], 1)
+        report = (self.dir / "list-qa-report.md").read_text(encoding="utf-8")
+        section = report[report.index("## Anomalies"):report.index("## What we built")]
+        self.assertIn("**WARNING: One real employer behind several company domains", section)
+        self.assertIn("1 employer, 3 campaign-ready contacts", section)
+        self.assertIn("@hilton.com: 3 contacts across 2 company domains", section)
+        self.assertNotIn("@gmail.com", section)
+        self.assertNotIn("—", report)
+        self.assertNotIn("–", report)
+
+    def test_the_flag_needs_two_company_domains_and_more_than_the_cap_or_two_offers(self):
+        def row(email, dom, offer=""):
+            return {"email_domain": email, "company_domain_norm": dom, "offer": offer}
+        flag = list_qa.one_employer_many_domains
+        self.assertEqual([], flag([row("a.com", "a.com")] * 5, 2))                       # one company domain
+        self.assertEqual([], flag([row("a.com", "a.com"), row("a.com", "b.com")], 2))    # at the cap, one offer
+        hit = flag([row("a.com", "a.com"), row("a.com", "b.com"), row("a.com", "b.com")], 2)
+        self.assertEqual([("a.com", 3, 2, 0)], [(d, len(rs), c, o) for d, rs, c, o in hit])
+        two_offers = flag([row("a.com", "a.com", "o1"), row("a.com", "b.com", "o2")], 2)
+        self.assertEqual(["a.com"], [d for d, *_ in two_offers])
+        self.assertEqual([], flag([row("a.com", "a.com"), row("a.com", "b.com"), row("a.com", "c.com")], None))
+        self.assertEqual([], flag([row("gmail.com", "a.com"), row("gmail.com", "b.com"), row("gmail.com", "c.com")], 2))
 
 
 class PortedPolicyTest(ListQATestBase):

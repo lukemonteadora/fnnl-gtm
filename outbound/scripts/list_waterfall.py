@@ -31,13 +31,20 @@ Nothing about a vendor is hard-coded. provider-routing.yaml names every tool:
     stop ends that person's waterfall and sends the address to the holdback);
   - which rung may only run after another has finished for the same row
     (layers.<layer>.requires_attempted, for example {prospeo: [aiark]}).
-A rung switched off with --skip-provider (after an outage seen in this run)
-counts as satisfied for requires_attempted: that is the sanctioned exception.
+A rung switched off with --skip-provider counts as satisfied for
+requires_attempted. Since 2026-09-28 (/tool-balance-guard) every
+--skip-provider also needs --operator-approved-skip: a provider that is out of
+balance, over its fair use, answering 402 or down is a STOP that waits for the
+operator, never a skip that hands its rows to the next rung. The flag says the
+operator has said in chat to go on without that provider, and the ledger's
+skip line records it (detail.operator_approved).
 
 Usage:
   list_waterfall.py plan --dir D --contacts C --spec S --routing R
         [--layer email|phone|people] [--companies T]
         [--skip-provider P --skip-reason TEXT] [--unskip-provider P] [--allow-draft]
+        [--operator-approved-skip]   (required with every --skip-provider: the operator said in chat
+                                      to go on without that provider; /tool-balance-guard)
   list_waterfall.py record --dir D --layer email|phone|people|verify [--provider P] --results F [--routing R]
         (the verify layer takes the verifier key from the routing file: --routing, or the
         file the last plan used, which plan writes to _waterfall/status.json)
@@ -101,6 +108,17 @@ DEFAULT_RETRY = 1
 UNRANKED = 10**9
 
 PHONE_NOT_REQUIRED = "phone not required by the targeting spec; skipped"
+# /tool-balance-guard (ported 2026-09-28). A skip reason that says the provider ran out of balance, credits or fair
+# use, or that it is down. Both are a stop, never a skip, unless the operator approved going on without it. The two
+# patterns only choose the wording of the refusal: every --skip-provider needs --operator-approved-skip.
+BALANCE_REASON = re.compile(
+    r"\b402\b|credit|balance|quota|top[- ]?up|insufficient|out of funds|spending limit|wallet|fair[- ]?use|"
+    r"records remaining|payment required",
+    re.IGNORECASE)
+OUTAGE_REASON = re.compile(
+    r"\b(401|403|5\d\d)\b|invalidated|outage|\bdown\b|unavailable|missing key|no key|key missing|auth|"
+    r"health check|timed? ?out|timeout|network|connection|unreachable|not responding",
+    re.IGNORECASE)
 SERIAL_NOTE = "run this queue one call at a time, never in parallel"
 
 FIELD_ALIASES = {
@@ -327,7 +345,7 @@ def unmet_prereqs(ledger: "Ledger", layer: str, cfg: dict[str, Any], provider: s
     """The prerequisites of `provider` that are NOT yet satisfied for this row (empty list = may run).
 
     A prerequisite is satisfied when it finished for this row, or when it is switched off for the run with
-    --skip-provider (an outage observed in this run: the sanctioned exception).
+    --skip-provider, which since 2026-09-28 needs --operator-approved-skip (/tool-balance-guard).
     """
     return [
         prereq for prereq in requires_attempted(cfg, provider)
@@ -990,6 +1008,8 @@ def build_control_lines(args: argparse.Namespace, cfg: dict[str, Any], layer: st
         return []
     if skips and not (args.skip_reason or "").strip():
         raise WaterfallError("--skip-provider needs --skip-reason (a skip is never silent)")
+    if skips and not getattr(args, "operator_approved_skip", False):
+        raise WaterfallError(skip_refusal(skips, args.skip_reason))
     order = layer_order(cfg)
     unknown = [provider for provider in skips + unskips if provider not in order]
     if unknown:
@@ -1000,7 +1020,7 @@ def build_control_lines(args: argparse.Namespace, cfg: dict[str, Any], layer: st
         lines.append({
             "ts": ts, "layer": layer, "provider": provider, "company_domain": "", "person_id": "",
             "result": "skipped", "value": "", "email": "", "cost_usd": None,
-            "detail": {"scope": "run", "reason": args.skip_reason.strip()},
+            "detail": {"scope": "run", "reason": args.skip_reason.strip(), "operator_approved": True},
         })
     for provider in unskips:
         lines.append({
@@ -1009,6 +1029,20 @@ def build_control_lines(args: argparse.Namespace, cfg: dict[str, Any], layer: st
             "detail": {"scope": "run", "reason": (args.skip_reason or "").strip() or "operator unskip"},
         })
     return lines
+
+
+def skip_refusal(skips: list[str], reason: str) -> str:
+    """Why a --skip-provider without --operator-approved-skip is refused (/tool-balance-guard)."""
+    if BALANCE_REASON.search(reason):
+        what = "out of balance (credits, fair use, wallet or a 402)"
+    elif OUTAGE_REASON.search(reason):
+        what = "down"
+    else:
+        what = "switched off"
+    return (f"{skips} would be skipped as {what}, and a provider that is {what} is a stop, not a skip: its rows "
+            "never pass to the next rung without the operator's say-so. Stop that step, save progress, and ask the "
+            "operator to top it up or fix it, then resume on the same provider (/tool-balance-guard). Only when the "
+            "operator has said in chat to go on without it, re-run with --operator-approved-skip.")
 
 
 def queue_line(routing: dict[str, Any], name: str, provider: str, count: int, noun: str) -> str:
@@ -1858,6 +1892,7 @@ def build_report(engine: Engine, spec: dict[str, Any], routing: dict[str, Any], 
             latest = history[-1]
             reason = (latest.get("detail") or {}).get("reason") or "no reason given"
             skip_reasons = [str((line.get("detail") or {}).get("reason") or "no reason given")
+                            + (" (operator approved)" if (line.get("detail") or {}).get("operator_approved") else "")
                             for line in history if line.get("result") == "skipped"]
             now = "still skipped" if latest.get("result") == "skipped" else "back on"
             routed = ""
@@ -2026,6 +2061,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     plan.add_argument("--skip-provider", action="append", help="skip this provider for the rest of the run")
     plan.add_argument("--skip-reason", help="why the provider is skipped (required with --skip-provider)")
     plan.add_argument("--unskip-provider", action="append", help="turn a skipped provider back on")
+    plan.add_argument("--operator-approved-skip", action="store_true",
+                      help="required with --skip-provider: the operator said in chat to go on without that provider "
+                           "(out of balance or down is otherwise a stop, /tool-balance-guard)")
 
     record = sub.add_parser("record", help="append provider or email verifier results to the ledger")
     record.add_argument("--dir", required=True, type=Path)

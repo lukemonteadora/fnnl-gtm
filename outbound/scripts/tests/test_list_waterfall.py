@@ -496,7 +496,10 @@ class ListWaterfallTests(WaterfallTestCase):
     # 6
     def test_skip_provider_writes_control_line_and_routes_to_next_rung(self):
         reason = "AI Ark connector invalidated (observed in this run)"
-        self.plan("--skip-provider", "aiark", "--skip-reason", reason)
+        status, _, err = self.cli("plan", *self.state_args(), "--skip-provider", "aiark", "--skip-reason", reason)
+        self.assertEqual(2, status)  # down is a stop, not a skip, until the operator approves (/tool-balance-guard)
+        self.assertIn("--operator-approved-skip", err)
+        self.plan("--skip-provider", "aiark", "--skip-reason", reason, "--operator-approved-skip")
         self.assertFalse((self.work / "queue-email-aiark.csv").exists())
         expected = {"A1", "A2", "B1", "B2", self.pid["Cara"], self.pid["Cole"]}
         self.assertEqual(expected, set(self.queue_ids("queue-email-getleads.csv")))
@@ -504,7 +507,7 @@ class ListWaterfallTests(WaterfallTestCase):
         self.assertEqual(1, len(control))
         self.assertEqual("email", control[0]["layer"])
         self.assertEqual("aiark", control[0]["provider"])
-        self.assertEqual({"scope": "run", "reason": reason}, control[0]["detail"])
+        self.assertEqual({"scope": "run", "reason": reason, "operator_approved": True}, control[0]["detail"])
         self.assertEqual("", control[0]["person_id"])
 
         self.plan()  # the skip persists without the flag
@@ -513,6 +516,7 @@ class ListWaterfallTests(WaterfallTestCase):
         report = self.report()
         self.assertIn("email aiark: still skipped", report)
         self.assertIn(reason, report)
+        self.assertIn(f"{reason} (operator approved)", report)
 
         self.plan("--unskip-provider", "aiark")
         self.assertEqual(expected, set(self.queue_ids("queue-email-aiark.csv")))
@@ -520,6 +524,34 @@ class ListWaterfallTests(WaterfallTestCase):
         status, _, err = self.cli("plan", *self.state_args(), "--skip-provider", "aiark")
         self.assertEqual(2, status)
         self.assertIn("--skip-reason", err)
+
+    def test_tool_balance_guard_refuses_every_skip_without_operator_approval(self):
+        # /tool-balance-guard: out of balance, over fair use, a 402 or down is a stop on every rung, the last one
+        # included. Nothing is skipped, and no control line is written, until the operator approves the skip.
+        cases = [
+            ("aiark", "AI Ark returned HTTP 402 insufficient credits", "out of balance"),
+            ("getleads", "GetLeads fair use used up for today", "out of balance"),
+            ("getleads", "GetLeads insufficient_wallet_cash", "out of balance"),
+            ("prospeo", "Prospeo 402 on every call", "out of balance"),
+            ("prospeo", "Prospeo API down (503)", "down"),
+            ("aiark", "operator wants to save it for later", "switched off"),
+        ]
+        for provider, reason, wording in cases:
+            with self.subTest(provider=provider, reason=reason):
+                status, _, err = self.cli("plan", *self.state_args(), "--skip-provider", provider,
+                                          "--skip-reason", reason)
+                self.assertEqual(2, status)
+                self.assertIn("--operator-approved-skip", err)
+                self.assertIn(wording, err)
+                self.assertIn("/tool-balance-guard", err)
+        self.assertEqual([], [line for line in self.ledger() if line.get("result") == "skipped"])
+
+        self.plan("--skip-provider", "prospeo", "--skip-reason", "Prospeo 402 on every call",
+                  "--operator-approved-skip")
+        control = [line for line in self.ledger() if line.get("result") == "skipped"]
+        self.assertEqual(1, len(control))
+        self.assertEqual("prospeo", control[0]["provider"])
+        self.assertTrue(control[0]["detail"]["operator_approved"])
 
     # 7
     def test_record_rejects_rows_not_in_the_current_queue(self):
@@ -869,7 +901,7 @@ class RequiresAttemptedTests(WaterfallTestCase):
         self.assertIn("prospeo runs only after aiark has been attempted", report)
         self.assertNotIn(c1, {pid for provider, pid in self.queued if provider == "prospeo"})
 
-    def test_run_skip_of_the_prerequisite_is_the_sanctioned_exception(self):
+    def test_operator_approved_run_skip_of_the_prerequisite_satisfies_requires_attempted(self):
         # Two rungs that every base contact can take, with the prerequisite rule on.
         self.write_routing(lambda r: r["layers"]["email"].update({
             "order": ["aiark", "prospeo"],
@@ -877,7 +909,11 @@ class RequiresAttemptedTests(WaterfallTestCase):
             "requires_attempted": {"prospeo": ["aiark"]},
         }))
         everyone = {"A1", "A2", "B1", "B2", self.pid["Cara"], self.pid["Cole"]}
-        self.plan("--skip-provider", "aiark", "--skip-reason", "AI Ark returned 5xx on every call (observed)")
+        reason = "AI Ark returned 5xx on every call (observed)"
+        status, _, err = self.cli("plan", *self.state_args(), "--skip-provider", "aiark", "--skip-reason", reason)
+        self.assertEqual(2, status)  # an outage no longer opens the rows to prospeo on its own
+        self.assertIn("--operator-approved-skip", err)
+        self.plan("--skip-provider", "aiark", "--skip-reason", reason, "--operator-approved-skip")
         self.assertEqual(everyone, set(self.queue_ids("queue-email-prospeo.csv")))
         self.plan("--unskip-provider", "aiark")
         self.assertEqual(everyone, set(self.queue_ids("queue-email-aiark.csv")))
