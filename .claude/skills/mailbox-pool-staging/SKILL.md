@@ -65,7 +65,7 @@ whichever skill `/stack-setup` activated for that slot.
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at `/cold-email-kickoff`'s four phase checkpoints; `review_gates` is opt-in), proceed without pausing: apply the rubric, record the decision, and continue. Pool purchases are infrastructure, so they run against the setup total the operator approved once (the standing $100 data budget in `run_state.spend_ceiling_usd` never covers them), auto-approved within that total. Stop only for the hard-stop list (funding a wallet, paying by card, accepting OAuth or terms, anything that authenticates, or pressing a campaign **Start**). On a long async wait (warmup maturity is ~3 weeks), background-poll and move to other productive work, never holding the session idle on a clock. UI-only steps are finished in the browser yourself, hands-free, under the same boundaries (see Automated vs Manual).
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at `/cold-email-kickoff`'s four phase checkpoints; `review_gates` is opt-in), proceed without pausing: apply the rubric, record the decision, and continue. Pool purchases are infrastructure, so they run against the setup total the operator approved once (the standing \$100 data budget in `run_state.spend_ceiling_usd` never covers them), auto-approved within that total. Stop only for the hard-stop list (funding a wallet, paying by card, accepting OAuth or terms, anything that authenticates, or pressing a campaign **Start**). On a long async wait (warmup maturity is ~3 weeks), background-poll and move to other productive work, never holding the session idle on a clock. UI-only steps are finished in the browser yourself, hands-free, under the same boundaries (see Automated vs Manual).
 
 ## Material Decision Rule
 
@@ -181,10 +181,10 @@ The DASHBOARD burn-rate math needs per-unit costs. These are the numbers the she
 
 | Line item | Previous-stack figure | Replace with |
 |---|---|---|
-| Mailbox, monthly (Google or Microsoft, flat) | $3.00 | FNNL's `mailbox_provider` rate |
-| Mailbox, monthly (second provider in a split fleet) | $4.50 | FNNL's second provider rate, if any |
-| `.com` domain, first year | $8.88 | FNNL's `registrar` rate |
-| `.co` domain, first year | $3.48 | FNNL's `registrar` rate (and check the renewal price) |
+| Mailbox, monthly (Google or Microsoft, flat) | \$3.00 | FNNL's `mailbox_provider` rate |
+| Mailbox, monthly (second provider in a split fleet) | \$4.50 | FNNL's second provider rate, if any |
+| `.com` domain, first year | \$8.88 | FNNL's `registrar` rate |
+| `.co` domain, first year | \$3.48 | FNNL's `registrar` rate (and check the renewal price) |
 
 Keep the tracker's rate card and this one identical, or the burn rate and the per-client cost will disagree.
 

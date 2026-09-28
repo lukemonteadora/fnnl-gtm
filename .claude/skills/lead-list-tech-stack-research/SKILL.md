@@ -56,7 +56,7 @@ When more than one tool can collect a signal, route to the **cheapest tool that 
 1. **Already-paid spine first.** For lists built on the chosen `company_discovery` / `contact_discovery` spine, take any field those tools or their native enrichers return before fetching it elsewhere, because it is already paid for. (Typical coverage to check for: a company-search endpoint returning firmographics, sales-motion signals, tech and hiring; a contact endpoint returning rows by title or by domain; a similarity tool returning business profile, growth metrics, and appended data.) **Then the gap-fill provider for the still-blank cells, never as the spine.** That is the exhaust-then-gap-fill ordering: run the primary across the whole survivor set first, then route only the still-blank cells onward, in the `provider-routing.yaml` order for that field (under `lead_data.contact_enrichment.notes` in the stack contract). A gap-filler's credits are usually already paid too, and where a provider offers an **exact count that reveals no record** (e.g. GetLeads `count_contacts`, on its plan meter), size any pull with it before spending a credit on search or export (§16). A rung out of balance stops and asks (`/tool-balance-guard`); it is never skipped for the next one.
 2. **Free public / official data.** Government, regulator, and official directory datasets (e.g. CMS `data.cms.gov`, NCQA recognition directory, SEC EDGAR, state licensing boards). Zero cost, authoritative, always first for any regulated/official fact.
 3. **The `crawl` role** (in FNNL, the harness's WebFetch; a scripted crawler such as Spider Cloud is an OUT OF STACK, needs operator approval catalogue example): the default for ANY website, article, careers/ATS, or HTML page. Where the crawler exposes these settings, crawl `request:'http'` **proxy-off** first (fast, ~0.5s); escalate to `'chrome'` (JS render) only when http returns 0 pages, and turn the proxy on only for a confirmed bot wall. Per-page cheap. **Throughput is concurrency-bound, not per-site: see the fast-crawl settings in §7.**
-4. **The `search` role** (in FNNL, the harness's WebSearch; a search API such as Serper is an OUT OF STACK, needs operator approval catalogue example): Google Search / News / **Places** to find pages, news/timing signals, and Google ratings. A search API's **Places** endpoint is the light substitute for a paid Maps scraper (rating + review count). ≈$0.001–0.003/query.
+4. **The `search` role** (in FNNL, the harness's WebSearch; a search API such as Serper is an OUT OF STACK, needs operator approval catalogue example): Google Search / News / **Places** to find pages, news/timing signals, and Google ratings. A search API's **Places** endpoint is the light substitute for a paid Maps scraper (rating + review count). ≈\$0.001–0.003/query.
 5. **Claude Code sub-agent extraction** (this rung was "a cheap AI tool" until the no-AI-API rule, operator directive 2026-09-22): Claude Code sub-agents fanned out over disjoint batches per `/personalization-subagent-pattern` turn the scraped/searched text into the structured value, with the main session handling the nuanced cases (per `/ai-model-routing`). No AI model on any API key. JSON-only, blank-when-unsupported.
 6. **Paid scrapers: OUT OF STACK, needs operator approval** (e.g. Apify, Scrap.io; none is in FNNL's approved stack). Raise one only when no stack tool obtains the field, and spend nothing on it until the operator approves it by name. Genuine scraper-only cases: Google-Maps **review text** (per-review sentiment), ad-library / running-ads, some social scrapers. Gate every paid-scraper run through `/api-cost-governance`; if even the paid tool isn't available, **leave the field blank** (a blank is honest).
 
@@ -91,7 +91,7 @@ When building the whole TAM up front (see `/tam-build`), split the stack by what
 - Work email / mobile **FINDER** (when a real-named row has NO email): the finders in the `layers.email` order of `provider-routing.yaml`, blank rows only, each result checked by the verifier; a multi-provider waterfall (e.g. BetterContact) is OUT OF STACK, needs operator approval. The order is the file's, not a preference re-decided per run, and a rung out of balance stops and asks (`/tool-balance-guard`). A finder needs first+last+domain. Where the `contact_discovery` tool already returns emails on its contact rows, or exposes a LinkedIn-to-email batch endpoint, that is a cheaper gap-fill to exhaust before the next rung (§16). (Per-tool routing detail in `/email-waterfall`.)
 - Email **VERIFICATION + catch-all** (when a row ALREADY has an email: verify-first, don't pay a finder to re-discover it): the `email_verification` tool. Prefer a **two-in-one** verifier whose single call returns both a deliverability status (deliverable/undeliverable/risky/unknown) AND a catch-all flag, covering deliverability AND catch-all in one pass, so no separate catch-all tool is needed. A verifier that collapses catch-all into valid or invalid will quietly inflate bounce rate. **Every finder's output is re-verified through the `email_verification` tool before sending: no source is exempt, and a finder's own internal self-check is a provider signal, not the send-gate.** The verifier of record is the `email_verification` tool in the stack contract (`outbound/scripts/millionverifier_verify.mjs`); §14 is an OUT OF STACK, needs operator approval catalogue note. Routing owned by `/email-waterfall`'s Verification Doctrine.
 
-Rule: build Layer 1 for the whole TAM; spend Layer 2 only on the contacts a campaign has confirmed it sends to. In the first wave that is the whole scored, eligible TAM, revealed and verified in P1 to P5 order, with the standing $100 run budget still stopping and asking (Aaron process alignment, operator directive 2026-09-22). Never run per-contact reveal / verification across the whole TAM up front, before scoring and campaign selection: that is the expensive move the "right order" avoids. **Within Layer 2, verify any existing email FIRST (email + catch-all) before paying a finder to discover a new one. Finding when you already have a verifiable email double-pays.** Preview both layers through `/api-cost-governance` before spending.
+Rule: build Layer 1 for the whole TAM; spend Layer 2 only on the contacts a campaign has confirmed it sends to. In the first wave that is the whole scored, eligible TAM, revealed and verified in P1 to P5 order, with the standing \$100 run budget still stopping and asking (Aaron process alignment, operator directive 2026-09-22). Never run per-contact reveal / verification across the whole TAM up front, before scoring and campaign selection: that is the expensive move the "right order" avoids. **Within Layer 2, verify any existing email FIRST (email + catch-all) before paying a finder to discover a new one. Finding when you already have a verifiable email double-pays.** Preview both layers through `/api-cost-governance` before spending.
 
 # Lead List Ideas From The Candidate Tool Catalog
 
@@ -1246,11 +1246,11 @@ This is best for SaaS account lists, not general B2B.
 ## Lead Lists You Can Build
 
 - SaaS company by ARR list
-  - $0 to $1M ARR.
-  - $1M to $5M ARR.
-  - $5M to $10M ARR.
-  - $10M+ ARR.
-  - $50M+ ARR.
+  - \$0 to \$1M ARR.
+  - \$1M to \$5M ARR.
+  - \$5M to \$10M ARR.
+  - \$10M+ ARR.
+  - \$50M+ ARR.
 
 - High-growth SaaS list
   - Companies with strong year-over-year growth.
@@ -1760,8 +1760,8 @@ The site cites pre-compiled datasets (e.g. 3.5M+ Crunchbase companies, 3.5M+ Sho
 **Where it sits in the stack:** LeadsFriday is a *low-cost extraction layer* (a cheap way to pull rows out of the five sources above), not a source-of-truth signal and not the contact-enrichment layer. Its distinctive pitch is price and no subscription: pay-as-you-go credits, minimum 10 credits to start.
 
 **Pricing (vendor-stated, PAYG, verify before relying on it):**
-- Crunchbase companies: ~$3.50 per 1,000 companies
-- LinkedIn company followers: ~$3.00 per 1,000 followers
+- Crunchbase companies: ~\$3.50 per 1,000 companies
+- LinkedIn company followers: ~\$3.00 per 1,000 followers
 - (StoreLeads / BuiltWith / LinkedIn group members billed per result on the same credit system: confirm current rate in-app before a large pull)
 
 Because it bills per result on a small floor, it is genuinely cheap for high-volume extraction, which is exactly why the discipline below matters. Cheap data tempts you to skip ICP and source logic. Don't.
@@ -1804,7 +1804,7 @@ Every one of these is a raw extract. Hand it to the usual pipeline: `/icp-prompt
 
 ## Cost-Governance Note
 
-LeadsFriday is a paid, credit-based tool. Before any extraction run, route through `/api-cost-governance` to preview the USD/credit cost, check the balance, and block if under cost or the $10 warning threshold. The same gate applies to every paid tool in this catalog, with no exceptions.
+LeadsFriday is a paid, credit-based tool. Before any extraction run, route through `/api-cost-governance` to preview the USD/credit cost, check the balance, and block if under cost or the \$10 warning threshold. The same gate applies to every paid tool in this catalog, with no exceptions.
 
 ---
 
@@ -1877,7 +1877,7 @@ These are all *enrichment passes over an already-targeted person list*, not stan
 
 ## Cost-Governance Note
 
-BetterContact is a paid, credit-based tool. Before any enrichment run, route through `/api-cost-governance` to preview the credit/USD cost (the `--dry-run` eligible-row count is the upper bound; pay-per-valid means actual spend is usually lower), check the balance, and block if the key is under cost or the $10 warning threshold. The same gate applies to every paid tool in this catalog. If this vendor's parked script is ever activated, its `--max-credits N` flag is the hard pre-submit stop worth wiring into that gate.
+BetterContact is a paid, credit-based tool. Before any enrichment run, route through `/api-cost-governance` to preview the credit/USD cost (the `--dry-run` eligible-row count is the upper bound; pay-per-valid means actual spend is usually lower), check the balance, and block if the key is under cost or the \$10 warning threshold. The same gate applies to every paid tool in this catalog. If this vendor's parked script is ever activated, its `--max-credits N` flag is the hard pre-submit stop worth wiring into that gate.
 
 ## Credit Planning: Avoid the "On Hold" Trap
 
@@ -1886,7 +1886,7 @@ BetterContact runs on a **monthly credit allowance**, not a usage-based wallet, 
 Practical prevention (apply on every run and when sizing the plan):
 
 - **Check the balance before you submit, top up before you hit the limit.** The step-0 `--credits` call is load-bearing; the script now also auto-checks the live balance before submitting: it aborts at a 0 balance and warns when the balance is below the eligible-row count, so it never silently creates an on-hold queue.
-- **Plan around the monthly allowance.** Pricing tiers: Free = 50 one-time signup credits; **Starter $15/mo = 200 credits; Pro $49/mo = 1,000–50,000** (tiered); Enterprise $799+/mo. Costing is **1 credit = 1 verified email, 10 credits = 1 verified phone**, pay-per-valid (only valid results charge). Unused credits **roll over, capped at your plan's monthly amount.** For recurring or high-volume sending, size the monthly plan above real volume rather than topping up reactively after each stall.
+- **Plan around the monthly allowance.** Pricing tiers: Free = 50 one-time signup credits; **Starter \$15/mo = 200 credits; Pro \$49/mo = 1,000–50,000** (tiered); Enterprise \$799+/mo. Costing is **1 credit = 1 verified email, 10 credits = 1 verified phone**, pay-per-valid (only valid results charge). Unused credits **roll over, capped at your plan's monthly amount.** For recurring or high-volume sending, size the monthly plan above real volume rather than topping up reactively after each stall.
 - **Respect the rate limits:** **60 requests/minute, ≤100 contacts per request.** The script's 100-row sequential batches stay well under this, but do **not** run multiple instances concurrently, which trips BetterContact's throttle (it queues batches as `on_hold`).
 - **Estimate credits from volume.** If the operator gives a rough daily/weekly request count, compute the monthly credits needed (≈ verified-emails/mo + 10×verified-phones/mo, adjusted for the find rate) and recommend the matching plan tier so the account never runs dry.
 
@@ -1992,8 +1992,8 @@ Read this before reporting any GetLeads balance problem. There are **two indepen
 Three rules that follow:
 
 - **`creditsRemaining: null` means UNLIMITED, not zero.** Unlimited-plan accounts report `null`. Never read `null` as "out of credits."
-- **Never report "out of credits" from the wallet balance.** A $0 wallet says nothing at all about search or export.
-- **The two move independently.** The classic failure state looks like this: a healthy finite plan-credit balance (a finite number means the account is not on the unlimited plan) sitting alongside a **$0.00 wallet with auto-top-up off**. Contact search and export work fine, while a profile-monitoring or company-followers scrape fails `insufficient_wallet_cash`. That is precisely the state that generates the false "out of credits" report. Always read both numbers live before diagnosing; neither is ever a standing fact.
+- **Never report "out of credits" from the wallet balance.** A \$0 wallet says nothing at all about search or export.
+- **The two move independently.** The classic failure state looks like this: a healthy finite plan-credit balance (a finite number means the account is not on the unlimited plan) sitting alongside a **\$0.00 wallet with auto-top-up off**. Contact search and export work fine, while a profile-monitoring or company-followers scrape fails `insufficient_wallet_cash`. That is precisely the state that generates the false "out of credits" report. Always read both numbers live before diagnosing; neither is ever a standing fact.
 
 ## Lead Lists You Can Build
 
@@ -2017,11 +2017,11 @@ Three rules that follow:
 - **LinkedIn engager list** (`add_monitored_profile`, then `list_profile_monitoring_leads`)
   - Monitor a profile and collect who engages with its posts, with backfill across existing posts.
   - Overlaps any other competitor-engager motion (Trigify, §11, is OUT OF STACK, needs operator approval). Same caution: **a like is weak intent.**
-  - Paid scrape billed to the **wallet**. Vendor-stated ≈$0.012 per engager. Price it with `estimate_scrape_cost` first.
+  - Paid scrape billed to the **wallet**. Vendor-stated ≈\$0.012 per engager. Price it with `estimate_scrape_cost` first.
 
 - **Company-followers list** (`lookup_company_linkedin_followers`)
   - Followers of a competitor or category-leader page. (LeadsFriday's follower extract, §12, is OUT OF STACK, needs operator approval.)
-  - Paid scrape billed to the **wallet**. Vendor-stated ≈$0.0035 per follower with a ≈$8.75 minimum. Confirm with `estimate_scrape_cost`.
+  - Paid scrape billed to the **wallet**. Vendor-stated ≈\$0.0035 per follower with a ≈\$8.75 minimum. Confirm with `estimate_scrape_cost`.
 
 - **Domain-to-people list** (`search_contacts` + `domains[]`, or `getleads_lookup_colleagues_by_domain`)
   - A known account list to named contacts. Size it with `count_contacts` first.
@@ -2138,7 +2138,7 @@ Use when selling to SaaS companies.
 Example lists:
 
 - AI SaaS companies growing 100%+ YoY.
-- Bootstrapped SaaS companies above $10M ARR.
+- Bootstrapped SaaS companies above \$10M ARR.
 - Seed to Series A SaaS hiring sales roles.
 - PLG SaaS with freemium and high user count.
 - Enterprise SaaS with high ACV and new funding.
@@ -2236,7 +2236,7 @@ If you want practical starting points, build these before chasing weird edge cas
 ## Best For SaaS
 
 - GetLatka high-growth SaaS by category.
-- GetLatka bootstrapped $10M+ ARR list.
+- GetLatka bootstrapped \$10M+ ARR list.
 - Prospeo funded SaaS with target department headcount growth.
 - Prospeo companies hiring target roles.
 - DiscoLike natural-language ICP for SaaS subsegments.

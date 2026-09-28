@@ -215,7 +215,7 @@ case_studies: [leave blank if none yet]
 
 hard_numbers: [leave blank if none yet]
 # Exact metrics tied to real outcomes (a %, a $ figure, time saved, a count) you'd defend if a prospect asked.
-# E.g.: "Recovered $48k in missed renewals in Q1 for a mid-market SaaS client."
+# E.g.: "Recovered \$48k in missed renewals in Q1 for a mid-market SaaS client."
 
 proof_naming_constraints: [leave blank if none]
 # Any client you CANNOT name, NDA limits, or numbers you can't share publicly.
@@ -427,7 +427,7 @@ Intake form saved to: profiles/<business-slug>/intake-form.md
 Client profile saved to: profiles/<business-slug>/client-profile.yaml
 
 Execution mode: <auto_execute | review_gates>, <phase_checkpoints | none>
-Spend budget: $100 per client run (standing, never asked)
+Spend budget: \$100 per client run (standing, never asked)
 Context sweep: <N of M sources read (account or workspace per source), K constraints, B blocklist rows written to suppression, notes in context-sweep.md | BLOCKED: <source>, <one-line fix>, retry at next resume>
 Slack: <N channels read in <workspace>, notes in slack-context.md | none found in <workspace> | NOT READ: <reason>, retry at next resume>
 

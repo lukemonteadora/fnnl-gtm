@@ -74,7 +74,7 @@ For the real sequence with all prerequisites and gates, start Phase 1 for the cl
 - Do not let a campaign idea into strategy unless its source path has a plausible target-geography fit.
 - Do not build a list before `/lead-source-strategy` Lead Source Plan Mode decides what signal the list must prove.
 - Do not treat onboarding form offers as locked. Store them under `offer.client_suggested_*`, then run discovery and ranked brainstorm.
-- Do not ask about spend at startup. Paid data steps run inside the standing $100 budget per client run (`run_state.spend_ceiling_usd`); confirm only a purchase that would push the run over it, plus the setup total once before any mailbox infrastructure purchase.
+- Do not ask about spend at startup. Paid data steps run inside the standing \$100 budget per client run (`run_state.spend_ceiling_usd`); confirm only a purchase that would push the run over it, plus the setup total once before any mailbox infrastructure purchase.
 - A tool that is out of balance or down stops its step and asks the operator (`/tool-balance-guard`); never switch to another tool or skip a rung without the operator's recorded approval.
 - Generated client files are plain text (Markdown, or CSV, YAML and JSON for scripts); a DOCX, deck, PDF or Google Doc is built only when the operator asks for that file.
 - Wait at least 2 weeks after warmup starts before real sending.

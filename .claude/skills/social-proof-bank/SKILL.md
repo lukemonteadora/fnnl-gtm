@@ -41,7 +41,7 @@ How the same columns read across industries (illustrative):
 | Healthcare provider | a procedure / program | "cut no-show rate from 19% to 7%" | new clinic location, payer/reg change, new medical director |
 | Local / home services | a job type | "booked 40% more jobs in 90 days" | seasonal demand window, new competitor in the area, storm/season event |
 | Ecommerce / DTC | a category / SKU line | "grew repeat-purchase revenue 3x" | peak-season timing, platform migration, new ad spend |
-| Professional services | a practice area | "recovered $480k in one review" | year-end / regulatory deadline, new leadership, M&A activity |
+| Professional services | a practice area | "recovered \$480k in one review" | year-end / regulatory deadline, new leadership, M&A activity |
 
 ## Material Decision Rule
 

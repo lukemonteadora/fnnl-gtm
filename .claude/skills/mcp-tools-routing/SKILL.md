@@ -19,7 +19,7 @@ MCP servers give Claude live, native tool access to the infra and sending layer 
 
 ## ⚠️ Cost gate first: MCP is a new spend surface
 
-`/api-cost-governance` (the STANDING PROTOCOL) was built around a **script registry**, so it knows which `.py`/`.ps1` scripts spend money. **MCP tool calls bypass that registry entirely.** A single MCP call can register 24 domains or create 48 mailboxes: real money, no script involved. The operator's standing rule is "never silently auto-spend": every charge is previewed and reported, it runs without a question only inside an approved budget (the standing $100 per client run for paid data steps, operator directive 2026-09-22; the setup total the operator approved for infrastructure), and there is a top-up gate and a $10 warning.
+`/api-cost-governance` (the STANDING PROTOCOL) was built around a **script registry**, so it knows which `.py`/`.ps1` scripts spend money. **MCP tool calls bypass that registry entirely.** A single MCP call can register 24 domains or create 48 mailboxes: real money, no script involved. The operator's standing rule is "never silently auto-spend": every charge is previewed and reported, it runs without a question only inside an approved budget (the standing \$100 per client run for paid data steps, operator directive 2026-09-22; the setup total the operator approved for infrastructure), and there is a top-up gate and a \$10 warning.
 
 **Therefore: any MCP op that spends money routes through `/api-cost-governance` exactly like a script: preview USD, check balance/funds, check it against the approved budget (inside it, the budget is the confirmation and nothing is asked; over it, ask), then act.**
 

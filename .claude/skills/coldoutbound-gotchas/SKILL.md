@@ -222,7 +222,7 @@ integration packs sit inert in `_vendor-library/` until `/stack-setup` activates
   "fetch failed"; the API docs exposed no purchase endpoint). AVOID hunting for a purchase API.
 - **Purchase via the Zapmail UI** (browser): Home, then **Buy Mailboxes**, toggle provider (Google / Microsoft
   icons, top-right), set qty, Pay Now, then **"Pay using Wallet"** (NOT Stripe/card). At the time,
-  **Microsoft = $3/mo monthly** (same as Google; yearly $2.5 and quarterly $2.7 existed but billed a big
+  **Microsoft = \$3/mo monthly** (same as Google; yearly \$2.5 and quarterly \$2.7 existed but billed a big
   upfront, so Monthly was the pick). Wallet funds it. **Re-check all pricing before quoting it.**
 - After capacity exists, the assign payload is
   `{ "<domainUUID>": [ {firstName,lastName,mailboxUsername,domainName}, ... ] }` with header

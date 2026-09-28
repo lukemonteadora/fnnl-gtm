@@ -301,7 +301,7 @@ Extract:
 5. Which `persona` owns this problem? Use the role the hire reports into or works alongside, so a job-posting pain carries a persona like every other pain row and joins the pain-by-persona table.
 6. Write each posting as a `job_post` ledger row (`source_class: job_posting`), with the problem, the outcome the hire owns and the tools named in its fields. Prefer postings from the research-sample companies, and add new employers to the sample.
 
-Job postings represent budget decisions. A company spending $80K/year to hire for a problem will pay to solve it.
+Job postings represent budget decisions. A company spending \$80K/year to hire for a problem will pay to solve it.
 
 ---
 

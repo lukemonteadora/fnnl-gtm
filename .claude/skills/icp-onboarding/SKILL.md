@@ -338,7 +338,7 @@ lead_sourcing:
   preferred_sources: []
   blocked_sources: []
   approved_custom_scraping: false
-  approval_required_for_paid_sources: false   # default (operator directive 2026-09-22): paid data sources run inside the standing $100 run budget without an approval
+  approval_required_for_paid_sources: false   # default (operator directive 2026-09-22): paid data sources run inside the standing \$100 run budget without an approval
 
 capability_boundary:
   deliverable_strengths: []

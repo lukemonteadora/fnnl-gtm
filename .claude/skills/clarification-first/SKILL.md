@@ -13,7 +13,7 @@ Do not use it for short answers or obvious single-step requests.
 
 ## Interaction Policy
 
-This skill defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at the one checkpoint that closes each of the four phases, `phase-protocol.md`; `review_gates` is opt-in), proceed without pausing: pick the strongest option per the rubric, record it to `run_state`/profile, and continue. Never re-ask a decision already in `run_state`, `client-profile.yaml`, `campaign-plan.md`, memory, or the latest operator message. Spend runs against the standing budget in `run_state.spend_ceiling_usd` ($100 per client run, never asked, in either execution mode): auto-approve within it. Stop only for the hard-stops in the policy. On a long async wait, background-poll and move to other productive work. Never idle.
+This skill defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at the one checkpoint that closes each of the four phases, `phase-protocol.md`; `review_gates` is opt-in), proceed without pausing: pick the strongest option per the rubric, record it to `run_state`/profile, and continue. Never re-ask a decision already in `run_state`, `client-profile.yaml`, `campaign-plan.md`, memory, or the latest operator message. Spend runs against the standing budget in `run_state.spend_ceiling_usd` (\$100 per client run, never asked, in either execution mode): auto-approve within it. Stop only for the hard-stops in the policy. On a long async wait, background-poll and move to other productive work. Never idle.
 
 ## Activity Log Protocol
 
@@ -24,7 +24,7 @@ Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURR
 Ask before proceeding when the missing answer affects:
 
 - Provider stack
-- Spend beyond the run's standing budget (a paid data step inside the standing $100 in `run_state.spend_ceiling_usd` is already approved and never asked), or an infrastructure purchase outside an approved setup total
+- Spend beyond the run's standing budget (a paid data step inside the standing \$100 in `run_state.spend_ceiling_usd` is already approved and never asked), or an infrastructure purchase outside an approved setup total
 - Client identity
 - Target market
 - Offer source of truth
@@ -68,7 +68,7 @@ Interactive prompt rules:
 - Accept either the option letter, the option text, or a natural-language correction.
 - When a prior file, website, research result, or `run_state` gives a likely answer, pre-fill it as the recommended option instead of asking the user to type from scratch.
 - When the answer is factual status and no evidence exists, do not pretend to know. Make `Not sure - check first` the recommended option.
-- For spend beyond the run's standing budget, an infrastructure purchase, live-system mutation, scraping risk, legal/compliance, or client-facing approval (the operator's review of a client-facing document; the client's own approval of an offer is optional and never a pause, per `/offer-test-slate`), the safe recommendation is review or pause unless the user explicitly chooses approval. A paid data step inside the standing $100 budget is not on this list: it runs without a question.
+- For spend beyond the run's standing budget, an infrastructure purchase, live-system mutation, scraping risk, legal/compliance, or client-facing approval (the operator's review of a client-facing document; the client's own approval of an offer is optional and never a pause, per `/offer-test-slate`), the safe recommendation is review or pause unless the user explicitly chooses approval. A paid data step inside the standing \$100 budget is not on this list: it runs without a question.
 
 Fallback text format, only if native Interactive Inputs are unavailable:
 
