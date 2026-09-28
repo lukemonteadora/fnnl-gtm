@@ -4,7 +4,7 @@
 
 ## HARD RULE: zero Clay credits, and build lead lists in Clay (operator directive 2026-09-22)
 
-FNNL never runs anything in Clay that consumes Clay credits. Clay is where lead lists are built and watched, never a data vendor paid through Clay's own balance. Every tool used inside Clay runs on FNNL's own API key. Lead lists are built in a Clay table by default so the operator sees them fill live. The full rule (six numbered clauses, including default-deny for anything unproven and the Actions meter) lives in the stack contract at `lead_data.list_workbench.credit_policy_rule`, with a summary in CLAUDE.md section 7. **Where this document and that rule disagree, the rule wins.**
+FNNL never runs anything in Clay that consumes Clay credits. Clay is where lead lists are built and watched, never a data vendor paid through Clay's own balance. Every tool used inside Clay runs on FNNL's own API key. Lead lists are built in a Clay table by default so the operator sees them fill live. When a key inside Clay is missing, failing or out of balance, the step stops and asks the operator to fix or top it up: Clay credits are never the fallback and no other tool is swapped in (`/tool-balance-guard`, operator decision 2026-09-28). The full rule (six numbered clauses, including default-deny for anything unproven and the Actions meter) lives in the stack contract at `lead_data.list_workbench.credit_policy_rule`, with a summary in CLAUDE.md section 7. **Where this document and that rule disagree, the rule wins.**
 
 ## Why this exists
 

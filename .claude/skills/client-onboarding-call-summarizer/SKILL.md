@@ -1,9 +1,11 @@
 ---
 name: client-onboarding-call-summarizer
-description: Turn a raw client / discovery / sales / onboarding call transcript into a structured "what we learned" brief that feeds /icp-onboarding and /client-intake-form. Extracts everything learned about the client's business, ICP, offer, pain, proof, and constraints, maps it to the onboarding fields, captures verbatim ICP pain quotes, and flags what is still unknown to ask. Learning-focused. NO action-item / to-do checklist (that is the personal anthropic-skills:ai-meeting-summarizer; this is the client-onboarding version). Accepts pasted text or Fathom / Otter / Zoom / Teams exports. Runs inside Claude Code (no API spend).
+description: Turns a raw client, discovery, sales or onboarding call transcript (pasted, or a Fathom, Otter, Zoom or Teams export) into a "what we learned" brief that feeds /icp-onboarding and /client-intake-form. No action-item list (that is anthropic-skills:ai-meeting-summarizer).
 ---
 
 # Client Onboarding Call Summarizer
+
+**From the former description:** Extracts everything learned about the client's business, ICP, offer, pain, proof, and constraints, maps it to the onboarding fields, captures verbatim ICP pain quotes, and flags what is still unknown to ask. Learning-focused. NO action-item / to-do checklist (that is the personal anthropic-skills:ai-meeting-summarizer; this is the client-onboarding version). Runs inside Claude Code (no API spend).
 
 Turn a raw call transcript into onboarding-ready intelligence. This is the **client-facing** sibling of `anthropic-skills:ai-meeting-summarizer`: same transcript-in / structured-notes-out idea, but a different purpose and format. The personal version ends in a task / action-item checklist; **this one does not**. Its only job is to answer two questions: *"What did we learn about this client that belongs in their ICP onboarding / intake?"* and *"What is still unknown, so we know what to ask?"*
 

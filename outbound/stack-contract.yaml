@@ -88,7 +88,7 @@ approved_stack:
       fills: [lead_data.intent_signals]
       also_covers: >
         Deliberate SECOND source for company and contact discovery (402M
-        contacts, free exact counts via count_contacts). The gap-fill to try
+        contacts, exact counts at 0 credits via count_contacts). The gap-fill to try
         when an AI Ark universe comes back thin.
       access: hosted MCP (no .env key)
     - tool: AI Ark
@@ -147,7 +147,7 @@ approved_stack:
     - tool: OpenAI
       need: "sender headshots only (ai.image_generation)"
       approved_on: 2026-09-22
-      approved_by: "operator (Luke)"
+      approved_by: "operator"
       note: >
         The one AI exception to the no-AI-API rule (operator directive
         2026-09-22). Image generation for sender persona headshots only, run
@@ -400,6 +400,22 @@ channels:
 #    Finding the companies, finding the people, and getting their real contact
 #    details. This is where most of the money gets spent, so the ordering
 #    between these slots matters as much as the tools themselves.
+#
+#    SIGNAL RULES (pointer block; the rules live in the files named, not here):
+#      1. Provider order per field, exhaust-then-gap-fill: this contract owns
+#         the order, outbound/reference/provider-routing.yaml mirrors it for
+#         the planner, and /email-waterfall and /tam-build run it.
+#      2. Company signals join onto contact rows by company_domain
+#         (/tam-build, /data-point-discovery).
+#      3. Layer-1 contact-discovery signals (tenure, new-in-seat) are pulled
+#         with the contact search, before any reveal (/data-point-discovery,
+#         /email-waterfall; provider-routing.yaml layers.contact_new_in_seat,
+#         unverified).
+#      4. Contact-signal campaigns outrank company-signal campaigns
+#         (/campaign-strategy).
+#    FILTER-FIRST DISCOVERY and the TOOL-BALANCE GUARD (operator decisions
+#    2026-09-28) are recorded in company_discovery.notes and
+#    contact_enrichment.notes below.
 # =============================================================================
 
 lead_data:
@@ -431,6 +447,15 @@ lead_data:
       in intent_signals rather than here so the source-of-truth layer stays single.
       If a TAM comes back thin from AI Ark, GetLeads is the gap-fill to try before
       buying a third tool.
+      FILTER-FIRST (operator decision 2026-09-28, overriding the 2026-09-22
+      "lookalike is a MUST"): count and filter the company universe first, AI Ark
+      company_search, then GetLeads count_contacts (an exact count at 0 credits;
+      GetLeads itself is not free: plan credits and wallet cash) as the size check
+      and the top-up. Lookalike seeding is an option or an exception, not
+      required. Reveal and lookup-by-person calls (for example GetLeads
+      lookup_decision_makers, which returns emails and bills per record) are never
+      discovery rungs. /tam-build records the route in run_state.discovery_route.
+      Machine-readable form: provider-routing.yaml layers.company_discovery.
 
   contact_discovery:
     tool: AI Ark
@@ -475,6 +500,12 @@ lead_data:
                 a rejection: it goes to the holdback, not to Prospeo.
         STEP 4. MillionVerifier verify on everything step 3 returned.
       Never open Prospeo on a row AI Ark has not already attempted.
+      TOOL-BALANCE GUARD (operator decision 2026-09-28, overriding the 2026-06-19
+      "finder down, enricher becomes finder" exception): a tool that is out of
+      balance, down or switched off stops the run and the operator is asked.
+      Never substitute another tool for it. A skip needs the operator's say-so,
+      passed as list_waterfall.py `plan --skip-provider ... --operator-approved-skip`
+      and recorded as detail.operator_approved. See /tool-balance-guard.
       NO SOURCE IS EXEMPT FROM RE-VERIFICATION. Both AI Ark and Prospeo verify at
       reveal time using the same third-party engine (BounceBan), and that is EXPLICITLY
       NOT the send-gate. /email-waterfall's Verification Doctrine states a finding
@@ -1052,7 +1083,10 @@ operations:
 # 7. EXECUTION DEFAULTS
 #    Not tools. These are the workspace-level settings a new client's
 #    run_state inherits. New clients run hands-free inside each phase and
-#    stop at four phase checkpoints (operator decision 2026-09-24).
+#    stop once per phase at its checkpoint (at most 4 questions): the four
+#    phase skills /phase-1-onboarding, /phase-2-research-offer, /phase-3-list
+#    and /phase-4-copy-launch, one fresh thread each (operator decisions
+#    2026-09-24 and 2026-09-28; outbound/reference/phase-protocol.md).
 #    Spend runs on a standing budget per client run that is never asked.
 # =============================================================================
 
@@ -1060,7 +1094,7 @@ execution_defaults:
 
   execution_mode: auto_execute      # auto_execute | review_gates (review_gates is opt-in since 2026-09-24)
   run_state_field_execution_mode: run_state.execution_mode
-  review_protocol: phase_checkpoints   # phase_checkpoints | per_phase_gates | none; stops only at /cold-email-kickoff's four checkpoints
+  review_protocol: phase_checkpoints   # phase_checkpoints | per_phase_gates | none; stops only at each phase skill's one checkpoint (phase-protocol.md)
   run_state_field_review_protocol: run_state.review_protocol
   spend_ceiling_usd: 100            # standing budget per client run, never asked (operator directive 2026-09-22)
   run_state_field_spend_ceiling: run_state.spend_ceiling_usd
@@ -1082,6 +1116,18 @@ execution_defaults:
     unattended misconfigured query could burn real money before anyone sees
     it. Revisit per tool as each one reaches status: live, not as a single
     blanket change.
+    PHASE STATE LIVES IN THE TRACKER (operator decision 2026-09-28), not in
+    run_state: outbound/profiles/<slug>/phases/state.yaml, written only by
+    outbound/scripts/phase_state.py (board, show, start, checkpoint, approve,
+    reopen, release, place). run_state.checkpoints is retired: the `place`
+    backfill reads it once for a client that predates the tracker.
+    RUN_STATE FIELDS ADDED 2026-09-28 (names never renamed once written):
+      run_state.discovery_route: filter | lookalike. Written by /tam-build with
+        its reason; missing reads as filter (filter-first discovery).
+      run_state.aaron_lane.offer_call / .copy_call: the date each Aaron call
+        ran. With its consult file (aaron-offer-call.md, aaron-copy-call.md) it
+        is the proof the offer or the copy went through Aaron
+        (outbound/reference/aaron-lane.md).
 
 # =============================================================================
 # 8. FNNL AGENCY PROCESS OVERRIDES

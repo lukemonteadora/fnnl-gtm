@@ -1,9 +1,12 @@
 ---
 name: icp-prompt-builder
-description: Interactive approval loop for building and tuning an AI prompt that classifies broad company fit and whether a claimed source signal is supported. It is a cheap evidence-classification step for /tam-build and external lists, not the governed 10-point priority score. Adjacent marketable companies stay maybe. /lead-scoring owns the final transparent company, contact, and timing score before email spend.
+description: Interactive loop to build and tune the prompt that classifies broad company fit (good, maybe, bad) and whether a claimed signal is supported, for /tam-build and external lists. NOT the governed 10-point priority score (use /lead-scoring).
 ---
 
 # ICP Prompt Builder
+
+**From the former description:** It is a cheap evidence-classification step, not the governed score. Adjacent marketable companies stay maybe. /lead-scoring owns the final transparent company, contact, and timing score before email spend. It runs inside Phase 3 (`/phase-3-list`, through `/tam-build`).
+
 ## Canonical Profile Root
 
 All profiles/<business-slug> paths in this skill resolve under:
@@ -37,7 +40,7 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at `/cold-email-kickoff`'s four phase checkpoints; `review_gates` is opt-in), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue. Never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work. Never idle.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at the one checkpoint that closes each of the four phases, `phase-protocol.md`; `review_gates` is opt-in), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue. Never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work. Never idle.
 
 ## Activity Log Protocol
 
@@ -47,7 +50,7 @@ Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURR
 
 - `profiles/<business-slug>/client-profile.yaml`
 - `profiles/<business-slug>/campaigns/<campaign-slug>/lead-source-plan.md`, when it exists
-- A sample CSV from any selected source path, including company-lookalike tools, domain-to-person builders, maps and local-business extractors, contact-database exports, social-engagement sources, directories, job boards, event pages, marketplaces, Serper plus Spider Cloud, Apify, Scrap.io, GetLatka, Trigify, A-Leads, WizLeads, or custom website scrapes
+- A sample CSV from any selected source path, including company-lookalike tools, domain-to-person builders, maps and local-business extractors, contact-database exports, social-engagement sources, directories, job boards, event pages, marketplaces, web search and crawl results, or custom website scrapes
 - At least 50 mixed rows if possible
 - **For the TAM fit gate:** a ~40-row mixed sample of `tam.csv`'s cheap layer (identity + firmographics + the homepage-derived fields) from `/tam-build` Layer 1a: no contacts, no extension columns yet
 

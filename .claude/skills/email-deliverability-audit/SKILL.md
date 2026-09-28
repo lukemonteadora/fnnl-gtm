@@ -1,9 +1,12 @@
 ---
 name: email-deliverability-audit
-description: Diagnostic audit for a running cold email program. Checks DNS authentication, inbox health, warmup status, bounce rates, reply rates, sender rotation, spam-placement evidence when available, and copy/list risks. Uses the locked run_state.sending_platform to route to that platform's inbox manager, its native analytics, or a manual path, with no assumed vendor.
+description: Diagnostic audit for a running cold email program. Checks DNS authentication, inbox health, warmup, bounce and reply rates, sender rotation, spam-placement evidence when available, and copy/list risks. Routes by the locked run_state.sending_platform, with no assumed vendor.
 ---
 
 # Email Deliverability Audit
+
+**From the former description:** Uses the locked run_state.sending_platform to route to that platform's inbox manager, its native analytics, or a manual path, with no assumed vendor.
+
 ## Canonical Profile Root
 
 All profiles/<business-slug> paths in this skill resolve under:

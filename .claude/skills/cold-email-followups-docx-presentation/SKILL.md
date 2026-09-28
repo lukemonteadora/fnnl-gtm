@@ -1,9 +1,14 @@
 ---
 name: cold-email-followups-docx-presentation
-description: Creates a compact client-facing DOCX presentation for cold email no-reply follow-up or re-engagement sequences from approved followups.yaml files. Use after lifecycle follow-up copy exists and the user wants the sequence packaged with the same shared cold email DOCX formatting as the campaign sequence presentation.
+description: Packages an approved followups.yaml (a no-reply follow-up or re-engagement sequence) into a client-facing DOCX in the shared cold email format. Runs only when the operator asks for this DOCX in chat; generated files are plain text by default.
 ---
 
 # Cold Email Follow-Ups DOCX Presentation Skill
+
+**From the former description:** Use after lifecycle follow-up copy exists, to package the sequence with the same shared cold email DOCX formatting as the campaign sequence presentation.
+
+**On request only (plain-text outputs, operator decision 2026-09-28).** Run this skill only when the operator asks in chat for this DOCX. No flow step runs it by default, and the source YAML or Markdown file in the client's profile folder is the deliverable. One ask covers that one pack.
+
 ## Canonical Profile Root
 
 All profiles/<business-slug> paths in this skill resolve under:

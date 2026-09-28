@@ -1,6 +1,6 @@
 ---
 name: deliverability-incident-response
-description: Triage playbook for when cold email deliverability breaks. Decision-tree guidance for "I landed in spam", "bounce rate spiked", "domain blacklisted", "inbox blocked in warmup", "reply rate dropped". Tells you what to check first, what to fix, and how long the fix takes. Pair with /email-deliverability-audit for diagnosis.
+description: Triage playbook for when cold email deliverability breaks. Decision tree for "I landed in spam", "bounce rate spiked", "domain blacklisted", "inbox blocked in warmup", "reply rate dropped". Says what to check first, what to fix and how long it takes. Pair with /email-deliverability-audit for diagnosis.
 ---
 
 # Deliverability Incident Response

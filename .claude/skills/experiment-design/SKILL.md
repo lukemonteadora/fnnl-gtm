@@ -1,7 +1,9 @@
 ---
 name: experiment-design
-description: Framework for running single-variable cold email experiments. Defines experiment types (offer-only, list-only, copy-only, combined), the test order (offer, then positioning of the offer, then CTA and delivery, with list cuts in parallel and subject lines last), confidence weighting, minimum sample sizes, and success criteria judged on time-agreed replies beside positive replies. Use when the user wants to improve a campaign, test a new list vs old one, compare copy variants, or run offer-validation arms. Prevents the #1 learning-loop mistake - changing list + copy + offer at once and losing all signal. Includes a Generative Proposal Mode that mines tam/tam.csv (from /tam-build) and prior results to propose ranked, data-grounded experiment candidates for the next round.
+description: "Designs single-variable cold email experiments (offer, list, copy): test order, sample sizes, confidence and success criteria, so one change is tested at a time. Use to improve a campaign, compare lists or copy, run offer-validation arms, or propose the next round of tests from the TAM."
 ---
+
+**From the former description:** Experiment types are offer-only, list-only, copy-only and combined. The test order is the offer, then the offer's positioning, then the CTA and delivery, with list cuts in parallel and subject lines last; confidence is weighted and success is judged on time-agreed replies beside positive replies. It prevents the number-one learning-loop mistake: changing list, copy and offer at once and losing all signal. Its Generative Proposal Mode mines `tam/tam.csv` (from `/tam-build`) and prior results to propose ranked, data-grounded experiment candidates for the next round.
 
 # Experiment Design
 ## Canonical Profile Root
@@ -231,7 +233,7 @@ If you're just starting out, **don't run controlled copy experiments** until you
 2. **The positioning of the offer** (how the same offer is framed; under Framework A the opener is the offer, so opener tests live here)
 3. **The CTA and delivery** (the ask, and what happens after the yes)
 
-**In parallel from launch, not in sequence:** data source and segment (list cuts). In the first wave each offer runs in every first-wave segment it fits (the case-study lookalike core, the widened rows, the sold-to splits, and any split across two or three data sources, which carries disjoint rows tagged `source_arm`), its own fit filters deciding; each offer is read pooled across the segments it runs in and offers are compared only on shared ground, so the read says which offer worked and where (operator decision 2026-09-23; replaces the offer x segment matrix, Aaron Apr 13 and the Aaron process alignment, operator directive 2026-09-22). Later list-only slices are this lever too; they run alongside the rungs above instead of waiting behind them.
+**In parallel from launch, not in sequence:** data source and segment (list cuts). In the first wave each offer runs in every first-wave segment it fits (the tight core, the widened rows, the sold-to splits, and any split across two or three data sources, which carries disjoint rows tagged `source_arm`), its own fit filters deciding; each offer is read pooled across the segments it runs in and offers are compared only on shared ground, so the read says which offer worked and where (operator decision 2026-09-23; replaces the offer x segment matrix, Aaron Apr 13 and the Aaron process alignment, operator directive 2026-09-22). Later list-only slices are this lever too; they run alongside the rungs above instead of waiting behind them.
 
 **After those:**
 4. **Sequence timing** (Day 3 vs Day 2 follow-up; live delays stay a house decision)
@@ -309,7 +311,7 @@ Launch the planned experiment through the campaign upload path for the locked `r
 
 Then read each arm per Step 6: once it reaches its sample floor and its last contacts have had the sequence plus grace (about 7 to 10 days from their first touch), run the positive-reply scoring path for the locked `run_state.sending_platform` on it. In the first week after launch, read daily for bounce, deliverability and reply handling only.
 
-If you do not have 2,000+ leads per experiment arm, you cannot detect normal-sized effects. (Offer arms may still launch below this and ride HOLD under `/campaign-strategy`'s pooled flip, which never kills an arm on a small sample.) Build a bigger list first through the source path `/lead-source-strategy` selects.
+If you do not have 2,000+ leads per experiment arm, you cannot detect normal-sized effects. (Offer arms may still launch below this and ride HOLD under `/campaign-strategy`'s pooled flip, which never kills an arm on a small sample.) Build a bigger list first: widen the TAM on the `/tam-build` expansion-for-volume ladder while ICP fit holds (filter-first by default, counting the company universe and then the contacts before any pull; lookalike only for a group `/tam-build` sends down the lookalike route, operator decision 2026-09-28), then find contacts in the `layers.people_discovery` order in `outbound/reference/provider-routing.yaml` (the stack contract wins where they differ), through the source path `/lead-source-strategy` selects.
 
 ## Related skills
 

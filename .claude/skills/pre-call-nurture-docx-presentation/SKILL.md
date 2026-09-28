@@ -1,9 +1,14 @@
 ---
 name: pre-call-nurture-docx-presentation
-description: Creates a compact client-facing DOCX presentation for pre-call nurture flows from approved Markdown files such as pre-call.md, including the confirmation page and its FAQs. Use when packaging what the prospect sees at booking and what gets sent between booking and the sales call, using the same shared cold email DOCX formatting as the campaign sequence presentation.
+description: Packages approved pre-call nurture copy (pre-call.md, the confirmation page and FAQs, the booking-to-call emails) into a compact client-facing DOCX in the shared cold-email DOCX format. Runs only when the operator asks for this DOCX in chat, never as a default step.
 ---
 
 # Pre-Call Nurture DOCX Presentation Skill
+
+**From the former description:** It packages what the prospect sees at booking and what gets sent between booking and the sales call, using the same shared cold email DOCX formatting as the campaign sequence presentation.
+
+**On request only (plain-text outputs, operator decision 2026-09-28).** Run this skill only when the operator asks in chat for this DOCX. No flow step runs it by default, and the source YAML or Markdown file in the client's profile folder is the deliverable. One ask covers that one pack.
+
 ## Canonical Profile Root
 
 All profiles/<business-slug> paths in this skill resolve under:

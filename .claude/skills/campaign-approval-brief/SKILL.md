@@ -1,9 +1,11 @@
 ---
 name: campaign-approval-brief
-description: Creates a client-facing approval brief for selected campaign paths, explaining the ICP, source signal, offer, lead-source path, campaign order, client-facing asset needs, and saved copy variants from artifacts without inventing missing decision history. The deliverable is a locked 10-slide PPTX deck (a founder skims it in under 2 minutes).
+description: Writes the client-facing approval brief (campaign-approval-brief.md) for the selected campaigns (ICP, signal, offer, source path, campaign order, asset needs and copy), drawn only from saved artifacts. The 10-slide PPTX deck is built only when the operator asks.
 ---
 
 # Campaign Approval Brief
+
+**From the former description:** It never invents missing decision history, and a founder skims the brief in under 2 minutes.
 
 ## Canonical Profile Root
 
@@ -19,20 +21,20 @@ Create a client-facing approval brief before list build whenever possible.
 
 This skill explains why the selected campaign path was chosen. It is not a conversation transcript, and it must not invent a clean decision trail when the artifacts do not contain one.
 
-## DELIVERABLE FORMAT (HARD RULE)
+## DELIVERABLE FORMAT (HARD RULE: plain text, operator decision 2026-09-28)
 
-**The approval brief is delivered as a PPTX deck** in the locked 10-slide format below: a professional presentation a founder can skim in under two minutes, not a text document. This is a hard rule: never hand over only a Markdown or DOCX file. The pipeline is:
+**The approval brief is delivered as the Markdown file `profiles/<business-slug>/campaign-approval-brief.md`** in the client's profile folder, authored in the template's section order so it reads top to bottom in under two minutes. This reverses the earlier rule that the brief must be a PPTX deck: generated client files are plain text by default (operator decision 2026-09-28), because a rendered deck with slide-image QA costs time, tokens and context without changing a decision. The pipeline is:
 
-1. **Author** the Markdown brief from saved artifacts (the content + voice contract is unchanged; see Source Of Truth, Data Rules, and the template's voice rules). This step carries all the client-facing QA: no vendor/tool names, no "TAM", no `{{braces}}`, no skill slugs, the plain role vocabulary, the "What We Need From You" exclusions.
-2. **Map** that Markdown onto the 10 slides (see The 10-Slide Contract).
-3. **Render** the PPTX with the locked design library (see Required Builder), so every client's deck is visually identical.
-4. **QA** by rendering each slide to an image and viewing it, plus a text scan of the generated file.
+1. **Author** the Markdown brief from saved artifacts (the content and voice contract is unchanged; see Source Of Truth, Data Rules, and the template's voice rules). This step carries all the client-facing QA: no vendor/tool names, no "TAM", no `{{braces}}`, no skill slugs, the plain role vocabulary, the "What We Need From You" exclusions.
+2. **Stop at the Markdown.** Run the text scan and key-content check (QA steps 4 to 6) on the Markdown, record the path, log it, and hand it to the operator. Mention in one line that a deck version exists on request, and never build one first.
 
-The old DOCX render (`scripts/brief_md_to_docx.ps1`) is **retired** for this skill. The script stays on disk for history; do not point new work at it. Author against the Markdown skeleton exactly as before. Only the render target changed (DOCX → PPTX).
+**Deck on request only.** When the operator asks in chat for the deck version of this brief, map the Markdown onto the 10 slides (The 10-Slide Contract), render it with the locked design library (Required Builder) and QA it (QA section). That ask covers that one brief, not later runs. Wherever a section below says "Slide N", the Markdown section that slide maps to is the default target; slides exist only in a requested deck.
+
+The old DOCX render (`scripts/brief_md_to_docx.ps1`) is **retired** for this skill. The script stays on disk for history; do not point new work at it.
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at `/cold-email-kickoff`'s four phase checkpoints; `review_gates` is opt-in), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue, and never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work, never idle.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at the one checkpoint that closes each of the four phases, `phase-protocol.md`, with phase state held by `outbound/scripts/phase_state.py`, not `run_state.checkpoints`; `review_gates` is opt-in), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue, and never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work, never idle.
 
 ## Activity Log Protocol
 
@@ -51,6 +53,8 @@ Use this skill after:
 Best timing: before list build, enrichment spend, copy upload, or live sending.
 
 Also use it after `/campaign-copywriting` when the user wants a client brief explaining the "why" behind finished campaign copy.
+
+**Where it sits in the phases** (`phase-protocol.md`: 1 Onboarding, 2 Research and Offer, 3 List, 4 Copy and Launch). No phase requires this brief. Its inputs exist once `/phase-3-list` has drafted the wave and the lead-source plans, so the earliest useful run is during Phase 3; the copy sections fill in only after `/phase-4-copy-launch` records the copy. Any client ask the brief surfaces is also merged into the one unsent `profiles/<business-slug>/client-asks.md` (`client-messages.md`), never sent from here.
 
 ---
 
@@ -115,35 +119,39 @@ profiles/<business-slug>/data-point-catalog.md
 profiles/<business-slug>/offer-intelligence.md
 profiles/<business-slug>/lead-magnets.md
 profiles/<business-slug>/offer-test-slate.md                 # the offer slate the client saw (first wave and queue)
+profiles/<business-slug>/offers/_readiness-board.md          # generated Offer Readiness board (offer-readiness.md); link it, never restate it
+profiles/<business-slug>/aaron-copy-call.md                  # Aaron's Call 2 launch set and copy, when the lane ran (aaron-lane.md)
 profiles/<business-slug>/offer-validations/                  # existing-offer path only: the validation brief at offer.offer_validation_path
 profiles/<business-slug>/_research/pain-clusters.md          # optional; Appendix A may cite it (see the template)
 profiles/<business-slug>/campaign-strategy.md
 profiles/<business-slug>/campaign-plan.md
-profiles/<business-slug>/campaign-approval-brief.md          # the authored Markdown (deck content source)
+profiles/<business-slug>/campaign-approval-brief.md          # the deliverable (and the source of a deck when the operator asks)
 profiles/<business-slug>/campaigns/<campaign-slug>/lead-source-plan.md
 profiles/<business-slug>/campaigns/<campaign-slug>/variants.yaml
 ```
 
 `variants.yaml` is optional. If it exists, use every saved variant for the copy-preview + full-sequence slides. If it is missing, do not invent copy.
 
-Do not read chat history as the source of truth. The deck must be reproducible from saved campaign artifacts.
+Do not read chat history as the source of truth. The brief must be reproducible from saved campaign artifacts.
 
 ## Copy QA Dependency
 
-If `variants.yaml` exists, read the saved copy before packaging it into the deck and confirm it still passes:
+If `variants.yaml` exists, read the saved copy before putting it in the brief and confirm it still passes:
 
 1. `spam-word-checker.md`
 2. `cold-email-copy-best-practices.md`
 
 Stop and route back to `/campaign-copywriting` if the copy fails. Do not rewrite copy inside this skill.
 
+**Aaron's copy is shown as recorded** (`aaron-lane.md`). When `variants.yaml` came through Aaron's Call 2, each email is built on one of his frames (`aaron-copy-frames.md`; F1-F11, S1-S5, P1-P5, FU1-FU4, DR) and `outbound/scripts/aaron_frame_check.py` has checked it. Quote the copy word for word. Frame ids, his divergences from house rules and his rationale are internal notes: they never appear in the client brief, the same as skill slugs.
+
 Hard-stop examples include em dashes, double hyphens, mid-sentence dash separators, colon-as-runway sentences, comma-wrapped company descriptors, weak CTAs, repeated generic new-thread CTA deliverables, CTA deliverables with no named honorer (an arm whose `lead_magnet_client_ok` is `pending` is shown as "Needs your OK", not a hard stop), broken sequence structure (two emails by default, a third only in a genuinely small market or as a tested arm; a 4th email, or a second new thread other than a final follow-up run as the logged new-thread arm, per Aaron process alignment, operator directive 2026-09-22), follow-up-reference openers, goodbye or fake wrap-up emails, or links and calendar links in emails 1-3 without explicit user override.
 
-**Copy Preview gate (Slides 6-7 only).** Include finalized copy on the copy-preview + full-sequence slides only when the campaign's slice passed the verified-list gate (`verified-list-gate.md`): a `leads.verified.csv` exists and `variants.yaml` was produced by `/campaign-copywriting` under that gate. When the deck is built pre-list-build (its normal, intended timing), there is no verified slice yet, so **replace the copy-preview slide with a single placeholder line** ("Copy preview available once the list is built and copy is approved") and drop the full-sequence slide. The deck itself is NOT gated on a verified list; only the two copy slides are. Never block deck generation waiting for a list.
+**Copy Preview gate (the copy sections; Slides 6-7 in a requested deck).** Include finalized copy in the copy preview and full sequence only when the campaign's slice passed the verified-list gate (`verified-list-gate.md`): a `leads.verified.csv` exists and `variants.yaml` was produced by `/campaign-copywriting` under that gate. When the brief is written pre-list-build (its normal, intended timing), there is no verified slice yet, so **replace the copy preview with a single placeholder line** ("Copy preview available once the list is built and copy is approved") and drop the full sequence. The brief itself is NOT gated on a verified list; only the copy sections are. Never block the brief waiting for a list.
 
-## Required Builder
+## Required Builder (deck on request only)
 
-This skill is author-then-render. The visual template is LOCKED in a reusable pptxgenjs library so every client's deck is visually identical.
+This section runs only when the operator asks for the deck version. The deck is author-then-render. The visual template is LOCKED in a reusable pptxgenjs library so every client's deck is visually identical.
 
 ### Files (under `<outbound>/scripts/approval-brief-pptx/`)
 
@@ -222,6 +230,8 @@ These are encoded in `lib.mjs`. They exist here as the contract and the QA check
 
 ## QA (required before delivering)
 
+On the default plain-text run, steps 4 to 6 apply to the Markdown itself. Steps 1 to 3, and step 4's unzip, apply only to a requested deck.
+
 1. **Structural conformance.** The deck has the locked slides in order; Appendix A ("What else we considered") and Appendix B ("If you want to change something") are present as their own slides; the cover carries real stats (not fabricated); role labels use the plain vocabulary; the decision slide uses REQUIRED / CONFIRM / OPTIONAL badges.
 2. **Every slide opens.** Open the built `.pptx` via PowerPoint COM (or `_probe.mjs` per slide). Zero "could not open / corrupt" errors.
 3. **View every slide image.** Export PNGs and look at each: no text overflowing its card, no overlapping elements, no low-contrast text, no cramped-vs-empty imbalance. Fix and re-render until clean. Copy bodies on the sequence slide must be **complete** (shrink font before truncating; never truncate copy).
@@ -251,7 +261,7 @@ Include only client-facing needs that change campaign content or require client 
 
 - customer exclusion / suppression CSV
 - benchmark data or customer metrics needed for a promised benchmark
-- explicit approval only for a proof claim, an asset the client must provide, or a client-honored offer whose `lead_magnet_client_ok` is still `pending`. Offers the agency honors need no approval: `/offer-test-slate` already showed them, and client approval of offers is optional by default (operator directive 2026-09-22)
+- explicit approval only for a proof claim, an asset the client must provide, or a client-honored offer whose `lead_magnet_client_ok:` is still `pending`. Offers the agency honors need no approval: `/offer-test-slate` already showed them, and client approval of offers is optional by default (operator directive 2026-09-22). For each offer's readiness (sample, what is missing, next action, owner, the ask's `Sent:` date), point to the generated board `profiles/<business-slug>/offers/_readiness-board.md` rather than restating it: the brief names the pending offers, says in plain words that each one launches only after the client's yes (its campaign is drafted and paused until then), and links the board (Offer Readiness, operator decision 2026-09-28; `outbound/reference/offer-readiness.md`). A client's yes or no is recorded only through `outbound/scripts/offer-readiness/offer_approval.py`, never by this skill
 - the reply-readiness items only the client can supply, because the reply machine is built before Start (Gate D; Aaron process alignment, operator directive 2026-09-22): when the client's own team takes the calls, who calls an interested reply (the speed-to-lead owner, 5-minute target) and the booking calendar the reply offers two times from; and, for a trial, service or custom-work offer the client delivers, confirmation of the short qualifying questions (`offer.qualification`) that decide who gets the free unit and who gets the standard offer
 
 Exclude technical or internal launch tasks (API keys, workspace IDs, list-building, verifier, mailbox, registrar, warmup or sending-platform configuration, and any source-workflow build step the operator can do without client input).
@@ -260,7 +270,7 @@ If the selected campaigns need no new client-provided assets, say that plainly.
 
 ## Output Shape
 
-Keep the deck tight and client-facing, in the plain voice defined in the template's "How To Write It: The Voice" section.
+Keep the brief tight and client-facing, in the plain voice defined in the template's "How To Write It: The Voice" section.
 
 - Alternatives appear **once**, on Appendix A (Slide 8). Never repeat an alternatives list on the campaign slides.
 - Slide 3 condenses the campaigns; the per-campaign why/risk detail lives in the authored Markdown, not on the slide.
@@ -269,9 +279,9 @@ Keep the deck tight and client-facing, in the plain voice defined in the templat
 
 ## Workflow Position
 
-This deck explains campaign logic and shows saved copy variants when requested. It does not replace:
+This brief explains campaign logic and shows saved copy variants when requested. It does not replace:
 
-- `/cold-email-campaign-sequence-docx-presentation`, which shows the full email sequence and variants
+- `/cold-email-campaign-sequence-docx-presentation`, which shows the full email sequence and variants (a DOCX built only on request)
 - `/list-quality-scorecard`, which grades the final list
 - `/campaign-copywriting`, which writes final copy and owns copy QA
 
@@ -289,4 +299,5 @@ If the client changes a decision:
 - `/offer-intelligence` - supplies market and saturation evidence
 - `/lead-magnet-brainstorm` - selects the front-end offer
 - `/campaign-copywriting` - writes final campaign copy
-- `/cold-email-campaign-sequence-docx-presentation` - creates the full sequence deck after copy is approved
+- `/cold-email-campaign-sequence-docx-presentation` - creates the full sequence DOCX, only when the operator asks for it
+- `/phase-3-list` and `/phase-4-copy-launch` - the phases whose outputs this brief reads (`phase-protocol.md`)

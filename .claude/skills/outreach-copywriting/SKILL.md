@@ -1,7 +1,9 @@
 ---
 name: outreach-copywriting
-description: Creates and QA-checks first-touch cold written outreach across cold email, LinkedIn DMs, LinkedIn connection notes, SMS, X DMs, and other prospecting channels. Use whenever writing, revising, reviewing, serializing, or preparing initial outbound copy for any channel. Enforces the Framework A Email 1 contract (Aaron Shepherd's measured winner anatomy, aligned 2026-09-21) as a hard rule and routes full cold-email campaign work through campaign-copywriting.
+description: "Writes and QA-checks first-touch cold outreach for any channel (email, LinkedIn DMs and connection notes, SMS, X DMs). Use when writing, revising or reviewing initial outbound copy. Enforces the Framework A Email 1 contract, and full cold-email campaigns also go through /campaign-copywriting."
 ---
+
+**From the former description:** It covers other prospecting channels too, and serializing or preparing initial outbound copy for any of them. The Framework A Email 1 contract (Aaron Shepherd's measured winner anatomy, aligned 2026-09-21) is a hard rule, and full cold-email campaign work routes through `/campaign-copywriting`.
 
 # Outreach Copywriting
 
@@ -15,6 +17,8 @@ Read and apply these before drafting:
 2. `/spam-word-checker`
 
 For a full cold-email campaign, also run `/campaign-copywriting`. Its list, offer, proof, fulfilment, sequence, artifact, and platform gates remain mandatory.
+
+**Aaron's copy frames** (`aaron-copy-frames.md`). In the Aaron lane (`aaron-lane.md`), a full cold-email campaign's copy is Aaron's copy call, recorded word for word by `/campaign-copywriting`: every email names one frame id (F1 to F11 for Email 1, S1 to S5 for subjects, P1 to P5 for the P.S., FU1 to FU4 for follow-ups, DR for the delivery reply), checked by `python outbound/scripts/aaron_frame_check.py --client <slug>`. A standalone first touch written here outside that call may borrow a frame's shape, never his sentences (B12).
 
 ## Inputs
 
@@ -65,5 +69,5 @@ Rewrite internally until every check passes. Do not show failed copy as an optio
 
 - `/campaign-copywriting`: full cold-email campaign workflow and artifacts
 - `/spam-word-checker`: always-on formatting, CTA, opener, and voice guardrails
-- `/ask-aaron`: advisory persona consult for a line-by-line teardown or offer pressure-test; never relaxes this skill's hard rules
+- `/ask-aaron`: decides the offer and writes the cold-email campaign copy in the Aaron lane, and his call is final over the house copy contract there (operator directive 2026-09-24, `aaron-lane.md`); only the rails in that file bind him. Outside the lane, a consult for line-by-line draft teardowns or an offer pressure-test that never relaxes this skill's hard rules
 - The multichannel sending layer for the locked `run_state.sending_platform`, if `/stack-setup` activated a pack that provides one (e.g. `/getsales-io`): it carries the LinkedIn and email touches and is never the copy-authoring source of truth. If no pack is active, use that platform's native surface directly. If neither exists, say so and place the copy manually rather than implying coverage.

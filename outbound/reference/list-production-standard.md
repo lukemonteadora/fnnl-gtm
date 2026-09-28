@@ -19,7 +19,7 @@
 Market research -> offer -> buyer map
   -> TARGETING SPEC (profiles/<slug>/targeting-spec.yaml)            section 3
   -> 25-account validation, companies AND buyers                      section 4
-  -> company discovery (the lookalike spine, seeded from offer-fit companies)
+  -> company discovery (filter-first; a lookalike only as the exception)
   -> account QA after the provider: headcount, geography, exclusions  section 5
   -> people discovery waterfall, per account                          section 6, waterfall A
   -> title classification: rules first, sub-agents only for ambiguous section 7
@@ -107,7 +107,7 @@ Order: `layers.email.order`, which mirrors the contract's recorded order: the co
 - A candidate is **accepted** only on a verifier `valid` (the address accepts mail and the domain is not catch-all) on the person's own company domain.
 - `invalid` (disposable counts as invalid) or `unknown` rejects that candidate and the waterfall continues for the same person. Transient failures (a verifier error, a timeout, a rate limit) are retried with backoff, then treated as `unknown`; a transient result is never cached.
 - **A verified `catch_all` ends that person's email waterfall.** The candidate goes to the catch-all holdback and is never sent on to the gap-fill rung (`layers.email.on_catch_all: stop`, per the contract's `lead_data.email_verification` and `lead_data.contact_enrichment` notes). The person counts as exhausted (`EMAIL_CATCH_ALL`), so waterfall C promotes the next approved person at the account.
-- **The gap-fill rung never runs on a person the first rung has not attempted** (`requires_attempted` in the routing file; the contract's "never open the gap-fill on a row the first rung has not already attempted"). The one exception is an outage actually observed in the run (see the stop conditions below).
+- **The gap-fill rung never runs on a person the first rung has not attempted** (`requires_attempted` in the routing file; the contract's "never open the gap-fill on a row the first rung has not already attempted"). An outage no longer opens it: the only way through is an operator-approved skip (see the stop conditions below).
 - Route the first rung through its single-person finder endpoint, which the contract records as billing nothing on a miss, never its bulk export path, which bills per profile even on a miss (`lead_data.contact_enrichment.notes`). The provider-specific detail lives in the routing file's provider notes.
 - A valid email on a different, non-consumer domain is kept as a fallback (review later), not accepted.
 - A consumer-domain candidate (gmail and the rest) under `personal_email_policy: fail` is rejected **without** paying to verify it.
@@ -140,7 +140,7 @@ Runs only when the spec sets `buyers.phone_required: true` (a calling campaign, 
 | E phone | first phone found, or every phone rung tried |
 | Account QA | ICP fail confirmed, or the account passes |
 
-A rung that is unavailable at run time (key missing, connector down, route not on the plan, required input missing on the row) is skipped and logged, never faked, and never a stop. A connector error actually observed in the run skips that provider for the rest of the run (`list_waterfall.py plan --skip-provider <key> --skip-reason "..."`), and only then may the gap-fill rung take persons the first rung never attempted (the SANCTIONED EXCEPTION in `/email-waterfall`). A prediction that a provider might fail never does (the NO PRE-EMPTIVE SKIP rule in `/email-waterfall`).
+A row whose required input is missing (no domain, no name for a finder) skips that rung for that row, logged and never faked. A tool that is out of balance, down (key missing or rejected, connector down after two retries) or switched off is different: the step stops, progress is saved, and the operator is asked to top up or fix it, then the run resumes on that same tool (`/tool-balance-guard`, operator decision 2026-09-28; this retires the old SANCTIONED EXCEPTION that let an observed outage open the gap-fill). A tool is never swapped for another and a rung is never skipped to get around it. The one way through is the operator saying so in chat for that step of that run: `list_waterfall.py plan --skip-provider <key> --skip-reason "..." --operator-approved-skip` (the planner refuses a skip without the flag, and the ledger records `detail.operator_approved`); only then may the gap-fill rung take persons the first rung never attempted. A `429` rate limit is retried, not stopped. A prediction that a provider might fail never skips it (the NO PRE-EMPTIVE SKIP rule in `/email-waterfall`).
 
 **A low find rate never holds verified rows.** Email yield is not a send gate (`/email-waterfall`; Aaron process alignment, operator directive 2026-09-22). Every verifier-`valid` row ships, rows no rung could close go to review, and catch-alls go to the holdback. A low yield is reported as evidence for the routing review in section 16.
 

@@ -1,8 +1,10 @@
 # Google Docs auto-export: one-time setup
 
-This wires the cold-outbound DOCX renderers (campaign approval brief, campaign-sequence and lifecycle presentations) so that every render also creates a **native, formatted Google Doc** in your Google Drive automatically. No more "transfer and upload" into Google Docs.
+This wires the cold-outbound DOCX renderers (campaign approval brief, campaign-sequence and lifecycle presentations) so that a render can also create a **native, formatted Google Doc** in your Google Drive automatically. No more "transfer and upload" into Google Docs.
 
-**Why a setup step at all?** The connected Drive tool can only auto-convert plain text/CSV, and it can't reliably push a full DOCX. So a tiny uploader script (`scripts/docx_to_gdoc.mjs`) uses *your own* Google credential to upload the DOCX with Drive's conversion flag, producing a real Google Doc you can open, edit, and share. You do this once (~10 minutes); after that it's fully automatic.
+> **On request only (operator decision 2026-09-28).** Generated client files are plain text (Markdown) by default. A DOCX, and the Google Doc made from it, is built only when the operator asks for that format for that file. Nothing below runs as a default step.
+
+**Why a setup step at all?** The connected Drive tool can only auto-convert plain text/CSV, and it can't reliably push a full DOCX. So a tiny uploader script (`scripts/docx_to_gdoc.mjs`) uses *your own* Google credential to upload the DOCX with Drive's conversion flag, producing a real Google Doc you can open, edit, and share. You do this once (~10 minutes); after that a requested export needs no manual step.
 
 The script uses the least-privilege **`drive.file`** scope: it can only touch files it creates (its own export folder and the Docs it makes). It cannot see the rest of your Drive.
 
@@ -60,7 +62,7 @@ It prints `CREATED <link>` (or `UPDATED <link>` on later runs) and, on first run
 
 ## How it's used after setup
 
-The skills run it automatically right after rendering the DOCX:
+Once the operator has asked for a DOCX and it has been rendered, the skill runs:
 
 ```
 node scripts/docx_to_gdoc.mjs --in "<rendered .docx>" --title "<doc title>"
@@ -68,7 +70,7 @@ node scripts/docx_to_gdoc.mjs --in "<rendered .docx>" --title "<doc title>"
 
 - **First render** of a brief → creates a Google Doc in the FNNL Agency Cold Outbound Drive folder (its exact name is the `FOLDER_NAME` constant in `scripts/docx_to_gdoc.mjs`).
 - **Re-renders** of the same title → update the *same* Doc, so any link you've shared stays valid.
-- If the creds aren't set up yet, the script exits with code `2` and the skills simply skip the Google Doc and deliver the DOCX as before. Nothing breaks.
+- If the creds aren't set up yet, the script exits with code `2` and the skills simply skip the Google Doc and deliver the requested DOCX on its own. Nothing breaks.
 
 ## Security notes
 

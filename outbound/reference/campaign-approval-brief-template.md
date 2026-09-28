@@ -7,7 +7,7 @@
 > it to the other in the same change, so the two never drift apart again.
 
 
-This is the **authoring contract** for `/campaign-approval-brief`. The skill authors `profiles/<business-slug>/campaign-approval-brief.md` against the skeleton below, then renders it to a **locked 10-slide PPTX deck** via `scripts/approval-brief-pptx/` (see the SKILL.md section "The 10-Slide Contract" for the render pipeline and the Markdown-section → slide mapping). The old `scripts/brief_md_to_docx.ps1` DOCX render is **retired** (kept on disk for history); only the final render format changed (DOCX → PPTX). This file remains the single source of truth for the authored Markdown: **structure** (section order, fixed table columns/rows, role vocabulary) and the **plain writing voice** (the rules + the banned-in-client-prose list).
+This is the **authoring contract** for `/campaign-approval-brief`. The skill authors `profiles/<business-slug>/campaign-approval-brief.md` against the skeleton below. **The Markdown is the deliverable and the source of record** (generated client files are plain text by default, operator decision 2026-09-28). The locked 10-slide PPTX deck (the pptxgenjs library at `scripts/approval-brief-pptx/`, SKILL.md "The 10-Slide Contract" for the Markdown-section → slide mapping) is built only when the operator asks for it. The old `scripts/brief_md_to_docx.ps1` DOCX render is **retired** (kept on disk for history). This file remains the single source of truth for the authored Markdown: **structure** (section order, fixed table columns/rows, role vocabulary) and the **plain writing voice** (the rules + the banned-in-client-prose list).
 
 There is no gold-standard brief in this workspace yet, because no client has been onboarded. The skeleton at
 the bottom of this file plus the voice rules below ARE the standard until the first real brief exists. Once
@@ -22,8 +22,8 @@ one is written and approved, record it here as the reference:
 ## How To Use This File
 
 1. **Author** `profiles/<business-slug>/campaign-approval-brief.md` by copying the **Copy-Paste Markdown Skeleton** at the bottom of this file and filling it from saved artifacts only (never chat history, never invented decision history). Keep the section order, the fixed table columns/rows, and the plain voice exactly.
-2. **Render** the deck through the SKILL.md pipeline (The 10-Slide Contract, Required Builder, QA): map the Markdown onto the locked slides, build the PPTX with `scripts/approval-brief-pptx/`, and QA every slide. Never hand-build the deck, and never point new work at the retired `scripts/brief_md_to_docx.ps1`.
-3. **QA** the authored Markdown against this skeleton (structure first, then voice + banned terms) before rendering. The QA steps in SKILL.md (structural conformance and the content text scan) check against this file.
+2. **QA** the authored Markdown against this skeleton (structure first, then voice and banned terms) before it is handed over. The QA steps in SKILL.md (structural conformance and the content text scan) check against this file.
+3. **Stop there: the Markdown is what the operator gets.** Only when the operator asks for the deck version, map it onto the locked 10-slide deck, render it and QA it through the SKILL.md pipeline (The 10-Slide Contract, Required Builder, QA). Never hand-build the deck, and never point new work at the retired `scripts/brief_md_to_docx.ps1`.
 
 The reader meets the **campaigns** (Sections 2–3) before the **email mechanics** (Section 4). Put a `---` rule after the metadata block and between every section.
 
@@ -31,7 +31,7 @@ The reader meets the **campaigns** (Sections 2–3) before the **email mechanics
 
 ## The Old DOCX Look (Design Tokens, Retired)
 
-These tokens styled the retired DOCX render (the CSS block in `scripts/brief_md_to_docx.ps1`) and are kept for history only. The deck's look is locked in `scripts/approval-brief-pptx/lib.mjs` (SKILL.md, PPTX Design Rules). The hex values below are the ones baked into that script, carried over from a previous brand. **They are not FNNL Agency's brand colors.** When FNNL's palette is decided, update the accent in the PPTX design rules; there is no need to touch the retired script.
+These tokens styled the retired DOCX render (the CSS block in `scripts/brief_md_to_docx.ps1`) and are kept for history only. A requested deck's look is locked in `scripts/approval-brief-pptx/lib.mjs` (SKILL.md, PPTX Design Rules). The hex values below are the ones baked into that script, carried over from a previous brand. **They are not FNNL Agency's brand colors.** When FNNL's palette is decided, update the accent in the PPTX design rules; there is no need to touch the retired script.
 
 - **Font:** **Calibri** (Segoe UI / Arial fallback, all sans). A separate display face was deliberately not used, because it is not installed on the render box and the presentation renderers can't fall back through a CSS stack. **11 pt** body, **line-height 1.4**, near-black text **#1c1917**.
 - **Headings:** H1 **22 pt** accent (**#dd1729**), H2 **15 pt** accent, H3 **12.5 pt** accent.
@@ -56,7 +56,7 @@ Author in exactly this order. Headings must match verbatim. Do **not** hardcode 
    - A **quality-rule blockquote** (`>`): every per-contact fact must be sourced; if we can't source it, we don't use it.
    - **Step 4: Load and send.** Light per-recipient variation (with the deliverability gloss), loaded as a **paused draft**, one consistent sender across the warmed mailboxes, nothing sends until the client starts it.
 6. **`## 5. Copy Preview`**: every saved variant from `variants.yaml` as blockquotes (one per email variant), **or** the standard pre-list-build placeholder when the brief is written before the list exists (its normal timing). Never invent copy here.
-7. **`## 6. What We Need From You`**: **strategic, client-facing decisions only** (approve offers/order, suppression list, proof/claims they're comfortable using, any asset-gate or budget decision, and the reply-readiness items only they can supply: who on their team calls an interested reply and the booking calendar, when their team takes those calls, plus the qualifying questions for a trial, service or custom-work offer they deliver). Open with "Mark any you want changed; silence means approved." **Exclude** all technical/internal setup (API keys, workspace IDs, verifier/mailbox/registrar/warmup setup, source-workflow build steps).
+7. **`## 6. What We Need From You`**: **strategic, client-facing decisions only** (approve offers/order, suppression list, proof/claims they're comfortable using, any asset-gate or budget decision, and the reply-readiness items only they can supply: who on their team calls an interested reply and the booking calendar, when their team takes those calls, plus the qualifying questions for a trial, service or custom-work offer they deliver). Open with "Mark any you want changed; silence means approved." Silence approves the plan, never a client-delivered offer: name each offer still waiting on the client's yes, say in plain words that its campaign is ready but paused until they say yes, and point to the offer readiness board (`profiles/<business-slug>/offers/_readiness-board.md`, `offer-readiness.md`) instead of restating its rows. Keep the same asks, in the same words, as the one unsent `client-asks.md` (`client-messages.md`). **Exclude** all technical/internal setup (API keys, workspace IDs, verifier/mailbox/registrar/warmup setup, source-workflow build steps).
 8. **`## 7. What Happens Next`**: the operational sequence in plain language (no skill slugs, no vendor names) + a "Things we won't skip" line with the per-campaign stop gates.
 9. **`## 8. How We Protect Your Reputation`**: the deliverability and compliance guardrails in plain words.
 10. **`## Appendix A: Other Options We Considered`**: the alternatives, listed **once** (never repeat an alternatives list inside campaign sections), in up to three groups:
@@ -92,7 +92,7 @@ The prose is **graded, not just the structure**. Write everything so a smart per
 - **Source-first logic, plainly.** Explain that the chosen source *proves the campaign signal*, not merely that it's easy to export.
 - **No fake certainty.** Don't invent a clean decision trail. If alternatives aren't in the artifacts, write `Not captured in current artifacts.`; if a recommendation differs from the chosen path and the reason isn't explicit, write `Reason not captured.`
 
-**Banned in client prose. Scan and confirm ZERO hits before rendering:**
+**Banned in client prose. Scan and confirm ZERO hits before the brief is handed over:**
 
 - **Internal vendor / tool names.** Build the list at scan time from every tool named in `outbound/stack-contract.yaml` (company discovery, contact enrichment, email verifier, registrar, mailbox provider, sending platform, CRM, research), plus any pack name under `_vendor-library/`, plus any other data, scraping or enrichment tool that appears in this client's artifacts. Describe what the tool *does* in plain words instead ("we look up and verify the right contact"). If the contract is still empty there may be nothing to scan for, which is fine.
 - **Raw syntax / fragments:** `segment_subtype`, `{{` (any merge-field braces), and any query, column, or filter fragment.
@@ -214,6 +214,7 @@ No company appears in more than one list, so the campaigns never compete for the
 Mark any you want changed; silence means approved.
 
 1. **<Approve the offers / order>**: <the core strategic approval>.
+<For each offer you deliver that still needs your yes: **<offer in plain words>**: ready and paused; it starts only after you say yes. Agency-delivered offers need no yes and are not listed here.>
 2. **Suppression list**: any existing customers, active deals, or partners you do **not** want contacted.
 3. **Proof you're comfortable using**: confirm which named clients, results, or claims we may reference, and flag anything off-limits.
 4. **Who calls back a yes** <only when your team takes the calls>: the person on your team who calls anyone who replies with interest, ideally within about 5 minutes, and the booking calendar we offer two times from.

@@ -169,7 +169,16 @@ exactly the records your current stack misses.
 - **Tech-stack and other detection providers.** The same incremental-unique-contribution logic
   before adding a second or third provider on top of the primary one.
 - **AI model and prompt choice for research work.** Test a cheaper prompt or a different model
-  against a reviewed answer key you already trust before swapping it in.
+  against a reviewed answer key you already trust before swapping it in. In FNNL that means a
+  Claude sub-agent model tier (`/ai-model-routing`), never a third-party AI API.
+
+**FNNL house setting governs (routing order, operator decisions 2026-09-28).** Company discovery
+is built by filter first (`/tam-build`, `layers.company_discovery` in `provider-routing.yaml`),
+with a lookalike only as the exception. Contact discovery and email finding run in the
+`layers.people_discovery` and `layers.email` orders of the same file, under the stack contract.
+So a benchmark here is evidence for the operator on the order, or on a tool outside the approved
+six, never a swap on its own. It is also never a reason to route around a tool that is out of
+balance or down: that step stops and asks the operator (`/tool-balance-guard`).
 
 ### The failure mode this prevents
 

@@ -1,9 +1,11 @@
 ---
 name: lead-scoring
-description: Build, tune, validate, and apply the governed 1.0-to-10.0 lead-priority score after the company and contact TAMs exist but before campaign selection, email reveal, verification, or sending. Use for any TAM or campaign list that needs transparent company-fit, contact-fit, and timing points; client-and-offer-level scoring rubrics; priority tiers; hard-exclusion handling; or score-ordered enrichment and outreach.
+description: Build, tune, validate and apply the governed 1.0-to-10.0 lead-priority score (company fit, contact fit, timing; P1 to P5 tiers; hard exclusions) after the TAMs exist, before campaign selection or email reveal. Required when sending capacity forces a cut; optional for a first wave that ships every tier.
 ---
 
 # Lead Scoring
+
+**From the former description:** Build, tune, validate, and apply the governed 1.0-to-10.0 lead-priority score after the company and contact TAMs exist but before campaign selection, email reveal, verification, or sending. Use for any TAM or campaign list that needs transparent company-fit, contact-fit, and timing points; client-and-offer-level scoring rubrics; priority tiers; hard-exclusion handling; or score-ordered enrichment and outreach. (Updated 2026-09-28: scoring is optional for a first wave that ships every tier, and required when sending capacity forces a cut; `/phase-3-list` step 3.)
 
 Turn the built company and contact TAM into an auditable outreach queue. The score orders work. It never estimates conversion probability, deletes lower but marketable tiers, or replaces email verification.
 
@@ -70,7 +72,9 @@ run_state:
 - `rubric_ready`: the rubric and normalized tier inputs validate, but the full list is not scored.
 - `complete`: every company and contact row was processed; every eligible contact has a score, priority tier, confidence, and reason; every ineligible row has an exclusion reason.
 
-`/campaign-strategy` and `/email-waterfall` must stop when a TAM-backed path has `scoring_stage != complete`.
+**Scoring is optional for a first wave that ships every tier, and required when sending capacity forces a cut** (operator decision 2026-09-26, `/phase-3-list` step 3). When it is required, `/campaign-strategy` and `/email-waterfall` must stop when a TAM-backed path has `scoring_stage != complete`. When a first wave skips it, record that in `run_state` and the phase handoff, and the wave's order comes from `/campaign-strategy`.
+
+**Provider order.** Any paid data call a scoring step triggers (a missing firmographic, a timing signal) takes its tool order from `outbound/reference/provider-routing.yaml`, which overrides any order in this prose (precedence: `stack-contract.yaml`, then `provider-routing.yaml`, then skill prose). A tool that is out of balance, down or switched off stops the step and the operator is asked (`/tool-balance-guard`); never substitute another tool.
 
 ## Fixed scoring shell
 
@@ -181,6 +185,7 @@ python scripts/title_classify.py \
 - **Feeding the next run.** `--emit-explicit-titles` (with `--merge-ai`) writes the verdicts as a YAML snippet for review. The reviewed snippet is copied into the spec's `explicit_titles` and logged under its `changes`, so the next build decides those titles by rule.
 - **Persona mappings.** The rubric's `persona_mappings` should mirror the spec's tiers rather than restate a second title list.
 - **Everything else is unchanged.** The market, offer, size, geography and timing tiers stay sub-agent-interpreted as before, added to the same scoring input.
+- **Speed without skipping a gate (operator decision 2026-09-28).** Interpret only the rows in the wave's scope, and send only distinct values to a sub-agent (one verdict per distinct title or distinct evidence string, joined back to every row that carries it). Fan the passes out per `/personalization-subagent-pattern`: disjoint slices, one output file per agent, a count and format check on every file, a resume of only the failed slices, and a merge by `company_domain` or contact id with a duplicate check. Claude sub-agents only; no outside AI API runs any step.
 
 Use the rubric's actual input-column mapping. Common source aliases include:
 
@@ -190,7 +195,7 @@ Use the rubric's actual input-column mapping. Common source aliases include:
 - Contact authority: `contact_seniority`, `member_management_level`, and documented legacy evidence such as `buyer_tier`, `seniority_rank`, or `dm_tier`.
 - Timing: `contact_new_in_seat` and verified `co_*` change or intent signals.
 
-An ambiguous column named `score` is never accepted as the governed total or as component evidence unless the rubric documents exactly what produced it. `fit_confidence`, `source_confidence`, DiscoLike `disco_score`, and similarity are confidence or source priors, never quality points.
+An ambiguous column named `score` is never accepted as the governed total or as component evidence unless the rubric documents exactly what produced it. `fit_confidence`, `source_confidence`, a lookalike tool's similarity score, and similarity are confidence or source priors, never quality points.
 
 Leave a tier blank when the evidence is missing. Never infer a missing field merely to complete the score.
 
@@ -256,12 +261,12 @@ Priority tiers:
 - `P4`: 3.0 to 4.9
 - `P5`: 2.0 to 2.9
 
-**Every eligible contact goes out in the first wave, in score order. P1 to P5 is the send order inside the wave, never a hold (Aaron process alignment, operator directive 2026-09-22; supersedes "reveal and verify P1 first, then P2 through P5 as capacity becomes available").** `/email-waterfall` reveals and verifies the whole eligible TAM in one pass in score order, and the sequence receives it in the same order. Within a company, the highest-scoring two contacts may enter the same active wave by default. Rank 3+ stays marked for a later staggered wave. That per-company cap is a send-simultaneity guard, not a tier hold, so it survives this rule unchanged.
+**Every eligible contact goes out in the first wave, in score order. P1 to P5 is the send order inside the wave, never a hold (Aaron process alignment, operator directive 2026-09-22; supersedes "reveal and verify P1 first, then P2 through P5 as capacity becomes available").** `/email-waterfall` reveals and verifies every contact in Aaron's launch set in one pass in score order (the launch set's `now` campaigns, operator decision 2026-09-28), and the sequence receives it in the same order. Within a company, the highest-scoring two contacts may enter the same active wave by default. Rank 3+ stays marked for a later staggered wave. That per-company cap is a send-simultaneity guard, not a tier hold, so it survives this rule unchanged.
 
 **"Capacity" means two named limits, and neither one holds a tier back.**
 
 - **Send capacity:** the daily sends the client's warmed, active sending fleet delivers, recorded as `run_state.capacity_request.allocated_daily_sends`. `/campaign-strategy` writes the capacity request with the wave (`daily_sends_needed` = qualified contacts x sequence steps / ~5 Monday-to-Friday sending days, Aaron's one-week pace), and `/mailbox-mix-strategy` sizes the fleet to the request (or `/mailbox-pool-staging` assigns a pre-warmed pool group). A fleet that delivers less stretches the runway: the wave still covers the whole TAM, only over more days.
-- **Run budget:** `run_state.spend_ceiling_usd`, the standing $100 per client run, which caps reveal and verification spend. A whole-TAM reveal that would cross it stops and asks in `/email-waterfall`.
+- **Run budget:** `run_state.spend_ceiling_usd`, the standing $100 per client run, which caps reveal and verification spend. A launch-set reveal that would cross it stops and asks in `/email-waterfall`.
 
 **Coverage line (required at the end of `lead-scoring-report.md`, appended by the session after the script runs, because `scripts/lead_score.py` has no capacity input).** State: eligible contacts; days to cover at the allocated rate (eligible contacts x sequence steps / `allocated_daily_sends`, two steps by default, counted in Monday-to-Friday sending days); the estimated reveal and verification cost for the whole eligible TAM (rates from `/api-cost-governance`) against `spend_ceiling_usd`; and which limit binds. The run budget binds when the reveal estimate exceeds it. Send capacity binds when days to cover runs past about 5 sending days. Name both when both apply. `/lead-scoring` usually runs before `/campaign-strategy` writes the request, so when `capacity_request` or its `allocated_daily_sends` is absent, write "send allocation not yet filed (`/campaign-strategy` writes the capacity request)" in place of days to cover, still report the eligible count and the reveal cost against the budget, and name the budget as the binding limit whenever the estimate exceeds it. This skill never writes or edits `capacity_request` itself.
 
@@ -297,7 +302,7 @@ Use a stratified sample that includes exact fits, adjacent fits, weak fits, miss
 ## Downstream rules
 
 - `/campaign-strategy` reads `tam.scored.csv` and `contacts.scored.csv`, reports score distribution per proposed slice, and uses the score for ordering only.
-- `/email-waterfall` consumes `leads.scored.csv` or `contacts.scored.csv` in descending priority order. It never calls a paid finder or verifier before `scoring_stage = complete` on a TAM-backed path.
+- `/email-waterfall` consumes `leads.scored.csv` or `contacts.scored.csv` in descending priority order. When scoring is required, it never calls a paid finder or verifier before `scoring_stage = complete` on a TAM-backed path.
 - `/list-quality-scorecard` requires complete score coverage and zero explicit-exclusion leakage. It reports the P1-to-P5 mix but does not punish a healthy adjacent lower tier.
 - `/cold-email-flow-audit` treats lead scoring as its own artifact stage between TAM and campaign strategy.
 
@@ -312,13 +317,14 @@ Stop and fail loud when:
 - An ineligible row has no exclusion reason.
 - Any hard-no or suppression row is marked eligible.
 - A downstream step tries to filter out P4 or P5 merely because the score is low, or holds any eligible tier out of the first wave.
-- A paid email step is attempted before scoring completes.
+- A paid email step is attempted before scoring completes, when scoring is required (sending capacity forces a cut).
 - The list workbench push reported fewer rows than the scored CSV holds, and one retry also fell short.
 
 A push shortfall is reported at the top of the scoring report and retried once, never silently accepted. That stop applies to the publish step only. It does not reset `scoring_stage` or hold `/campaign-strategy` and `/email-waterfall`, because the local scored CSV they read is intact. A list workbench that is not ready is not a stop gate: it takes the CSV-only fallback above.
 
 ## Related skills
 
+- `/phase-3-list`: the phase this skill runs in (step 3, only when capacity forces a cut).
 - `/data-point-discovery`: supplies the scoreable fields and controlled vocabularies.
 - `/tam-build`: builds the company and contact inputs.
 - `/icp-prompt-builder`: tunes broad company-fit and normalization judgment.

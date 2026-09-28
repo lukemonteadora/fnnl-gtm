@@ -1,9 +1,11 @@
 ---
 name: proof-asset-request
-description: Generate an easy-to-fill form that collects the real proof a campaign needs from the client (a named client to reference, a real case study, an exact number) when that proof is not on file yet. Use when a planned angle leans on hard proof you don't have, so the copy can stand on real evidence instead of vague or invented claims. Triggers include "ask the client for proof", "we don't have a number/case study/client name for this", "prep a form to get proof from <client>", "proof-asset request", and "/proof-asset-request".
+description: Builds an easy form asking the client for proof a campaign needs but we lack (a named client, a case study, an exact number). Use for "ask the client for proof", "we don't have a number/case study/client name", "prep a proof form for <client>", "proof-asset request", "/proof-asset-request".
 ---
 
 # Proof-Asset Request
+
+**From the former description:** Use when a planned angle leans on hard proof you don't have, so the copy can stand on real evidence instead of vague or invented claims. Also triggered by "prep a form to get proof from <client>".
 
 Thin generator for the client proof-collection form. When a campaign angle needs a named client, a real case study, or an exact number that is not on file, this produces a short, pre-filled, gap-targeted form to send the client so we get real evidence back, instead of writing hollow or invented copy.
 
@@ -23,19 +25,20 @@ Don't write copy whose credibility needs hard proof you don't have. Be blunt abo
    - BLOCK (the angle is hollow without this proof): only the proof-led copy variant is held until the proof returns, never the slice. The slice ships now on its offer-led version, and the proof line joins later as an A/B arm against the no-proof version (Aaron, Sep 21, on a proof PS: "it puts up that sales friction ... try it, see which one works better"). Say so. (Aaron process alignment, operator directive 2026-09-22; supersedes "copy for that angle is held until the proof returns".)
    - FLAG (proof would only strengthen viable copy): copy proceeds now and gets upgraded when the proof returns. Say so.
 
-4. **Build the form** from the template in the reference doc. Keep it genuinely easy: three targeted fields at most, one or two examples per field, and a clear return path (a Google Doc via the google-docs MCP, or a paste-back markdown block). Trim every field the angle doesn't need.
+4. **Build the form** from the template in the reference doc. Keep it genuinely easy: three targeted fields at most, one or two examples per field, and a clear return path: a plain-text paste-back block the client answers in the reply (plain-text default, operator decision 2026-09-28). A Google Doc version (google-docs MCP) is made only when the operator asks for one. Trim every field the angle doesn't need.
 
-5. **Hand it off.** Output the finished form to the operator (and, if asked, create it as a Google Doc to send). Log the request in the client's `activity-log.md` as `PENDING`.
+5. **Hand it off.** Merge the finished form into the client's one unsent message, `profiles/<client>/client-asks.md`, as one numbered item with its fields indented beneath it (class `FEEDS`, or `BLOCKS-START` when an offer cannot run without it), per `client-messages.md` (outbound/reference/). Merge into the current message, never add a second greeting. When this skill runs as a sub-agent it returns the item to the main session, which writes the file. The operator sends it; Claude never does. Log the request in the client's `activity-log.md` as `PENDING`.
 
 6. **On return:** record the confirmed proof into `client-profile.yaml` (the `proof:` block) so the gate doesn't re-fire next campaign, update the activity log to `DONE`, and add the proof-led variant as an A/B arm (BLOCK) or upgrade the affected copy (FLAG).
 
 ## Autonomy
 
-Not relaxed by `auto_execute`. This is a missing-source-material input gate (modeled on the verified-List Gate), and the form is a data request to the client, not a pause that re-asks the operator. So generating and sending the form is fully compatible with hands-free execution. Shipping hollow or invented proof is a hard-rule violation in any execution mode; shipping the slice's offer-led version with no proof line is not.
+Not relaxed by `auto_execute`. This is a missing-source-material input gate (modeled on the verified-List Gate), and the form is a data request to the client, not a pause that re-asks the operator. So generating the form and merging it into `client-asks.md` for the operator to send is fully compatible with hands-free execution. Shipping hollow or invented proof is a hard-rule violation in any execution mode; shipping the slice's offer-led version with no proof line is not.
 
 ## Related
 
 - `proof-asset-request.md` (reference doc): the gate procedure and the full form template.
+- `client-messages.md` (reference doc): the one unsent client message every ask merges into.
 - `/client-intake-form`: collects proof assets up front so most clients never hit this.
 - `/campaign-strategy`: earliest gap detection.
 - `/campaign-copywriting`: enforces the gate at copy time.

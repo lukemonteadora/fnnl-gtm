@@ -473,7 +473,7 @@ Use this before any copy is shown to the user, saved to YAML, or prepared for up
 
 ## What To Do Next
 
-If writing campaign copy, return to `campaign-copywriting.md` and apply its stepwise workflow.
+If writing campaign copy, return to `/campaign-copywriting` (`.claude/skills/campaign-copywriting/SKILL.md`) and apply its stepwise workflow.
 
 If copy exists, run `spam-word-checker.md` first, then use this guide for the second-pass quality review.
 

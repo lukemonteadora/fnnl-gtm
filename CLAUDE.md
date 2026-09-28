@@ -82,7 +82,7 @@ The read-first / write-after activity-log protocol itself still applies in full.
 
 **Skills live in `.claude/skills/<name>/SKILL.md`** at the repo root. That is the single source of truth for every skill. Edit them there; Claude Code loads them live. There is no second copy and no account upload.
 
-**Exception: most of Luke's personal and operator skills live outside this repo entirely**, in sibling folders `../Personal GTM System/.claude/skills/` (his content engine, creator study library) and `../operator/.claude/skills/` (`daily-intel`, `co-domain-sale-monitor`), shared with his other GTM workspaces. Claude Code auto-discovers both the same way it discovers this repo's own skills, so they're usable from inside this workspace too (invoked as `Personal GTM System:<name>` / `operator:<name>`, or bare `/<name>` when there's no collision). Nothing FNNL-specific belongs in either folder. See `../Personal GTM System/CLAUDE.md` and `../operator/CLAUDE.md`.
+**Exception: most of the operator's personal and operator-level skills live outside this repo entirely**, in sibling folders `../Personal GTM System/.claude/skills/` (the operator's content engine, creator study library) and `../operator/.claude/skills/` (`daily-intel`, `co-domain-sale-monitor`), shared with the operator's other GTM workspaces. Claude Code auto-discovers both the same way it discovers this repo's own skills, so they're usable from inside this workspace too (invoked as `Personal GTM System:<name>` / `operator:<name>`, or bare `/<name>` when there's no collision). Nothing FNNL-specific belongs in either folder. See `../Personal GTM System/CLAUDE.md` and `../operator/CLAUDE.md`.
 
 **A second exception: the four persona-consult skills are mirrored, not owned here.** `ask-aaron`, `ask-eric`, `ask-nate` and `ask-taylor` are byte-identical copies of the canonical versions in `Documents/Personal GTM System/.claude/skills/<name>/`. **Do not hand-edit them in this repo.** Edit canonical, then run `Personal GTM System/sync-mirrored-skills.ps1` (`-Check` verifies parity and completeness without writing). The full rule lives in the global `~/.claude/CLAUDE.md` so it loads from every workspace, not just this one. Because they must stay byte-identical across repos, these four contain no absolute paths and degrade gracefully when a resource exists in another workspace but not here.
 
@@ -94,7 +94,7 @@ The read-first / write-after activity-log protocol itself still applies in full.
 
 | Path | Contents |
 |---|---|
-| `.claude/skills/` | The 62 active skills (58 owned here, plus the 4 mirrored persona-consult skills). Claude Code loads these live. |
+| `.claude/skills/` | The 67 active skills (63 owned here, plus the 4 mirrored persona-consult skills). Claude Code loads these live. |
 | `.claude/settings.json`, `.claude/hooks/` | Project hooks. Today one: `clay-credit-guard.mjs`, which enforces the zero-Clay-credit rule (section 7). |
 | `outbound/` | Everything the skills read and write. Detailed below. |
 | `_vendor-library/` | Parked tool integrations. **Nothing here loads**, by construction. |
@@ -144,6 +144,8 @@ Run these in order. Each one refuses to guess what the previous one should have 
 3. **`/cold-email-kickoff`**: onboard the first client.
 4. **`/continue-client`**: resume a client mid-flight.
 
+From there each client runs in four phases, one fresh thread each ("Phase N for <client>"; section 7, "Four phases, one thread each"). `python outbound/scripts/phase_state.py board` shows where every client is.
+
 `/cold-email-starter-kit` is the orientation router if you are unsure where to begin.
 
 ---
@@ -180,7 +182,7 @@ Fuller guidance and a plain-English glossary live in `outbound/reference/output-
 
 ### Decisions
 
-At any material decision point (strategy, cost, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, risk exposure): **name the realistic options, give a recommendation with a reason, say briefly why the alternatives are weaker, then ask or proceed.** Ask when the choice affects spend beyond an approved budget (a paid data step inside the standing $100 client budget is already approved; see Spend below), live systems, provider changes, compliance risk, or client-facing deliverables. Proceed on low-risk reversible choices. Never silently pick a material path. A client run under `review_protocol: phase_checkpoints` (the new-client default since 2026-09-24) batches its questions into the four phase checkpoints in `/cold-email-kickoff` instead of asking at each fork, and the hard stops in `/autonomous-execution-policy` section 3 still stop the moment they are hit.
+At any material decision point (strategy, cost, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, risk exposure): **name the realistic options, give a recommendation with a reason, say briefly why the alternatives are weaker, then ask or proceed.** Ask when the choice affects spend beyond an approved budget (a paid data step inside the standing $100 client budget is already approved; see Spend below), live systems, provider changes, compliance risk, or client-facing deliverables. Proceed on low-risk reversible choices. Never silently pick a material path. A client run under `review_protocol: phase_checkpoints` (the new-client default since 2026-09-24) batches its questions into the one checkpoint each phase skill shows (at most 4 questions; "Four phases, one thread each" below) instead of asking at each fork, and the hard stops in `/autonomous-execution-policy` section 3 still stop the moment they are hit.
 
 Use native Interactive Inputs where the runtime supports them, with the recommended option first and a custom-answer option last.
 
@@ -196,9 +198,39 @@ When giving a strategy, plan, or recommendation, surface the strongest case agai
 
 When work splits into two or more pieces with no shared state and no ordering dependency, fan them out across sub-agents in one message rather than grinding serially. Partition inputs so no two agents get the same item, give each its own output target, then de-duplicate after merging. Going serial on genuinely independent work needs a stated reason. `/personalization-subagent-pattern` is the canonical implementation.
 
+### Four phases, one thread each (operator decisions 2026-09-24 and 2026-09-28)
+
+A client runs in four phases, and the operator starts each one in a fresh thread by saying "Phase N for <client>":
+
+1. `/phase-1-onboarding`: the context sweep, the website scrape, the folder refresh for a returning client, the profile and the ICP.
+2. `/phase-2-research-offer`: the research, the Research QA gate, the Aaron offer call and the offer slate.
+3. `/phase-3-list`: the TAM, the Aaron campaign and copy call, and the verified list per campaign.
+4. `/phase-4-copy-launch`: Aaron's copy recorded, the reply machine, and PAUSED drafts on the sending platform. Pressing Start stays the operator's.
+
+Each phase runs hands-free and stops once, at its checkpoint, with at most 4 questions. It then writes a handoff file (`outbound/profiles/<slug>/phases/phase-N-*.md`) and freezes once the operator approves it. The next thread reads that handoff, not the old conversation. This replaces the four checkpoints that used to sit inside `/cold-email-kickoff`.
+
+- **Where every client is:** `python outbound/scripts/phase_state.py board`. The tracker (`outbound/profiles/<slug>/phases/state.yaml`) is written only by that script and holds the phase state. `run_state.checkpoints` is retired: the `place` backfill reads it once to place a client that predates the tracker.
+- **Resuming a client** ("continue <client>") runs `/continue-client`, which routes to the current phase.
+- **A frozen phase changes only through a reopen** (`phase_state.py reopen`). The protocol (the read set, the handoff shape, the freeze, when a phase reopens, and how existing clients are placed) is `outbound/reference/phase-protocol.md`.
+- **FNNL's own rules hold inside every phase:** the context sweep first, the $100 standing budget, infrastructure that may be deferred without holding research, lists, copy or the paused draft, the draft-upload stop in `/cold-email-kickoff` Step 6, and the operator's Start.
+
 ### Spend
 
 Anything that costs money routes through `/api-cost-governance` and respects `run_state.spend_ceiling_usd`. **Every client run gets a standing budget of $100 (operator directive 2026-09-22), written automatically and never asked at onboarding, intake, kickoff or run start.** Paid data steps inside it run without a confirmation, and a purchase that would push the run over it stops and asks. Each new wave starts a fresh $100. Mailbox infrastructure (domains, mailbox capacity) is outside the budget and still needs the operator's approval of the setup total. Change a client's figure only on an explicit operator instruction, never silently. There is no separate AI research budget any more: research runs on Claude Code and costs nothing here.
+
+### Tool balances: stop and ask, never substitute (HARD RULE, operator decision 2026-09-28)
+
+When a tool that a skill or `provider-routing.yaml` names for a step is out of balance (credits, plan fair use, or GetLeads wallet cash for a paid scrape), down (a missing or rejected key, an outage that outlasts two retries) or switched off, the step stops and the operator is asked to top up or fix it. It then resumes on that same tool. This overrides the 2026-06-19 exception that let the enricher open a down finder's rows as the finder.
+
+- **Never substitute.** Never switch to another tool or the next waterfall rung to get around an empty or broken tool, and never hand partial output on as complete. The only way through is the operator saying so in chat, for that step of that run: `list_waterfall.py plan --skip-provider <tool> --skip-reason "<what was seen>" --operator-approved-skip`, recorded as `detail.operator_approved`. The planner refuses a skip without that flag. Reaching the same tool by its other route (its MCP server or its script) is not a substitution.
+- **Check before, report after.** Before a phase that spends, read the named tools' balances; after it, post the short balance report in chat.
+- **A `429` rate limit is retried, not stopped.** Clay credits are never a fallback.
+
+The signals, the stop block and the report format are in `/tool-balance-guard`.
+
+### Filter-first company discovery (operator decision 2026-09-28)
+
+A TAM is counted and filtered first, never seeded by a lookalike by default. This overrides the 2026-09-22 "lookalike is a MUST". `/tam-build` runs AI Ark `company_search` on the resolved filters, then GetLeads `count_contacts` (an exact count at 0 credits; GetLeads itself is a paid plan, never free) as the size check and the top-up when the AI Ark universe comes back thin. A lookalike seeded from offer-fit companies is an option or an exception, not a requirement, and `run_state.discovery_route` records which route ran (`filter` or `lookalike`; missing reads as `filter`). Reveal and lookup-by-person calls, such as GetLeads `lookup_decision_makers` (which returns emails and bills per record), are never discovery rungs. The machine-readable order is `layers.company_discovery` in `outbound/reference/provider-routing.yaml`.
 
 ### List workbench (Clay): zero Clay credits, build lead lists in it (HARD RULE, operator directive 2026-09-22)
 
@@ -229,15 +261,40 @@ Skills refer to this as the zero-workbench-credit rule and name the role ("the l
 - **The one exception is sender headshots:** OpenAI, headshots only, asked for at infrastructure setup (`ai.image_generation`, recorded in `approved_stack.approved_exceptions`). Its key is never requested or flagged as missing at onboarding, intake, kickoff, preflight, stack setup or workspace creation.
 - **No other AI key** belongs in `scripts/.env.example` or the credential registry. Claude Code usage is not metered API spend here, so `/api-cost-governance` previews only data-vendor calls and the headshot call.
 
+### Generated files are plain text (operator decision 2026-09-28)
+
+Every file a skill generates for a client is plain text in `outbound/profiles/<slug>/`: the offer slate, research write-ups, the approval brief, copy and lifecycle copy, the proof bank, audits and reports. Anything a person reads is Markdown, and anything a script reads is CSV, YAML or JSON.
+
+- **No rich formats by default:** no DOCX, PPTX, PDF, XLSX or Google Doc, and no rendering of slides to images for QA.
+- **The one exception is an explicit ask.** When the operator asks for a specific format for a specific file, build that one file from the Markdown, which stays the source of record. One ask covers that file only. A skill may say in one line that a richer version exists on request; it never builds one first.
+- **Out of scope:** live systems that hold the truth (the list workbench table, the sending platform's campaigns), and an asset a prospect actually receives, which gets its delivery format when it is built.
+- **The render tooling stays on disk for those asks:** the four `*-docx-presentation` skills, `outbound/scripts/approval-brief-pptx/`, `brief_md_to_docx.ps1` and `docx_to_gdoc.mjs`.
+
 ### Market research layer (operator-approved port, 2026-09-24)
 
 Research comes before offers, and evidence is stored, counted and checked rather than summarized. The standard is `outbound/reference/market-evidence-standard.md`.
 
 - **Per-client research lives in `outbound/profiles/<slug>/_research/`:** `evidence.csv` (the evidence ledger: one tiered, sourced row per evidence item, appended only by `outbound/scripts/research/evidence_ledger.mjs`, never typed by hand), `pain-clusters.md` (the pain clusters, honest counts, opportunity scores, the Research QA verdict, the Language bank of the buyers' own phrases, and the Market feedback log), `competitors-and-ads.md`, `market-sample.md`, and dated `runs/` folders for raw captures. Older research folders are referenced, never moved. The `research_artifacts:` block in `client-profile.yaml` is the index.
-- **The flow:** `/offer-intelligence` collects, reusing what already exists → `/market-evidence synthesize` clusters, counts, scores and runs the Research QA gate → `/lead-magnet-brainstorm` builds offers that cite their evidence (Offer QA, the check that each offer rests on real evidence, runs when the offer locks) → the list build, with a 25-account list QA before Phase B spend (Phase B is the full list build and its paid enrichment, after the sample passes the GO gate) → copy drawn from the buyers' own language → launch → `/market-evidence feedback`, once the sending platform is live, turns replies, objections and calls into evidence and updates the research.
-- **The Research QA gate has three verdicts.** PASS means offers may be built. DEEPEN means the gaps can be fixed with more research: under `review_protocol: phase_checkpoints` (the new-client default since 2026-09-24) research is one run, and a targeted pass on the named gaps is an option the operator picks at checkpoint 2; under plain `auto_execute` or `review_gates` a targeted pass runs on the named gaps only, at most two loops. HOLD means more public research cannot fix it: under `review_gates` the operator decides at the offer-step review (Gate 2), under `phase_checkpoints` the verdict is shown at checkpoint 2 and the operator decides there, and under plain `auto_execute` every cluster goes forward labelled low confidence with the reasons flagged at the top of the report. Never a silent block, never a silent pass.
+- **The flow:** `/offer-intelligence` collects, reusing what already exists → `/market-evidence synthesize` clusters, counts, scores and runs the Research QA gate → the Aaron offer call decides the offers and `/lead-magnet-brainstorm` records them with their evidence cited (Offer QA, the check that each offer rests on real evidence, runs when the offer locks) → the list build, with a 25-account list QA before Phase B spend (Phase B is the full list build and its paid enrichment, after the sample passes the GO gate) → copy drawn from the buyers' own language → launch → `/market-evidence feedback`, once the sending platform is live, turns replies, objections and calls into evidence and updates the research.
+- **The Research QA gate has three verdicts.** PASS means offers may be built. DEEPEN means the gaps can be fixed with more research: a targeted pass runs on the named gaps only, at most two loops, automatically inside Phase 2 with no stop (operator decision 2026-09-28), and it ends as PASS with low-confidence labels, or HOLD. HOLD means more public research cannot fix it: under `review_gates` the operator decides at the offer-step review (Gate 2), under `phase_checkpoints` the HOLD reasons lead the Phase 2 checkpoint and the operator decides there, and under plain `auto_execute` every cluster goes forward labelled low confidence with the reasons flagged at the top of the report. Never a silent block, never a silent pass.
 - **The gates label and rank, never hide** (the Aaron alignment). Under `auto_execute` they never pause except where they protect spend: a 25-account list QA that fails twice stops before Phase B. None of them is a sending pilot or a scale gate.
 - **Research is Claude-native.** Collection runs only on the tools the no-AI-API rule above allows; the table of research read routes is section 9 of the standard. Nothing in this layer adds a tool to the approved six.
+
+### Aaron decides offers, targeting and copy (operator decision 2026-09-28)
+
+Once the research is done, `/ask-aaron` makes the call on the offers we test, who each offer goes to, which campaigns launch and the copy sequence. The operator outranks Aaron (a swap at a checkpoint wins), and Aaron outranks every house default on those subjects.
+
+- **Two calls, each in a fresh Claude sub-agent** (no AI API). Call 1, the offer call, runs in Phase 2 right after the Research QA verdict. Call 2, the campaign and copy call, runs in Phase 3 right after `/campaign-strategy` drafts the wave, before any list spend. The house skills record his answers word for word into the fields the flow already reads, and `run_state.aaron_lane.offer_call` / `.copy_call` date each call.
+- **He rules on who, not on how the list is built.** The list skills still build and verify the list on the approved six for the buyers he names.
+- **Rails he cannot override:** truth, `/spam-word-checker` and the send format, targeting the stack can collect, compliance, suppression and verified-only emails, the spend budget and the operator's Start, plain-text files, the locked stack and `run_state` names. A failed rail goes back to Aaron for one fix round; if it still fails, only that item is held and shown at the next checkpoint.
+- **Copy is built frame by frame on his own example emails.** Every subject, email and reply names one frame in `outbound/reference/aaron-copy-frames.md` and keeps its structure; only the slots change. `outbound/scripts/aaron_frame_check.py` checks it before `copy.md` is written.
+- **The house authoring procedures stay on disk** and run only when the operator asks; their output goes to Aaron as input. Offers and drafts built before the lane are flagged, not rewritten, and an Aaron pass is offered at the next checkpoint.
+
+The procedure is `outbound/reference/aaron-lane.md`. The mirrored `/ask-aaron` skill is not edited for this.
+
+### Offer Readiness (operator decision 2026-09-28)
+
+Offer Readiness is a rail around Aaron's offer call, not a second opinion. One generated board (`offers/_readiness-board.md`) shows, per offer, who delivers it, whether the client has said yes and on what evidence, the real sample, what is missing and from whom, and the next action. The client's yes or no is recorded only by `outbound/scripts/offer-readiness/offer_approval.py`. A pending offer is drafted like any other (list, copy, paused campaign) and only its Start is held until the client's yes, with a 48-hour nudge and never a send on silence. A `no` or `vetoed` offer is never built. The spec is `outbound/reference/offer-readiness.md`.
 
 ### Client context sweep on every onboarding (HARD RULE, operator directives 2026-09-22 and 2026-09-24)
 
@@ -252,6 +309,24 @@ Research comes before offers, and evidence is stored, counted and checked rather
 - **Slack is not a stack tool here, and not the reporting destination,** which stays unchosen. The same holds for the other sweep sources (see the next rule).
 
 The full procedure (sources, search terms, the cross-agency guard, output shape, gates, safety rules) is `outbound/reference/client-context-sweep.md`; the Slack channel read inside it is `outbound/reference/client-slack-check.md`.
+
+### Live website scrape on every onboarding (HARD RULE, operator directive 2026-09-24)
+
+Right after the context sweep, before any question or research, onboarding reads the client's own website live, page by page (products, pricing, case studies, the offers and calls to action they already run, named competitors). The result is `outbound/profiles/<slug>/website-profile.md` plus a top-level `website_scrape:` block in `client-profile.yaml`, which the ICP draft, `/offer-intelligence`, the Aaron offer call and `/social-proof-bank` read.
+
+- **Never skipped.** No URL on file means finding it; only the operator can confirm a client has no website.
+- **Research waits for it.** `/offer-intelligence` does not start its primary pass until the status is `done`, `partial` or a confirmed `no_website`.
+- **Free and Claude-native.** The route ladder is the browser pane (read-only), then WebFetch, then a plain `curl`. Never Claude in Chrome, never a paid crawler. Record what a visitor sees, and treat it as the client's self-description, never as evidence for the ledger.
+
+`/continue-client` backfills it for any client without a `website_scrape` block. The procedure is `outbound/reference/client-website-scrape.md`.
+
+### Client folder refresh for returning clients (operator decision 2026-09-28)
+
+When a client we worked with before is onboarded again, `/phase-1-onboarding` (or `/continue-client` when it re-onboards) checks every file already in the profile folder against the fresh sweep and scrape, after both have run. Each file is marked CURRENT, UPDATE, SUPERSEDED or UNVERIFIABLE; stale files are updated and the rest move to `_archive/<date>-folder-refresh/`, never deleted. It runs hands-free and the result is shown at checkpoint 1. The procedure is `outbound/reference/client-folder-refresh.md`.
+
+### Client asks: one unsent message per client (operator decision 2026-09-28)
+
+Everything we need from a client goes into one file, `outbound/profiles/<slug>/client-asks.md`, holding at most one unsent message. Skills merge their asks into it rather than writing their own. Each item is classed BLOCKS-UPLOAD, BLOCKS-START or FEEDS, so a client ask never holds the flow beyond the one thing that needs the answer. **Claude never sends it:** the operator (or a teammate the operator names) does. The rule is `outbound/reference/client-messages.md`.
 
 ### Client-context sources are not stack tools (operator ruling 2026-09-24)
 

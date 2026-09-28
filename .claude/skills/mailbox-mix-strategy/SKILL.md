@@ -1,6 +1,6 @@
 ---
 name: mailbox-mix-strategy
-description: Provider-agnostic strategy gate for choosing the Google Workspace vs Microsoft 365 mailbox purchase mix, and for sizing the total warmed mailbox fleet, before any cold email infrastructure setup spends money. Use before ANY registrar or mailbox-provider setup skill runs, whenever domains or inboxes are about to be bought.
+description: Provider-agnostic strategy gate for choosing the Google Workspace vs Microsoft 365 mailbox purchase mix and sizing the total warmed mailbox fleet before any cold email infrastructure spend. Use before ANY registrar or mailbox-provider setup skill runs, whenever domains or inboxes are about to be bought.
 ---
 
 # Mailbox Mix Strategy

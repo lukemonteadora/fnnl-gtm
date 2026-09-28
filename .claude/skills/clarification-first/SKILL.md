@@ -9,9 +9,11 @@ Use this skill when missing context would change the answer, spend money, touch 
 
 Do not use it for short answers or obvious single-step requests.
 
+**Client runs already batch their questions.** A new client starts with `/phase-1-onboarding` ("Phase 1 for <client>"), a known client resumes through `/continue-client`, and each of the four phase skills (`/phase-1-onboarding`, `/phase-2-research-offer`, `/phase-3-list`, `/phase-4-copy-launch`) asks its questions once, at the checkpoint that closes the phase (operator decision 2026-09-28, `phase-protocol.md`). Inside a phase, use this skill to decide what goes into that checkpoint, not to add a separate mid-phase question.
+
 ## Interaction Policy
 
-This skill defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at `/cold-email-kickoff`'s four phase checkpoints; `review_gates` is opt-in), proceed without pausing: pick the strongest option per the rubric, record it to `run_state`/profile, and continue. Never re-ask a decision already in `run_state`, `client-profile.yaml`, `campaign-plan.md`, memory, or the latest operator message. Spend runs against the standing budget in `run_state.spend_ceiling_usd` ($100 per client run, never asked, in either execution mode): auto-approve within it. Stop only for the hard-stops in the policy. On a long async wait, background-poll and move to other productive work. Never idle.
+This skill defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at the one checkpoint that closes each of the four phases, `phase-protocol.md`; `review_gates` is opt-in), proceed without pausing: pick the strongest option per the rubric, record it to `run_state`/profile, and continue. Never re-ask a decision already in `run_state`, `client-profile.yaml`, `campaign-plan.md`, memory, or the latest operator message. Spend runs against the standing budget in `run_state.spend_ceiling_usd` ($100 per client run, never asked, in either execution mode): auto-approve within it. Stop only for the hard-stops in the policy. On a long async wait, background-poll and move to other productive work. Never idle.
 
 ## Activity Log Protocol
 
@@ -47,7 +49,7 @@ Under autonomous execution (`execution_mode = auto_execute`), the `/autonomous-e
 
 ## Questions
 
-Ask no more than four questions at once (the native prompt's limit). At a phase checkpoint under `review_protocol: phase_checkpoints` (`/cold-email-kickoff`, operator directive 2026-09-24), that one prompt carries every question the phase needs, with related facts grouped into one multi-part question before a second prompt is ever used.
+Ask no more than four questions at once (the native prompt's limit). At a phase checkpoint under `review_protocol: phase_checkpoints` (the phase skills and `phase-protocol.md`, operator decisions 2026-09-24 and 2026-09-28), that one prompt carries every question the phase needs, with related facts grouped into one multi-part question before a second prompt is ever used.
 
 Use Claude Desktop native Interactive Inputs / Choice Prompts for every user-facing question unless the user explicitly asks for a freeform interview.
 
@@ -66,7 +68,7 @@ Interactive prompt rules:
 - Accept either the option letter, the option text, or a natural-language correction.
 - When a prior file, website, research result, or `run_state` gives a likely answer, pre-fill it as the recommended option instead of asking the user to type from scratch.
 - When the answer is factual status and no evidence exists, do not pretend to know. Make `Not sure - check first` the recommended option.
-- For spend beyond the run's standing budget, an infrastructure purchase, live-system mutation, scraping risk, legal/compliance, or client-facing approval (Luke's review of a client-facing document; the client's own approval of an offer is optional and never a pause, per `/offer-test-slate`), the safe recommendation is review or pause unless the user explicitly chooses approval. A paid data step inside the standing $100 budget is not on this list: it runs without a question.
+- For spend beyond the run's standing budget, an infrastructure purchase, live-system mutation, scraping risk, legal/compliance, or client-facing approval (the operator's review of a client-facing document; the client's own approval of an offer is optional and never a pause, per `/offer-test-slate`), the safe recommendation is review or pause unless the user explicitly chooses approval. A paid data step inside the standing $100 budget is not on this list: it runs without a question.
 
 Fallback text format, only if native Interactive Inputs are unavailable:
 
@@ -90,21 +92,11 @@ C. Ask me one follow-up first
 D. Custom answer
 ```
 
-## Required Stack Questions For Cold Email
+## Stack Questions For Cold Email
 
-Before GTM/cold email execution, confirm only the provider stack:
+Do not ask the operator to pick a provider stack. The sending platform, registrar and mailbox provider come from `outbound/stack-contract.yaml` (the contract), and `/cold-email-kickoff` writes them into `run_state` (`run_state.sending_platform`, `run_state.registrar`, `run_state.mailbox_provider`, `run_state.infrastructure_stack`). Never present a vendor menu, and never infer a vendor from a key in `.env` or a name in `_vendor-library/`.
 
-1. Infrastructure path:
-   - Dynadot domains + Zapmail mailboxes
-   - Spaceship domains + Zapmail mailboxes
-   - Dynadot domains + Primeforge mailboxes
-   - Spaceship domains + Primeforge mailboxes
-   - Primeforge native domains + Primeforge mailboxes
-2. Sending platform: EmailBison, Smartlead, Instantly, or Other
-
-Save the chosen path in `run_state.infrastructure_stack`, then derive `run_state.registrar` and `run_state.mailbox_provider` from it.
-
-Hard rule: `registrar = Primeforge` is valid only with `mailbox_provider = Primeforge`. Do not create or accept `Primeforge domains + Zapmail mailboxes`. If the user wants Zapmail mailboxes, route domain buying through Dynadot or Spaceship.
+Infrastructure is deferred until the operator resolves it in the contract (operator decision 2026-09-22): an empty or `deferred` slot never blocks intake, ICP, offer research, the offer test slate, lists, copy or the paused draft. It becomes a question only at the step that uses that tool (an infrastructure purchase, or pressing Start), and then the route is `/stack-setup`. Only pairings the contract declares valid are routed.
 
 Do not ask startup questions about whether domains are already purchased, whether inboxes have reached a warmup age, or whether provider API keys are connected. Those checks happen later inside the selected setup, lead-source, verification, or platform manager skill.
 

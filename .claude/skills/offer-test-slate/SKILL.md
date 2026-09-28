@@ -1,9 +1,13 @@
 ---
 name: offer-test-slate
-description: "Client-facing offer test plan and results review, the two decks around an offer test. Slate mode runs right after /lead-magnet-brainstorm locks the test set and before any list work: it shows the client the buyer types we will reach, the problems the research found in the buyer's own words, every offer we want to test and why, who honors a qualified yes and how, and the whole first wave (every offer launched together, each placed only in the segments it fits, one offer per about 2,000 qualified contacts, at least three). Client approval is optional by default: offers the agency can honor start without it, the client can veto any offer, and only an offer whose yes the client alone can honor waits for the client's OK. Scale-review mode runs alongside the winner's scale-up, never ahead of it: it is a results report plus a review of the winner's offer.qualification rule, where the client's capacity answer sets how many qualified yeses get the free unit each week. It gates sending volume only where the client itself supplies the deliverable."
+description: "Client-facing Markdown reports around an offer test. Slate mode runs after /lead-magnet-brainstorm locks the test set: buyer types, problems found, every offer and why. Scale-review mode reports the results beside the winner's scale-up and reviews its qualification rule."
 ---
 
+**From the former description:** The slate also shows who honors a qualified yes and how, and the whole first wave (every offer launched together, each placed only in the segments it fits, one offer per about 2,000 qualified contacts, at least three unless Aaron's offer call sets another count). Client approval is optional by default: offers the agency can honor start without it, the client can veto any offer, and only an offer whose yes the client alone can honor waits for the client's OK. Slate mode runs before any list work. Scale review runs alongside the winner's scale-up, never ahead of it: the client's capacity answer sets how many qualified yeses get the free unit each week, and it gates sending volume only where the client itself supplies the deliverable. A deck or DOCX is built only when the operator asks for one.
+
 # Offer Test Slate
+
+**Built from Aaron's offer call (the Aaron lane, operator directive 2026-09-24; `aaron-lane.md`).** The offers, their order, the reasons and the ideas considered but not tested come from `aaron-offer-call.md` as `/lead-magnet-brainstorm` recorded them. The slate explains his call in plain words. It never re-ranks, re-words or drops an offer, and "Other ideas we considered" lists his untested ideas with his reasons.
 
 ## Stack Resolution (read before any tool step)
 
@@ -34,10 +38,10 @@ Here `<outbound>` is the root of this skill library. Resolve it to wherever the 
 
 Aaron Shepherd's offer method is: research the buyer, generate a lot of offers ("Some of these are going to be great, some of them are going to be iffy, but the idea is you have a bunch of things to work from"), test three or four, and "let the market tell you what you should do" (doctrine §3, §5). The flow used to invert that for the client relationship: it dropped offers at ideation because the client might not want them, might not be able to deliver them, or because they needed a free trial or real effort. The operator retired that on 2026-09-22. The new order is:
 
-1. **Ideate without client or capacity limits.** `/lead-magnet-brainstorm` generates and ranks the strongest offers for each buyer type, on buyer pull only.
+1. **Ideate without client or capacity limits.** The strongest offers for each buyer type are generated and ranked on buyer pull only (under the Aaron lane, by Aaron's offer call, which `/lead-magnet-brainstorm` records).
 2. **Show the client the slate** (this skill, slate mode): the buyer types, the problems found, every offer and why. Approval is optional.
 3. **Test every first-wave offer together inside the full-volume send** (`/campaign-strategy` Offer-Validation Wave): `max(3, floor(qualified_contacts / 2000))` offers, capped at the qualifying candidates, across the whole qualified list, each offer running in every first-wave segment it fits (its own fit filters decide), not across every segment, with shared ground split evenly (operator decision 2026-09-23). The list is never sized to the offers; the offer count follows the list (Aaron, Apr 6: one offer per about 2,000 leads; May 4: always test three or four).
-4. **Report the results** (this skill, scale-review mode): what was tested and what won, while the winner already goes to the rest of the list it fits (rows it does not fit go to the strongest offer that fits them; operator decision 2026-09-23). Deliverability at the scale of the emails being sent is checked at offer lock, not here: each offer shows a scale note that fits, or an `offer.qualification` rule that decides who gets the free unit (`/lead-magnet-brainstorm`, Deliverable at Send Scale). The scale review reviews that rule with the client. (Aaron process alignment, operator directive 2026-09-22; supersedes "test the offers on a few thousand contacts each" and "the capacity question lives HERE, after the market has picked".)
+4. **Report the results** (this skill, scale-review mode): what was tested and what won, while the winner already goes to the rest of the list it fits (rows it does not fit go to the strongest offer that fits them; operator decision 2026-09-23). Deliverability at the scale of the emails being sent is checked at offer lock, not here: each offer shows a scale note that fits, or an `offer.qualification` rule that decides who gets the free unit (`/lead-magnet-brainstorm` references/saturation-and-scale.md, Deliverable at Send Scale). The scale review reviews that rule with the client. (Aaron process alignment, operator directive 2026-09-22; supersedes "test the offers on a few thousand contacts each" and "the capacity question lives HERE, after the market has picked".)
 
 ## The one rule that stays: honor every qualified yes
 
@@ -61,18 +65,18 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at `/cold-email-kickoff`'s four phase checkpoints; `review_gates` is opt-in), proceed without pausing: author and render the slate, record it, and continue the flow. Claude never sends the deck to the client. The operator sends it, and records the send date and any client response (see State fields). Stop only for the policy's hard-stops.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at the one checkpoint that closes each of the four phases, `phase-protocol.md`; `review_gates` is opt-in), proceed without pausing: author the slate, record it, and continue the flow. Claude never sends the slate to the client. The operator sends it, and records the send date and any client response (see State fields). Stop only for the policy's hard-stops.
 
 `run_state.offer_slate_approval` decides whether the flow waits for the client:
 
-- `optional` (default, operator directive 2026-09-22): hand the deck to the operator and continue to `/data-point-discovery` immediately. Agency-honored offers proceed toward launch. "Needs your OK" offers wait for the client's yes on their own and never block the rest.
+- `optional` (default, operator directive 2026-09-22): hand the slate (`offer-test-slate.md`) to the operator and continue to `/data-point-discovery` immediately. Agency-honored offers proceed toward launch. "Needs your OK" offers wait for the client's yes on their own and never block the rest.
 - `required` (a per-client override, for example a regulated industry or a client who has asked to sign off on everything sent under their name): the flow pauses before list build until `offer.test_slate.client_response` is recorded.
 
 ## Activity Log Protocol
 
 Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURRENT STATE block) so you know what was last done, what's pending, and what's blocked. After any material step (something newly built, updated, confirmed-existing, left pending, blocked, completed, or cancelled), **append** a one-line entry (newest first) to that log's LOG section and refresh its CURRENT STATE. Status vocab: CREATED/UPDATED/EXISTS/PENDING/BLOCKED/DONE/CANCELLED/NOTE. Keep it short: record status, not raw output. Full protocol: `client-activity-log.md`.
 
-Right after CURRENT STATE, read `profiles/<business-slug>/client-intel.md` (the client intel feed): Needs attention and Open items in full, plus Recent activity tagged `offer`, `icp` or `engagement`. Check it for any offer the client vetoed or asked for in a meeting or in Slack, and name each conflict with the slate (a vetoed offer still on it, a requested offer missing from it) in the hand-off to the operator (slate step 8, scale review step 8). A feed item is a hypothesis: never write it into `offer.test_slate.vetoed_offers` or set `lead_magnet_client_ok: yes` from it on your own; the operator records it (under `auto_execute`, a conflict touching the offer set stops this step and asks). A missing feed, or one that is stale by the rule in `client-intel-feed.md`, is a one-line flag at the top of the hand-off, never a blocker; offer `/client-intel-sync <client>` for a fresh pull. Protocol: `client-intel-feed.md`.
+Right after CURRENT STATE, read `profiles/<business-slug>/client-intel.md` (the client intel feed): Needs attention and Open items in full, plus Recent activity tagged `offer`, `icp` or `engagement`. Check it for any offer the client vetoed or asked for in a meeting or in Slack, and name each conflict with the slate (a vetoed offer still on it, a requested offer missing from it) in the hand-off to the operator (slate step 8, scale review step 8). A feed item is a hypothesis: never write it into `offer.test_slate.vetoed_offers` or set `lead_magnet_client_ok: yes` from it on your own (only `offer_approval.py` writes that field, see State fields); the operator records it (under `auto_execute`, a conflict touching the offer set stops this step and asks). A missing feed, or one that is stale by the rule in `client-intel-feed.md`, is a one-line flag at the top of the hand-off, never a blocker; offer `/client-intel-sync <client>` for a fresh pull. Protocol: `client-intel-feed.md`.
 
 Read `profiles/<business-slug>/context-sweep.md` the same way: every item in its Constraints & Instructions register that touches the offers is checked against the slate. Name at the top of the hand-off any source nobody has read yet: a missing `context_sweep:` block, a core source (Slack channels, Slack DMs, email, Drive) still `blocked` and not `waived_by_operator`, or a Slack check recorded `unavailable` in `client_comms.slack`. The client may already have answered something the slate contradicts in a place nobody has read (`client-context-sweep.md`). The flag never holds the slate.
 
@@ -82,8 +86,8 @@ Read `profiles/<business-slug>/context-sweep.md` the same way: every item in its
 
 ### When to run
 
-- Invoked by `/cold-email-kickoff` Step 3.2, right after `/lead-magnet-brainstorm` locks the test set (the primary offer plus its ranked validation arms) and before `/data-point-discovery`.
-- Again whenever a new flight of offers joins the test (a queued offer is promoted to a flight, or new candidates are generated after a flop). Re-render the same deck with the changes marked.
+- Invoked in Phase 2 (`/phase-2-research-offer` step 6), right after `/lead-magnet-brainstorm` records the test set from Aaron's offer call (the primary offer plus its ranked validation arms), and before any list work (`/data-point-discovery` opens Phase 3). Under `review_gates`, `/cold-email-kickoff` runs it at the same point.
+- Again whenever a new flight of offers joins the test (a queued offer is promoted to a flight, or new candidates are generated after a flop). Update the same Markdown with the changes marked.
 
 ### Inputs (read these; do not re-research)
 
@@ -101,15 +105,15 @@ If `lead-magnets.md` has no ranked candidates, `/lead-magnet-brainstorm` has not
 2. **Label each offer for the client.** From its `lead_magnet_yes_honored_by` field: `agency` shows as "We handle this"; `client` shows as "Needs your OK" plus the one specific thing we need (`lead_magnet_client_dependency`). Also carry `lead_magnet_scale_needs` (what delivering it at full sending volume takes) and, where one applies, `offer.qualification` in plain words (who gets the free unit, the short form, and the eligibility the offer states up front). An offer with neither a fitting scale note nor a qualification rule shows as ranked lower with the reason, never as out.
 3. **Show the whole first wave honestly.** The first wave launches `max(3, floor(qualified_contacts / 2000))` offers together, capped at the number of qualifying candidates, each offer running in every first-wave segment it fits (its own fit filters decide), not across every segment, with shared ground split evenly (operator decision 2026-09-23, which replaces "as equal cells across every first-wave campaign and segment"): no offer gets a head start, and about 1,300 first-touch contacts per offer, pooled across the segments it runs in, is the hard minimum below which no result can be called (the pooled flip criterion). Where offers fit different segments, show which buyers each offer goes to. The whole qualified list goes out; it is never shrunk to fit the offers. For per-buyer-type offer sets (`offer.segments`), the formula runs per buyer-type segment on that segment's qualified contacts, and each buyer type shows its own first wave. If `/campaign-strategy` has not run yet (no qualified-contact count), show the top three sendable offers as the first wave (the formula's floor), say the count rises by one offer per about 2,000 qualified contacts, and list the next offers in rank order as the ones that join the first wave if the list supports them, then the queue. Say "fewer than three" only when fewer candidates qualify. If the client's warmed sending fleet delivers less than the plan needs (`run_state.capacity_request`), say the runway stretches (days to cover the list); offers are never cut for it. (Aaron process alignment, operator directive 2026-09-22; supersedes "size the list to the offers, so 3 to 4 offers need about 8,000 to 12,000 contacts", "the primary plus arm 1, and the remaining offers as the queue" and "never promise more simultaneous offers than send capacity can read", operator decision 2026-09-22.)
 4. **Author the Markdown** at `profiles/<business-slug>/offer-test-slate.md` from the template below.
-5. **Client-facing QA** (all must pass before rendering):
+5. **Client-facing QA** (all must pass before the slate is recorded):
    - Zero hits on the "Banned in client prose" list in `/campaign-approval-brief` (`docs/campaign-approval-brief-template.md`): no internal tool or vendor names, no merge braces or raw fields, no skill slugs, no credit counts, no "TAM".
    - No spaced em dash anywhere (house hard rule).
    - Every quote in "What we found" is verbatim from a real call, review or post on file. Never fabricate or tidy a quote, and never present a public quote as coming from the client's own calls.
    - Every number traces to a saved artifact. Where the artifacts do not hold a reason, write `Not captured in current artifacts.` rather than inventing one.
    - Plain words for a sharp outsider: gloss a specialist term the first time it appears; describe offers by what the prospect gets.
-6. **Render.** Default is a presentation built on the locked design library (see Rendering). When the operator wants a document or a simple list instead, render the same Markdown to DOCX. Always keep the Markdown as the source of record. **Under `review_protocol: phase_checkpoints` (the new-client default since 2026-09-24), stop at the Markdown:** the deck is built only when the operator asks for it (offer it in one line at checkpoint 3), so rendering and slide QA never sit on the path to the list.
+6. **Stop at the Markdown (plain-text outputs, operator decision 2026-09-28, every mode).** `offer-test-slate.md` in the client's profile folder is the deliverable. A deck or DOCX is built only when the operator asks for that format in chat (see Rendering); mention that in one line at checkpoint 2, and never build one first. Rendering and slide QA never sit on the path to the list.
 7. **Record** `offer.test_slate` in `client-profile.yaml` (see State fields) and log it.
-8. **Hand it to the operator** with one line on what it is, the path, and the "Needs your OK" asks. Then continue the flow per `run_state.offer_slate_approval`; under `review_protocol: phase_checkpoints`, the flow first stops at `/cold-email-kickoff` checkpoint 3 and continues only after the operator answers it.
+8. **Hand it to the operator** with one line on what it is, the path, and the "Needs your OK" asks. Then continue the flow per `run_state.offer_slate_approval`; under `review_protocol: phase_checkpoints`, the flow first stops at the Phase 2 checkpoint (`/phase-2-research-offer`) and continues only after the operator answers it.
 
 ### Slate template (client-facing Markdown)
 
@@ -206,7 +210,7 @@ We read <N> of your sales calls, <N> competitors' offers and ads, and <N> buyer 
    - Check the criteria and form fields against the real replies: do the people who qualify look like buyers of the paid service? Tighten or loosen the criteria with the client.
 5. **Name the fallbacks** for a cap of zero or a carve-out "no", so it is not a dead end: the agency takes over fulfillment where it can, a lighter version of the winner, or the runner-up (a runner-up that already proved out needs no re-test; one still reading keeps testing).
 6. **List the next flight:** queued offers from the slate, and any new candidates, in rank order.
-7. **Author** `profiles/<business-slug>/offer-scale-review-YYYY-MM-DD.md` from the template below, run the same client-facing QA as slate mode, render, record `offer.scale_review`, and log it.
+7. **Author** `profiles/<business-slug>/offer-scale-review-YYYY-MM-DD.md` from the template below, run the same client-facing QA as slate mode, record `offer.scale_review`, and log it. The Markdown is the deliverable. A deck is built only if the operator asks for one.
 8. **Hand it to the operator.** When the client answers, record `client_answer` and `confirmed_capacity_per_week`, and write the confirmed number into the winner's `offer.qualification.free_unit_cap_per_week` (the winner is promoted first, so its fields already sit in the primary block, `/lead-magnet-brainstorm` Save Output; for per-buyer-type sets, that segment's primary block in `offer.segments`). Sending volume does not wait on this answer: the winner is already scaling, and qualified yeses above the cap get the standard offer. Then route:
    - `yes` or `partial`: the cap is set; nothing else changes. Carve-out only: `/campaign-strategy` keeps that offer's sends at the pace the confirmed capacity covers.
    - `no`: pick a fallback from step 5 with the operator. A client-supplied deliverable never scales past what the client confirmed.
@@ -266,9 +270,9 @@ We tested <N> offers with <N> people between <date> and <date>. This shows what 
 
 ## Rendering
 
-The Markdown file is always the source of record. Render it one of two ways.
+The Markdown file is the deliverable and the source of record. Nothing below runs by default (plain-text outputs, operator decision 2026-09-28). It runs only when the operator asks in chat for a deck or a document for this specific file, and that ask covers that file only.
 
-**Presentation (default).** Compose a deck with the locked design library in `scripts/approval-brief-pptx/lib.mjs`, the same one `/campaign-approval-brief` uses, so every client deck looks alike. Write a content-only module `scripts/approval-brief-pptx/<client>-offer-slate.mjs` (or `<client>-scale-review.mjs`) exporting `meta` and `buildSlides(b)`, reading each method's parameters in `lib.mjs` (this workspace ships no client reference module yet). Never restyle inside the library. Suggested slide order:
+**Presentation (on request).** Compose a deck with the locked design library in `scripts/approval-brief-pptx/lib.mjs`, the same one `/campaign-approval-brief` uses, so every client deck looks alike. Write a content-only module `scripts/approval-brief-pptx/<client>-offer-slate.mjs` (or `<client>-scale-review.mjs`) exporting `meta` and `buildSlides(b)`, reading each method's parameters in `lib.mjs` (this workspace ships no client reference module yet). Never restyle inside the library. Suggested slide order:
 
 | Slate | Scale review |
 |---|---|
@@ -304,7 +308,14 @@ offer:
   # Per offer, on the primary block and on every validation_arms entry (written at lock by /lead-magnet-brainstorm):
   lead_magnet_yes_honored_by: agency    # agency | client: who honors a qualified yes
   lead_magnet_client_dependency: none   # or the one specific thing only the client can provide
-  lead_magnet_client_ok: not_needed     # not_needed (agency-honored) | pending | yes | no. Sends only at not_needed or yes
+  lead_magnet_client_ok: not_needed     # not_needed (agency-honored) | pending | yes | no. Sends only at not_needed or yes; drafted at pending, Start held
+  lead_magnet_client_ok_by: null        # evidence trio (Offer Readiness 2026-09-28): null at lock; set only by offer_approval.py
+  lead_magnet_client_ok_at: null
+  lead_magnet_client_ok_evidence: null
+  aaron_rank: <n>                        # the offer's rank in Aaron's offer call; the key offer_approval.py and client-asks.md use (offer-readiness.md)
+  delivery_mode: agency                 # agency | client_input | client_delivers | call_only: a detail of lead_magnet_yes_honored_by; recorder at lock
+  capacity: <arithmetic only: planned first touches a week, GUESS reply rate with source, expected yeses, who fulfils, turnaround, cap_note>  # recorder at lock
+  sample: {path: null, account: null, prepared: null, missing: [], reviewed_by: null, provisional_reason: null}  # built in Phase 4 step 2
   lead_magnet_scale_needs: <what delivering it at full sending volume takes, and whether it fits; the lock check, never a reason to drop the offer>
   qualification:                        # costly front ends only (trial, service, custom work); written at lock by /lead-magnet-brainstorm (Aaron process alignment 2026-09-22)
     criteria: [<plain fit test>, ...]
@@ -313,7 +324,7 @@ offer:
 
   test_slate:
     path: profiles/<business-slug>/offer-test-slate.md
-    rendered: <path to the .pptx or .docx>
+    rendered: null                      # the path of a deck or DOCX only when the operator asked for one; never a gap to fill
     drafted_on: YYYY-MM-DD
     sent_on: <YYYY-MM-DD, recorded when the operator confirms he sent it>
     client_response: none               # none | approved | changes_requested | vetoed_some
@@ -328,7 +339,16 @@ offer:
     notes: <one line>
 ```
 
-When the client OKs a "Needs your OK" offer, write exactly what they confirmed into `lead_magnet_client_dependency` (the term and its limits, for example "free 14-day trial, up to 20 qualified accounts a week") and set `lead_magnet_client_ok: yes`; `/campaign-strategy` can then schedule it into a flight. Copy may claim only what was confirmed (Capability Truth, `/campaign-copywriting` Hard Rule 28). When the client vetoes an offer, set its `validation_arms` status to `vetoed` (or, for the primary, promote the next sendable arm and record the swap in the activity log).
+**The client's yes or no is recorded only by `offer_approval.py` (Offer Readiness, `offer-readiness.md`).** Never edit `lead_magnet_client_ok:`, the evidence trio or `lead_magnet_client_dependency` by hand. The script is the only writer, updates every mirror of the offer, and logs to `activity-log.md`:
+
+```text
+python outbound/scripts/offer-readiness/offer_approval.py set <client-dir> <aaron_rank> yes|no --by "<who>" --evidence "<permalink|email id|meeting note>" [--terms "<exactly what the client confirmed>"] [--at YYYY-MM-DD] [--dry-run]
+```
+
+- **Yes:** `--terms` is required. It writes `CONFIRMED <date>: <terms>` into `lead_magnet_client_dependency` (the term and its limits, for example "free 14-day trial, up to 20 qualified accounts a week"), sets `lead_magnet_client_ok: yes` and the trio, and `/campaign-strategy` can then schedule the offer into a flight. Copy may claim only what was confirmed (Capability Truth, `/campaign-copywriting` Hard Rule 28).
+- **No on an arm:** the arm's `status` becomes `vetoed`, it is appended to `test_slate.vetoed_offers`, and `test_slate.client_response` becomes `vetoed_some`.
+- **No on the primary:** it is never auto-promoted. The script logs the follow-on: the recorder re-records the offer block under a fresh Aaron call, and a client no reopens a frozen Phase 2 (`phase-protocol.md`).
+- **It refuses** agency-honored offers, empty evidence, a yes without terms, disagreeing mirrors and a profile not yet migrated. An older profile gets the fields from the one-time migration `readiness_fields.py` first.
 
 ## Common mistakes
 
@@ -345,15 +365,16 @@ When the client OKs a "Needs your OK" offer, write exactly what they confirmed i
 
 | Skill | Relationship |
 |---|---|
-| `/lead-magnet-brainstorm` | Produces every candidate, the ranked test set (primary plus validation arms) and the per-offer honoring fields this skill presents. |
+| `/lead-magnet-brainstorm` | Records Aaron's offer call as the ranked test set (primary plus validation arms), with every candidate and the per-offer honoring fields this skill presents. |
+| `/ask-aaron` | Makes the offer call this slate explains (the Aaron lane, call 1, `aaron-lane.md`). The slate never re-ranks it. |
 | `/offer-intelligence` | Produces the research the "What we found" section summarizes. |
-| `/cold-email-kickoff` | Runs slate mode at Step 3.2, between the offer lock and `/data-point-discovery`. |
-| `/campaign-strategy` | Applies the first-wave offer count from the list, enforces the per-offer launch condition (`lead_magnet_client_ok`), files the capacity request (`run_state.capacity_request`) the client's sending fleet is sized to, reads out the wave, sends the winner to the rest of the TAM, and triggers scale-review mode as a report alongside that scale-up. Reads `offer.scale_review.confirmed_capacity_per_week` as a send cap only for a client-supplied deliverable. |
-| `/campaign-copywriting` | Writes copy only for offers whose yes can be honored today (its Confirmed Deliverable Gate reads the same fields). |
-| `/campaign-approval-brief` | The later, campaign-level deck (lists, sources, copy). This skill is the earlier, offer-level one. They share the design library and the client-prose rules. |
+| `/phase-2-research-offer` | Runs slate mode at step 6, after the offer lock and before the Phase 2 checkpoint; `/data-point-discovery` follows in Phase 3. Under `review_gates`, `/cold-email-kickoff` runs it at the same point. |
+| `/campaign-strategy` | Applies the first-wave offer count from the list, enforces the per-offer launch condition (`lead_magnet_client_ok`; a `pending` offer is planned and drafted with Start held, never sent), files the capacity request (`run_state.capacity_request`) the client's sending fleet is sized to, reads out the wave, sends the winner to the rest of the TAM, and triggers scale-review mode as a report alongside that scale-up. Reads `offer.scale_review.confirmed_capacity_per_week` as a send cap only for a client-supplied deliverable. |
+| `/campaign-copywriting` | Writes copy for every offer in the flight: a `pending` offer's campaign is drafted and Start-held, with no unconfirmed client term, and a `no` or vetoed offer gets none (its Confirmed Deliverable Gate reads the same fields; Offer Readiness, `offer-readiness.md`). |
+| `/campaign-approval-brief` | The later, campaign-level brief (lists, sources, copy), also Markdown by default. This skill is the earlier, offer-level one. They share the client-prose rules, and the design library when a deck is asked for. |
 | The sending platform's campaign and reply-scoring skills (activated by `/stack-setup`) | Supply the per-offer numbers for the scale review. |
 
 ## What to do next
 
-- **Slate done:** continue to `/data-point-discovery` (via `/cold-email-kickoff`), unless `run_state.offer_slate_approval = required`, in which case wait for the client's answer first.
+- **Slate done:** the Phase 2 checkpoint, then Phase 3 (`/phase-3-list`, which opens with `/data-point-discovery`), unless `run_state.offer_slate_approval = required`, in which case wait for the client's answer first.
 - **Scale review done:** record the qualification cap. The winner is already scaling through `/campaign-strategy` (held to the confirmed capacity only for a client-supplied deliverable); schedule the next flight of queued offers.

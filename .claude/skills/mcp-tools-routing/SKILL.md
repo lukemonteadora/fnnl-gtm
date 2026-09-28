@@ -1,7 +1,9 @@
 ---
 name: mcp-tools-routing
-description: "Infra/sending-tool MCP routing for FNNL Agency cold outbound. Use before any domain, DNS, mailbox, campaign-upload, or deliverability/reporting step to decide MCP tool vs script vs raw API. The infra-layer sibling of ai-model-routing.md (which routes Claude Code's own research, crunching and copy) and lead-list-tech-stack-research.md (which routes data tools). Also routes the read-only client-context connectors (Slack, email, calendar, file storage, Notion) that the client context sweep and /client-intel-sync use. CRITICAL: MCP tool calls are a new spend surface, so route every spend op through /api-cost-governance."
+description: "Infra and sending-tool MCP routing for FNNL cold outbound. Use before any domain, DNS, mailbox, campaign-upload or deliverability/reporting step to decide MCP tool vs script vs raw API; also routes the read-only client-context connectors. Every spend op goes through /api-cost-governance."
 ---
+
+**From the former description:** The infra-layer sibling of ai-model-routing.md (which routes Claude Code's own research, crunching and copy) and lead-list-tech-stack-research.md (which routes data tools). The read-only client-context connectors it routes are Slack, email, calendar, file storage and Notion, used by the client context sweep and /client-intel-sync. CRITICAL: MCP tool calls are a new spend surface, so route every spend op through /api-cost-governance.
 
 # MCP Tools Routing
 
@@ -90,7 +92,7 @@ Routing for any document, spreadsheet, or file-storage operation once such a ser
 | Operation | Use | Notes |
 |---|---|---|
 | Read/edit a Doc or Sheet, append rows, format cells, create a Doc/Sheet from markdown, search file storage | **the connected document MCP** | Native, no browser. The biggest win is a tracker skill such as `cold-email-inbox-tracker`, which otherwise writes its sheet through browser automation or Apps Script. Prefer the Sheets tools whenever the document server is connected, browser only as fallback. |
-| Render a polished **DOCX** into a native Google Doc (approval briefs, presentations) | **`docx_to_gdoc.mjs` script** | Keep the script. It preserves full Word formatting on import, which the MCP cannot do. The two are complementary, not a replacement. |
+| Render a polished **DOCX** into a native Google Doc (approval briefs, presentations), only when the operator asked for that DOCX (generated client files are plain text by default, operator decision 2026-09-28) | **`docx_to_gdoc.mjs` script** | Keep the script. It preserves full Word formatting on import, which the MCP cannot do. The two are complementary, not a replacement. |
 | Gmail / Calendar reads or writes | **the connected document MCP**, *only if those tool groups were enabled at install* | Sensitive scopes. Off unless the operator opted in. That opt-in governs writes and this document MCP's own Gmail and Calendar tool groups. The client context sweep and `/client-intel-sync` do not wait on it: they read email and the calendar through whatever connector the session already has (next row), read-only, and never send, draft, label, trash or write an event. |
 | Read client context: Slack channels and DMs, email, calendar, Drive or other file storage, Notion, for the client context sweep and `/client-intel-sync` | **whatever read connectors the session actually has**, read-only | Read-only client-context sources (operator ruling 2026-09-24), not stack tools: they fill no slot in `stack-contract.yaml`, are never credentialed or spent on, and the six-tools rule does not apply to them (the same reasoning `client-slack-check.md` gives for Slack). Many of these connectors also expose send, post, draft, label, trash and event tools; none of them is ever called. Protocols: `client-context-sweep.md` and `client-intel-feed.md`. |
 

@@ -1,9 +1,11 @@
 ---
 name: coldoutbound-gotchas
-description: Field-tested "what works / what to AVOID" reference for mailbox provisioning, sender profile pictures, and mailbox-provider to sending-platform operations. Read this BEFORE infra/profile/export work to skip dead ends already paid for. "AVOID" = already tried, wasted time, confirmed not to work. Split into vendor-neutral lessons (trustworthy anywhere) and clearly labelled vendor-specific notes from a previous stack (verify before trusting them on FNNL's tools).
+description: "Field-tested what-works / what-to-AVOID reference for mailbox provisioning, sender profile pictures, sending-platform connection and list-building data calls. Read it BEFORE infra, profile, export or list work. Vendor-neutral lessons first; vendor notes from a previous stack are verify-first."
 ---
 
 # Coldoutbound Field-Tested Gotchas (what works / what to AVOID)
+
+**From the former description:** Field-tested "what works / what to AVOID" reference for mailbox provisioning, sender profile pictures, and mailbox-provider to sending-platform operations. Read this BEFORE infra/profile/export work to skip dead ends already paid for. "AVOID" = already tried, wasted time, confirmed not to work. Split into vendor-neutral lessons (trustworthy anywhere) and clearly labelled vendor-specific notes from a previous stack (verify before trusting them on FNNL's tools). (Updated 2026-09-28: a vendor-neutral list-building and data-provider section and the provider-routing pointer were added.)
 
 Hard-won on live client builds in an earlier workspace (2026-06-05 onward). Each "AVOID" was actually tried
 and burned a cycle. Read the relevant section before you start so you don't re-test the same dead ends.
@@ -22,6 +24,11 @@ This file has two halves, and they carry very different weight:
 FNNL's actual tool per capability is declared in `outbound/stack-contract.yaml` (the
 `registrar`, `mailbox_provider`, `sending_platform` and other slots). **If the slot you need is empty, stop
 and route the operator to `/stack-setup`.** Do not pick a tool because a note below mentions it.
+
+**Which tool runs a data step, in what order,** is `outbound/reference/provider-routing.yaml`. Precedence:
+`stack-contract.yaml`, then `provider-routing.yaml`, then any skill's prose. A tool that is out of balance,
+down or switched off stops the step and the operator is asked (`/tool-balance-guard`); never substitute another
+tool for it.
 
 ## Environment
 
@@ -121,6 +128,31 @@ and route the operator to `/stack-setup`.** Do not pick a tool because a note be
   capability doesn't exist. Note the broken tool by name and route around it; don't abandon the whole MCP.
 - **A "Found 0" style counter in an MCP response can be buggy.** The JSON body is the truth. Large payloads
   may spill to a file rather than into the response.
+
+## List building and data providers (vendor-neutral)
+
+- **Count before you pull.** Read the company-discovery tool's count and the widening tool's count on the same
+  filters before paying for rows (`/tam-build`'s filter-first rule). A count is not a pull, but no paid tool is
+  "free": one with plan credits still bills for the records a pull returns.
+- **Guessed filter values fail silently.** Resolve industry, location and technology values through the tool's
+  own lookup first; a guessed value returns a wrong universe with no error.
+- **A reveal is never a discovery call.** A lookup that always returns emails and bills per person (a
+  decision-maker lookup, for example) belongs to `/email-waterfall` on the contacts a wave picks, never to TAM
+  or contact discovery.
+- **A dead tool is a stop, not a detour.** Out of balance, a `402`, an auth error or a `5xx` on every call: stop
+  and ask. Never route its rows to the next tool on your own. The only way past is an operator-approved skip
+  (`list_waterfall.py plan --skip-provider <key> --skip-reason "..." --operator-approved-skip`), undone with
+  `--unskip-provider` once it works again. A prediction that a tool will fail never justifies a skip.
+- **A shared provider account can hand back another company's rows under a correct-looking label.** Keep the
+  leak guard on (`list_waterfall.py record` rejects ids that were not in its queue), and run a provider whose
+  concurrency is `untested` in `provider-routing.yaml` serially until a real run confirms it.
+- **A finder's own "verified" is a provider signal, never the send gate.** Some finders fold catch-all into
+  valid; every email goes through the email verifier, and a catch-all goes to the holdback.
+- **One employer can hide behind several company domains** (brand, regional or acquired sites). The per-company
+  cap runs on `company_domain`, so read `list_qa.py`'s one-employer warning before upload.
+- **Fan-outs lose or double rows silently.** Use `/personalization-subagent-pattern`'s batch safety: disjoint
+  slices, one file per agent, count checks, resume, merge by id, dedup. No outside AI API runs any step.
+- **Generated client files are plain text** (Markdown and CSV), never a Word file unless the operator asks.
 
 ## HARD AGENT BOUNDARIES: never do, don't retry, don't store creds
 

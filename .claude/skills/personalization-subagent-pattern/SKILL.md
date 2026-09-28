@@ -1,9 +1,12 @@
 ---
 name: personalization-subagent-pattern
-description: Reusable approval-loop pattern for fanning out per-lead generation across parallel Claude Code Task sub-agents. Shows the user 1 sample, collects feedback, runs 10 more, approves, runs 10 more, stops when 2 consecutive rounds have zero edits, then scales to the full list. ALWAYS uses Claude Code Task tool sub-agents. Use when any skill needs per-lead research that places leads into slices or sources the at most two per-contact copy variables (sells_to_vertical, service_offered, own_best_client) with an evidence URL, or needs the per-contact email body columns (email_1_a, email_1_b and email_1_c by default) filled with a slice's shared approved body and those values. Any generated initial cold touch must pass the Framework A contract in outreach-copy-framework.md.
+description: "Reusable pattern for fanning per-lead or per-row work across parallel Claude Code Task sub-agents: 1 sample, rounds of 10 until two clean rounds, then full fan-out with batch safety (disjoint slices, one file per agent, count checks, resume, dedup). Always the Task tool, never an AI API."
 ---
 
 # Personalization Sub-Agent Pattern
+
+**From the former description:** Reusable approval-loop pattern for fanning out per-lead generation across parallel Claude Code Task sub-agents. Shows the user 1 sample, collects feedback, runs 10 more, approves, runs 10 more, stops when 2 consecutive rounds have zero edits, then scales to the full list. ALWAYS uses Claude Code Task tool sub-agents. Use when any skill needs per-lead research that places leads into slices or sources the at most two per-contact copy variables (sells_to_vertical, service_offered, own_best_client) with an evidence URL, or needs the per-contact email body columns (email_1_a, email_1_b and email_1_c by default) filled with a slice's shared approved body and those values. Any generated initial cold touch must pass the Framework A contract in outreach-copy-framework.md. (Updated 2026-09-28: the batch-safety rules below also govern the non-copy fan-outs other skills run on this pattern, such as `/tam-build` company fit, `/lead-scoring` normalization and title passes.)
+
 ## Canonical Profile Root
 
 All profiles/<business-slug> paths in this skill resolve under:
@@ -106,6 +109,18 @@ Once locked:
 3. **Post-merge uniqueness check.** After merging, scan for convergent duplicates: different leads that got near-identical lines (the "Repetition across leads" failure in Quality checks below). De-dupe by content and re-run the offending batch with an explicit diversity instruction. Partitioning stops overlap; only this step catches convergence.
 
    **Scope under B13 (operator-approved Aaron alignment, 2026-09-21).** Run the uniqueness check on the per-lead generated values (the slicing research fields and the `service_offered` / `own_best_client` values), where convergence is a real failure. The body columns carry the slice's shared text, so identical body text across rows is by design; check the bodies instead against the approved text (every row must match it apart from the filled values). A human reviews the first 20 filled per-contact variable values before the list scales; if more than 3 of 20 are vague, awkward or wrong, refine the research prompt first (Aaron process alignment, operator directive 2026-09-22).
+
+### Batch safety (every fan-out on this pattern, copy or not; operator decision 2026-09-28)
+
+Other skills fan row-level judgment out through this pattern too: `/tam-build` company fit and title passes, `/lead-scoring` evidence normalization, `/email-waterfall`'s LinkedIn backfill, and `/data-point-discovery`'s trigger research. The same five rules hold for all of them, because a fan-out that loses or doubles a slice fails silently.
+
+1. **Partition before launch, in a manifest.** Write the split to a manifest file in the run's work folder (`<task>-manifest.json`: batch id, the ids in it, the output path). Check that the batches cover the whole input with zero overlap before any agent starts. Hand each agent only its rows, the rule text and the output format, never a whole skill.
+2. **One output file per agent.** Each agent writes `<task>-<batch-id>.json` (or `.csv`), never a shared file. The files on disk plus the manifest are the run's state.
+3. **Count and format check on every file before it merges.** The file parses; it holds exactly the ids its batch was given, each once, and no id from outside the batch (a foreign id is a leak, so the file is rejected); every required field is filled; every enum value is in the declared vocabulary. A file that fails is not merged.
+4. **Resume after failure, never restart.** Re-run only the batches whose file is missing or failed its check, and never re-run a batch that passed. Retry a failed batch once with a strict prompt, then split it smaller; a row that still cannot be judged is marked with a reason (for example `status: skipped`) and reported at the top, never dropped. A new session resumes from the manifest and the files already on disk.
+5. **Merge by stable id, then check for duplicates.** Merge on the stable id (`lead_id`, `company_domain` or the contact id), confirm the merged count equals the input count, and run the post-merge uniqueness check above.
+
+**No API batch lane.** Scale is more Task sub-agents in waves of about 10, or a smaller scope (judge only the rows in the wave's scope, and send only distinct values, such as distinct titles, to an agent and join the verdict back). Never a provider batch API, an outside AI API, or a script that calls a model (no-AI-API rule). A step that already has its own script-level concurrency (for example the email verifier's `--concurrency` flag) uses that and is not wrapped in agents.
 
 After the merge, verify the row count and coverage against the input slice before reporting done: a dropped or double-counted batch is the silent partial the verify-before-done rule exists to catch.
 
@@ -296,11 +311,11 @@ After all sub-agents complete:
      "email_1_a": "...", "email_1_b": "...", "email_1_c": "...", "email_2": "..."
    }
    ```
-4. When uploading to EmailBison/Smartlead/Instantly, map each field to a custom variable. Convention:
+4. When uploading to the locked `run_state.sending_platform` (PlusVibe on this stack), map each field to a custom variable. Convention:
    - Slicing fields stay in the lead data for targeting; they are never referenced in the email body (B13). The per-contact copy variable values (and their `_source` fields) stay in the lead data as the audit trail; their values are already baked into the `email_*` bodies, so the step never references them as separate tokens. Where no per-contact case study exists, the case-study name lives in each slice's shared body (B5).
-   - Legacy fragment fields, still valid column names for existing campaigns but no longer generated as Email 1 copy inserts under B13: EmailBison `{SITUATION_LINE_A}`, `{VALUE_LINE_A}`, etc.; Smartlead `{{situation_line_a}}`, `{{value_line_a}}`, etc.
+   - Legacy fragment fields, still valid column names for existing campaigns but no longer generated as Email 1 copy inserts under B13: `{{situation_line_a}}`, `{{value_line_a}}`, etc., in the sending platform's custom-variable syntax.
    - The Email 1 variant test is best run **within one campaign** where the locked `run_state.sending_platform` supports it: one variation per declared Email 1 column (A, B and C by default) on the same step, split evenly across all of them. Confirm the platform takes that many variations with an even split, and stop rather than drop Variant C if it does not (Aaron process alignment, operator directive 2026-09-22; supersedes the Variant A + Variant B 50/50 split). For the exact setup, use the campaign-upload skill for that platform, if `/stack-setup` activated a pack that provides one (e.g. `/smartlead-campaign-upload-public`). If no pack is active, set the variations and the even split in that platform's native campaign builder. If neither exists, say so and build the split by hand rather than implying coverage. One campaign per variant column (across-campaign, the list split evenly between them) is the platform-agnostic fallback only.
-   - Pre-written copy path (full email body mode below): the variable IS the whole email body. Smartlead `{{email_1_a}}`; EmailBison the same field with its custom-variable syntax.
+   - Pre-written copy path (full email body mode below): the variable IS the whole email body, for example `{{email_1_a}}` in the sending platform's custom-variable syntax.
 
 ## Pre-Written Email Copy Architecture (full email body mode)
 
@@ -425,6 +440,8 @@ If you're reading this directly, return to whichever skill sent you here.
 ## Related skills
 
 - `/auto-research-public` - the primary consumer of this pattern
+- `/tam-build`, `/lead-scoring`, `/email-waterfall` - run row-level fan-outs on this pattern's batch-safety rules
+- `/phase-3-list` - the phase where those fan-outs run
 - `/icp-onboarding` - produces the `client-profile.yaml` the prompt pulls from
 - `/campaign-copywriting` - copy principles the prompt enforces, and the home of each slice's approved shared body
 - `/ask-aaron` - the source of the shared-body rule (ledger R02, R13) behind B13 in `outreach-copy-framework.md`. Advisory only.

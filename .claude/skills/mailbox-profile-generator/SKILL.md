@@ -1,9 +1,11 @@
 ---
 name: mailbox-profile-generator
-description: Generate the client's ONE sender-persona profile assets (a natural realistic headshot from an AI image model, the company logo from the web, and a smooth headshot-to-logo crossfade GIF), then set them on every mailbox at whichever mailbox provider FNNL uses. Provider-agnostic. Output lands under the client's sender-identity folder (PROFILE_OUTPUT_ROOT). Run it as a HARD-RULE step the moment the persona name is locked and BEFORE any mailbox is created or set up.
+description: 'Builds the client''s ONE sender persona''s profile assets (a realistic AI headshot, the company logo, a headshot-to-logo crossfade GIF) and sets them on every mailbox at the mailbox provider. Provider-agnostic. HARD RULE at infrastructure setup: after the persona name locks, before any mailbox exists.'
 ---
 
 # Mailbox Profile Generator
+
+**From the former description:** Output lands under the client's sender-identity folder (PROFILE_OUTPUT_ROOT). It belongs to the infrastructure setup run, outside the four client phases: never in Phase 1 onboarding (`/phase-1-onboarding` sizes and buys no infrastructure), and `phase-protocol.md` lets infrastructure stay deferred through Phase 4.
 
 Use this skill to generate and set the sender-persona profile assets for a client's mailboxes, across
 **any** mailbox provider. It produces the realistic headshot, the company logo, and the animated crossfade
@@ -112,7 +114,7 @@ slot means run `/stack-setup`. The matching integration packs sit inert in `_ven
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at `/cold-email-kickoff`'s four phase checkpoints; `review_gates` is opt-in), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue, and never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider or source-of-truth change, safety gates). Note that the HARD-RULE order-of-operations and profile-gate-before-import rules below are not relaxed by autonomy. On a long async wait, background-poll and move to other productive work, never idle.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at the one checkpoint that closes each of the four phases, `phase-protocol.md`; `review_gates` is opt-in), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue, and never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider or source-of-truth change, safety gates). Note that the HARD-RULE order-of-operations and profile-gate-before-import rules below are not relaxed by autonomy. On a long async wait, background-poll and move to other productive work, never idle.
 
 ## Activity Log Protocol
 

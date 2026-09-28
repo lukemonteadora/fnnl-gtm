@@ -1,18 +1,14 @@
 ---
 name: spam-word-checker
 description: >
-  Always-on formatting, voice, and structural guardrails for cold email copy. Apply these rules whenever
-  writing, reviewing, or QA-ing subject lines, openers, follow-ups, CTAs, or any cold outreach copy.
-  Trigger on phrases like "check this for spam", "spam word check", "deliverability review",
-  "QA this copy", "check subject line", "is this safe to send", or any time cold email copy is being
-  generated or reviewed. Also trigger automatically as a background rule whenever the campaign-copywriting
-  or cold-email-copywriting skill is active -- these guardrails apply to EVERY piece of outbound copy
-  generated, even if the user does not explicitly ask for a check. Does NOT enforce a hard-coded banned-word
-  list (see "Why this file no longer bans a keyword list" below) -- it enforces formatting, CTA, opener,
-  and voice discipline instead, including Aaron Shepherd's own named kill-list.
+  Always-on formatting, structural, CTA, opener and voice guardrails for cold email copy, including
+  Aaron Shepherd's named kill-list (no hard-coded banned-word list). Use whenever copy is written,
+  reviewed or QA'd, and on "check this for spam", "spam word check", "QA this copy", "is this safe to send".
 ---
 
 # Spam Word Checker
+
+**From the former description:** Apply these rules whenever writing, reviewing, or QA-ing subject lines, openers, follow-ups, CTAs, or any cold outreach copy. Other triggers: "deliverability review", "check subject line", or any time cold email copy is being generated or reviewed. Also trigger automatically as a background rule whenever the campaign-copywriting or cold-email-copywriting skill is active -- these guardrails apply to EVERY piece of outbound copy generated, even if the user does not explicitly ask for a check. Does NOT enforce a hard-coded banned-word list (see "Why this file no longer bans a keyword list" below) -- it enforces formatting, CTA, opener, and voice discipline instead, including Aaron Shepherd's own named kill-list.
 
 Always-on formatting, voice, and structural rules. Apply to every subject line, opener, second line, follow-up, and CTA generated or reviewed.
 

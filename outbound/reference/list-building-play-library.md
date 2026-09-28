@@ -5,6 +5,8 @@
 > **Scope boundary, so this is not a second source of truth.** `signal-strategy-playbook.md` owns **which signals exist**, what each one proves, its campaign slices, its copy angles, and its acquisition paths. This doc owns the layer underneath that: **the six shapes a list can be derived in**, and the rule for deciding **which groupings earn their own campaign, their own copy, or neither**. Where a play depends on a signal, the signal's detail lives in the playbook and is cross-linked, never restated. The volume shape of a wave is owned by `/campaign-strategy` (Volume-first, the ≥500-company floor, the Offer-Validation Wave); this doc quotes those rules and never sets its own.
 >
 > **Tool-status note (FNNL Agency).** Every play below is written as a **capability**, never a vendor. FNNL's tools are the closed list in the `approved_stack` block of `stack-contract.yaml` (operator directive 2026-09-22), and the live answer for any capability is the matching slot there. A slot at `not_chosen` or `held` declares nothing, and a tool outside the approved list needs explicit operator approval before any play uses it. Before running a play, read the matching slot and confirm the specific **field or filter** the play names actually exists in the chosen tool. A tool being named in any signal library is not evidence the filter exists; `chosen` is not `live`.
+>
+> **Routing and balances (operator decisions 2026-09-28).** The order each tool is tried in, per field, is `provider-routing.yaml` (`layers.company_discovery`, `layers.people_discovery`, `layers.email`), never a play's prose: the first rung runs across the whole set, then only the still-blank cells go to the next. A tool that is out of balance, down or switched off stops the play and asks the operator; it is never swapped for another tool or skipped without the operator's say-so (`/tool-balance-guard`).
 
 ---
 
@@ -35,6 +37,7 @@ Set firmographic and contact filters on a database and export what comes back. I
 - **Capability needed:** a company-discovery source and a contact-discovery source.
 - **Volume behavior:** unlimited. This is where the big campaigns come from.
 - **Strength:** cheap, fast, repeatable, and the only shape that filters *before* you spend per record.
+- **The default TAM discovery route (filter-first, operator decision 2026-09-28).** `/tam-build` counts and filters the universe first in the `layers.company_discovery` order of `provider-routing.yaml`, carries industry as a keyword stack, and records `run_state.discovery_route`. Reveal and lookup-by-person calls never sit in that order.
 - **Weakness:** it describes **what a company is**, which rarely changes the message. Everyone with the same tool builds the same list. Treat it as the substrate that the other five shapes cut into, not as a strategy on its own.
 
 ### Shape 2: Seed and lookalike
@@ -43,7 +46,7 @@ Start from a set of companies you already know are the right buyer (your client'
 
 - **Capability needed:** a seed set (from `/social-proof-bank`), plus a company-discovery source that can match on the seed's defining attributes.
 - **Volume behavior:** expands in a controlled ladder (more seeds, then markets, then headcount bands, then merging sibling groups), each step gated on fit holding. `/tam-build` owns the ladder.
-- **Strength:** the proof and the list are built from the same evidence, so the case study you show is automatically the right one. This is the workspace **default** discovery motion.
+- **Strength:** the proof and the list are built from the same evidence, so the case study you show is automatically the right one. Since 2026-09-28 it is the **exception** route for TAM discovery, not the default: `/tam-build` runs it only when the offer needs a lookalike AND the TAM is small or hard to build by filters. It stays a normal way to cut or extend a filter-built TAM.
 - **Weakness:** saturates. A client with eight case studies in one niche will run out of twins, which is exactly what the expansion ladder exists to solve.
 
 ### Shape 3: The two-hop (relationship-derived)
@@ -167,7 +170,7 @@ Those were the old preconditions. Now the group's own offer test launches alongs
 
 The offer comes first, and the list is built to fit it. The live order is:
 
-**ICP and buyer pain, then the front-end offer set (a lead magnet is one of Aaron's three offer buckets, not a separate step), then data points, then the 5 to 10 companies that best fit the locked offer as seeds, then the lookalike TAM, then scoring, then the campaign and test design with its capacity request, then copy, then the reply machine before launch** (Aaron process alignment, operator directive 2026-09-22).
+**ICP and buyer pain, then the front-end offer set (a lead magnet is one of Aaron's three offer buckets, not a separate step), then data points, then the TAM built filter-first (counted and filtered first; the 5 to 10 companies that best fit the locked offer seed a lookalike only on the exception route), then scoring, then the campaign and test design with its capacity request, then copy, then the reply machine before launch** (Aaron process alignment, operator directive 2026-09-22; the discovery step amended by the filter-first decision of 2026-09-28).
 
 > **Superseded 2026-09-19.** This section used to read "ICP, then source-signal feasibility, then offer...", with a separate source-signal feasibility phase running before the offer. That phase is retired. There is no `/lead-source-strategy` Source-Signal Discovery Mode and no `source-signal-intelligence.md` any more. If you find a reference to either, it is stale.
 
@@ -235,7 +238,7 @@ Before any grouping becomes a campaign:
 
 - `signal-strategy-playbook.md` for which signals exist, what each proves, and how to acquire it
 - `/campaign-strategy` for the volume-first wave shape, the ≥500-company floor (applied per offer cell), and the Offer-Validation Wave (the whole qualified TAM at full volume, each offer placed where its own fit filters pass, with equal cells on shared ground)
-- `/tam-build` for case-study-anchored discovery and the lookalike expansion ladder
+- `/tam-build` for filter-first discovery (the lookalike only as the exception) and the expansion-for-volume ladder
 - `/data-point-discovery` for deciding which data points to collect before any list is built
 - `/social-proof-bank` for seed sets and the per-group proof that copy draws on
 - `/campaign-copywriting` for Hard Rules 34 and 38, which govern how a signal may appear in copy

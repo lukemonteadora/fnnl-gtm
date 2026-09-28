@@ -1,9 +1,11 @@
 ---
 name: prospeo-full-export
-description: Export your entire Prospeo people search to CSV. Build filters in Prospeo's UI, then use this skill to extract every result via the API - even searches over 25K. Handles pagination, rate limiting, deduplication, and state-by-state splitting automatically. Pair with /icp-prompt-builder on a 50-person sample to tune a qualification prompt BEFORE exporting 25K.
+description: Export your entire Prospeo people search to CSV. Build filters in Prospeo's UI, then this skill extracts every result via the API, even searches over 25K, handling pagination, rate limiting, deduplication and state-by-state splitting automatically.
 ---
 
 # Prospeo Full Search Export
+
+**From the former description:** Pair with /icp-prompt-builder on a 50-person sample to tune a qualification prompt BEFORE exporting 25K.
 
 ## Material Decision Rule
 

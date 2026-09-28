@@ -1,9 +1,14 @@
 ---
 name: cold-email-campaign-sequence-docx-presentation
-description: Creates a compact client-facing DOCX presentation from one or more approved cold email campaign variants.yaml files after campaign-copywriting.md finishes. Use when the user wants a repeatable DOCX launch sheet, MVP campaign presentation, or client overview showing target, angle, and full email sequence copy with the shared cold email DOCX formatting.
+description: Builds a compact client-facing DOCX launch sheet (target, angle, full sequence copy) from approved campaign variants.yaml files. Runs only when the operator asks for this DOCX in chat, never as a default next step.
 ---
 
 # Cold Email Campaign Sequence DOCX Presentation Skill
+
+**From the former description:** It reads one or more approved cold email campaign variants.yaml files after campaign-copywriting.md finishes, for a repeatable DOCX launch sheet, MVP campaign presentation or client overview, in the shared cold email DOCX formatting.
+
+**On request only (plain-text outputs, operator decision 2026-09-28).** Run this skill only when the operator asks in chat for this DOCX. No flow step runs it by default, and the source YAML or Markdown file in the client's profile folder is the deliverable. One ask covers that one pack.
+
 ## Canonical Profile Root
 
 All profiles/<business-slug> paths in this skill resolve under:

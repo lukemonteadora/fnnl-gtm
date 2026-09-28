@@ -1,9 +1,11 @@
 ---
 name: client-intake-form
-description: "Single-session client intake skill. Runs a pre-fill discovery pass that opens with the mandatory client context sweep (the client's Slack channels and DMs, email, calendar, docs, Notion and local files, through whatever read-only connectors the session has, with any blocklist written straight to suppression), then reads the stack contract for the tool in each capability slot, reads .env, scrapes the website, and checks existing profiles and the client intel feed. It produces a partially pre-populated intake form for the user to confirm or correct, then writes profiles/<business-slug>/intake-form.md and profiles/<business-slug>/client-profile.yaml. Use this before /cold-email-kickoff to eliminate back-and-forth questions. Supports execution_mode auto_execute with review_protocol phase_checkpoints (the default since 2026-09-24, hands-free inside each phase with one stop at the end of each of the four phases) or review_gates (opt-in, which presents options and waits at each gate)."
+description: Single-session client intake. Runs the client context sweep, key check and website scrape, pre-fills an intake form for the user to confirm, then writes intake-form.md and client-profile.yaml. The locked stack is recorded, never asked. Runs inside Phase 1. Use before /cold-email-kickoff.
 ---
 
 # Client Intake Form
+
+**From the former description:** The pre-fill discovery pass opens with the mandatory client context sweep (the client's Slack channels and DMs, email, calendar, docs, Notion and local files, through whatever read-only connectors the session has, with any blocklist written straight to suppression), then reads the stack contract for the tool in each capability slot, reads .env, runs the live website scrape, and checks existing profiles and the client intel feed. It writes `profiles/<business-slug>/intake-form.md` and `profiles/<business-slug>/client-profile.yaml`. Supports execution_mode auto_execute with review_protocol phase_checkpoints (the default since 2026-09-24, hands-free inside each phase with one stop at the end of each of the four phases, `phase-protocol.md`) or review_gates (opt-in, which presents options and waits at each gate). It runs inside Phase 1 (`/phase-1-onboarding` step 4, the intake fast path).
 
 Single-session intake that feeds every downstream cold outbound skill. Run this once per client. After the form is confirmed and saved, `/cold-email-kickoff` (the single entry-point orchestrator) will read it and skip its interview phases entirely.
 
@@ -17,7 +19,7 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at `/cold-email-kickoff`'s four phase checkpoints; `review_gates` is opt-in), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue. Never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work. Never idle.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at the one checkpoint that closes each of the four phases, `phase-protocol.md`; `review_gates` is opt-in), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue. Never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work. Never idle.
 
 ## Activity Log Protocol
 
@@ -65,7 +67,7 @@ Before presenting any questions, run the following discovery pass and build a pr
 
 5. **Environment file:** Read `.env` and `.env.local` from the workspace root. A key found there is evidence that a credential exists, not a stack decision. Map each key to the capability slot it would serve (sending platform, registrar, mailbox provider, self-hosted instance URL, email verification, lead source) and check it against the stack contract. A key matching a provider the contract declares supports `credentials_ready` for that slot; a key for a provider the contract does not declare is a mismatch to surface, never a vendor to pre-fill.
 
-6. **Business website:** If a website URL is available from context, the user's message, or an existing profile, scrape it and infer (a fact from item 1 outranks any of these inferences):
+6. **Live website scrape (HARD RULE, operator directive 2026-09-24):** Right after the context sweep and before the form is shown, read the client's own site live per `client-website-scrape.md`: every product, solution, pricing, case-study, free-offer, comparison, integration and about page, captured as the text a visitor actually sees, every pricing tab included (never a WebFetch summary or a page's hidden content), with every figure checked against the captures. It writes `profiles/<business-slug>/website-profile.md` and the `website_scrape:` block. It is never skipped: with no URL on file, find it from the sweep, the email domains or a search, and only the operator can confirm there is no website. If `/cold-email-kickoff` or `/phase-1-onboarding` already ran it this session, read `website-profile.md` instead of scraping again. From that file, infer (source label `website:<url>`; a fact from item 1 outranks any of these inferences):
    - `offer_one_sentence`: from homepage headline or hero copy
    - `buying_function` and `seniority` (plus any example titles as `buying_job_title`): from "who it's for" sections, case study job titles, or testimonial bylines
    - `headcount_min` / `headcount_max`: from pricing tiers ("teams of X+", "up to X seats"), case study company sizes
@@ -74,6 +76,7 @@ Before presenting any questions, run the following discovery pass and build a pr
    - `offer_client_suggested`: from services/product pages, "what we offer" sections
    - `deliverable_constraints`: only a legal or truth limit the site states outright (e.g., "we never guarantee ROI"). Do not pre-fill operational limits from marketing copy: a turnaround the site advertises is not a ceiling on what the test may offer (operator directive 2026-09-22).
    - `tone`: from homepage copy voice (formal/casual, data-heavy/story-driven, direct/nurturing)
+   - Capabilities the site claims pre-fill `capability_boundary` as hypotheses labelled `website`, never as confirmed capabilities. Show the website snapshot (what they sell, the pricing model and range, the proof found, the offers they already run) above the form, and turn the file's "What the site does not say" list into `# REQUIRED` or confirm-or-correct fields.
 
 **Output of this pass:** A pre-fill map with field names, suggested values, and source labels. The Still Unknown lists from `context-sweep.md` and `slack-context.md` feed the `# REQUIRED` gaps, and their Conflicts sit next to the fields they touch. Use this to populate the form template below.
 
@@ -207,7 +210,7 @@ referenceable_clients: [leave blank if none yet]
 case_studies: [leave blank if none yet]
 # Real result stories with a before/after you will stand behind. One line each.
 # For EACH company named here, add its website/domain and which sub-industry / what-they-sell group it belongs to.
-# The ones that fit the offer we lock become the first lookalike SEEDS: /social-proof-bank picks the 5 to 10 companies that best fit the locked offer (your fitting case studies and customers first, researched lookalike exemplars to top up), and /tam-build builds each group's TAM from them. So the domain and grouping matter as much as the story (Aaron process alignment, operator directive 2026-09-22).
+# The domain and grouping matter as much as the story: the groups mark which prospects a real win backs, and the companies seed a lookalike search only in the exception case where one is needed (filter-first discovery, operator decision 2026-09-28).
 # E.g.: "Cut Acme's (acme.com, group: 3PL logistics) monthly billing reconciliation from 12 hours to under 2."
 
 hard_numbers: [leave blank if none yet]
@@ -232,8 +235,8 @@ offer_validation_evidence: [N/A or describe evidence]
 execution_mode: auto_execute
 review_protocol: phase_checkpoints
 # auto_execute + phase_checkpoints (default, operator directive 2026-09-24) = the run is hands-free inside
-#   each phase and stops once at the end of each of the four phases (onboard, research, offer, list to
-#   paused drafts), with every question for that phase in one prompt. Matches every other entry path.
+#   each phase and stops once at the end of each of the four phases (onboarding, research and offer, list,
+#   copy and launch to paused drafts; phase-protocol.md), with every question for that phase in one prompt. Matches every other entry path.
 # review_gates = OPT-IN. System presents options and waits for your selection at each gate
 #   (offer selection, campaign selection, copy direction).
 # review_protocol: none = no checkpoints, straight to paused drafts.
@@ -292,7 +295,7 @@ When the user returns the completed form, run validation before writing any file
 - `client_comms.slack.status = unavailable`: Slack was never read for this client. Say so at the top of the confirmation, not the bottom, and note that `/continue-client` retries the check on the next resume. `none_found` only holds for the workspace that was searched, so name it.
 - Any other `context_sweep` source at `blocked` (Slack DMs, email, Drive; a core source with no connector in the session counts as blocked): say so at the top of the confirmation with the account it tried and the one-line fix. `/continue-client` retries it. Research and lists never wait on it, but while a core source (Slack channels, Slack DMs, email, Drive) stays blocked and not `waived_by_operator`, the draft upload stops and asks (`client-context-sweep.md`). Only the operator waives a source.
 - `context_sweep.unresolved_blocklist_names` above zero: a blocklist name has no domain yet, so it cannot block its company before email spend. List the names at the top and resolve them before list work.
-- All three proof fields (`referenceable_clients`, `case_studies`, `hard_numbers`) blank: warn that the proof-asset gate will fire at strategy/copy time and a proof-asset-request form (proof-asset-request.md) will go to the client to collect real evidence before copy that needs it is written. Collecting it now avoids that round-trip. (These three fields plus `triggers` are the **first self-gather source** for `/social-proof-bank`, which builds the full copy-ready Social Proof + Trigger Bank later in the flow: anything captured here is one less thing that skill has to ask the client for.) The named case-study/customer companies (with their domains, grouped by sub-industry / what-they-sell) are also the first candidates for the lookalike **seeds**, the 5 to 10 companies that best fit the locked offer, topped up with researched exemplars when the client has fewer (Aaron process alignment, operator directive 2026-09-22), and the result/timeframe/named-client facts are exactly what `/social-proof-bank`'s **Seed-and-Proof Readiness** gate checks before a proven-motion group's TAM is built, so capturing them up front is worth the extra minute.
+- All three proof fields (`referenceable_clients`, `case_studies`, `hard_numbers`) blank: warn that the proof-asset gate will fire at strategy/copy time and a proof-asset-request form (proof-asset-request.md) will go to the client to collect real evidence before copy that needs it is written. Collecting it now avoids that round-trip. (These three fields plus `triggers` are the **first self-gather source** for `/social-proof-bank`, which builds the full copy-ready Social Proof + Trigger Bank later in the flow: anything captured here is one less thing that skill has to ask the client for.) The named case-study/customer companies (with their domains, grouped by sub-industry / what-they-sell) also become `/social-proof-bank`'s case-study groups, which `/tam-build` matches its filter-built rows against to mark the rows a real offer-fit client win backs as `proven` (filter-first discovery, operator decision 2026-09-28, recorded in `run_state.discovery_route`). They seed a lookalike only for a group `/tam-build` sends down the lookalike route (the offer needs one or filters build a poor universe), and only there does `/social-proof-bank`'s **Seed-and-Proof Readiness** gate check them, 5 to 10 seeds, before that group's TAM is built. The result/timeframe/named-client facts are the copy proof on either route, so capturing them up front is worth the extra minute. Any proof-asset ask merges into the client's one unsent message, `client-asks.md` (`client-messages.md`), as plain text.
 
 ## Step 4: Write Profile Files
 
@@ -344,7 +347,7 @@ offer:
   validation_candidate_evidence: <value or null>
 proof:
   referenceable_clients: <value or null>
-  case_studies: <value or null>   # keep the company website/domain + sub-industry / what-they-sell group written into each entry; these are the lookalike seeds /tam-build reads
+  case_studies: <value or null>   # keep the company website/domain + sub-industry / what-they-sell group written into each entry; /social-proof-bank groups them for /tam-build's proven re-tag, and they seed a lookalike only on the lookalike-route exception
   hard_numbers: <value or null>
   naming_constraints: <value or null>
 capability_boundary:     # top-level, not inside run_state
@@ -428,7 +431,7 @@ Spend budget: $100 per client run (standing, never asked)
 Context sweep: <N of M sources read (account or workspace per source), K constraints, B blocklist rows written to suppression, notes in context-sweep.md | BLOCKED: <source>, <one-line fix>, retry at next resume>
 Slack: <N channels read in <workspace>, notes in slack-context.md | none found in <workspace> | NOT READ: <reason>, retry at next resume>
 
-Ready to launch. Run /cold-email-kickoff.
+Ready to launch. Run /cold-email-kickoff (Phase 1 continues in /phase-1-onboarding).
 It will read this intake form and skip the interview phase.
 ```
 

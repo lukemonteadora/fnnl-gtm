@@ -37,6 +37,7 @@ Earlier, a finder that was down could be switched off for the run with `--skip-p
 | Balance below what the phase needs | out of balance | stop before starting, ask the operator |
 | 401 or 403, key rejected or missing | down (credentials) | stop, ask the operator to fix the key (`/preflight-credentials`) |
 | 5xx, timeouts, connection errors after the retries below | down | stop, ask the operator |
+| `429` rate limit with no credit or quota wording | neither | back off and retry the same tool; not a stop |
 
 ## Balance checks for FNNL's tools
 

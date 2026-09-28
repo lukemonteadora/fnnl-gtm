@@ -1,6 +1,6 @@
 ---
 name: prospeo-search-api
-description: This skill should be used when searching for people/leads using the Prospeo Search Person API. It provides the correct API format, filter types, rate limiting patterns, and state-by-state crawling techniques to overcome the 25K result limit. Use when building lead lists, searching by job title/industry/location, or integrating with Prospeo.
+description: Use when searching for people/leads with the Prospeo Search Person API. Provides the correct API format, filter types, rate limiting patterns, and state-by-state crawling to overcome the 25K result limit. Use when building lead lists, searching by job title/industry/location, or integrating with Prospeo.
 ---
 
 # Prospeo Search Person API

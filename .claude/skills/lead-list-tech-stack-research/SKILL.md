@@ -1,7 +1,9 @@
 ---
 name: lead-list-tech-stack-research
-description: Source-tool fit map for FNNL Agency cold outbound list building, and the obtainability backbone /data-point-discovery cross-references every candidate data point against. Use before lead-source-strategy chooses a source path, scraper, contact database, or enrichment stack. Separates workflow layer, source-of-truth signal, collection tool, contact enrichment, and QA so the contact layer is never mistaken for the source-of-truth signal. Catalogs candidate tools per capability slot; the tool actually chosen for each slot is read from the workspace stack contract at outbound/stack-contract.yaml, never from this file.
+description: Source-tool fit map for cold outbound list building, and the obtainability backbone /data-point-discovery checks data points against. Use before /lead-source-strategy picks a source path, scraper, contact database or enrichment stack. Each slot's tool comes from outbound/stack-contract.yaml, never this file.
 ---
+
+**From the former description:** It separates workflow layer, source-of-truth signal, collection tool, contact enrichment, and QA so the contact layer is never mistaken for the source-of-truth signal, and it catalogs candidate tools per capability slot. The tool actually chosen for each slot is read from the workspace stack contract at outbound/stack-contract.yaml, never from this file; any catalogued tool outside its `approved_stack` is OUT OF STACK, needs operator approval.
 
 # Lead List Tech Stack Research
 
@@ -16,29 +18,32 @@ Each row names the capability **slot** that owns the need. The tool that actuall
 | Need | Slot, and candidate tools (illustrative only, none chosen for FNNL) | Role in stack | Weak move |
 |---|---|---|---|
 | Combine sources, score rows, dedupe, run APIs, prepare final CSV | `lead_data.list_workbench` (the list workbench) by default; the session itself natively as fallback; optionally a spreadsheet-style workspace (e.g. RevCode) | Workflow layer. The working list lives in a workbench table the operator watches fill live: the session sources and enriches with FNNL's own API-keyed tools and pushes finished rows in through the table's inbound webhook, spending zero workbench credits. If no workbench table is ready, the Claude Code session builds the CSV directly and says so | Treating the workspace as the source, or expecting the automated flow to drive a workspace that has no API; spending the workbench's own credits (its built-in search, enrichments, or AI columns) instead of FNNL's API keys |
-| True lookalike or company-similarity discovery | `company_discovery` (e.g. DiscoLike) | Account discovery | Using GetLatka just because the target is SaaS |
-| SaaS revenue, ARR, category, growth, or funding-stage fit | `company_discovery`, SaaS-specific (e.g. GetLatka) | SaaS account database. If the chosen tool exposes no API, it is UI-only and cannot be scripted from here | Using it for generic lookalikes when similarity is the real signal |
-| Title, person, verified email, broad company filters | `contact_discovery` (e.g. A-Leads `advanced_search`, GetLeads `search_contacts` (§16), Prospeo) | Contact database | Calling it the source when the signal came from jobs, directories, events, or lookalikes |
-| Company + contact data, emails, verification, EMEA coverage, tech filters, phone enrichment | One vendor spanning `contact_discovery` + `contact_enrichment` + `email_verification` (e.g. A-Leads via MCP; its integration pack ships inert in `_vendor-library/` and loads only once `/stack-setup` activates it) | Combined company/contact data, email find, and verify | Trusting one provider as complete |
-| Highest-find-rate work email + mobile, with a built-in self-check | `contact_enrichment`, waterfall type (e.g. BetterContact) | Waterfall contact enrichment (Layer 2, per-contact). Where the contract records a waterfall order in `lead_data.contact_enrichment.notes`, a multi-provider waterfall is normally the fallback that runs after the primary finder, and its output is still re-verified by the `email_verification` tool | Running it across the whole TAM before scoring and campaign selection, instead of on the campaign-confirmed contacts (in the first wave those are the whole scored, eligible TAM; Aaron process alignment, operator directive 2026-09-22); treating its own 4-layer self-check as the send-gate (the configured verifier re-verifies every finder's output, no source exempt); using it to "verify" an email a row already had |
-| Sales Navigator exports or LinkedIn-first person lists | `contact_discovery`, LinkedIn-first (e.g. WizLeads) | LinkedIn/Sales Nav extraction and verification | Confusing LinkedIn filters with offer logic |
-| Local SMB discovery | `company_discovery`, local (e.g. Apify Maps, Serper Places, Scrap.io) | Local business source | Forcing local businesses into LinkedIn or Prospeo |
-| Public websites, directories, event pages, job boards, marketplaces | `search` + `crawl` (e.g. Serper plus Spider Cloud, Apify, a custom parser) | Source discovery and extraction | Ignoring the source because it is harder than a database pull |
-| Website text, pricing pages, public product signals | `crawl` (e.g. Spider Cloud, DiscoLike, a search tool plus a crawler) | Evidence extraction and account scoring | Referencing a weak or unverified page signal in copy |
-| Social or competitor intent | `intent_signals` (e.g. GetLeads engager monitoring (§16), Trigify, competitor-engagers, an approved social source) | Timing and context signal. This slot is genuinely optional: if FNNL is not buying intent data it is set to `n/a` and stops being offered as a path | Treating a like as buying intent |
-| Known domains to people | `contact_discovery` in domain mode (e.g. A-Leads `bulk_domains`, GetLeads `search_contacts` + `domains[]` (§16)), then `contact_enrichment` for the residue | Domain-to-person enrichment | Buying a fresh list before enriching the known account set |
-| Sizing a filter before you spend anything on it | Whatever `contact_discovery` tool exposes a free exact count (e.g. GetLeads `count_contacts`, **FREE, 0 credits**) | Free sizing, and a zero-cost department-size proxy when scoped by `domains[]` + `job_functions[]` | Paying a per-record enricher to answer a question a free exact count already answers |
+| The company universe for the TAM (the default; operator decision 2026-09-28) | `company_discovery`, the filter build: count and filter first in the `layers.company_discovery` order of `outbound/reference/provider-routing.yaml` (the company search tool through its enum pre-step for industries, locations and technologies, then GetLeads `count_contacts` (§16) as the widening top-up, where the company universe is the distinct domains on its contact rows) | Account discovery (the filter build, `/tam-build` filter-first discovery); record `run_state.discovery_route` | Carrying industry as a provider industry-taxonomy include instead of the keyword stack; putting a reveal or lookup-by-person call in the discovery order |
+| True lookalike or company-similarity discovery | `company_discovery`, similarity mode (in stack, the tool `layers.company_discovery.lookalike` in `provider-routing.yaml` names, still untested; DiscoLike is OUT OF STACK, needs operator approval), seeded from the 5 to 10 companies that best fit the locked offer | Account discovery, the exception route: only when the offer needs a lookalike AND the TAM is small or hard to build by filters | Running it on a big TAM that filters can describe; using a SaaS database just because the target is SaaS |
+| SaaS revenue, ARR, category, growth, or funding-stage fit | `company_discovery`, SaaS-specific (e.g. GetLatka, OUT OF STACK, needs operator approval; in stack, GetLeads funding filters and `list_funding_signals`, §16) | SaaS account database. If the chosen tool exposes no API, it is UI-only and cannot be scripted from here | Using it for generic lookalikes when similarity is the real signal |
+| Title, person, verified email, broad company filters | `contact_discovery`, in the `layers.people_discovery` order of `provider-routing.yaml` (read it there; GetLeads `search_contacts` (§16) and Prospeo (§5) are rungs) | Contact database | Calling it the source when the signal came from jobs, directories, events, or lookalikes |
+| Company + contact data, email find, tech filters | One vendor spanning `company_discovery` + `contact_discovery` + `contact_enrichment` (the stack contract says which tool does; every address it finds is still checked by the `email_verification` tool) | Combined company/contact data and email find | Trusting one provider as complete, or skipping the verifier because the finder self-checks |
+| Highest-find-rate work email + mobile, with a built-in self-check | `contact_enrichment`, waterfall type (e.g. BetterContact, OUT OF STACK, needs operator approval; FNNL's email order is `layers.email` in `provider-routing.yaml`, blank rows only, catch-all to the holdback) | Waterfall contact enrichment (Layer 2, per-contact). Where the contract records a waterfall order in `lead_data.contact_enrichment.notes`, a multi-provider waterfall is normally the fallback that runs after the primary finder, and its output is still re-verified by the `email_verification` tool | Running it across the whole TAM before scoring and campaign selection, instead of on the campaign-confirmed contacts (in the first wave those are the whole scored, eligible TAM; Aaron process alignment, operator directive 2026-09-22); treating its own 4-layer self-check as the send-gate (the configured verifier re-verifies every finder's output, no source exempt); using it to "verify" an email a row already had |
+| Sales Navigator exports or LinkedIn-first person lists | `contact_discovery`, LinkedIn-first (e.g. WizLeads, OUT OF STACK, needs operator approval) | LinkedIn/Sales Nav extraction and verification | Confusing LinkedIn filters with offer logic |
+| Local SMB discovery | `company_discovery`, local (in stack: the company search tool's geo and keyword filters; Apify Maps, Serper Places and Scrap.io are OUT OF STACK, needs operator approval) | Local business source | Forcing local businesses into LinkedIn or Prospeo |
+| Public websites, directories, event pages, job boards, marketplaces | `search` + `crawl` (in FNNL the harness's WebSearch and WebFetch plus sub-agents, or a custom parser; Serper, Spider Cloud and Apify are OUT OF STACK, needs operator approval) | Source discovery and extraction | Ignoring the source because it is harder than a database pull |
+| Website text, pricing pages, public product signals | `crawl` (in FNNL the harness's WebFetch, with WebSearch to find the pages; Spider Cloud and DiscoLike are OUT OF STACK, needs operator approval) | Evidence extraction and account scoring | Referencing a weak or unverified page signal in copy |
+| Social or competitor intent | `intent_signals` (e.g. GetLeads engager monitoring (§16, paid from its wallet cash), competitor-engagers; Trigify is OUT OF STACK, needs operator approval) | Timing and context signal. This slot is genuinely optional: if FNNL is not buying intent data it is set to `n/a` and stops being offered as a path | Treating a like as buying intent |
+| Known domains to people | `contact_discovery` in domain mode, in the `layers.people_discovery` order (GetLeads `search_contacts` + `domains[]` (§16) is one rung), then the `layers.email` finders for blank rows | Domain-to-person enrichment | Buying a fresh list before enriching the known account set |
+| Sizing a filter before you spend on it | A `contact_discovery` tool with an exact count that reveals no record (e.g. GetLeads `count_contacts`, §16; it runs on the GetLeads plan and its fair use, so read the meter rather than assuming it is free) | Sizing, and a department-size proxy with no per-contact reveal when scoped by `domains[]` + `job_functions[]` | Paying a per-record enricher to answer a question an exact count already answers |
 | Funding rounds or M&A as a why-now trigger | `intent_signals` with first-class funding/acquisition feeds (e.g. GetLeads `list_funding_signals`, `list_acquisition_signals` (§16)) | Timing signal. Few tools return these as a first-class feed, so check what the slot's tool actually covers before assuming it is handled | Treating "they raised" as buying intent with no offer match |
 | LinkedIn engagers on a profile, or a company page's followers | `intent_signals` (e.g. GetLeads `add_monitored_profile` / `lookup_company_linkedin_followers` (§16)) | Paid social scrape. Where a vendor splits plan credits from a **prepaid wallet**, scrapes bill to the wallet, not the credits | Confusing a vendor's two balances and reporting "out of credits" when only the wallet is empty (§16) |
-| Cheap bulk extraction from Crunchbase, StoreLeads, BuiltWith, and LinkedIn (company followers / public group members) on a pay-as-you-go budget | `crawl`, bulk/low-cost (e.g. LeadsFriday) | Low-cost extraction layer. Treat it as extraction; whether its own waterfall/verification features get used is a separate decision belonging to the `contact_enrichment` and `email_verification` slots | Treating its scraped database dumps as a verified source-of-truth signal, or skipping ICP/source logic just because the data is cheap |
+| Cheap bulk extraction from Crunchbase, StoreLeads, BuiltWith, and LinkedIn (company followers / public group members) on a pay-as-you-go budget | `crawl`, bulk/low-cost (e.g. LeadsFriday, OUT OF STACK, needs operator approval) | Low-cost extraction layer. Treat it as extraction; whether its own waterfall/verification features get used is a separate decision belonging to the `contact_enrichment` and `email_verification` slots | Treating its scraped database dumps as a verified source-of-truth signal, or skipping ICP/source logic just because the data is cheap |
 
 > **An MCP connector visible in a session is not a chosen tool.** A connector can appear in the tool list while being unauthenticated, unpaid, or simply not the tool FNNL picked. Apollo (Apollo.io) is the usual example, but the rule is general. Routing comes from the stack contract, never from what happens to be on screen. If the slot a need maps to is filled by something else, do not propose or route to the visible connector, and if the slot is empty, stop and route the operator to `/stack-setup` rather than substituting whatever is authenticated today.
 
-> **There is no declared stack in this file.** Which tool fills each capability slot (`company_discovery`, `contact_discovery`, `contact_enrichment`, `email_verification`, `intent_signals`) is sourced from the workspace stack contract at `outbound/stack-contract.yaml`, whose `approved_stack` block is the closed list of FNNL's tools. Two kinds of slot no longer need a vendor at all (no-AI-API rule, operator directive 2026-09-22): `search` and `crawl` are the harness's own WebSearch and WebFetch, and the former AI slots (`research_provider` / `bulk_classification` / `copywriting`) are retired, because research, classification, extraction and copy all run on Claude Code itself (the `/deep-research` harness, sub-agents, and the main session). A third-party search API or crawler named below is a catalogue example like any other tool. Nothing in this file asserts what FNNL has keyed, callable, or verified: the sections below catalog the market, they do not inventory the account. If a slot is unset, stop and route the operator to `/stack-setup` rather than substituting a vendor. Two rules when reading the contract: a slot whose status is `chosen` has only been recorded, not proven (only `live` means a real call against FNNL's own account has succeeded), and the enrichment waterfall **order** lives in `lead_data.contact_enrichment.notes`, mirrored into `/email-waterfall`. Read the contract fresh rather than trusting a remembered list. A stale stack list is exactly how this file goes wrong downstream, because `/data-point-discovery` cross-references every candidate data point against it.
+> **There is no declared stack in this file.** Which tool fills each capability slot (`company_discovery`, `contact_discovery`, `contact_enrichment`, `email_verification`, `intent_signals`) is sourced from the workspace stack contract at `outbound/stack-contract.yaml`, whose `approved_stack` block is the closed list of FNNL's tools. Two kinds of slot no longer need a vendor at all (no-AI-API rule, operator directive 2026-09-22): `search` and `crawl` are the harness's own WebSearch and WebFetch, and the former AI slots (`research_provider` / `bulk_classification` / `copywriting`) are retired, because research, classification, extraction and copy all run on Claude Code itself (the `/deep-research` harness, sub-agents, and the main session). A third-party search API or crawler named below is a catalogue example like any other tool. Nothing in this file asserts what FNNL has keyed, callable, or verified: the sections below catalog the market, they do not inventory the account. If a slot is unset, stop and route the operator to `/stack-setup` rather than substituting a vendor. Two rules when reading the contract: a slot whose status is `chosen` has only been recorded, not proven (only `live` means a real call against FNNL's own account has succeeded), and the live per-field provider **order** lives in `outbound/reference/provider-routing.yaml` (`layers.*`), under the contract's waterfall in `lead_data.contact_enrichment.notes`, mirrored into `/email-waterfall`. Read the contract fresh rather than trusting a remembered list. A stale stack list is exactly how this file goes wrong downstream, because `/data-point-discovery` cross-references every candidate data point against it.
 
 > **Capability-gap analysis depends on which tools get chosen, so run it against the filled slots, not against this catalog.** Before concluding a data point is unobtainable, check what the contract's tools actually cover. Two gaps persist across most common stacks and are worth knowing in advance:
-> - **Search-time filtering versus post-list enrichment is the distinction that matters.** A tool earns a place by filtering at *search* time, narrowing the universe **before** the list is built, rather than enriching a list you already hold (Prospeo is the usual example of a search-time filterer). Some data points have a cheap post-list path and no search-time path at all: **department-level headcount growth rate** (a per-record growth enricher such as DiscoLike `growth-metrics` runs on a list you already have, so it can never act as a discovery gate) and the **sold-to** axis (derivable post-list for free, so it can never surface a company that does not state its end customer publicly). If the chosen `contact_discovery` or `company_discovery` tool has no search-time filter for these, treat them as post-list scoring fields, not targeting filters. Some tools close part of this cheaply: a free exact-count endpoint (e.g. GetLeads `count_contacts`, §16) filters on department (`job_functions`), founded year, funding, revenue, and technologies at count time for 0 credits.
-> - **Blitz is a docs-search server, not a data provider.** The `blitz_api` MCP searches BlitzAPI's public website; it cannot return a contact or a company. That is a fact about the tool, not about any account, so any line that routes to it for contact or company data is a bug regardless of what the contract says.
+> - **Search-time filtering versus post-list enrichment is the distinction that matters.** A tool earns a place by filtering at *search* time, narrowing the universe **before** the list is built, rather than enriching a list you already hold (Prospeo is the usual example of a search-time filterer). Some data points have a cheap post-list path and no search-time path at all: **department-level headcount growth rate** (a per-record growth enricher such as DiscoLike `growth-metrics` runs on a list you already have, so it can never act as a discovery gate) and the **sold-to** axis (derivable post-list for free, so it can never surface a company that does not state its end customer publicly). If the chosen `contact_discovery` or `company_discovery` tool has no search-time filter for these, treat them as post-list scoring fields, not targeting filters. Some tools close part of this cheaply: an exact-count endpoint (e.g. GetLeads `count_contacts`, §16, on its plan meter) filters on department (`job_functions`), founded year, funding, revenue, and technologies at count time, with no record revealed.
+> - **A docs-search MCP server is not a data provider.** Some connectors only search a vendor's public website and cannot return a contact or a company, so any line that routes to one for contact or company data is a bug regardless of what the contract says.
+
+> **Filter-first discovery and the tool-balance guard (operator decisions 2026-09-28).** Company discovery counts and filters the universe first, in the `layers.company_discovery` order of `outbound/reference/provider-routing.yaml`, and records `run_state.discovery_route`; a lookalike is the exception route (`/tam-build`). Reveal and lookup-by-person calls never sit in the discovery order. The people, email and backfill orders are in the same file: read them there, never restate them from this catalog. A tool that is out of balance, down or switched off stops the step and asks the operator (`/tool-balance-guard`). Never substitute another tool, never reorder, never propose the list workbench's own credits, and never skip a rung unless the operator approved it (`outbound/scripts/list_waterfall.py plan --skip-provider <p> --skip-reason <text> --operator-approved-skip`).
 
 > **Signal-driven acquisition (the eight timing/context signals):** for job change, department headcount, headcount growth, founded year, ads intelligence, job-change detection, jobs/JD content, and profile/work-history, the per-signal slices, copy angles, and full with/without-tool acquisition recipes live in `signal-strategy-playbook.md` (slices → `/campaign-strategy` Signal-Driven Slice Library; copy → `/campaign-copywriting` Signal Angle Library; data points → `/data-point-discovery`). That playbook names specific premium tools as the primary path for several signals (Prospeo search-time filters, LeadMagic endpoints, §15 below). Read those as illustrative, not as configuration: check the matching slot in the stack contract first, and where the slot's tool covers the signal more cheaply, prefer it. Several signals the playbook calls premium-only do have a cheap path in some tools, for example department headcount and founded year as free search-time count filters, plus funding and acquisition feeds the playbook does not cover at all. Treat any "only tool X can do this" claim in the playbook as a claim to re-test against the chosen stack, not a standing fact.
 
@@ -48,12 +53,12 @@ Each row names the capability **slot** that owns the need. The tool that actuall
 
 When more than one tool can collect a signal, route to the **cheapest tool that actually returns it**. The light layer (the `crawl` and `search` roles, which in FNNL are the harness's WebFetch and WebSearch, plus Claude Code sub-agent extraction) plus free public data does most of the work; a paid scraper is a last resort, only when nothing lighter can get the field. This ladder is the default for `/data-point-discovery` `source_tool` assignment, `/tam-build` Layer 1b enrich + Layer 1c workflow-layer handoff, and any list-build collection step.
 
-1. **Already-paid spine first.** For lists built on the chosen `company_discovery` / `contact_discovery` spine, take any field those tools or their native enrichers return before fetching it elsewhere, because it is already paid for. (Typical coverage to check for: a company-search endpoint returning firmographics, sales-motion signals, tech and hiring; a contact endpoint returning rows by title or by domain; a similarity tool returning business profile, growth metrics, and appended data.) **Then the gap-fill provider for the still-blank cells, never as the spine.** That is the exhaust-then-gap-fill ordering: run the primary across the whole survivor set first, then route only the still-blank cells onward, in the order recorded at `lead_data.contact_enrichment.notes` in the stack contract. A gap-filler's credits are usually already paid too, and where a provider offers a **free exact count** (e.g. GetLeads `count_contacts`, 0 credits), size any pull with that free count before spending a credit on search or export (§16).
+1. **Already-paid spine first.** For lists built on the chosen `company_discovery` / `contact_discovery` spine, take any field those tools or their native enrichers return before fetching it elsewhere, because it is already paid for. (Typical coverage to check for: a company-search endpoint returning firmographics, sales-motion signals, tech and hiring; a contact endpoint returning rows by title or by domain; a similarity tool returning business profile, growth metrics, and appended data.) **Then the gap-fill provider for the still-blank cells, never as the spine.** That is the exhaust-then-gap-fill ordering: run the primary across the whole survivor set first, then route only the still-blank cells onward, in the `provider-routing.yaml` order for that field (under `lead_data.contact_enrichment.notes` in the stack contract). A gap-filler's credits are usually already paid too, and where a provider offers an **exact count that reveals no record** (e.g. GetLeads `count_contacts`, on its plan meter), size any pull with it before spending a credit on search or export (§16). A rung out of balance stops and asks (`/tool-balance-guard`); it is never skipped for the next one.
 2. **Free public / official data.** Government, regulator, and official directory datasets (e.g. CMS `data.cms.gov`, NCQA recognition directory, SEC EDGAR, state licensing boards). Zero cost, authoritative, always first for any regulated/official fact.
-3. **The `crawl` role** (in FNNL, the harness's WebFetch; a scripted crawler such as Spider Cloud is a catalogue example): the default for ANY website, article, careers/ATS, or HTML page. Where the crawler exposes these settings, crawl `request:'http'` **proxy-off** first (fast, ~0.5s); escalate to `'chrome'` (JS render) only when http returns 0 pages, and turn the proxy on only for a confirmed bot wall. Per-page cheap. **Throughput is concurrency-bound, not per-site: see the fast-crawl settings in §7.**
-4. **The `search` role** (in FNNL, the harness's WebSearch; a search API such as Serper is a catalogue example): Google Search / News / **Places** to find pages, news/timing signals, and Google ratings. A search API's **Places** endpoint is the light substitute for a paid Maps scraper (rating + review count). ≈$0.001–0.003/query.
+3. **The `crawl` role** (in FNNL, the harness's WebFetch; a scripted crawler such as Spider Cloud is an OUT OF STACK, needs operator approval catalogue example): the default for ANY website, article, careers/ATS, or HTML page. Where the crawler exposes these settings, crawl `request:'http'` **proxy-off** first (fast, ~0.5s); escalate to `'chrome'` (JS render) only when http returns 0 pages, and turn the proxy on only for a confirmed bot wall. Per-page cheap. **Throughput is concurrency-bound, not per-site: see the fast-crawl settings in §7.**
+4. **The `search` role** (in FNNL, the harness's WebSearch; a search API such as Serper is an OUT OF STACK, needs operator approval catalogue example): Google Search / News / **Places** to find pages, news/timing signals, and Google ratings. A search API's **Places** endpoint is the light substitute for a paid Maps scraper (rating + review count). ≈$0.001–0.003/query.
 5. **Claude Code sub-agent extraction** (this rung was "a cheap AI tool" until the no-AI-API rule, operator directive 2026-09-22): Claude Code sub-agents fanned out over disjoint batches per `/personalization-subagent-pattern` turn the scraped/searched text into the structured value, with the main session handling the nuanced cases (per `/ai-model-routing`). No AI model on any API key. JSON-only, blank-when-unsupported.
-6. **Paid scrapers, last resort only** (e.g. Apify, Scrap.io). Use only when no lighter tool obtains the field. Genuine scraper-only cases: Google-Maps **review text** (per-review sentiment), ad-library / running-ads, some social scrapers. Gate every paid-scraper run through `/api-cost-governance`; if even the paid tool isn't available, **leave the field blank** (a blank is honest).
+6. **Paid scrapers: OUT OF STACK, needs operator approval** (e.g. Apify, Scrap.io; none is in FNNL's approved stack). Raise one only when no stack tool obtains the field, and spend nothing on it until the operator approves it by name. Genuine scraper-only cases: Google-Maps **review text** (per-review sentiment), ad-library / running-ads, some social scrapers. Gate every paid-scraper run through `/api-cost-governance`; if even the paid tool isn't available, **leave the field blank** (a blank is honest).
 
 ## Layer Order Pattern (the order of the layers, not a declared stack)
 
@@ -62,7 +67,7 @@ For most source-first campaigns, use this order. The order is fixed; which tool 
 1. **Workflow layer** (contract slot `lead_data.list_workbench`, locked per client as `run_state.list_workbench`): the list workbench by default. The working list lives in a workbench table the operator watches fill live: the running Claude Code session sources and enriches with FNNL's own API-keyed tools and pushes finished rows in through the table's inbound webhook, and it never spends the workbench's own credits (zero-workbench-credit HARD RULE, CLAUDE.md section 7). If no workbench table is ready, the session combines sources, scores, dedupes, and prepares the final CSV directly via MCP tools plus scripts, and says so. A spreadsheet-style workspace (illustrative only, none chosen for FNNL: RevCode) is the optional alternative for the same work. Reach for one when you want a spreadsheet UI, saved or shareable workflows, or a local no-row-ceiling engine. A workspace with **no API** is a manual, human-in-the-loop tool, so the automated flow must never depend on it. The choice is safe either way because the contract between skills is the CSV plus canonical columns plus data dictionary, never a workspace artifact, so both paths produce an identical downstream file and nothing else in the flow changes. Caveat for a *large* list built natively: Python is unavailable in this Claude Code env (see `/coldoutbound-gotchas`), so process via a Node script (deterministic steps) or Claude Code sub-agents over disjoint batches (per `/personalization-subagent-pattern`) rather than reading 100K rows into context, or run that heavy step in a workspace whose local engine handles 100K+ rows directly.
 2. **Source-of-truth signal:** the public place where the campaign proof actually lives.
 3. **Collection tool:** whatever fills `company_discovery`, `search`, or `crawl`, or a custom parser.
-4. **Contact enrichment:** the primary `contact_discovery` / `contact_enrichment` provider first, exhausted across the whole survivor set, then the gap-fill provider for the still-blank cells, then a waterfall provider for the residue, and every result re-verified by the `email_verification` tool. The actual tools and the waterfall order come from `outbound/stack-contract.yaml` (`lead_data.contact_enrichment.notes`), mirrored into `/email-waterfall`. There is no default; an unset slot means stop and route the operator to `/stack-setup`.
+4. **Contact enrichment:** people in the `layers.people_discovery` order and emails in the `layers.email` order of `outbound/reference/provider-routing.yaml` (the first rung exhausted across the whole survivor set, then the next rung on still-blank cells only), and every result checked by the `email_verification` tool; a catch-all goes to the holdback. The file sits under the contract's waterfall (`lead_data.contact_enrichment.notes`), mirrored into `/email-waterfall`. There is no default in this skill: an unset slot means stop and route the operator to `/stack-setup`, and a rung out of balance, down or switched off stops and asks (`/tool-balance-guard`).
 5. **QA and verification:** `/icp-prompt-builder`, `/email-waterfall`, `/list-quality-scorecard`.
 
 Do not collapse these layers into one vendor unless one vendor truly owns the source signal and the contact path.
@@ -73,24 +78,26 @@ When building the whole TAM up front (see `/tam-build`), split the stack by what
 
 **Layer 1: company-level, build across the whole TAM up front (cheap):**
 
-- Account discovery (primary spine: pick one per operator choice; HARD RULE in `/tam-build`): whatever `company_discovery` is locked to. Augment/extend only, never the primary list: `search` (coverage), a local-business source (truly local-SMB is its own motion, and the maps integration pack that runs it ships inert in `_vendor-library/` until `/stack-setup` activates it), a SaaS-revenue database (SaaS ARR)
+- Account discovery (filter-first, `/tam-build`, operator decision 2026-09-28; overrides the old lookalike-spine rule): a filter build by default in the `layers.company_discovery` order of `provider-routing.yaml` (the company search tool through its enum pre-step, then GetLeads `count_contacts` as the widening top-up), with industry carried as the keyword stack and `run_state.discovery_route` recorded. A lookalike seeded from 5 to 10 offer-fit companies runs only when the offer needs a lookalike AND the TAM is small or hard to build by filters. Reveal and lookup-by-person calls never sit in the discovery order. Augment/extend only: `search` (coverage) and Claude web research. A local-business scraper or a SaaS-revenue database is OUT OF STACK, needs operator approval (the maps integration pack ships inert in `_vendor-library/` until `/stack-setup` activates it)
 - Firmographics: the discovery tool itself, or a similarity/firmographic enricher
 - Web-crawl signals (sales-motion CTAs, pricing, proof / case studies, tech / vendor, hiring, security): the `crawl` tool (plus `search` to find the pages)
-- Demand signal (running Meta / Google ads): an ad-library / transparency scraper (illustrative only: Apify Actors)
-- Org-structure depth (sales-leader-vs-IC, CRO / VP Sales / CMO present): a **free exact-count endpoint** on the `contact_discovery` tool, scoped by `domains[]` + `job_functions[]` / `seniority[]` / `personas[]`. Where the tool offers this for **free (0 credits)** and returns an exact count (illustrative only: GetLeads `count_contacts`, §16), it is a true company-level aggregate with no per-contact reveal and no spend, and a `where_sql` predicate can reach org role-count fields directly (e.g. `MARKETING_ROLE_COUNT_ORG >= 5`). If the slot's tool instead charges per record for this, it is a Layer 2 cost and does not belong here.
+- Demand signal (running Meta / Google ads): an ad-library / transparency scraper (OUT OF STACK, needs operator approval; e.g. Apify Actors)
+- Org-structure depth (sales-leader-vs-IC, CRO / VP Sales / CMO present): an **exact-count endpoint** on the `contact_discovery` tool, scoped by `domains[]` + `job_functions[]` / `seniority[]` / `personas[]`. Where the tool returns an exact count without revealing a record (e.g. GetLeads `count_contacts`, §16, on its plan meter), it is a true company-level aggregate with no per-contact reveal, and a `where_sql` predicate can reach org role-count fields directly (e.g. `MARKETING_ROLE_COUNT_ORG >= 5`). If the slot's tool instead charges per record for this, it is a Layer 2 cost and does not belong here.
 - Normalize / crunch: Claude Code sub-agents over disjoint batches (per `/personalization-subagent-pattern`); process / dedupe / score: the workflow layer (the list workbench by default, `run_state.list_workbench`, with rows pushed in by its inbound webhook at zero workbench credits; the session natively as fallback, or a workspace with a local no-row-ceiling engine on large lists)
 
 **Layer 2: per-contact, defer to the live campaign slice (per-credit, expensive at TAM scale):**
 
-- Contact DISCOVERY (real named people: first+last+title+LinkedIn; the discovery itself, with no email reveal, runs up front across the whole qualified TAM in `/tam-build` Layer 1d, because `full_enriched` means mapped, fit-scored and contacts discovered; signal columns optional): the people-search side of `contact_discovery`, run primary-first and then gap-filled per the contract's waterfall order. Examples of tools that could fill this slot (illustrative only, none chosen for FNNL): A-Leads `advanced_search`, GetLeads `search_contacts` (§16; always size it first with the free `count_contacts`), DiscoLike `generate-contacts` (ContaGen). **Never use a contact-index / `has_email` mode that returns the company email *pattern* rather than a real person for a sendable list**: pattern guesses fabricate names and bounce (one similarity vendor's version of this trap is documented in its integration pack, which ships inert in `_vendor-library/` until `/stack-setup` activates it). ⛔ **And NEVER discover contacts from a LinkedIn/Google search: a `site:linkedin.com/in` query plus an AI title-picker is BANNED.** Google's cached snippets give the AI **no employment-currency signal**, so it returns retired/departed people whose rows still pass every downstream gate. Contacts come only from a source with a **current-employer field**. (This does not touch the sanctioned search-plus-AI *backfill* of a LinkedIn URL for someone you already have.) Full rule: `/email-waterfall`.
-- Work email / mobile **FINDER** (when a real-named row has NO email): the primary `contact_enrichment` provider first, exhausted across the set, then the gap-fill provider, then a multi-provider waterfall for the residue (find+verify+catch-all across 20+ sources on a pay-per-valid model; illustrative only: BetterContact). The order is the one recorded at `lead_data.contact_enrichment.notes`, not a preference re-decided per run. A finder needs first+last+domain. Where the `contact_discovery` tool already returns emails on its contact rows, or exposes a LinkedIn-to-email batch endpoint, that is a cheaper gap-fill to exhaust before the paid waterfall (§16). (Per-tool routing detail in `/email-waterfall`.)
-- Email **VERIFICATION + catch-all** (when a row ALREADY has an email: verify-first, don't pay a finder to re-discover it): the `email_verification` tool. Prefer a **two-in-one** verifier whose single call returns both a deliverability status (deliverable/undeliverable/risky/unknown) AND a catch-all flag, covering deliverability AND catch-all in one pass, so no separate catch-all tool is needed. A verifier that collapses catch-all into valid or invalid will quietly inflate bounce rate. **Every finder's output is re-verified through the `email_verification` tool before sending: no source is exempt, and a finder's own internal self-check is a provider signal, not the send-gate.** Candidate reference below (§14); routing owned by `/email-waterfall`'s Verification Doctrine.
+- Contact DISCOVERY (real named people: first+last+title+LinkedIn; the discovery itself, with no email reveal, runs up front across the whole qualified TAM in `/tam-build` Layer 1d, because `full_enriched` means mapped, fit-scored and contacts discovered; signal columns optional): the people-search side of `contact_discovery`, run primary-first and then gap-filled per the contract's waterfall order. The order is `layers.people_discovery` in `provider-routing.yaml` (GetLeads `search_contacts` is one rung, §16; size it first with `count_contacts`), and a lookup-by-person or decision-maker reveal never runs at discovery. **Never use a contact-index / `has_email` mode that returns the company email *pattern* rather than a real person for a sendable list**: pattern guesses fabricate names and bounce (one similarity vendor's version of this trap is documented in its integration pack, which ships inert in `_vendor-library/` until `/stack-setup` activates it). ⛔ **And NEVER discover contacts from a LinkedIn/Google search: a `site:linkedin.com/in` query plus an AI title-picker is BANNED.** Google's cached snippets give the AI **no employment-currency signal**, so it returns retired/departed people whose rows still pass every downstream gate. Contacts come only from a source with a **current-employer field**. (This does not touch the sanctioned search-plus-AI *backfill* of a LinkedIn URL for someone you already have.) Full rule: `/email-waterfall`.
+- Work email / mobile **FINDER** (when a real-named row has NO email): the finders in the `layers.email` order of `provider-routing.yaml`, blank rows only, each result checked by the verifier; a multi-provider waterfall (e.g. BetterContact) is OUT OF STACK, needs operator approval. The order is the file's, not a preference re-decided per run, and a rung out of balance stops and asks (`/tool-balance-guard`). A finder needs first+last+domain. Where the `contact_discovery` tool already returns emails on its contact rows, or exposes a LinkedIn-to-email batch endpoint, that is a cheaper gap-fill to exhaust before the next rung (§16). (Per-tool routing detail in `/email-waterfall`.)
+- Email **VERIFICATION + catch-all** (when a row ALREADY has an email: verify-first, don't pay a finder to re-discover it): the `email_verification` tool. Prefer a **two-in-one** verifier whose single call returns both a deliverability status (deliverable/undeliverable/risky/unknown) AND a catch-all flag, covering deliverability AND catch-all in one pass, so no separate catch-all tool is needed. A verifier that collapses catch-all into valid or invalid will quietly inflate bounce rate. **Every finder's output is re-verified through the `email_verification` tool before sending: no source is exempt, and a finder's own internal self-check is a provider signal, not the send-gate.** The verifier of record is the `email_verification` tool in the stack contract (`outbound/scripts/millionverifier_verify.mjs`); §14 is an OUT OF STACK, needs operator approval catalogue note. Routing owned by `/email-waterfall`'s Verification Doctrine.
 
 Rule: build Layer 1 for the whole TAM; spend Layer 2 only on the contacts a campaign has confirmed it sends to. In the first wave that is the whole scored, eligible TAM, revealed and verified in P1 to P5 order, with the standing $100 run budget still stopping and asking (Aaron process alignment, operator directive 2026-09-22). Never run per-contact reveal / verification across the whole TAM up front, before scoring and campaign selection: that is the expensive move the "right order" avoids. **Within Layer 2, verify any existing email FIRST (email + catch-all) before paying a finder to discover a new one. Finding when you already have a verifiable email double-pays.** Preview both layers through `/api-cost-governance` before spending.
 
 # Lead List Ideas From The Candidate Tool Catalog
 
 Research date: May 26, 2026
+
+> **Stack status (read first).** Of the tool sections below, only §5 (Prospeo) and §16 (GetLeads) cover tools in FNNL's approved stack (`approved_stack` in `outbound/stack-contract.yaml`); the rest of the stack has no section here. Every other tool section is an OUT OF STACK, needs operator approval: a research note, never a default path. The live order per field is `outbound/reference/provider-routing.yaml`.
 
 This is an idea bank. It is not a plan to build every list.
 
@@ -142,7 +149,7 @@ Good first data-quality sample (is the list clean and on target? This is not a r
 
 These samples check fit, identity and deliverability before spend. They are far too small to judge replies or an offer: a good offer usually shows zero positive replies at this size. Reply tests run at the Offer-Validation Wave's pooled read (about 2,000 to 3,000 first-touch contacts per offer, 1,300 at minimum, `/campaign-strategy`), so never kill a list or an offer on a data-quality sample (operator directive 2026-09-22).
 
-Before spending credits on any paid tool in this catalog (the contact databases, enrichers, verifiers, scrapers, and workspaces named throughout, for example RevCode, A-Leads, WizLeads, Scrap.io, Prospeo, Apify, Trigify, MillionVerifier), run `/api-cost-governance` to preview the USD/credit cost, check the balance, and block if a key is below cost or under the $10 warning threshold.
+Before spending credits on any paid stack tool (GetLeads plan credits or wallet cash, Prospeo, and the rest of `approved_stack`), run `/api-cost-governance` to preview the USD/credit cost, check the balance, and block if a key is below cost or under the \$10 warning threshold. Every other paid tool named in this catalog is OUT OF STACK, needs operator approval and gets no spend until approved. A stack tool that is out of balance or down (a missing key, a failed health check, a lasting outage) is never skipped or substituted: the step stops and asks the operator to top up or fix it, then resumes on the same tool (`/tool-balance-guard`, operator decision 2026-09-28). The list workbench's own credits are never the fallback.
 
 ## Benchmark A Vendor Before You Pay For It
 
@@ -349,7 +356,7 @@ For which provider owns each stage and how the `ai_*_provider` columns get popul
 
 ---
 
-# 2. A-Leads
+# 2. A-Leads (OUT OF STACK, needs operator approval)
 
 ## What It Is
 
@@ -494,7 +501,7 @@ Vendor pages mention 100M+ verified contacts in one section and 320M+ verified B
 
 ---
 
-# 3. WizLeads
+# 3. WizLeads (OUT OF STACK, needs operator approval)
 
 ## What It Is
 
@@ -607,7 +614,7 @@ This is a strong list-building tool when your source of truth is Sales Navigator
 
 ---
 
-# 4. Scrap.io
+# 4. Scrap.io (OUT OF STACK, needs operator approval)
 
 ## What It Is
 
@@ -748,7 +755,7 @@ This is best for local businesses that may not appear well in LinkedIn-style B2B
 
 > **This is a capability record, not a routing instruction.** Prospeo is a candidate for `contact_discovery`; whether it is the tool FNNL uses comes from the stack contract, and nothing in this section says it is. Before planning a campaign around any list idea below, confirm the slot and confirm status `live`, not just `chosen`.
 >
-> **Most of what this section describes is available from other tools too**, so check the filled slot before assuming Prospeo is required: contact search, department size / founded year / funding / revenue / technologies as search-time filters (some tools expose these in a free exact count, §16), email finding plus verification (§13, §14), and tenure or time-in-seat (a `job_duration_months`-style field, the flagship contact why-now signal).
+> **Most of what this section describes is available from other tools too**, so check the filled slot before assuming Prospeo is required: contact search, department size / founded year / funding / revenue / technologies as search-time filters (some tools expose these in an exact count that reveals no record, §16), email finding plus verification (§13, §14), and tenure or time-in-seat (a `job_duration_months`-style field, the flagship contact why-now signal).
 >
 > **The genuinely distinctive remainder is narrow:** department-level **headcount growth rate** and the **sold-to axis**, both as *search-time* filters (narrowing the universe before the list exists, versus enriching a list you already hold). If Prospeo is ever the chosen tool, re-read `signal-strategy-playbook.md` for the per-signal recipe, and re-check its "Prospeo exclusive" claims against §16 first, because several tools have since closed parts of that gap.
 
@@ -947,7 +954,7 @@ On paper Prospeo is one of the most flexible list builders in this catalog. Whet
 
 ---
 
-# 6. DiscoLike
+# 6. DiscoLike (OUT OF STACK, needs operator approval)
 
 ## What It Is
 
@@ -1077,7 +1084,7 @@ DiscoLike is strong for account discovery, not contact enrichment.
 
 ---
 
-# 7. Spider Cloud
+# 7. Spider Cloud (OUT OF STACK, needs operator approval)
 
 ## What It Is
 
@@ -1228,7 +1235,7 @@ Crawl throughput is **concurrency-bound, not per-site-bound.** A single crawl re
 
 ---
 
-# 8. GetLatka
+# 8. GetLatka (OUT OF STACK, needs operator approval)
 
 ## What It Is
 
@@ -1355,7 +1362,7 @@ This is best for SaaS account lists, not general B2B.
 
 ---
 
-# 9. Serper
+# 9. Serper (OUT OF STACK, needs operator approval)
 
 ## What It Is
 
@@ -1479,7 +1486,7 @@ Serper is best for finding pages, companies, URLs, and signals from Google. It i
 
 ---
 
-# 10. Apify
+# 10. Apify (OUT OF STACK, needs operator approval)
 
 ## What It Is
 
@@ -1600,7 +1607,7 @@ Apify is a toolbox, not one tool. Actor quality varies.
 
 ---
 
-# 11. Trigify
+# 11. Trigify (OUT OF STACK, needs operator approval)
 
 ## What It Is
 
@@ -1732,7 +1739,7 @@ This is best for timing and context. It is not a classic static database.
 
 ---
 
-# 12. LeadsFriday
+# 12. LeadsFriday (OUT OF STACK, needs operator approval)
 
 Added: June 8, 2026
 
@@ -1801,7 +1808,7 @@ LeadsFriday is a paid, credit-based tool. Before any extraction run, route throu
 
 ---
 
-# 13. BetterContact
+# 13. BetterContact (OUT OF STACK, needs operator approval)
 
 Added: June 13, 2026
 
@@ -1885,7 +1892,7 @@ Practical prevention (apply on every run and when sizing the plan):
 
 ---
 
-# 14. Deliverable.co (candidate for the `email_verification` slot)
+# 14. Deliverable.co (OUT OF STACK, needs operator approval; FNNL's verifier of record is set in the stack contract)
 
 ## What It Is
 
@@ -1930,7 +1937,7 @@ Deliverable.co is paid / credit-based with no balance API. Route a slice through
 
 ---
 
-# 15. LeadMagic (premium signal enrichment, candidate for `intent_signals` / `contact_enrichment`)
+# 15. LeadMagic (premium signal enrichment; OUT OF STACK, needs operator approval)
 
 ## What It Is
 
@@ -1961,16 +1968,16 @@ Added: July 17, 2026
 
 GetLeads is a B2B contact database plus a **signal** layer, reached over an authenticated MCP connector. Two things earn it a section rather than a line in the contact-layer list:
 
-1. **`count_contacts` is FREE (0 credits) and returns an exact count.** That makes it an unusually cheap sizing tool, and a zero-cost **department-size proxy** when scoped by `domains[]` + `job_functions[]` (company-level aggregate, no per-contact reveal, no spend). Free exact counts are rare, so a tool that offers one is worth weighing for `contact_discovery` on that basis alone.
+1. **`count_contacts` returns an exact count without revealing a record.** That makes it an unusually cheap sizing tool, and a **department-size proxy** when scoped by `domains[]` + `job_functions[]` (company-level aggregate, no per-contact reveal). It has returned `credits_used: 0` in tests, but GetLeads is never free: the count runs on the plan and its fair use (`get_fair_use`), search, export and enrichment draw plan credits, and paid scrapes draw wallet cash. Exact counts are rare, so a tool that offers one is worth weighing for `contact_discovery` on that basis alone.
 2. **It carries signals few tools return as a first-class feed:** funding rounds, acquisitions, LinkedIn engager monitoring, and company-page follower scrapes. Reconstructing those from a news scrape is materially worse, so check whether the `intent_signals` slot already covers them before building a workaround.
 
-It suits a **gap-filler role, not a spine.** The exhaust-then-gap-fill ordering governs wherever it sits: run the primary `contact_discovery` / `contact_enrichment` provider across the survivor set first, then route only the still-blank cells onward, in the order recorded at `lead_data.contact_enrichment.notes`. Account discovery stays with `company_discovery` (see `/tam-build`).
+Its place in each field's order is set in `outbound/reference/provider-routing.yaml`, never here: in company discovery it is the widening top-up after the company search tool (the company universe is the distinct domains on its contact rows), and in people discovery and backfill it is a rung. The exhaust-then-gap-fill ordering governs wherever it sits: run the earlier rung across the survivor set first, then route only the still-blank cells onward.
 
 ## Access
 
 **MCP connector, OAuth.** GetLeads authenticates over MCP OAuth rather than an API key, so it has **no `.env` entry at all**. That matters for a general reason: for an OAuth-based connector, absence from `scripts/.env` says nothing about whether the tool is available. Check the stack contract and the connector's own auth state, and do not go hunting for a key that would never exist.
 
-Two calls establish whether it is usable, and both are worth running before anything else: `getleads_health` (expects `{"ok": true}`) and a `count_contacts` call with a narrow filter, which should return a count at `credits_used: 0` and thereby prove the auth and the free-count behavior together.
+Two calls establish whether it is usable, and both are worth running before anything else: `getleads_health` (expects `{"ok": true}`) and a `count_contacts` call with a narrow filter, which should return a count and thereby prove the auth and the count behavior together (record the `credits_used` it reports; never assume it).
 
 ## Billing: TWO separate balances (this causes a recurring misdiagnosis)
 
@@ -1990,17 +1997,17 @@ Three rules that follow:
 
 ## Lead Lists You Can Build
 
-- **Free filter-sizing pass (run before any spend)**
+- **Filter-sizing pass (run before any search or export spend)**
   - `count_contacts` returns exact `total_matching` plus `exportable_rows` (capped at `max_export_rows`, default 50k per export).
-  - Size a slice, test a filter, or sanity-check a segment's reach before committing to it, all for 0 credits. (For launch eligibility, the governing floor is company-level and owned by `/campaign-strategy`. Read it there rather than assuming a contact count clears it.)
+  - Size a slice, test a filter, or sanity-check a segment's reach before committing to it, with no record revealed. (For launch eligibility, the governing floor is company-level and owned by `/campaign-strategy`. Read it there rather than assuming a contact count clears it.)
 
-- **Zero-cost department-size / org-depth list**
+- **Department-size / org-depth list (count only)**
   - Scope `count_contacts` by `domains[]` + `job_functions[]` (or `seniority[]` / `personas[]`) for a company-level department count with no per-contact reveal.
   - `where_sql` reaches the org role-count columns directly, e.g. `MARKETING_ROLE_COUNT_ORG >= 5`.
-  - This is a free substitute for the premium company-level aggregate the playbook assumes (Layer 1 above), and it is why `signal-strategy-playbook.md` §2's "Prospeo exclusive" claim should be re-tested rather than believed.
+  - This is a count-only substitute for the premium company-level aggregate the playbook assumes (Layer 1 above), and it is why `signal-strategy-playbook.md` §2's "Prospeo exclusive" claim should be re-tested rather than believed.
 
 - **Funding-signal list** (`list_funding_signals`)
-  - Recently funded companies as a first-class feed, rather than reconstructing it from a Serper news scrape.
+  - Recently funded companies as a first-class feed, rather than reconstructing it from a news search.
   - Funding is a why-now trigger, not buying intent. It can equally mean hiring chaos (see Hard Truths).
 
 - **Acquisition / M&A signal list** (`list_acquisition_signals`)
@@ -2009,23 +2016,23 @@ Three rules that follow:
 
 - **LinkedIn engager list** (`add_monitored_profile`, then `list_profile_monitoring_leads`)
   - Monitor a profile and collect who engages with its posts, with backfill across existing posts.
-  - Overlaps Trigify (§11) and any other competitor-engager motion. Same caution: **a like is weak intent.**
+  - Overlaps any other competitor-engager motion (Trigify, §11, is OUT OF STACK, needs operator approval). Same caution: **a like is weak intent.**
   - Paid scrape billed to the **wallet**. Vendor-stated ≈$0.012 per engager. Price it with `estimate_scrape_cost` first.
 
 - **Company-followers list** (`lookup_company_linkedin_followers`)
-  - Followers of a competitor or category-leader page. Overlaps LeadsFriday's follower extract (§12, ≈$3.00/1,000), so compare on price before choosing.
+  - Followers of a competitor or category-leader page. (LeadsFriday's follower extract, §12, is OUT OF STACK, needs operator approval.)
   - Paid scrape billed to the **wallet**. Vendor-stated ≈$0.0035 per follower with a ≈$8.75 minimum. Confirm with `estimate_scrape_cost`.
 
 - **Domain-to-people list** (`search_contacts` + `domains[]`, or `getleads_lookup_colleagues_by_domain`)
-  - A known account list to named contacts. Size it free with `count_contacts` first.
+  - A known account list to named contacts. Size it with `count_contacts` first.
 
 - **Email / LinkedIn cross-fill** (`getleads_get_emails_from_linkedin_batch`, `getleads_get_linkedin_urls_from_emails_batch`, `getleads_enrich_person_batch`)
   - Fill a missing email from a LinkedIn URL, or the reverse. This is the sanctioned backfill direction: enriching a row you already hold, never discovering a new contact from a search snippet.
-  - Every email still passes through the `email_verification` tool before sending (§14). No source is exempt.
+  - Every email still passes through the `email_verification` tool before sending. No source is exempt.
 
 ## Tiny Features That Matter
 
-- **`count_contacts` is free and exact.** Run it before `search_contacts` / `export_contacts`, every time. This is the highest-leverage habit with this tool.
+- **`count_contacts` is exact and reveals no record.** Run it before `search_contacts` / `export_contacts`, every time. This is the highest-leverage habit with this tool.
 - **`estimate_scrape_cost` prices a paid scrape before it runs.** Use it as the `/api-cost-governance` preview for monitoring and follower pulls.
 - **`recommend_filters`, `get_available_values`, `get_available_columns`** resolve valid filter values instead of guessing (an unknown `personas` value errors with the valid list).
 - **`where_sql`** reaches catalog columns the curated filters do not expose, AND-combined with them.
@@ -2036,15 +2043,15 @@ Three rules that follow:
 
 - **The two-balance confusion is the number-one failure.** See the billing table. It reads as a hard outage and is usually just an empty wallet.
 - **`job_titles` is a substring text-match and over-matches.** It catches "Assistant to CEO", "Owner's Representative" (a real AEC job function, not ownership), and "Owner at [a different company]". Always post-filter a title substring match before treating it as a seniority filter.
-- **A strict founder/owner/CEO title search understates coverage**, especially in AEC and professional services where the boss is titled President or Principal. Size the wider-title gap with a free `count_contacts` before concluding the data is not there.
+- **A strict founder/owner/CEO title search understates coverage**, especially in AEC and professional services where the boss is titled President or Principal. Size the wider-title gap with `count_contacts` before concluding the data is not there.
 - **Use `search_contacts` for batch domain+title work, not `lookup_decision_makers`**, which is single-domain-or-browser-upload only (its batch link needs a manual CSV upload in a browser, so it is not hands-free).
-- **It is not account discovery.** It will not tell you which companies to target. That is the `company_discovery` spine, for example a lookalike search seeded from case-study companies (see `/tam-build`).
+- **Its account discovery is a people search rolled up.** In the company discovery order it is the widening top-up after the company search tool, and the companies it finds are the distinct domains on its contact rows, so a company with no title-matching person never shows up. The discovery route is the filter build by default, a lookalike only as the exception (`/tam-build` filter-first discovery).
 - **The prices above are vendor-stated**, like every other number in this file. Verify with `estimate_scrape_cost` before relying on them.
 - **A like or a follow is not buying intent.** Engager and follower lists need qualification before outreach (see Hard Truths).
 
 ## Cost-Governance Note
 
-Two balances means two gates. **Contact search / export / enrichment:** run the free `count_contacts` first and treat it as the row-count preview, then route through `/api-cost-governance` before `search_contacts` / `export_contacts` spends plan credits. **Paid scrapes (profile monitoring, company followers):** preview with `estimate_scrape_cost` and check `get_wallet_balance` live. If the wallet is empty or below the estimate, the scrape needs an operator-approved top-up first (`create_topup_link`). Do not enable auto-top-up to route around that gate, because it converts a per-run approval into standing spend.
+Two balances means two gates. **Contact search / export / enrichment:** run `count_contacts` first and treat it as the row-count preview, then route through `/api-cost-governance` before `search_contacts` / `export_contacts` spends plan credits. **Paid scrapes (profile monitoring, company followers):** preview with `estimate_scrape_cost` and check `get_wallet_balance` live. If the wallet is empty or below the estimate, the scrape stops and asks for an operator-approved top-up first (`create_topup_link`, `/tool-balance-guard`); no other tool stands in for it. Do not enable auto-top-up to route around that gate, because it converts a per-run approval into standing spend.
 
 ---
 
@@ -2052,7 +2059,7 @@ Two balances means two gates. **Contact search / export / enrichment:** run the 
 
 These are stronger than using tools one by one.
 
-> **Read the tool names below as roles, not as routing.** These recipes were written against a particular set of vendors. The **recipe shapes are the IP and they still hold**; the names are placeholders. Substitute per slot: a contact-database step means whatever fills `contact_discovery`, an email-filling step means `contact_enrichment` run primary-first then gap-filled, and every email lands at the `email_verification` tool before sending. If a named tool is not what a slot is locked to, do not reach for it, and if the slot is empty, stop and route the operator to `/stack-setup`.
+> **Read the tool names below as roles, not as routing.** These recipes were written against a particular set of vendors. The **recipe shapes are the IP and they still hold**; the names are placeholders. Substitute per slot: a contact-database step means whatever fills `contact_discovery`, an email-filling step means `contact_enrichment` run primary-first then gap-filled, and every email lands at the `email_verification` tool before sending. If a named tool is not what a slot is locked to, do not reach for it, and if the slot is empty, stop and route the operator to `/stack-setup`. Any named tool outside `approved_stack` is OUT OF STACK, needs operator approval: a research note, never a default path.
 
 ## Combo 1: Tech-Stack ABM List
 
@@ -2208,7 +2215,7 @@ Output segments:
 
 If you want practical starting points, build these before chasing weird edge cases.
 
-> **Read the tool names below as roles, not as routing.** Whether any named entry is buildable depends entirely on which tools fill the slots. Translate as you read: a verified-email list by title/industry/size comes from `contact_discovery` plus `contact_enrichment`, sized first with a free count where the tool offers one. For the timing ideas, job-change and new-in-seat come from a tenure field (`job_duration_months`-style) on the contact database, funding and M&A from `intent_signals`, and news triggers from `search`. Headcount-growth-rate targeting often has **no search-time path at all** (see the capability-gap note near the top), because a growth-metrics enricher only enriches a list you already hold.
+> **Read the tool names below as roles, not as routing.** Whether any named entry is buildable depends entirely on which tools fill the slots. Translate as you read: a verified-email list by title/industry/size comes from `contact_discovery` plus `contact_enrichment`, sized first with an exact count where the tool offers one. For the timing ideas, job-change and new-in-seat come from a tenure field (`job_duration_months`-style) on the contact database, funding and M&A from `intent_signals`, and news triggers from `search`. Headcount-growth-rate targeting often has **no search-time path at all** (see the capability-gap note near the top), because a growth-metrics enricher only enriches a list you already hold. Any named tool outside `approved_stack` is OUT OF STACK, needs operator approval: a research note, never a default path.
 
 ## Best For Cold Email
 
@@ -2254,16 +2261,16 @@ If you want practical starting points, build these before chasing weird edge cas
 
 # Feature-To-List Map
 
-Use this when you know the signal you want but not the tool.
+Use this when you know the signal you want but not the tool. Any named tool outside `approved_stack` is OUT OF STACK, needs operator approval: a research note, never a default path.
 
 ## If You Need Contact Data
 
-Candidates per slot, illustrative only, none chosen for FNNL. The order below is the *shape* (primary, then gap-fill, then waterfall residue); the actual tools and order come from the stack contract.
+The live order is `layers.people_discovery` and `layers.email` in `outbound/reference/provider-routing.yaml`; read it there, never from this list. The shape is the first rung exhausted, then the next rung on still-blank cells, and every email checked by the verifier of record.
 
-- The `contact_discovery` primary, called first and exhausted across the whole survivor set (e.g. A-Leads `advanced_search` / `bulk_domains`)
-- The gap-filler for the still-blank cells (e.g. GetLeads, §16). Size any pull with a free exact count before you spend, where the tool offers one
-- A waterfall `contact_enrichment` provider for the residue (e.g. BetterContact: 20+ providers, pay-per-valid, finds and pre-checks work email / mobile in one call)
-- A cheap bulk extractor for *raw* contact rows from its supported sources only (e.g. LeadsFriday: unverified, no emails attached, so enrich and verify downstream)
+- The first rung in `layers.people_discovery`, called first and exhausted across the whole survivor set
+- The next rung for the still-blank cells (e.g. GetLeads, §16). Size any pull with an exact count before you spend, where the tool offers one
+- OUT OF STACK, needs operator approval: a waterfall `contact_enrichment` provider for the residue (e.g. BetterContact: 20+ providers, pay-per-valid, finds and pre-checks work email / mobile in one call)
+- OUT OF STACK, needs operator approval: a cheap bulk extractor for *raw* contact rows from its supported sources only (e.g. LeadsFriday: unverified, no emails attached, so enrich and verify downstream)
 
 ## If You Need LinkedIn Sales Navigator Data
 
@@ -2343,14 +2350,14 @@ If the answer is no, fix the list before writing copy.
 
 # Quick Tool Ranking By Use Case
 
-These are rankings by **fit**, a market judgment about which tool is best suited to a job. They are not a statement of what FNNL has. The tool actually chosen for each capability slot comes from `outbound/stack-contract.yaml`; where a ranking and the contract disagree, the contract wins, and an empty slot means stop and route the operator to `/stack-setup`.
+These are rankings by **fit**, a market judgment about which tool is best suited to a job. They are not a statement of what FNNL has. The tool actually chosen for each capability slot comes from `outbound/stack-contract.yaml`; where a ranking and the contract disagree, the contract wins, and an empty slot means stop and route the operator to `/stack-setup`. Any named tool outside `approved_stack` is OUT OF STACK, needs operator approval: a research note, never a default path.
 
 ## Best Account Discovery
 
-1. DiscoLike
-2. GetLatka for SaaS only
-3. Serper plus Spider Cloud
-4. Scrap.io for local businesses
+1. The filter build in the `layers.company_discovery` order of `provider-routing.yaml` (the default; `/tam-build` filter-first discovery)
+2. GetLeads funding and acquisition feeds (§16), when the trigger itself is the discovery signal
+3. A lookalike only on `/tam-build`'s exception route, through the tool `layers.company_discovery.lookalike` names
+4. OUT OF STACK, needs operator approval: DiscoLike, GetLatka for SaaS only, Serper plus Spider Cloud, Scrap.io for local businesses
 
 ## Common Person And Contact Data Options
 
@@ -2358,10 +2365,10 @@ Use only after the source-of-truth signal is chosen. These are contact layers, n
 
 The ranking is by position in the waterfall, not by vendor preference:
 
-1. The `contact_discovery` primary (e.g. A-Leads `advanced_search` / `bulk_domains`): the first call, exhausted across the whole survivor set
-2. The gap-filler for the still-blank cells (e.g. GetLeads, §16), sized free with an exact count where available
-3. A waterfall `contact_enrichment` provider for the residue (e.g. BetterContact: all-in-one email/phone finder plus verification across 20+ providers, pay-per-valid; `/email-waterfall`)
-4. A cheap bulk extractor for raw contact rows from its supported sources only (e.g. LeadsFriday: extraction-only, unverified output, enrich and verify downstream, and weigh scraping-TOS risk)
+1. The first rung in `layers.people_discovery` (`provider-routing.yaml`): the first call, exhausted across the whole survivor set
+2. The next rung for the still-blank cells (e.g. GetLeads, §16), sized with an exact count where available
+3. OUT OF STACK, needs operator approval: a waterfall `contact_enrichment` provider for the residue (e.g. BetterContact: all-in-one email/phone finder plus verification across 20+ providers, pay-per-valid; `/email-waterfall`)
+4. OUT OF STACK, needs operator approval: a cheap bulk extractor for raw contact rows from its supported sources only (e.g. LeadsFriday: extraction-only, unverified output, enrich and verify downstream, and weigh scraping-TOS risk)
 
 ## Best Local Lead Source
 
@@ -2399,16 +2406,16 @@ Build separate lists by source and signal:
 Each list type below names the slot that builds it. Tools in parentheses are illustrative only, none chosen for FNNL.
 
 - Static fit list:
-  - `company_discovery` plus `contact_discovery` (e.g. DiscoLike, A-Leads, GetLeads §16). A SaaS-revenue database only helps when the target really is SaaS.
+  - `company_discovery` plus `contact_discovery`: the filter build in the `provider-routing.yaml` order by default (GetLeads §16 is one rung), a lookalike only on `/tam-build`'s exception route. A SaaS-revenue database is OUT OF STACK, needs operator approval.
 
 - Timing list:
   - `intent_signals` for funding and acquisition feeds (e.g. GetLeads §16), a tenure field on `contact_discovery` for new-in-seat (`job_duration_months`-style), and `search` for news triggers.
 
 - Local list:
-  - `company_discovery` in local mode (e.g. Scrap.io, Apify, a search API's Places endpoint).
+  - `company_discovery` in local mode (the company search tool's geo and keyword filters; Scrap.io, Apify and a search API's Places endpoint are OUT OF STACK, needs operator approval).
 
 - Website signal list:
-  - `crawl` plus `search` (e.g. Spider Cloud, DiscoLike, Serper).
+  - `crawl` plus `search` (in FNNL the harness's WebFetch and WebSearch; Spider Cloud, DiscoLike and Serper are OUT OF STACK, needs operator approval).
 
 - Final processing:
   - The workflow layer: the list workbench by default (rows pushed in by its inbound webhook, zero workbench credits), the session natively as fallback, or a spreadsheet-style workspace (e.g. RevCode).
