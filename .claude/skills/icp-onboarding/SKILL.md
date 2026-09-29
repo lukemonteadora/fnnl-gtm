@@ -40,7 +40,7 @@ Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto
 - Commercial admin fields (price, target, contract, pipeline sheet) are recorded `null` and never asked.
 - Unresolved blocklist names go through the sweep's resolution ladder.
 
-The one prompt then holds only the items that pass the ask test (a different answer changes targeting, offer, spend or launch, and the run cannot find or default it), plus an opt-out ruling when the geography includes Canada, the UK or Ireland. Everything else is written to `context-sweep.md` as non-blocking, and the run continues; the Steps 1 to 5 prompts below apply under `review_gates`. The answers land in `run_state.speed_to_lead_owner`, `run_state.booking_link` and `capability_boundary.legal_or_compliance_limits`.
+The one prompt then holds only the items that pass the ask test (a different answer changes targeting, offer, spend or launch, and the run cannot find or default it), and nothing about the opt-out (it is never asked: the FNNL house default applies to every client and geography, operator directive 2026-09-30, always house default). Everything else is written to `context-sweep.md` as non-blocking, and the run continues; the Steps 1 to 5 prompts below apply under `review_gates`. The answers land in `run_state.speed_to_lead_owner` and `run_state.booking_link`. Set `capability_boundary.legal_or_compliance_limits` to the house default when none is on file (no opt-out line in the body, the one-click List-Unsubscribe header carries it, opt-outs by reply), unless the client's own counsel has already put a stricter requirement on record, which is honored.
 
 ## Activity Log Protocol
 

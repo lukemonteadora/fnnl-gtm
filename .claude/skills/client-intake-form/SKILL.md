@@ -268,9 +268,9 @@ booking_link: [leave blank if not known]
 
 legal_or_compliance_limits: [leave blank if none]
 # Compliance limits on how the email is sent, separate from deliverable_constraints (which limits claims).
-# When the geography includes Canada, the UK or Ireland, record the per-client opt-out ruling here: the default stands
-#   (the one-click List-Unsubscribe header alone), a plain-text opt-out line in the body, or a visible unsubscribe link.
-#   This is a compliance flag, not legal advice.
+# Opt-out is never asked. Every client and geography gets the FNNL house default (no opt-out line in the body, the one-click
+#   List-Unsubscribe header, opt-outs by reply; operator directive 2026-09-30, always house default). Record here only a
+#   stricter requirement the client's own counsel has already put on record. This is a compliance flag, not legal advice.
 ```
 
 ## Step 3: Validate the Completed Form
@@ -291,7 +291,7 @@ When the user returns the completed form, run validation before writing any file
 - `credentials_ready = partial` or `no`: warn that setup phases will stall without credentials.
 - `execution_mode = auto_execute` with `review_protocol: none`: the user has opted out of the phase checkpoints too. Note in one line that the run will go straight to paused drafts, with Start still theirs. The default pair (`auto_execute` plus `phase_checkpoints`) needs no confirmation.
 - `speed_to_lead_owner` or `booking_link` blank: note in one line that checkpoint 1 asks for it under `phase_checkpoints`, so phase 4 (Gate D) never stops for it; under `review_gates`, Gate D asks. Never fill either from inference.
-- `geography` includes Canada, the UK or Ireland with `legal_or_compliance_limits` holding no opt-out ruling: note that checkpoint 1 asks for the ruling under `phase_checkpoints`, and that `/campaign-copywriting` holds copy until one is recorded.
+- `legal_or_compliance_limits` holds no opt-out entry (any geography, including Canada, the UK and Ireland): record the FNNL house default yourself, citing "operator directive 2026-09-30, always house default". Never ask for it and never hold a checkpoint or copy for it. A stricter requirement from the client's own counsel, when already on record, is kept.
 - `client_comms.slack.status = unavailable`: Slack was never read for this client. Say so at the top of the confirmation, not the bottom, and note that `/continue-client` retries the check on the next resume. `none_found` only holds for the workspace that was searched, so name it.
 - Any other `context_sweep` source at `blocked` (Slack DMs, email, Drive; a core source with no connector in the session counts as blocked): say so at the top of the confirmation with the account it tried and the one-line fix. `/continue-client` retries it. Research and lists never wait on it, but while a core source (Slack channels, Slack DMs, email, Drive) stays blocked and not `waived_by_operator`, the draft upload stops and asks (`client-context-sweep.md`). Only the operator waives a source.
 - `context_sweep.unresolved_blocklist_names` above zero: a blocklist name has no domain yet, so it cannot block its company before email spend. List the names at the top and resolve them before list work.
@@ -351,7 +351,7 @@ proof:
   hard_numbers: <value or null>
   naming_constraints: <value or null>
 capability_boundary:     # top-level, not inside run_state
-  legal_or_compliance_limits: <[] or the form's legal_or_compliance_limits>   # checkpoint 1 writes the Canada, UK or Ireland opt-out ruling here; /campaign-copywriting Step 1 item 0a reads it
+  legal_or_compliance_limits: <[] or the form's legal_or_compliance_limits>   # a stricter opt-out requirement already on record from the client's counsel, else the recorded house default (operator directive 2026-09-30); /campaign-copywriting Step 1 item 0a reads it
 client_comms:            # top-level, deliberately not inside run_state. Written by the client Slack check (client-slack-check.md)
   slack:
     status: <harvested | none_found | unavailable | operator_says_none | waived_by_operator>

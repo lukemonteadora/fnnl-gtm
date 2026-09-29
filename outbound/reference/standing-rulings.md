@@ -1,0 +1,39 @@
+# Standing rulings (house-wide)
+
+**What this is.** Every answer the operator has given that applies to every client, in one place. A skill reads this file first, before it asks anything (`phase-protocol.md` section 3, the ask policy, rule 1). If the answer is here, it is applied and never asked. Answers that apply to one client only live in `outbound/profiles/<slug>/rulings.md`, in the same shape.
+
+**Store every answer, never ask twice.** When the operator answers a question in chat or at a checkpoint, the answer is written down the same turn: a one-client answer goes to that client's `rulings.md`, an answer that holds for every client (said outright, or clearly meant) goes here as a new row. A question whose answer is already in either file is never asked again. Never add a ruling the operator did not give. A skill's own default is not a ruling.
+
+| Key | Ruling | Since | Source |
+|---|---|---|---|
+| `ask-policy` | Find the answer first (rulings, profile, handoffs, context sweep, Slack, targeted search); ask only up front, once, in one batch at checkpoints 1 and 2; decide small calls and list them under "Calls I made"; never ask the same thing twice. Mid-run stops only for a tool out of balance or down, spend over the budget, Aaron's call contradicting a client requirement, or a missing required key, plus the one named exception FNNL keeps, the kickoff Step 6 context-sweep draft-upload stop. Everything else becomes a hold on the touched item or a note | 2026-09-30 | operator, chat |
+| `unverified-emails` | Never ship `risky`, `unknown`, `invalid` or not-verified emails. Never ask about them. Only the email verifier's `valid`, and verified catch-alls under the timing rule below, go in a send file | 2026-09-30 | operator, chat |
+| `catch-all` | A verified catch-all (deliverable, `is_catch_all: true`) is held out of the send file until the campaign's sending domains have about 2 to 3 weeks of healthy sending (the Catch-All Timing rule in `/email-waterfall`). It is never a question during a phase. Adding held catch-alls to a campaign that is already sending is a live change, so `/cold-email-weekly-rhythm` Step 3b stages it in the weekly review | 2026-09-30 | operator, chat; applied through the 2026-06-26 Catch-All Timing rule |
+| `dnc` | Ask once, at checkpoint 1: "Does the client have a do-not-contact list?" "No" is stored in the client's `rulings.md` as `dnc: none` and never asked again. A list that is owed never stops the build: drafts are built paused and only Start waits for it | 2026-09-30 | operator, chat |
+| `client-answers` | The operator pastes the client's answers after sending `client-asks.md`. Answered items are filed; unanswered ones are marked `skipped` and never asked again (an offer's own yes-or-no stays open, holding only that offer's Start). Filing follows `client-messages.md` | 2026-09-30 | operator, chat |
+| `aaron-auto` | Aaron's offers, launch set and copy are used as he writes them, with no approval question, as long as they do not contradict the client's requirements, instructions or notes (the client-fit check in `aaron-lane.md`). A contradiction stops the run and is shown to the operator | 2026-09-30 | operator, chat |
+| `qa-loops` | A failed QA gets one fix round. A second failure names the targeting question behind it; a stored ruling answers it or only that campaign is held for the next checkpoint. Never a third round | 2026-09-30 | operator, chat |
+| `launch-settings` | Sender-side values (sender names, signature, sending accounts, how the campaign sends) carry over from the client's most recent campaign when its settings are on record (the profile, a handoff, or a campaign the operator named in a `launch-settings-source` ruling). Target-side values (timezone, send days, hours, holidays, daily limits, step waits) are derived from the new campaign's own leads and senders, with each departure listed under "Calls I made" ("be smart about it, don't just copy everything"). House defaults when the client has no past campaign. Never asked | 2026-09-30 | operator, chat |
+| `start-date` | Never asked. Drafts are built paused; the schedule starts the next weekday; the operator presses Start | 2026-09-30 | operator, chat |
+| `capacity` | The sending-capacity figure is computed and stated as a note. It never trims the wave and is never an approval question | 2026-09-30 | operator, chat; capacity never trimmed since 2026-09-24 |
+| `getleads-export` | The contact export from the list source (GetLeads) is confirmed once per client, at checkpoint 2, and that confirmation then covers every later wave for that client | 2026-09-30 | operator, chat |
+| `opt-out` | Every client and geography, including Canada, the UK and Ireland, gets the FNNL house default: no opt-out line in the email body, the one-click List-Unsubscribe header (`/cold-email-kickoff` Gate C) carries the opt-out, and opt-outs also work by reply. Never asked, never a checkpoint question, never a hold. A stricter requirement from the client's own counsel, when already on record in `capability_boundary.legal_or_compliance_limits`, is honored | 2026-09-30 | operator directive 2026-09-30, always house default |
+| `tool-balance` | A tool out of balance or down stops its step; the operator tops up and the same tool resumes. Never substitute another tool. The check and the stop are `/tool-balance-guard` | 2026-09-25 | operator directive |
+
+## Template for a client's `rulings.md`
+
+Create `outbound/profiles/<slug>/rulings.md` the first time a client-specific answer exists. Newest rows go at the top of the table.
+
+```markdown
+# Rulings: <Client>
+
+Answers the operator (or the client, via the operator) gave for this client. Skills read this before asking anything (phase-protocol.md section 3). House-wide rulings are in outbound/reference/standing-rulings.md.
+
+| Key | Ruling | Since | Source |
+|---|---|---|---|
+| `dnc` | none | 2026-09-30 | operator, checkpoint 1 |
+| `targeting:internal-ai-copilots` | Out: they build for their own staff, not for customers | 2026-09-29 | operator, chat |
+| `sweep:email` | Waived: the client's mailbox is not shared with us | 2026-09-30 | operator, checkpoint 1 |
+```
+
+Keys are lower-case with hyphens. Targeting answers use `targeting:<topic>` so a QA question can look them up by topic. Context-sweep answers use `sweep:<source>` (for example a waived source). `outbound/profiles/` is gitignored, so a client's `rulings.md` stays local.

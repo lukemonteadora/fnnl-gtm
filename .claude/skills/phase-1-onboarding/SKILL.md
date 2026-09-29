@@ -7,6 +7,8 @@ description: "Phase 1 of 4 for a cold-outbound client. Say \"Phase 1 for <client
 
 **Say "Phase 1 for <client>" in a fresh thread, and this runs the whole onboarding phase, then stops once.** It works for a brand-new client and for an existing profile that was never onboarded under the four phases. The protocol every phase follows (the tracker, the read set, the handoff shape, the checkpoint and the freeze) is `outbound/reference/phase-protocol.md`. Read it first; this file only lists what Phase 1 does.
 
+**The ask policy governs every step** (`phase-protocol.md` section 3, house answers in `outbound/reference/standing-rulings.md`). Find the answer first (the sweep, the profile, memory, the client's `rulings.md`). Ask only here, once, in one batch at Checkpoint 1. Small calls are decided and listed under "Calls I made". A step that cannot proceed holds only the touched item and becomes a note. The only mid-run stops are a tool out of balance or down, spend over the budget, a missing required key, and the kickoff Step 6 draft-upload stop (`/cold-email-kickoff`).
+
 Paths resolve under `outbound/` (project `CLAUDE.md` path rule). Client profiles are gitignored, so read them with Bash or Read, never Glob or Grep.
 
 ## Start
@@ -40,8 +42,14 @@ Paths resolve under `outbound/` (project `CLAUDE.md` path rule). Client profiles
 6. **Segments.** Group the ICP into distinct buyer segments: a different vertical, or a different title cluster with a different pain. Merge the closest segments when there are more than five, and drop none. The segments go on the checkpoint screen.
 7. **Proof facts.** Pull every real proof fact already on hand (named clients, results with numbers, case studies, testimonials) from the intake, the sweep, the website and call notes into the profile's `proof:` block, each with its source. The full proof bank is built in Phase 3.
 8. **Key preflight.** Run `/preflight-credentials` at its default kickoff scope (`node outbound/scripts/preflight-credentials.mjs --profile <slug>`). At this scope the infrastructure and sending-platform keys only warn, so they are reported in one line and never block. Exit 1 on a required key is a hard stop.
-9. **Client asks.** Draft or merge the client's one unsent message in `client-asks.md` for what only they can give (a do-not-contact export, call recordings, proof facts, capacity), per `outbound/reference/client-messages.md`. Claude never sends it.
-10. **Log it.** Each material step above appends its activity-log line and refreshes CURRENT STATE (`client-activity-log.md`); a paid step also logs `NOTE spend: ...`.
+9. **Find the up-front answers before asking them.** Look each one up in the sweep, the profile, `rulings.md` and `standing-rulings.md`; ask only what none of them holds, and only at the checkpoint:
+   - the do-not-contact list (`dnc` ruling: No / Yes / Not sure). It is asked once and never holds the build; the sweep already loads any blocklist it found;
+   - the speed-to-lead owner and the booking link (`/cold-email-kickoff` "Resolve it yourself first");
+   - a core sweep source that could not be read is stored as `sweep:<source>` in `rulings.md` and retried at the next phase.
+
+   The opt-out is never one of these. It is always the FNNL house default (no opt-out line in the body, the one-click List-Unsubscribe header carries it, opt-outs by reply). When `capability_boundary.legal_or_compliance_limits` has no entry, record the house default there yourself, citing "operator directive 2026-09-30, always house default". A stricter requirement from the client's own counsel that is already on record is honored.
+10. **Client asks.** Draft or merge the client's one unsent message in `client-asks.md` for what only they can give (a do-not-contact export if the `dnc` question is not already answered, call recordings, proof facts, capacity), per `outbound/reference/client-messages.md`. Claude never sends it.
+11. **Log it.** Each material step above appends its activity-log line and refreshes CURRENT STATE (`client-activity-log.md`); a paid step also logs `NOTE spend: ...`.
 
 ## Handoff: `phases/phase-1-onboarding.md`
 
@@ -57,15 +65,15 @@ Paths resolve under `outbound/` (project `CLAUDE.md` path rule). Client profiles
 
 Write the handoff, then run `python outbound/scripts/phase_state.py checkpoint <slug> 1 --handoff phases/phase-1-onboarding.md`.
 
-The summary is the client on one screen: who they sell to, the segments, what the sweep found, the website snapshot, the proof found, anything blocked, and for a returning client a folder cleanup line (kept, updated, archived counts, plus any conflicts or UNVERIFIABLE files). Then one native prompt (at most four questions, recommended answer first):
+The summary is the client on one screen: who they sell to, the segments, what the sweep found, the website snapshot, the proof found, anything blocked, and for a returning client a folder cleanup line (kept, updated, archived counts, plus any conflicts or UNVERIFIABLE files). Then one native prompt (at most three questions, recommended answer first):
 1. The ICP and segments: confirm, or correct.
 2. The speed-to-lead owner and the booking link (one question, both read by Gate D in Phase 4), only when the run could not resolve them. The owner defaults to FNNL Agency and the link comes from the sweep (`/cold-email-kickoff` "Resolve it yourself first").
-3. An opt-out ruling, only when the geography includes Canada, the UK or Ireland. The house default (plain text, opt-outs by reply) is the first option. Not legal advice.
-4. Anything only the operator can answer: a website no route could read, a `no_website` to confirm, a sweep gap, a folder-refresh conflict or a frozen phase to reopen.
+3. The do-not-contact list (No / Yes / Not sure), only when neither the sweep, the profile nor `rulings.md` has it. The build never waits for it; a list still owed is only carried to Phase 4, where it holds Start and nothing else.
+4. Anything else only the operator can answer, grouped into this one prompt: a website no route could read, a `no_website` to confirm, a sweep gap, a folder-refresh conflict or a frozen phase to reopen.
 
-Record the answers where later phases read them:
+There is no opt-out question. Record the answers where later phases read them, and write each to the client's `rulings.md` the same turn so it is never asked twice:
 - the ICP and segments go to the `icp` block;
 - the owner goes to `run_state.speed_to_lead_owner`, the link to `run_state.booking_link`;
-- the opt-out ruling goes to `capability_boundary.legal_or_compliance_limits`.
+- the do-not-contact answer goes to `rulings.md` (`dnc`).
 
 Then run `python outbound/scripts/phase_state.py approve <slug> 1 --answer "..."` and close with: "Phase 1 is done. Open a new thread and say: Phase 2 for <client>."
