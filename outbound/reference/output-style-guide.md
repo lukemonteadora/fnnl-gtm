@@ -78,7 +78,7 @@ These show the writing problem, not the workflow. The tool names inside them are
 
 **An asking-for-a-decision moment.**
 
-> Before: "Offer archetype undecided. Primary candidate: benchmark report (requires client metrics). Secondary: free audit. Avoid: discount. Confirm primary to proceed to copy."
+> Before: "Offer not yet recorded. Primary candidate: benchmark report (requires client metrics). Secondary: free audit. Avoid: discount. Confirm primary to proceed to copy."
 >
 > After: "We're ready to lock the offer (the free thing we lead with in the first email). My recommendation is a benchmark report that shows them how they compare to similar companies, because it's the kind of thing your buyers actually want and it's hard for competitors to copy. The one catch is that it needs a few real numbers from you to build. A simpler fallback is a free audit, which needs nothing from you but is a more common offer. Want to go with the benchmark report, or play it safe with the audit?"
 

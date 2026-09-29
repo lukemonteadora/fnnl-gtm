@@ -14,7 +14,7 @@
 ## Where the worked examples live now
 
 - **Aaron's verbatim exemplars**, curated and tagged with their provenance, are in `outreach-copy-framework.md` (the section "Aaron's exemplars (verbatim, curated)"): the opening-line swap, the time-collapse offer, his AI bake-off winner with the loser it beat and his clause-by-clause teardown, the one-liner, the direct-to-offer forms, subject lines, CTAs, risk-reversal lines, and the P.S. proof template.
-- **The full bank and his rejection bank** are in `/ask-aaron` (`aaron-examples.md`; section 8 is the rejection bank, and every draft is checked against it).
+- **The full bank and his rejection bank** are in `aaron-examples.md` (frozen copy-QA reference; section 8 is the rejection bank, and every draft is checked against it).
 - **The portability rule applies to all of them** (B12): Aaron's examples show shape, not sentences. Never paste his lines into client copy.
 
 This file is kept, not deleted, so any older note that points to it by path still resolves.

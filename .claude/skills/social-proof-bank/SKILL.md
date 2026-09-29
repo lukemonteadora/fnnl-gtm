@@ -185,7 +185,7 @@ A trigger's default job is list relevance: it picks the slice, and the offer car
 Every `one_liner` and `poke_the_bear` is sendable copy, so it passes the same guardrails before it is written to the bank:
 
 - Pass `spam-word-checker.md` (formatting, CTA, opener and voice bans, including Aaron's named kill-list; no em dashes, no colon-as-runway, no comma-wrapped company descriptors). It no longer carries a keyword blocklist.
-- Pass `cold-email-copy-best-practices.md`, and check every line against Aaron's rejection bank (`aaron-examples.md` §8, in `/ask-aaron`). The `one_liner` meets the PS proof rules and the `poke_the_bear` line meets the test-arm rules in The two copy-ready lines: a statement, capped, validated, matched to the offer's pain, never a warmup, never an observational "I noticed / I saw that / congrats on" (operator-approved Aaron alignment, 2026-09-21).
+- Pass `cold-email-copy-best-practices.md`, and check every line against Aaron's rejection bank (`aaron-examples.md` §8). The `one_liner` meets the PS proof rules and the `poke_the_bear` line meets the test-arm rules in The two copy-ready lines: a statement, capped, validated, matched to the offer's pain, never a warmup, never an observational "I noticed / I saw that / congrats on" (operator-approved Aaron alignment, 2026-09-21).
 - **Capability truth + Proof-Asset truth:** a one-liner may only state a real, on-file result the client can defend, and only name a client we are allowed to name (`proof.naming_constraints`). No invented metric, no unnamed stand-in dressed as a name, no cross-industry metric claimed as directly applicable.
 - **Anti-surveillance:** the sold-to and department triggers carry the same caveat as the Signal Angle Library - never recite the prospect's customer list, logos, or a raw headcount back at them; state what the signal MEANS, not that we saw it.
 
@@ -255,7 +255,7 @@ Keep the "add rows as you discover new signals" spirit of the example: the trigg
 - `/offer-intelligence` - the ICP-pain and proof research the bank draws case-study and trigger rows from
 - `/campaign-strategy` - reads the bank; its Signal-Driven Slice Library is fed by the data-backed triggers
 - `/campaign-copywriting` - reads the bank; its Proof-Asset Gate and Signal Angle Library consume the proof rows (PS-ready one-liners) and, for labeled test arms only, the `poke_the_bear` lines
-- `/ask-aaron` - the doctrine behind the two copy-ready lines (`aaron-doctrine.md` §9, `aaron-examples.md` §6 and the §8 rejection bank); advisory only
+- `/ask-aaron` (reads Aaron's live Notion notes; the citations here point at the frozen snapshot `aaron-doctrine.md` and `aaron-examples.md`) - the doctrine behind the two copy-ready lines (`aaron-doctrine.md` §9, `aaron-examples.md` §6 and the §8 rejection bank); advisory only
 - `/phase-3-list` - invokes this skill at step 1, as a sub-agent in parallel with `/data-point-discovery`, alongside `/tam-build` (the seed portion first only for a lookalike-route group), before `/campaign-strategy`; `/cold-email-kickoff` reaches it through that phase
 - `/continue-client`, `/cold-email-flow-audit` - resume / certify this gate as part of the chain
 - `/ai-model-routing` - the no-AI-API rule: copy synthesis runs in Claude Code (the session or its sub-agents), never on an outside AI API (operator directive 2026-09-22)

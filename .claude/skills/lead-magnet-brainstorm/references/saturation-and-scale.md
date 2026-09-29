@@ -1,22 +1,13 @@
-**Saturation, per-account custom work and Deliverable at Send Scale (who honors a qualified yes, the scale note, `offer.qualification`), moved verbatim from SKILL.md on 2026-09-28. Read it when an offer is client-honored, carries a qualification rule or a scale note that does not fit, or is per-account custom work, and whenever the house flow runs.**
-
-## Saturation Rule
-
-If `offer-intelligence.md` exists:
-
-- Prioritize archetypes marked OPEN.
-- A CROWDED candidate needs a clearly different delivery or a named gap competitors leave.
-- A SATURATED candidate ranks lower (its differentiation score already carries the penalty) and must name the gap competitors leave, with its evidence. Saturation never removes a candidate, never keeps one with a named gap out of the first wave when its score earns a place, and never overrides a higher-scoring candidate. Heavy competitor ad spend behind the archetype is evidence of demand (Aaron, Sep 21). (Aaron process alignment, operator directive 2026-09-22; supersedes "rank SATURATED archetypes last and keep them out of the first test flight unless the operator picks one".)
-- Use contrarian opportunities when they connect to real ICP pain. Delivery capacity is not a filter at ideation (operator directive 2026-09-22); it is checked at lock (Deliverable at Send Scale).
+**Per-account custom work and Deliverable at Send Scale (who honors a qualified yes, the scale note, `offer.qualification`). Mechanics and rails only: none of this decides which offers to test, Aaron's call does (operator directive 2026-09-29). The old Saturation Rule (ranking offers by archetype saturation) was retired and archived at `outbound/_archive/offer-decoupling-2026-09-30/`; saturation counts now go to the Aaron offer call as evidence only, via `/offer-intelligence`. Read this file when an offer is client-honored, carries a qualification rule or a scale note that does not fit, or is per-account custom work.**
 
 ## Per-account custom work is open for testing (the Premium-tier deferral is retired, operator directive 2026-09-22)
 
-Bespoke per-prospect offers are generated and ranked like any other candidate: a made-for-them teardown, mockup, sample, personalized landing page, deep intelligence report, or the report-as-lead-magnet play (tease a light version, build the full asset on a hand-raise). They are often the most compelling offers a buyer can get, and they are Aaron's signature move: do a piece of the actual work and send it (doctrine §1, §3).
+Bespoke per-prospect offers are open for Aaron to propose and test like any other offer: a made-for-them teardown, mockup, sample, personalized landing page, deep intelligence report, or the report-as-lead-magnet play (tease a light version, build the full asset on a hand-raise). They are often the most compelling offers a buyer can get, and they are Aaron's signature move: do a piece of the actual work and send it (doctrine §1, §3).
 
 - **The agency produces them for qualified yeses**, with Claude Code doing most of the build. The first wave sends at full volume, not as a small test, so a per-account offer carries an `offer.qualification` rule unless its scale note shows the agency can build one for every yes at the planned volume (Deliverable at Send Scale; Aaron process alignment, operator directive 2026-09-22; supersedes "at test scale the agency produces them for the handful to few dozen yeses a test brings").
 - **Their cost at the planned send volume goes into `lead_magnet_scale_needs`** at lock and is shown to the client in the slate; `/offer-test-slate` scale review later reviews the qualification cap against real reply numbers.
 - **A model-generated per-company artifact still passes the Artifact-Truth Gate below before the first one ships.** The cost of building fell; the cost of being wrong about a prospect's business did not.
-- **The read is on meetings, not replies.** A strong custom artifact inflates positive replies on its own merits, so it runs as its own arm and is judged on time-agreed replies per 1,000 first touches (`/campaign-strategy`'s magnet-inflation guard), the same way as an archetype K tool (K1).
+- **The read is on meetings, not replies.** A strong custom artifact inflates positive replies on its own merits, so it runs as its own arm and is judged on time-agreed replies per 1,000 first touches (`/campaign-strategy`'s magnet-inflation guard), the same way as any interactive tool the prospect uses.
 
 The old deferral ("a future, operator-decided premium product", "do not propose custom landing pages or per-account asset builds as a default lead magnet unless the operator has explicitly opened the premium tier") and its open question about AI cost are archived verbatim at `outbound/_archive/offer-limits-removal-2026-09-22/`.
 

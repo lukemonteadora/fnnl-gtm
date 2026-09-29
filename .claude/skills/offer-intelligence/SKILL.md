@@ -1,9 +1,9 @@
 ---
 name: offer-intelligence
-description: "Offer research in two modes. Discovery runs after /icp-onboarding and before /lead-magnet-brainstorm: buyer pain, competitors, ads and job posts go into the evidence ledger to feed offer ideas. Validation checks an underperforming live offer against the evidence and replies (Go, Iterate or Swap)."
+description: "Offer evidence in two modes. Discovery runs after /icp-onboarding and before the Aaron offer call: buyer pain, competitors and ads go into the evidence ledger and the brief. Validation reads a live offer's results (Go, Iterate or Swap). It never proposes, ranks or drops an offer; Aaron's call does."
 ---
 
-**From the former description:** Discovery runs first on the offer path and needs no list-side or data-side work beforehand; obtainability and the list are worked out later, after the offer locks. It opens by reading the research that already exists (it never redoes research), grounds the work in a 10 to 25 company research sample built from public pages, and follows Aaron Shepherd's three-input research method, leading with buyer pain: the client's own won and lost sales-call recordings, five-layer persona desire research, real public complaints (Reddit, review sites, forums, with an honest record of which platforms were actually read), competitor cards and offer saturation across 5 to 10 competitors, paid-ad angles from the Meta Ad Library and LinkedIn read in the built-in browser pane, and job postings, with every pain row mapped to the persona who feels it. Every piece of evidence becomes a tiered, sourced row in the client's evidence ledger (`market-evidence-standard.md`). `/market-evidence synthesize` then counts, clusters, scores and gates it (Research QA: PASS, DEEPEN with at most two targeted loops, or HOLD) before the Intersection step hands `/lead-magnet-brainstorm` a named Candidate Generation Input block (persona, pain and open archetype rows citing cluster IDs) that candidate generation consumes directly instead of re-deriving pain. Validation mode weighs the replies the live offer earned.
+**From the former description:** Discovery runs first on the offer path and needs no list-side or data-side work beforehand; obtainability and the list are worked out later, after the offer locks. It opens by reading the research that already exists (it never redoes research), grounds the work in a 10 to 25 company research sample built from public pages, and follows Aaron Shepherd's three-input research method, leading with buyer pain: the client's own won and lost sales-call recordings, five-layer persona desire research, real public complaints (Reddit, review sites, forums, with an honest record of which platforms were actually read), competitor cards and offer saturation across 5 to 10 competitors, paid-ad angles from the Meta Ad Library and LinkedIn read in the built-in browser pane, and job postings, with every pain row mapped to the persona who feels it. Every piece of evidence becomes a tiered, sourced row in the client's evidence ledger (`market-evidence-standard.md`). `/market-evidence synthesize` then counts, clusters, scores and gates it (Research QA: PASS, DEEPEN with at most two targeted loops, or HOLD) before the Intersection step writes a named Candidate Generation Input block (persona, pain and competitor-form evidence rows citing cluster IDs) that the Aaron offer call reads instead of re-deriving pain. Validation mode weighs the replies the live offer earned. It never proposes, ranks or drops an offer.
 
 # Offer Intelligence
 ## Canonical Profile Root
@@ -16,23 +16,23 @@ All profiles/<business-slug> paths in this skill resolve under:
 
 Here `<outbound>` is the root of this skill library - resolve it to wherever the library is currently checked out (local Documents, OneDrive, or a git worktree); never hardcode an absolute path. Do not create client profiles under a `profiles/` folder at your current working directory.
 
-Cold email operators default to two failure modes: (1) copying whatever offer their competitors use, or (2) brainstorming in a vacuum with no market signal. This skill escapes both.
+Cold email operators default to two failure modes: (1) copying whatever offer their competitors use, or (2) brainstorming in a vacuum with no market signal. This skill escapes both by collecting the evidence. It does not create offers: offer creation is decided only by a fresh `/ask-aaron` sub-agent reading Aaron's live Notion content bank (`aaron-lane.md`, Call 1), and this skill's brief is one of that call's inputs.
 
-**In discovery mode**, it runs first on the offer path, immediately after `/icp-onboarding` and before the offer exists. It researches buyer pain and the market so that `/lead-magnet-brainstorm` invents from evidence, not from gut feel. The order of the whole chain is: buyer and pain, then the offer, then the list built to fit that offer, then the copy. Nothing in this mode waits on any list or data work.
+**In discovery mode**, it runs first on the offer path, immediately after `/icp-onboarding` and before the offer exists. It researches buyer pain and the market so that the Aaron offer call (recorded by `/lead-magnet-brainstorm` in recorder mode) decides from evidence, not from gut feel. The order of the whole chain is: buyer and pain, then the offer, then the list built to fit that offer, then the copy. Nothing in this mode waits on any list or data work.
 
-**Discovery mode is the research phase, and it does two jobs in order (Aaron process alignment, operator directive 2026-09-22).** First it **extends and clarifies what onboarding captured**: read what `/icp-onboarding` recorded, name what is thin, vague or missing (the buying function, the pain hypothesis, the competitors, the call library), and close those gaps from the client's site, the client, or the research itself. The intake ICP is a starting point, not a ceiling; the offer may later widen or narrow it. Then it **researches the vertical, the market and the ICP for real problems in the buyers' own words**: the client's won and lost sales calls first; then public opinion from the vertical on review sites, forums and public posts (Aaron, Sep 21: "mine demand, see what people are talking about ... the objections that people have"), with Reddit read only from an operator paste and X or LinkedIn posts only where WebSearch returns them, each gap logged (Vector 3); then competitor offers and what competitors fund in paid ads (the Meta Ad Library and LinkedIn ads, read in the harness's built-in browser pane, with WebSearch only to find an advertiser's page). **Heavy competitor ad spend behind an offer is evidence of demand** (Aaron, Sep 21), never a reason to close an offer type. In an unfamiliar market, Claude sub-agents do the research (Aaron, Sep 21, reaches for Claude when the space is unfamiliar; here that is the `/deep-research` fan-out plus WebSearch, WebFetch and the built-in browser pane in AI/API Routing, never another research provider). The output is a set of real, named problems with sources, which feeds the offer. **Every piece of evidence is written as a row in the client's evidence ledger** (`_research/evidence.csv`, per `market-evidence-standard.md`), raw captures stay in the run folder, and the research does not hand off to offers until `/market-evidence synthesize` has counted, clustered, scored and checked it (the Research QA gate). The brief this skill writes is the synthesis on top of that ledger, never the only place the evidence lives.
+**Discovery mode is the research phase, and it does two jobs in order (operator directive 2026-09-22).** First it **extends and clarifies what onboarding captured**: read what `/icp-onboarding` recorded, name what is thin, vague or missing (the buying function, the pain hypothesis, the competitors, the call library), and close those gaps from the client's site, the client, or the research itself. The intake ICP is a starting point, not a ceiling; the offer may later widen or narrow it. Then it **researches the vertical, the market and the ICP for real problems in the buyers' own words**: the client's won and lost sales calls first; then public opinion from the vertical on review sites, forums and public posts (mine demand: what people are talking about and the objections they raise), with Reddit read only from an operator paste and X or LinkedIn posts only where WebSearch returns them, each gap logged (Vector 3); then competitor offers and what competitors fund in paid ads (the Meta Ad Library and LinkedIn ads, read in the harness's built-in browser pane, with WebSearch only to find an advertiser's page). **Heavy competitor ad spend behind an offer is evidence of demand** (a house evidence rule), never a reason to close an offer form. In an unfamiliar market, Claude sub-agents do the research (the `/deep-research` fan-out plus WebSearch, WebFetch and the built-in browser pane in AI/API Routing, never another research provider). The output is a set of real, named problems with sources, which is the evidence the Aaron offer call reads. **Every piece of evidence is written as a row in the client's evidence ledger** (`_research/evidence.csv`, per `market-evidence-standard.md`), raw captures stay in the run folder, and the research does not hand off to offers until `/market-evidence synthesize` has counted, clustered, scored and checked it (the Research QA gate). The brief this skill writes is the synthesis on top of that ledger, never the only place the evidence lives.
 
 **In validation mode**, it runs after an offer is live - evaluating whether the offer is strong, weak, or invisible due to saturation, and deciding whether to keep it or swap it.
 
 ## The saturation problem
 
-Market evidence cuts both ways. If competitors are leading with "free audit" and have been for 18 months, that is not evidence that "free audit" works today. The ICP may have seen it 400 times and auto-delete it, and following the market into a saturated offer makes you the fifth cold email this week saying the same thing. It is also evidence that buyers care about the problem: heavy competitor ad spend behind an offer shows demand (Aaron, Sep 21: when competitors put "a massive amount of spend behind something ... we know that that offer is something that people actually care about").
+Market evidence cuts both ways. If competitors are leading with "free audit" and have been for 18 months, that is not evidence that "free audit" works today. The ICP may have seen it 400 times and auto-delete it, and following the market into a saturated offer makes you the fifth cold email this week saying the same thing. It is also evidence that buyers care about the problem: heavy competitor ad spend behind an offer shows demand (a house evidence rule: real money behind something means people care about it).
 
-So saturation **lowers an offer's rank and requires naming the gap competitors leave**; it never closes an archetype and never overrides a higher-scoring alternative (Aaron process alignment, operator directive 2026-09-22; supersedes "the right response to a saturated market is a contrarian offer" as the only answer). Two answers compete on the same rubric: the same archetype aimed at the gap the competitors leave, and a contrarian offer (the archetype the ICP has never been pitched in this context), whose pattern interruption has conversion value that no rubric score can capture.
+So saturation is **evidence, reported by offer form with the gap competitors leave**. It never ranks, limits or closes an offer, and never overrides a higher-scoring alternative. The saturation count is handed to the Aaron offer call as an input: Aaron decides what is tested (`aaron-lane.md`). This skill describes each competitor's offer form in plain words (what the competitor hands the buyer) and counts how many competitors use the same form, with the denominator beside it.
 
 ## Offer Architecture gate (shared with copy)
 
-Both modes here feed the three-question Offer Architecture gate that `/campaign-copywriting` runs before Email 1: (1) SQL vs MQL framing, (2) the easy-to-say-yes-to test, (3) a named risk reversal. Evaluate the offer against these as you research. In discovery mode, prefer directions that can name a clean risk reversal and pass the easy-yes test. In validation mode, a Go decision requires all three to hold; a missing risk reversal or a failed easy-yes test is an Iterate or Swap signal, not just a copy problem. Full gate: `/campaign-copywriting` Offer Architecture. In Aaron's method the risk reversal is the free front end itself plus casual risk elimination, never a money-back guarantee or a performance guarantee on the core service (doctrine §3, §6; examples §5), and in validation mode a Go also needs the Step 1 diagnostic order to come back clean (doctrine §2).
+Both modes here feed the three-question Offer Architecture gate that `/campaign-copywriting` runs before Email 1: (1) SQL vs MQL framing, (2) the easy-to-say-yes-to test, (3) a named risk reversal. Evaluate an existing offer against these as you research. In discovery mode, note in the evidence which buyer concerns bear on the risk reversal and the easy-yes test, as facts for the Aaron offer call; this skill does not steer which offers get built. In validation mode, a Go decision requires all three to hold; a missing risk reversal or a failed easy-yes test is an Iterate or Swap signal, not just a copy problem. Full gate: `/campaign-copywriting` Offer Architecture. What counts as a valid risk reversal for an offer is Aaron's call (Aaron's live notes, via `/ask-aaron`), not a house rule set here. In validation mode a Go also needs the Step 1 diagnostic order to come back clean.
 
 ## Material Decision Rule
 
@@ -40,7 +40,7 @@ When this skill reaches a material fork, name the realistic options, recommend t
 
 Ask before choices that affect spend beyond an approved budget, provider routing, source of truth, list quality, campaign direction, client-facing output, live systems, scraping or account risk, or legal/compliance risk. For low-risk reversible choices, state the recommendation and proceed.
 
-**Research findings and offer directions are never filtered out of view (operator directive 2026-09-22).** Report every direction the evidence supports, with its evidence strength, so `/lead-magnet-brainstorm` can generate from all of them. A weak or saturated direction is labelled and ranked, not dropped. The only thing never proposed is a direction that would be illegal or deceptive to send.
+**Research findings and offer directions are never filtered out of view (operator directive 2026-09-22).** Report every pain and market finding the evidence supports, with its evidence strength, so the Aaron offer call (recorded by `/lead-magnet-brainstorm` in recorder mode) sees all of it. A weak or saturated finding is labelled, not dropped. This skill never proposes, ranks or drops an offer; the only thing it never passes on is a finding that would be illegal or deceptive to send.
 
 When asking the user, use the Claude Desktop native Interactive Inputs / Choice Prompts pattern from /clarification-first: recommended option first, short choices, and Custom answer last when a custom answer is plausible.
 
@@ -58,7 +58,7 @@ Before doing client work, **read** `profiles/<client>/activity-log.md` (its CURR
 
 ### When to trigger
 
-- Invoked by `/cold-email-kickoff` immediately after `/icp-onboarding`, before `/lead-magnet-brainstorm`
+- Invoked by `/cold-email-kickoff` immediately after `/icp-onboarding`, before the Aaron offer call
 - When starting fresh with no existing offer
 - When the user wants to understand the market before deciding what to offer
 
@@ -66,9 +66,9 @@ This mode runs from the client profile, the client website, the client's own sal
 
 ### What this mode does
 
-Runs Step 0 (research scope: reuse what exists) and the research sample, then the First-Party Call Vector and Vectors 0-4 with every item written to the evidence ledger, then `/market-evidence synthesize` and its Research QA gate, then the Intersection step. No send data exists yet because no campaign exists. Builds a market signal brief covering buyer pain in the buyer's own words (first-party from the client's won and lost calls, then public), each pain mapped to the persona who feels it, a saturation map of which offer archetypes are overused in this space, and the open or contrarian archetypes that `/lead-magnet-brainstorm` should build toward.
+Runs Step 0 (research scope: reuse what exists) and the research sample, then the First-Party Call Vector and Vectors 0-4 with every item written to the evidence ledger, then `/market-evidence synthesize` and its Research QA gate, then the Intersection step. No send data exists yet because no campaign exists. Builds a market signal brief covering buyer pain in the buyer's own words (first-party from the client's won and lost calls, then public), each pain mapped to the persona who feels it, and a saturation map of which offer forms competitors already use in this space (evidence only, described in plain words, with denominators and the gap competitors leave).
 
-Does **not** evaluate an offer or output a Go/Iterate/Swap decision. There is nothing to evaluate yet. The output is research that feeds invention.
+Does **not** evaluate an offer, output a Go/Iterate/Swap decision, or propose which offers to build. There is nothing to evaluate yet. The output is research that the Aaron offer call reads.
 
 ### AI/API Routing
 
@@ -91,7 +91,7 @@ This mode has no list-side or data-side prerequisite of any kind. Proceed from t
 
 ### Steps
 
-**How this maps to Aaron's research method (operator directive 2026-09-22).** Aaron researches an offer from three inputs and then intersects them (2026-06-22 and 2026-04-06 videos, doctrine §5): (1) deep research on what the buyer persona deals with every day, at a business level and a personal level; (2) 5 to 10 competitors' Meta ads, to see which angles already have money behind them; (3) the client's won and lost sales calls, for the buyer's exact words. Here, (1) is Vector 0 plus the complaint mining in Vector 3, (2) is Vectors 1 and 2, (3) is the First-Party Call Vector, and the Intersection step after Vector 4 is his "find the commonality, validate it, reword it" move. Vector 3 goes one step past Aaron: his step one is model-led research, and a model-generated pain is a hypothesis, not a fact (doctrine §5, step 1), so Vector 3 checks those hypotheses against what real buyers complain about in public.
+**How the research is organized (operator directive 2026-09-22).** The research runs from three inputs and then intersects them: (1) deep research on what the buyer persona deals with every day, at a business level and a personal level; (2) 5 to 10 competitors' Meta ads, to see which angles already have money behind them; (3) the client's won and lost sales calls, for the buyer's exact words. Here, (1) is Vector 0 plus the complaint mining in Vector 3, (2) is Vectors 1 and 2, (3) is the First-Party Call Vector, and the Intersection step after Vector 4 finds the commonality, validates it and rewords it. A model-generated pain is a hypothesis, not a fact, so Vector 3 checks Vector 0's hypotheses against what real buyers complain about in public. What offers to create from this evidence is not decided here; it is the Aaron offer call's job.
 
 **Step 0 - Research scope: reuse what exists, never redo it**
 
@@ -140,7 +140,7 @@ Extract, per pain or objection:
 4. `source_class: first_party_call`
 5. What this implies the offer has to answer
 
-Then **reword the offer direction into that language**. If the client's buyers say "coverage gaps" and the client's own website says "risk exposure optimization", the offer says "coverage gaps". Take the website's side of that contrast from `website-profile.md` section 9 (the site's own phrases for the problem and the outcome), so the gap between how the client talks and how buyers talk is written down, not remembered. This rewrite is the point of the vector, not a nice-to-have: carry it into the brief as an explicit offer-language line that `/lead-magnet-brainstorm` and `/campaign-copywriting` inherit.
+Then **reword the offer direction into that language**. If the client's buyers say "coverage gaps" and the client's own website says "risk exposure optimization", the offer says "coverage gaps". Take the website's side of that contrast from `website-profile.md` section 9 (the site's own phrases for the problem and the outcome), so the gap between how the client talks and how buyers talk is written down, not remembered. This rewrite is the point of the vector, not a nice-to-have: carry it into the brief as an explicit offer-language line that the Aaron offer call and `/campaign-copywriting` inherit.
 
 **Hard rules for this vector:**
 - **Never fabricate a quote.** If you did not read it in a real recording or transcript, it does not go in the brief.
@@ -152,19 +152,19 @@ This vector reads client-supplied material, so it carries no external research s
 
 ---
 
-**Vector 0 - Persona desire research (Aaron's five layers)**
+**Vector 0 - Persona desire research (five layers)**
 
-Aaron's step one is deep research on what the buyer persona deals with day to day, at a business level and a personal level, because the pain that makes a stranger reply sits where the two meet (2026-06-22, 2026-04-06). Run it inside the `/deep-research` primary pass, once per persona in `icp_soft_preferences.personas_to_prioritize` (or once per persona the evidence derives, when that list is empty), using the four inputs he feeds it: persona and job title, industry, geography, and the client's service.
+The first research step is deep research on what the buyer persona deals with day to day, at a business level and a personal level, because the pain that makes a stranger reply sits where the two meet. Run it inside the `/deep-research` primary pass, once per persona in `icp_soft_preferences.personas_to_prioritize` (or once per persona the evidence derives, when that list is empty), using four inputs: persona and job title, industry, geography, and the client's service.
 
 Cover five layers per persona:
 
 1. **Business pain points:** the operational and revenue problems the role owns.
-2. **Emotional and personal drivers:** what the person fears, wants, or is judged on. His worked example: the driver was not "I need help with staffing", it was "I need someone who won't waste my time and will actually deliver."
+2. **Emotional and personal drivers:** what the person fears, wants, or is judged on. An illustration: the driver was not "I need help with staffing", it was "I need someone who won't waste my time and will actually deliver."
 3. **Trigger events:** the moments that make this persona reachable (a funding round, a lost key hire, a regulation change, a new target). Record them here; `/data-point-discovery` later decides which ones the list can actually detect.
 4. **Worldview and language:** what they believe about the problem, the words they use for it, and the phrasing that gets a cold email filtered out.
 5. **Competitive landscape:** what they have already been pitched, bought, or tried.
 
-**Everything Vector 0 produces is a hypothesis.** Tag each row `source_class: model_hypothesis`. A model's account of a persona's pain is a guess until a real buyer says it, so a hypothesis never counts toward `frequency_count`, never enters the ICP Pain section as pain, and never enters copy as a fact about a named person (doctrine §5, step 1). Its jobs are to tell Vector 3 which complaints to hunt for and which words to search with, and to give the Intersection step a map of the persona. A hypothesis that Vector 3 or the client's calls corroborate becomes evidence under that source's class. One they contradict is reported as overturned, the same way `buyer_pain_hypothesis` is.
+**Everything Vector 0 produces is a hypothesis.** Tag each row `source_class: model_hypothesis`. A model's account of a persona's pain is a guess until a real buyer says it, so a hypothesis never counts toward `frequency_count`, never enters the ICP Pain section as pain, and never enters copy as a fact about a named person. Its jobs are to tell Vector 3 which complaints to hunt for and which words to search with, and to give the Intersection step a map of the persona. A hypothesis that Vector 3 or the client's calls corroborate becomes evidence under that source's class. One they contradict is reported as overturned, the same way `buyer_pain_hypothesis` is.
 
 Discovery mode only. Validation mode reuses Vector 0 from an existing brief when one is on file and does not rerun it. With no brief on file, validation mode runs without Vector 0, so wherever validation mode says "Vectors 1-4" it means exactly that.
 
@@ -172,7 +172,7 @@ Discovery mode only. Validation mode reuses Vector 0 from an existing brief when
 
 **Vector 1 - Competitor front-end offers + saturation count**
 
-**Sample-size floor: research 5 to 10 competitors.** A saturation verdict is a claim about a field, and a field of two or three is not a field. Below 5 there is no denominator that can carry the word "saturated". Build the list from the client profile, the competitors the client names, the competitors and "vs" pages in `website-profile.md` section 8, and a search for adjacent players serving the same ICP, until you have at least 5. Record the count, because the verdict is only auditable next to its denominator. Put the client's own current offers and calls to action (`website-profile.md` section 6) in the saturation map as its first row, marked as the client's, so the map shows whether the client already sits in a crowded archetype. That row never counts toward a competitor saturation count.
+**Sample-size floor: research 5 to 10 competitors.** A saturation verdict is a claim about a field, and a field of two or three is not a field. Below 5 there is no denominator that can carry the word "saturated". Build the list from the client profile, the competitors the client names, the competitors and "vs" pages in `website-profile.md` section 8, and a search for adjacent players serving the same ICP, until you have at least 5. Record the count, because the verdict is only auditable next to its denominator. Put the client's own current offers and calls to action (`website-profile.md` section 6) in the saturation map as its first row, marked as the client's, so the map shows whether the client already sits in a crowded offer form. That row never counts toward a competitor saturation count.
 
 - Fetch competitor websites. Look at: homepage hero CTA, pricing page CTA, pop-up or inline lead magnets, any "free X" offer, how trial or demo is framed
 - Check their LinkedIn company pages for pinned posts or sponsored lead gen content
@@ -181,26 +181,26 @@ Discovery mode only. Validation mode reuses Vector 0 from an existing brief when
 
 Extract for each competitor:
 1. The specific offer they lead with
-2. Which archetype it maps to (A-K from `/lead-magnet-brainstorm`)
+2. The offer's form, in plain words: what the competitor hands the buyer (for example "a free written teardown of the buyer's site", "a benchmark report", "a 15-minute call"). No letters, no table to map it to: describe it, and group competitors whose forms are the same in substance
 3. How long they appear to have been running it
 
-Also fill a **competitor card** for each one in `_research/competitors-and-ads.md` (`market-evidence-standard.md` section 10), researching only what helps a GTM decision: who they sell to, their main promise (their headline, verbatim), the front-end offer and its archetype, pricing model or visible price, named customers and case studies (each a `competitor_case_study` ledger row), their lead magnets, what their customers complain about (review rows from Vector 3, cited by evidence ID), their strengths as buyers describe them, and the gap they leave. Competitor marketing is `competitor_claim`: context, never proof. Read a competitor's pricing, case-study and customer pages one by one with WebFetch, and in the browser pane when a page renders only client-side. A sub-agent reading one competitor page fills the page-level fields (promise, front-end offer and archetype, prices, named customers, lead magnets, main call to action) from the canonical instruction `outbound/evals/competitor-card/prompt.md`, which the benchmark measures; the session adds the cross-page fields (complaints, strengths, the gap).
+Also fill a **competitor card** for each one in `_research/competitors-and-ads.md` (`market-evidence-standard.md` section 10), researching only what helps a GTM decision: who they sell to, their main promise (their headline, verbatim), the front-end offer and its form in plain words, pricing model or visible price, named customers and case studies (each a `competitor_case_study` ledger row), their lead magnets, what their customers complain about (review rows from Vector 3, cited by evidence ID), their strengths as buyers describe them, and the gap they leave. Competitor marketing is `competitor_claim`: context, never proof. Read a competitor's pricing, case-study and customer pages one by one with WebFetch, and in the browser pane when a page renders only client-side. A sub-agent reading one competitor page fills the page-level fields (promise, front-end offer and its form, prices, named customers, lead magnets, main call to action) from the canonical instruction `outbound/evals/competitor-card/prompt.md`, which the benchmark measures; the session adds the cross-page fields (complaints, strengths, the gap).
 
 Build the saturation table. Head it with the denominator:
 
 **Competitors researched: [N]**
 
-| Competitor | Offer | Archetype | Running how long |
+| Competitor | Offer | Offer form (what the buyer receives) | Running how long |
 |---|---|---|---|
-| [Name] | [Offer] | [Letter] | [Duration or Unknown] |
+| [Name] | [Offer] | [plain-words description of the form] | [Duration or Unknown] |
 
-**Saturation rule:** Count how many competitors use the same archetype, out of the total number you actually researched (the denominator).
-- Denominator below 5 -> **INSUFFICIENT SAMPLE**. SATURATED may not be fired at all. Report how many competitors were researched and how many used the archetype, and leave the archetype unverdicted until the sample reaches 5.
-- Denominator 5 or more, 3 or more competitors using the archetype -> **SATURATED** (ICP is numb to it)
-- Denominator 5 or more, 2 using it -> **CROWDED** (notable but not fatal)
-- Denominator 5 or more, 0-1 using it -> **OPEN** (uncontested)
+**Saturation rule:** Count how many competitors use the same offer form, out of the total number you actually researched (the denominator).
+- Denominator below 5 -> **INSUFFICIENT SAMPLE**. SATURATED may not be fired at all. Report how many competitors were researched and how many used the form, and leave the form unverdicted until the sample reaches 5.
+- Denominator 5 or more, 3 or more competitors using the form -> **SATURATED** (the ICP may be numb to it)
+- Denominator 5 or more, 2 using it -> **CROWDED**
+- Denominator 5 or more, 0-1 using it -> **OPEN** (uncontested by competitors)
 
-A saturated archetype is not evidence the offer works for this client today; the ICP may be numb to the form. It is evidence that buyers care about the problem (competitor spend shows demand, Aaron, Sep 21). A SATURATED verdict therefore ranks the archetype lower and asks for the gap competitors leave; it never closes it (Aaron process alignment, operator directive 2026-09-22).
+A saturated offer form is not evidence the offer works or fails for this client today; the ICP may be numb to the form. It is also evidence that buyers care about the problem (competitor spend shows demand, a house evidence rule). The verdict is reported as evidence, with the gap competitors leave, for the Aaron offer call. It never ranks, limits or closes an offer; Aaron decides what is tested (`aaron-lane.md`).
 
 ---
 
@@ -279,7 +279,7 @@ Then read the 1-to-3-star reviews of each Vector 1 competitor on the readable re
 
 A question the ICP asks publicly in their own words = a problem they will trade their attention to solve. That problem is the lever your offer should pull.
 
-Extract: every usable quote as a ledger row (step 7). The 3-5 problems the brief reports are the top clusters `/market-evidence synthesize` forms from those rows, each with a verbatim `exact_quote`, its `source_url`, `persona`, `complaint_about` (`competitor_mentioned` in the ledger), and any counterevidence, and its `frequency_count` is the independent `buyer_quote` sighting count from `evidence_ledger.mjs stats`, never typed by hand. A pain only graduates into the brief at 3 or more independent sightings (the Research QA gate); weaker ones stay visible, labelled `confidence_score: low`. First-party call quotes are a separate, stronger class and never count toward this `frequency_count`, and neither do Vector 0 hypotheses. This exact phrasing feeds copywriting later and anchors the offer brainstorm.
+Extract: every usable quote as a ledger row (step 7). The 3-5 problems the brief reports are the top clusters `/market-evidence synthesize` forms from those rows, each with a verbatim `exact_quote`, its `source_url`, `persona`, `complaint_about` (`competitor_mentioned` in the ledger), and any counterevidence, and its `frequency_count` is the independent `buyer_quote` sighting count from `evidence_ledger.mjs stats`, never typed by hand. A pain only graduates into the brief at 3 or more independent sightings (the Research QA gate); weaker ones stay visible, labelled `confidence_score: low`. First-party call quotes are a separate, stronger class and never count toward this `frequency_count`, and neither do Vector 0 hypotheses. This exact phrasing feeds copywriting later and is part of the evidence the Aaron offer call reads.
 
 Sample before scaling: collect 20-30 quotes first; expand only if patterns are strong. If community signal is weak (niche market, hard-to-find ICP): note it, weight this vector low, lean more on Vectors 1 and 4.
 
@@ -317,23 +317,23 @@ Once the vectors have written their batches, run `/market-evidence` in `synthesi
 
 Staged depth follows `market-evidence-standard.md` section 8. Research here runs on Claude Code alone and spends nothing, so the stages bound effort and time, not money. If a step ever does make a metered call (a count or lookup the operator asks for, a platform read that uses credits), `/tool-balance-guard` runs first: a tool that is out of balance, down or switched off is a stop to ask the operator, never a reason to substitute another tool or skip the step (operator decision 2026-09-28). Weak clusters are never dropped; they are labelled and ranked.
 
-**Intersection - find the pain the inputs agree on (Aaron's commonality step)**
+**Intersection - find the pain the inputs agree on (the commonality step)**
 
-Aaron does not pick a pain from any single input. He lays his three inputs side by side, looks for the commonality, validates it against the market, and rewords it in the buyer's language (2026-06-22). Do the same before writing the brief:
+Do not pick a pain from any single input. Lay the three inputs side by side, look for the commonality, validate it against the market, and reword it in the buyer's language. Do this before writing the brief:
 
 1. **Line up the inputs.** The pain clusters from `/market-evidence synthesize`, ranked by opportunity score (they already combine Vectors 3 and 4 and the first-party calls, with Vector 0 as the map of what to look for), competitor angles with paid spend behind them from Vector 2, and the buyer's own words from the First-Party Call Vector.
-2. **Pick the lowest-hanging pain:** the cluster with the strongest real evidence (its opportunity score and its Research QA result) that a front-end offer can relieve quickly. Name it by cluster ID. In his experience it is "usually going to be around something revenue related". Treat that as his tendency, not a rule.
+2. **Pick the lowest-hanging pain:** the cluster with the strongest real evidence (its opportunity score and its Research QA result) that a front-end offer could relieve quickly. Name it by cluster ID. Do not assume it is revenue related or any other type; the evidence decides.
 3. **Validate it against paid spend.** If competitors already pay to advertise offers in this pain's category (Vector 2), the market has shown it cares. An unvalidated pain is not dropped. It is marked lower confidence.
-4. **Find the gap.** Name the part of the pain the competitors' ads do not address, using the `complaint_about: competitor:<name>` quotes from Vector 3 as evidence. His worked example: every clinical-ops staffing competitor pitched finding talent fast, but the research pain was interview load (a VP interviewing 30 candidates to find two good ones), so the offer became three pre-vetted clinical-ops candidates on the VP's desk in 14 days.
+4. **Find the gap.** Name the part of the pain the competitors' ads do not address, using the `complaint_about: competitor:<name>` quotes from Vector 3 as evidence. An illustration of what a gap looks like: every clinical-ops staffing competitor pitched finding talent fast, but the research pain was interview load (a VP interviewing 30 candidates to find two good ones). The gap is stated as a finding, never as an offer to build.
 5. **Reword it in the buyer's words** from the First-Party Buyer Voice section, or from Vector 3 quotes when the client has no recordings.
 
-The result is the Intersection section of the brief, and it becomes row 1 of `Candidate Generation Input`. If no pain clears step 2 with real evidence (only `model_hypothesis` rows exist), say so plainly. Never promote a hypothesis to fill the slot.
+The result is the Intersection section of the brief, and it becomes row 1 of `Candidate Generation Input` (the evidence table the Aaron offer call reads). If no pain clears step 2 with real evidence (only `model_hypothesis` rows exist), say so plainly. Never promote a hypothesis to fill the slot.
 
 ---
 
 **Synthesize and output the discovery brief**
 
-After the First-Party Call Vector, Vectors 0-4 and the Intersection step, build the brief that `/lead-magnet-brainstorm` reads.
+After the First-Party Call Vector, Vectors 0-4 and the Intersection step, build the brief that the Aaron offer call reads (`aaron-lane.md`, Call 1; recorded by `/lead-magnet-brainstorm` in recorder mode).
 
 Save to `profiles/<business-slug>/offer-intelligence.md`:
 
@@ -341,7 +341,7 @@ Save to `profiles/<business-slug>/offer-intelligence.md`:
 ## Offer Intelligence - [Business Name] (Discovery)
 **Date:** YYYY-MM-DD
 **Mode:** Discovery
-**Status:** Feeds /lead-magnet-brainstorm - no offer locked yet
+**Status:** Evidence for the Aaron offer call - no offer locked yet
 **Competitors researched:** [N] (floor is 5, see Vector 1)
 **First-party call recordings reviewed:** [N won / N lost, or "none available from client"]
 **Evidence base:** [ledger rows by tier (E-0001..E-nnnn); pain clusters in `_research/pain-clusters.md`; Research QA verdict and date; research sample of N companies in `_research/market-sample.md`]
@@ -355,7 +355,7 @@ Save to `profiles/<business-slug>/offer-intelligence.md`:
 
 If the client has no recordings, write exactly: "Client has no call recordings available. All pain below is reconstructed from public buyer voice." Mark this section's confidence Low and leave it at that. Do not backfill it with Vector 3 material.]
 
-**Offer language rewrite:** [the buyer's own words the offer should adopt, and the client-side jargon each one replaces. `/lead-magnet-brainstorm` and `/campaign-copywriting` inherit this line.]
+**Offer language rewrite:** [the buyer's own words the offer should adopt, and the client-side jargon each one replaces. The Aaron offer call and `/campaign-copywriting` inherit this line.]
 
 ---
 
@@ -366,7 +366,7 @@ If the client has no recordings, write exactly: "Client has no call recordings a
 
 ### Pain by persona
 
-Every pain row carries the persona who feels it, so `/lead-magnet-brainstorm` and `/campaign-strategy` can aim the offer at a specific buyer instead of an averaged ICP.
+Every pain row carries the persona who feels it, so the Aaron offer call and `/campaign-strategy` can see which specific buyer feels which pain instead of an averaged ICP.
 
 | Persona | Pain (their words) | Cluster | Source class | Frequency or call outcome | Priority |
 |---|---|---|---|---|---|
@@ -407,30 +407,22 @@ Angles only. The creative execution is not the finding. Ten to fifty variations 
 
 **Competitors researched (the denominator):** [N]. Below 5, every verdict is INSUFFICIENT SAMPLE and SATURATED may not be fired at all.
 
-| Archetype | Letter | Status |
-|---|---|---|
-| Free audit / diagnostic | A | SATURATED / CROWDED / OPEN / INSUFFICIENT SAMPLE |
-| Data / research piece | B | |
-| Competitive intel | C | |
-| Template / checklist | D | |
-| Intro / connection | E | |
-| Quick-win free work | F | |
-| Specific-to-them analysis | G | |
-| Limited access to the client's product | H | |
-| 15-min working session | I | |
-| Benchmark / comparison | J | |
-| Purpose-built interactive tool | K | |
+| Offer form (what competitors hand the buyer, in plain words) | Competitors using it (of N) | Status | Gap competitors leave |
+|---|---|---|---|
+| [for example "a free written teardown of the buyer's site"] | [n of N] | SATURATED / CROWDED / OPEN / INSUFFICIENT SAMPLE | [the part of the pain this form does not address, or "no gap found"] |
 
-> **Don't confuse H and K.** **H** is scoped access to the client's *actual paid product* (a trial, a free account), and its risk is product friction. **K** is a *purpose-built standalone* calculator or audit that is not the product at all: the prospect drops in their own numbers and gets an instant computed result. K runs as its own arm in any wave and is judged on time-agreed replies rather than positives (K1), and the agency builds it for the test (K2); both in `/lead-magnet-brainstorm`, reworked 2026-09-22. Score its saturation on whether this ICP is already being sent free calculators, not on the client's product.
+One row per distinct form found among the competitors researched (and the client's own current offer, marked as the client's, never counted). There is no fixed list of forms to fill in: a form appears only if a competitor actually uses it.
 
-**Saturated archetypes (rank lower, never closed):** [list, each with the gap competitors leave, or "no gap found"]
-**Crowded archetypes (proceed with caution):** [list]
-**Open archetypes (prioritize):** [list]
+**Saturated forms:** [list, each with the gap competitors leave, or "no gap found"]
+**Crowded forms:** [list]
+**Open forms (no or one competitor uses it):** [list]
 **Unverdicted (INSUFFICIENT SAMPLE, denominator below 5):** [list, or "none, denominator is [N]"]
+
+This map is evidence for the Aaron offer call. It never ranks, limits or closes an offer; Aaron decides what is tested (aaron-lane.md).
 
 ---
 
-### Intersection (Aaron's commonality step)
+### Intersection (the commonality step)
 
 **Lowest-hanging pain:** [exact quote and persona, with the evidence behind it: independent `buyer_quote` count and any first-party call]
 **Paid-spend validation:** [the Vector 2 competitor angles already selling into this pain's category, or "not validated, lower confidence"]
@@ -440,48 +432,44 @@ Angles only. The creative execution is not the finding. Ten to fifty variations 
 
 ---
 
-### Recommended direction for /lead-magnet-brainstorm
+### Evidence notes for the Aaron offer call
 
-**Buyer language to use:** [the exact words from the First-Party Buyer Voice section. Where the client had no recordings, fall back to the Vector 3 quotes and say so. The offer gets written in these words.]
-**Target persona:** [the persona from the Pain by persona table carrying the strongest, best-evidenced pain, and one line on why it beats the others]
-**Proven paid angle to borrow or avoid:** [from Paid Ads Angles. Name the angle, not the creative.]
-**Primary:** Focus invention on [open archetype(s)] - uncontested in this market, aligned with ICP pain #[X].
-**Secondary:** [another open archetype]. Delivery capacity is not a filter at research or ideation (operator directive 2026-09-22). At lock, `/lead-magnet-brainstorm` checks each offer is deliverable at the planned send volume, with a scale note or an `offer.qualification` rule (Aaron process alignment, operator directive 2026-09-22; supersedes "`/offer-test-slate` asks about full volume after the test").
-**Rank lower:** [saturated archetypes] - the ICP has seen them often, so each needs the gap competitors leave (named, with its evidence) to earn a place. Saturation never closes an archetype or overrides a higher-scoring direction (Aaron process alignment, operator directive 2026-09-22; supersedes "Avoid").
+**Buyer language to use:** [the exact words from the First-Party Buyer Voice section. Where the client had no recordings, fall back to the Vector 3 quotes and say so. Offer and copy wording is written in these words.]
+**Persona with the strongest evidence:** [the persona from the Pain by persona table carrying the strongest, best-evidenced pain, and one line on why the evidence beats the others]
+**Proven paid angles:** [from Paid Ads Angles. Name the angle, not the creative.]
+**Delivery capacity** is not a filter at research (operator directive 2026-09-22). It is checked at lock by `/lead-magnet-brainstorm` in recorder mode (a scale note or an `offer.qualification` rule).
 
-### Contrarian opportunity (if applicable)
-[Only populate if all or most archetypes are saturated/crowded. Name the archetype furthest from the saturated ones and why it could break the pattern.]
+This section records evidence only. It names no offer form to build or avoid and ranks no offer; Aaron decides what is tested (aaron-lane.md).
 
-### Candidate Generation Input (the handoff `/lead-magnet-brainstorm` consumes)
+### Candidate Generation Input (the evidence table the Aaron offer call reads)
 
-The rows below are not a summary. They are the working input the next skill invents from, so each one must be filled from the sections above rather than restated loosely. Row 1 is the Intersection section's pain. For a multi-segment client (kickoff Step 2.5 confirmed two or more segments whose pain or offer fit differ), write one `Candidate Generation Input` block per segment, headed with the segment slug, so `/lead-magnet-brainstorm` builds each segment's own offer set (`offer.segments`, operator decision 2026-09-22).
+The rows below are not a summary. They are the working input the Aaron offer call reads, so each one must be filled from the sections above rather than restated loosely. Row 1 is the Intersection section's pain. For a multi-segment client (kickoff Step 2.5 confirmed two or more segments whose pain or offer fit differ), write one `Candidate Generation Input` block per segment, headed with the segment slug, so the Aaron offer call decides each segment's own offer set (`offer.segments`, operator decision 2026-09-22).
 
-| # | Persona | Pain, in their words | Cluster (opportunity score) | Evidence strength | Open archetype(s) to build for | Why this pairing |
+| # | Persona | Pain, in their words | Cluster (opportunity score) | Evidence strength | Competitor offer forms already aimed at this pain (with the gap they leave) | Notes |
 |---|---|---|---|---|---|---|
-| 1 | [persona from Pain by persona] | [exact quote, not paraphrase, with its evidence ID] | [C-xx (n/16)] | [strong / good / supporting] | [letter(s) from Open archetypes] | [one line] |
+| 1 | [persona from Pain by persona] | [exact quote, not paraphrase, with its evidence ID] | [C-xx (n/16)] | [strong / good / supporting] | [plain-words forms from the Saturation Map, with n of N, or "none seen"] | [one line] |
 | 2 | | | | | | |
 | 3 | | | | | | |
 
-**Open archetypes still uncontested:** [letters + names from the Saturation Map's Open line]
-**Saturated (ranked lower, never closed):** [saturated archetypes, each with the gap competitors leave and the paid-ad spend behind it, which counts as demand evidence. Candidate generation may build toward one when it names that gap; it ranks below an equal-scoring open direction and never displaces a higher-scoring one (Aaron process alignment, operator directive 2026-09-22; supersedes "Closed to candidates", which contradicted this file's own never-filtered rule)]
+**Offer forms by saturation (evidence only):** [Open, Crowded and Saturated forms from the Saturation Map, each with its denominator, the gap competitors leave and the paid-ad spend behind it, which counts as demand evidence. This map is evidence for the Aaron offer call. It never ranks, limits or closes an offer; Aaron decides what is tested (aaron-lane.md).]
 **Cross-client priors (optional; patterns only):** [offer patterns that flipped `offer_market_proven` or scaled as winners for OTHER clients in this workspace (their `portfolio-review.md` winners): the offer family, the deliverable's shape, the input asked for, and the next step. Or "none used".]
 ```
 
-**Cross-client priors are optional and low-confidence (operator-approved Aaron alignment, 2026-09-21; S13, demonstrated).** Aaron's September build reads other clients' winning angles before generating offers, which is a demonstration rather than a tested rule, so a prior is a hint about a shape worth trying and never outranks this client's own evidence. Carry patterns only: never another client's name, number, data or copy, and never a prior as copy.
+**Cross-client priors are optional and low-confidence (operator-approved 2026-09-21).** A prior is a hint from the record of what happened for other clients, and it never outranks this client's own evidence. It is passed to the Aaron offer call as data only; this skill does not turn it into an offer. Carry patterns only: never another client's name, number, data or copy, and never a prior as copy.
 
 ### What to do next (discovery mode)
 
-Hand off to `/lead-magnet-brainstorm` once `/market-evidence synthesize` has returned its verdict (PASS, or HOLD carried forward with its labels: under plain `auto_execute` directly, under `review_gates` only once the operator decides so at Gate 2). Under `review_protocol: phase_checkpoints`, the handoff stays inside Phase 2 (`/phase-2-research-offer`): the verdict goes straight to the Aaron offer call (call 1 in `aaron-lane.md`), `/lead-magnet-brainstorm` records his call, and the verdict and any HOLD reasons lead the Phase 2 checkpoint. Discovery and candidate generation are one continuous offer motion split across two skills, so this mode is not finished until the handoff is usable as-is.
+Hand off to the Aaron offer call (`aaron-lane.md`, Call 1, run by a fresh `/ask-aaron` sub-agent and recorded by `/lead-magnet-brainstorm` in recorder mode) once `/market-evidence synthesize` has returned its verdict (PASS, or HOLD carried forward with its labels: under plain `auto_execute` directly, under `review_gates` only once the operator decides so at Gate 2). Under `review_protocol: phase_checkpoints`, the handoff stays inside Phase 2 (`/phase-2-research-offer`): the verdict goes straight to the Aaron offer call (call 1 in `aaron-lane.md`), `/lead-magnet-brainstorm` records his call, and the verdict and any HOLD reasons lead the Phase 2 checkpoint. This mode is not finished until the brief is usable as-is by the Aaron offer call.
 
-**What carries forward, by section name.** `/lead-magnet-brainstorm` opens by reading these five, and reads them rather than rebuilding them:
+**What carries forward, by section name.** The Aaron offer call opens by reading these five, and reads them rather than rebuilding them:
 
-1. **`Candidate Generation Input`** - the numbered persona + pain + open-archetype rows. This is the primary input: candidates are generated against these rows.
+1. **`Candidate Generation Input`** - the numbered persona + pain + competitor-form evidence rows. This is the primary input the call reads.
 2. **`Pain by persona`** - the full table behind those rows, including the prioritized personas with no pain evidence, which are named gaps rather than blanks.
-3. **`Saturation Map`** - the open, crowded, and saturated archetypes with the denominator, so archetype choice is bounded by evidence.
+3. **`Saturation Map`** - the competitor offer forms with their denominators and the gaps they leave. Evidence only; it never bounds what Aaron proposes.
 4. **`First-Party Buyer Voice`** and **`ICP Pain (in their words)`** - the exact words the offer gets written in.
-5. **`_research/pain-clusters.md`** - the clusters behind every row, their counts and opportunity scores, the Research QA verdict, and the Language bank. Every candidate `/lead-magnet-brainstorm` builds cites the clusters it answers (`market-evidence-standard.md` section 12).
+5. **`_research/pain-clusters.md`** - the clusters behind every row, their counts and opportunity scores, the Research QA verdict, and the Language bank. Every offer the Aaron call proposes cites the clusters it answers (`market-evidence-standard.md` section 12).
 
-Nothing else in this brief is a prerequisite for that handoff. If `Candidate Generation Input` is empty or missing, this mode has not actually finished, so complete it here rather than letting the next skill re-derive pain from scratch.
+Nothing else in this brief is a prerequisite for that handoff. If `Candidate Generation Input` is empty or missing, this mode has not actually finished, so complete it here rather than letting the next step re-derive pain from scratch.
 
 ---
 
@@ -491,18 +479,18 @@ Nothing else in this brief is a prerequisite for that handoff. If `Candidate Gen
 
 ### When to trigger
 
-- Live campaign reply rate below 1% after 300+ sends, where the offer is still a plausible bottleneck once the deliverability triggers and list quality are clear (Vector 5 Key diagnostics). Copy sits below the offer in the diagnostic order (doctrine §2), so a copy check is not a precondition for suspecting the offer. **300 sends only triggers a look, on raw reply rate; it never calls the offer broken.** Calling an offer broken needs about 1,300 first-touch contacts on the arm (Step 2, Minimum threshold; Aaron process alignment, operator directive 2026-09-22; supersedes "300 sends is enough to call an offer broken")
+- Live campaign reply rate below 1% after 300+ sends, where the offer is still a plausible bottleneck once the deliverability triggers and list quality are clear (Vector 5 Key diagnostics). Copy sits below the offer in the diagnostic order (Step 1), so a copy check is not a precondition for suspecting the offer. **300 sends only triggers a look, on raw reply rate; it never calls the offer broken.** Calling an offer broken needs about 1,300 first-touch contacts on the arm (Step 2, Minimum threshold; operator directive 2026-09-22)
 - Existing offer has live or prior campaign evidence and the client wants to keep it
 - User says "let's test a different offer" - run this before `/experiment-design` so the new offer is market-validated, not random
-- After `/lead-magnet-brainstorm` outputs an offer and you want a second opinion before locking. For a fast, hands-off second opinion - especially on a new or contrarian offer whose evidence is thin - run `/roast` on the offer: it returns a green-light / reshape / kill verdict plus the single cheapest test to run before committing copy build and list spend. The cheapest honest market test of a thinly-evidenced offer is one arm at the normal per-arm size (about 2,000 first-touch contacts planned, about 1,300 minimum) inside the first wave, beside the other offers, not a separate small wave that cannot reach significance (Aaron, Mar 9: "the more volume you're able to send, the faster you're able to figure out an angle that works"; Aaron process alignment, operator directive 2026-09-22; supersedes "treat a thinly-evidenced offer's first small wave as that cheapest test").
+- After the Aaron offer call (recorded by `/lead-magnet-brainstorm` in recorder mode) outputs an offer and you want a second opinion before locking. For a fast, hands-off second opinion, especially on a new offer whose evidence is thin, run `/roast` on the offer: it returns a green-light / reshape / kill verdict plus the single cheapest test to run before committing copy build and list spend. The cheapest honest market test of a thinly-evidenced offer is one arm at the normal per-arm size (about 2,000 first-touch contacts planned, about 1,300 minimum) inside the first wave, beside the other offers, not a separate small wave that cannot reach significance (operator directive 2026-09-22).
 
-Do not use validation mode just because an onboarding form contains a suggested lead magnet or CTA. A form answer is a hypothesis. For new clients and new campaigns, run discovery mode here first (it follows `/icp-onboarding` directly), then `/lead-magnet-brainstorm`, with the client suggestion treated as Candidate A. No list-side or data-side work is a prerequisite for either, because all of it runs after the offer locks.
+Do not use validation mode just because an onboarding form contains a suggested lead magnet or CTA. A form answer is a hypothesis. For new clients and new campaigns, run discovery mode here first (it follows `/icp-onboarding` directly), then the Aaron offer call, with the client suggestion handed to that call as an input, not a locked candidate. No list-side or data-side work is a prerequisite for either, because all of it runs after the offer locks.
 
 ### Inputs
 
 For validation mode, the existing offer to evaluate can come from `offer.validation_candidate` in `client-profile.yaml` when onboarding captured an evidence-backed offer, or from `profiles/<business-slug>/lead-magnets.md` when a previously locked offer exists. The evidence must be visible in `offer.validation_candidate_evidence`, prior campaign artifacts, or live send data.
 
-If validation mode is requested but the only offer fields are `offer.client_suggested_*` and no evidence pointer exists, **stop**. Do not run validation mode. Route to discovery mode here (which follows `/icp-onboarding` directly), then `/lead-magnet-brainstorm` instead. Client suggestions without evidence are candidates, not validation inputs. This stop is unconditional: missing evidence is the whole reason for it, and the reordering of the chain changes only where the route goes, never whether the stop fires.
+If validation mode is requested but the only offer fields are `offer.client_suggested_*` and no evidence pointer exists, **stop**. Do not run validation mode. Route to discovery mode here (which follows `/icp-onboarding` directly), then the Aaron offer call instead. Client suggestions without evidence are inputs to that call, not validation inputs. This stop is unconditional: missing evidence is the whole reason for it, and the reordering of the chain changes only where the route goes, never whether the stop fires.
 
 - `profiles/<business-slug>/client-profile.yaml` - ICP, value prop, hard filters, `icp_soft_preferences.personas_to_prioritize`
 - `profiles/<business-slug>/lead-magnets.md` - the existing offer to evaluate
@@ -517,21 +505,21 @@ If validation mode is requested but the only offer fields are `offer.client_sugg
 
 **Step 1: Pre-flight - walk the diagnostic order, then spot obvious broken offers in 2 minutes**
 
-**First, walk Aaron's diagnostic order top-down and stop at the highest broken item (doctrine §2; operator-approved Aaron alignment, 2026-09-21).** Do not work on a lower item while a higher one is broken. The highest broken item is the finding, and it names what Iterate or Swap must fix.
+**First, walk the house diagnostic order top-down and stop at the highest broken item (evidence logic for judging an existing offer, operator-approved 2026-09-21).** Do not work on a lower item while a higher one is broken. The highest broken item is the finding, and it names what Iterate or Swap must fix.
 
 0. **Is the buyer real and specific?** A named buyer type with a problem they already know they have, plus role, authority, current situation and exclusions. "Founders" or "B2B companies" is not a buyer.
 1. **Is the offer a concrete thing, or a description of the company?** It must say what they get, how fast, what they must do, and what risk they take.
-2. **Is every qualified yes being honored, at the volume being sent?** Aaron's "easy for you to fulfill" (doctrine §2 step 2), at "the scale of the emails that you're sending" (Aaron, Sep 21). For a live offer this is a fulfillment check against its lock record: a scale note showing it fits the send volume, or an `offer.qualification` rule that decides who gets the free unit and who gets the standard offer (`/lead-magnet-brainstorm` references/saturation-and-scale.md, Deliverable at Send Scale). A qualified yes that goes unhonored is a delivery problem to fix before the offer is judged, not evidence against the offer. An offer locked with neither record gets one now through `/lead-magnet-brainstorm` (Aaron process alignment, operator directive 2026-09-22; supersedes "full-volume capacity is asked in `/offer-test-slate` scale review, never here"; the twenty-buyer figure this item used to cite was this system's number, doctrine §13).
+2. **Is every qualified yes being honored, at the volume being sent?** For a live offer this is a fulfillment check against its lock record: a scale note showing it fits the send volume, or an `offer.qualification` rule that decides who gets the free unit and who gets the standard offer (`/lead-magnet-brainstorm` references/saturation-and-scale.md, Deliverable at Send Scale). A qualified yes that goes unhonored is a delivery problem to fix before the offer is judged, not evidence against the offer. An offer locked with neither record gets one now through `/lead-magnet-brainstorm` (operator directive 2026-09-22).
 3. **Does the copy lead with the offer, and is every word true?** Only now read the live draft.
 4. **Is the next step one easy action, and does each follow-up earn its place?**
-5. **Are we judging the right number?** Time-agreed replies per 1,000 first touches beside positive-reply rate, never reply count alone (doctrine §0, §2 step 5).
+5. **Are we judging the right number?** Time-agreed replies per 1,000 first touches beside positive-reply rate, never reply count alone.
 
 Then run the existing offer through four quick questions. They are the fast check for item 1, and they catch structurally broken offers without burning research time.
 
 | Question | Red flag if... |
 |---|---|
 | Would they want this even if they never buy from you? | No -> it's a pitch dressed as a gift |
-| Does it sound like something they would pay for, given free? (doctrine §3) | No -> low perceived value: a gesture, not a gift worth replying for |
+| Does it sound like something they would pay for, given free? | No -> low perceived value: a gesture, not a gift worth replying for |
 | Does receiving it prove your specific competence? | No -> it's just a gesture |
 | Does it require less than 60 seconds from the prospect to claim? | No -> friction kills reply rate |
 
@@ -539,7 +527,7 @@ Then run the existing offer through four quick questions. They are the fast chec
 - 1 red flag: note the flaw, proceed, factor into final score.
 - 2+ red flags: offer is broken structurally. Flag it. Research still runs, but recommendation will almost certainly be Swap.
 
-**Separately, check fulfillment (not a red flag against the offer).** Is every qualified yes the live offer gets being honored as promised, on time, at the current send volume? If not, fix delivery (or add the missing `offer.qualification` rule) before judging the offer. Deliverability at send scale is checked, never scored here (Aaron process alignment, operator directive 2026-09-22; supersedes "asked in `/offer-test-slate` scale review"; this used to be the question "can the front-end owner deliver it to 100 people this week without custom work per person?").
+**Separately, check fulfillment (not a red flag against the offer).** Is every qualified yes the live offer gets being honored as promised, on time, at the current send volume? If not, fix delivery (or add the missing `offer.qualification` rule) before judging the offer. Deliverability at send scale is checked, never scored here (operator directive 2026-09-22).
 
 ---
 
@@ -572,14 +560,14 @@ Classify replies into five buckets:
 | "Already have something" / "we use X" | Offer is commoditized - strong signal to swap |
 
 Key diagnostics, in this order:
-- **Deliverability first, but only on a trigger (operator-approved Aaron alignment, 2026-09-21).** Bounce above the house threshold, a placement test flagging it (a trigger to investigate, never decisive alone), a reply rate sitting near 0.1%, or contacts-per-positive jumping -> run `/email-deliverability-audit` first and do not blame the offer yet. **Open rate is never the trigger:** open tracking stays off on the sending platform, so open rate reads 0% and cannot diagnose anything (doctrine §9, "Don't track opens"; Eric agrees). The retired open-rate branches are archived at `outbound/_archive/aaron-alignment-2026-09-21/offer-intelligence--vector-5-open-rate-diagnostics.md`.
+- **Deliverability first, but only on a trigger (operator-approved 2026-09-21).** Bounce above the house threshold, a placement test flagging it (a trigger to investigate, never decisive alone), a reply rate sitting near 0.1%, or contacts-per-positive jumping -> run `/email-deliverability-audit` first and do not blame the offer yet. **Open rate is never the trigger:** open tracking stays off on the sending platform, so open rate reads 0% and cannot diagnose anything (house rule: opens are not tracked). The retired open-rate branches are archived at `outbound/_archive/aaron-alignment-2026-09-21/offer-intelligence--vector-5-open-rate-diagnostics.md`.
 - Bounce rate above accepted thresholds or repeated wrong-person replies -> list quality problem. Do not swap the offer until the list is fixed.
-- **No deliverability trigger fired and the list is clean -> the offer is a live candidate.** Walk the Step 1 diagnostic order (doctrine §2); the highest broken item is the finding.
-- Copy that fails `/spam-word-checker` or `cold-email-copy-best-practices.md` -> fix it before relaunch (a house QA gate). A clean copy pass never clears the offer: copy sits below the offer in the diagnostic order, and a rewrite cannot save a weak offer (doctrine §2, §9).
-- "Already have something" replies appearing more than once -> the archetype is saturated in their mind.
-- **Positive replies rising with no rise in time-agreed replies -> farming interest** (doctrine §4): the offer is easy to say yes to but not specific enough to filter out people who will never buy. Treat it as an Iterate signal, not a win and not a kill: reshape the offer so it is more specific and filters better. Time-agreed replies are positive replies whose thread moves toward a time, counted with `/campaign-strategy`'s magnet-inflation-guard proxy; they pick winners and gate scaling, and never move the offer-validation flip, which reads positive replies.
+- **No deliverability trigger fired and the list is clean -> the offer is a live candidate.** Walk the Step 1 diagnostic order; the highest broken item is the finding.
+- Copy that fails `/spam-word-checker` or `cold-email-copy-best-practices.md` -> fix it before relaunch (a house QA gate). A clean copy pass never clears the offer: copy sits below the offer in the diagnostic order, and a rewrite cannot save a weak offer.
+- "Already have something" replies appearing more than once -> this offer form is saturated in their mind.
+- **Positive replies rising with no rise in time-agreed replies -> farming interest:** the offer is easy to say yes to but not specific enough to filter out people who will never buy. Treat it as an Iterate signal, not a win and not a kill: record the finding, and any reshaped offer comes from the Aaron offer call (see Step 5). Time-agreed replies are positive replies whose thread moves toward a time, counted with `/campaign-strategy`'s magnet-inflation-guard proxy; they pick winners and gate scaling, and never move the offer-validation flip, which reads positive replies.
 
-Minimum threshold: do not call the offer broken before an arm has reached about 1,300 first-touch contacts (the flow's per-arm floor; about 2,000 are planned per offer) and its last contacts have had the sequence plus a few days of grace. Below that, variance is too high to trust (Aaron, May 4: every segment "was at least 1,000 prospects"; Aaron process alignment, operator directive 2026-09-22; supersedes "300 sends").
+Minimum threshold: do not call the offer broken before an arm has reached about 1,300 first-touch contacts (the flow's per-arm floor; about 2,000 are planned per offer) and its last contacts have had the sequence plus a few days of grace. Below that, variance is too high to trust (operator directive 2026-09-22).
 
 ---
 
@@ -588,10 +576,10 @@ Minimum threshold: do not call the offer broken before an arm has reached about 
 Answer four questions:
 
 1. **What problem does this ICP publicly, repeatedly admit they have?** (Vectors 3 + 4 - use their language)
-2. **What offers are competitors leading with, and which have real spend or longevity?** (Vectors 1 + 2 - distinguish validated from hypothetical)
+2. **What offer forms are competitors leading with, and which have real spend or longevity?** (Vectors 1 + 2 - distinguish validated from hypothetical)
 3. **Does the existing offer address #1 AND differentiate from #2?** Yes to both -> candidate for Go. No to either -> candidate for Iterate or Swap.
-4. **Is the market-validated archetype saturated to the point the ICP is numb to it?** (Saturation table from Vector 1)
-   - SATURATED -> flag for Contrarian Offer analysis regardless of score
+4. **Is the existing offer's form saturated to the point the ICP may be numb to it?** (Saturation table from Vector 1)
+   - SATURATED -> record it with the gap competitors leave, and apply the Step 4 penalty
    - CROWDED -> proceed, weight differentiation heavily
    - OPEN -> proceed normally
 
@@ -602,13 +590,13 @@ Answer four questions:
 | Criterion | Points | Existing offer | Market alternative |
 |---|---|---|---|
 | Directly addresses #1 ICP pain from signal | 0-2 (0=no, 1=partially, 2=yes) | | |
-| Perceived value: it sounds like something they would pay for, given free (doctrine §3), ideally anchored to a real price or cost. Delivery effort and scale do not score (operator directive 2026-09-22); deliverability at send scale is a lock check in `/lead-magnet-brainstorm` (Aaron process alignment, operator directive 2026-09-22) | 0-1 | | |
+| Perceived value: it sounds like something they would pay for, given free, ideally anchored to a real price or cost. Delivery effort and scale do not score (operator directive 2026-09-22); deliverability at send scale is a lock check in `/lead-magnet-brainstorm` in recorder mode | 0-1 | | |
 | Proves your specific competence in one step | 0-1 | | |
 | Requires <60 seconds from prospect to claim | 0-1 | | |
 | Differentiated from the field (not just one competitor) | 0-2 (0=same as 3+, 1=same as 1-2, 2=nobody else does this) | | |
 | **Total** | **/7** | | |
 
-**Saturation penalty:** If the existing offer's archetype is SATURATED, subtract 2 from its field differentiation score. The ICP's numbness to the archetype is real even if your specific execution is different.
+**Saturation penalty:** If the existing offer's form is SATURATED (denominator 5 or more), subtract 2 from its field differentiation score. The ICP's numbness to the form may be real even if your specific execution is different. This adjusts the score of an existing offer for the verdict; it is evidence, not a ruling on what may be tested.
 
 ---
 
@@ -616,55 +604,36 @@ Answer four questions:
 
 **Saturation check - run first**
 
-If the existing offer's archetype is SATURATED and the market alternative uses the same archetype, run Contrarian Offer analysis (Step 5B) before the decision logic and add its pick as a candidate beside the other two. Saturation already lowers rank through the Step 4 penalty; here it also requires naming the gap competitors leave for any saturated option that stays in play. It never closes the archetype and never overrides a higher-scoring alternative: heavy competitor ad spend behind the archetype is evidence of demand (Aaron, Sep 21), and the market, not the desk, settles whether the pattern is too tired (Aaron process alignment, operator directive 2026-09-22; supersedes "do not pick the market alternative" and "a high-scoring offer in a saturated category will underperform a mid-scoring contrarian"). If no gap can be named, say so in the Recommendation.
+If the existing offer's form is SATURATED and the market alternative uses the same form, name the gap competitors leave for the saturated form and record it beside the scores. Saturation already lowers the existing offer's score through the Step 4 penalty. It never closes the form and never overrides a higher-scoring alternative: heavy competitor ad spend behind a form is evidence of demand, and the market, not the desk, settles whether the pattern is too tired. If no gap can be named, say so in the Recommendation. Any replacement or reshaped offer is not authored here: see Step 5B.
 
 **Normal decision logic**
 
 | Existing offer score | Market alternative score | Decision |
 |---|---|---|
 | 6-7 | Any | **Go** - existing offer is strong, ship it |
-| 5 | 6-7 | **Iterate** - refine framing using ICP language from Vector 3 |
-| 5 | 5 | **Iterate** - tighten CTA specificity, both are mid |
-| 3-4 | 6-7 | **Swap** - existing offer is weak, replace with market alternative |
-| 3-4 | 5 | **Swap + test** - neither dominant, run both as offer-validation arms (`offer.validation_arms`, `/campaign-strategy` Offer-Validation Wave) via `/experiment-design`'s offer-only type |
-| 0-2 | Any | **Swap** - structurally broken, replace immediately |
+| 5 | 6-7 | **Iterate** - the existing offer needs reshaping; hand off to the Aaron offer call (below) |
+| 5 | 5 | **Iterate** - both are mid; hand off to the Aaron offer call (below) |
+| 3-4 | 6-7 | **Swap** - the existing offer is weak; hand off to the Aaron offer call (below), with the market alternative's score as evidence |
+| 3-4 | 5 | **Swap + test** - neither dominant; hand off to the Aaron offer call, which decides which offers are tested as `offer.validation_arms` (`/campaign-strategy` Offer-Validation Wave, `/experiment-design` offer-only type) |
+| 0-2 | Any | **Swap** - structurally broken; hand off to the Aaron offer call (below) |
 
-**Go:** Lock the offer in `client-profile.yaml` as the primary. **New offer arms are optional for a Go offer** (Aaron, Apr 13: "If you're pretty sure you've got a good offer, running a bunch of variations of it isn't necessarily going to be the highest leverage thing"). The default first-wave test is segments and data sources plus positioning variants of this offer, so `offer.validation_arms` may be `[]` with the reason "validated Go offer"; add arms through `/lead-magnet-brainstorm` only when the operator wants them (Aaron process alignment, operator directive 2026-09-22; supersedes "run `/lead-magnet-brainstorm` for validation arms to test beside it"). Proceed to `/campaign-strategy`.
+The score comparison is the verdict evidence on the existing offer. It does not name, rank or write a replacement.
 
-**Iterate:** Rewrite framing, CTA, and specificity. Common moves:
-- Make deliverable more specific ("a 5-minute audit" -> "your first three subject lines, rewritten": a done-for-you deliverable, never named an audit; doctrine §3, ledger R09)
-- Use ICP's own language from Vector 3
-- Eliminate friction (no form fill, reply-to-claim)
-- Sharpen competence proof ("I'll send you ideas" -> "I'll rewrite your first cold email subject line")
+**Go:** Lock the offer in `client-profile.yaml` as the primary. **New offer arms are optional for a Go offer.** The default first-wave test is segments and data sources plus positioning variants of this offer, so `offer.validation_arms` may be `[]` with the reason "validated Go offer"; add arms only when the operator wants them, and only through an Aaron offer call recorded by `/lead-magnet-brainstorm` (operator directive 2026-09-22). Proceed to `/campaign-strategy`.
 
-Re-score once to check the rewrite answers the finding, then let the market read it, not the desk: the iterated offer goes to `/lead-magnet-brainstorm`, which runs it in a fresh multi-offer flight beside other qualifying candidates as simultaneous cells, with list and copy frozen so the offer is the only variable (Aaron, Apr 6: "you really want to test a ton of different offers first"; Mar 2: "Let the market tell you what you should do"; Aaron process alignment, operator directive 2026-09-22; supersedes "re-score until the offer hits 6+").
+**Iterate:** Record the failure read (the highest broken item from the Step 1 diagnostic order, the reply buckets, the objections in the ledger, the buyer's own words from Vector 3 and the first-party calls). Re-score the existing offer once against that finding so the verdict is on file. Then hand off, as below. The reshaped offer comes from the Aaron offer call; this skill does not rewrite it.
 
-**Swap:** Choose the market alternative or contrarian offer. If `offer.validation_arms` already holds an active arm that passed every `/lead-magnet-brainstorm` gate, that arm is the first swap candidate. Write the offer-only experiment hypothesis for `/experiment-design`. Any new offer goes through `/lead-magnet-brainstorm` (ranked with its labels and its honoring fields, with its four fulfillment artifacts written before it sends) and into a fresh multi-offer flight run as simultaneous cells, list and copy frozen, shown on the next `/offer-test-slate` (Aaron process alignment, operator directive 2026-09-22; supersedes a one-offer swap).
+**Swap:** Record the same evidence and the failure read, plus the competitor-form map and the market alternative's score, then hand off, as below. If `offer.validation_arms` already holds an active arm that passed every rail in `/lead-magnet-brainstorm` (recorder mode), it is reported as an existing option, not chosen here. Write the offer-only experiment hypothesis skeleton for `/experiment-design` only after Aaron's call has named the replacement.
+
+**Hand-off to Aaron (Iterate needing a new offer, and every Swap):** run a fresh `/ask-aaron` offer call (`aaron-lane.md`, Call 1) with these inputs: the evidence-ledger clusters, the failure read, the existing offer as it ran (with its results), the Saturation Map of competitor forms (evidence only), and the first-party and reply language. Aaron proposes the replacement or reshaped offer, and `/lead-magnet-brainstorm` in recorder mode records his answer word for word. The recorded offers then run as a fresh multi-offer flight of simultaneous cells, list and copy frozen so the offer is the only variable, shown on the next `/offer-test-slate`.
 
 Keep the CTA at **direction-level** here: a plain-English ask direction, not exact send copy. Exact CTA wording is deferred to `/campaign-copywriting`, which writes it later under the verified-list gate (`verified-list-gate.md`) and runs it through `spam-word-checker.md` + `cold-email-copy-best-practices.md`. Do not write exact CTA send phrasing to the validation brief or `client-profile.yaml`, because this skill runs before any list exists.
 
 ---
 
-**Step 5B: Contrarian offer analysis**
+**Step 5B: Replacement or unexpected offer (hand-off to the Aaron offer call)**
 
-Trigger: the Step 5 saturation check fired (a SATURATED existing offer and a same-archetype market alternative), OR both existing and market alternative score below 5, OR user asks "what's the unexpected offer?"
-
-The contrarian offer is the archetype nobody (or almost nobody) in this market is currently using. Its advantage is not evidence it converts - it is the absence of evidence it has been ignored. The ICP has not been trained to delete it yet.
-
-**How to find it:**
-1. List all 11 archetypes (A-K)
-2. Mark which are SATURATED or CROWDED from the saturation table
-3. Remaining archetypes are contrarian candidates, K included (it runs as its own arm and is judged on time-agreed replies, K1 in `/lead-magnet-brainstorm`)
-4. Score each on all criteria except field differentiation (it automatically scores 2)
-5. Pick the highest-scoring candidate
-
-**Directional guide:**
-- If audit (A) is saturated -> consider competitive intel (C) or quick-win free work (F)
-- If data/report (B) is saturated -> consider specific-to-them observation (G) or working session (I)
-- If templates/checklists (D) are saturated -> consider intro/connection (E) or benchmark (J)
-- If everyone offers meetings -> offer to send the value async, no call required
-
-Output a named contrarian offer. Flag it clearly as contrarian - it trades market validation for pattern interruption. It joins the candidates on its score; it does not replace a higher-scoring one (Aaron process alignment, operator directive 2026-09-22).
+This skill does not invent a replacement, contrarian or "unexpected" offer. When the Step 5 verdict is Swap, when Iterate needs a new offer, when both the existing offer and the market alternative score below 5, or when someone asks "what's the unexpected offer?", run the Aaron hand-off in Step 5 (a fresh `/ask-aaron` offer call, `aaron-lane.md`, Call 1). Give it the evidence, the failure read and the Saturation Map of competitor forms. Aaron proposes the offer; `/lead-magnet-brainstorm` in recorder mode records it.
 
 ---
 
@@ -687,7 +656,7 @@ Save the CTA at **direction-level** only (`lead_magnet_cta_direction`, a plain-E
 **Pre-flight red flags:** [0 / 1 / 2+ - list any]
 **Competitors researched:** [N] (floor is 5, see Vector 1)
 **First-party call recordings reviewed:** [N won / N lost, or "none available from client"]
-**Decision:** Go | Iterate | Swap | Swap (Contrarian)
+**Decision:** Go | Iterate | Swap
 **Evidence base:** [ledger rows by tier, clusters used (IDs), replies ingested; Research QA verdict and date]
 
 ---
@@ -704,7 +673,9 @@ Save the CTA at **direction-level** only (`lead_magnet_cta_direction`, a plain-E
 | Job postings | | |
 | Send data | | |
 
-**Saturation status:** [SATURATED / CROWDED / OPEN / INSUFFICIENT SAMPLE] - [archetype, competitors using it out of competitors researched. SATURATED may not be fired on a denominator below 5.]
+**Saturation status of the existing offer's form:** [SATURATED / CROWDED / OPEN / INSUFFICIENT SAMPLE] - [the form in plain words, competitors using it out of competitors researched. SATURATED may not be fired on a denominator below 5.] Evidence for the Aaron offer call; it never ranks, limits or closes an offer (aaron-lane.md).
+
+**Saturation Map (competitor offer forms, evidence only):** [the same table as in discovery mode: form, n of N, status, gap competitors leave]
 
 ---
 
@@ -715,23 +686,25 @@ Save the CTA at **direction-level** only (`lead_magnet_cta_direction`, a plain-E
 
 ### Scorecard
 
-| Criterion | Existing | Market alternative | Contrarian (if applicable) |
-|---|---|---|---|
-| Addresses #1 ICP pain | | | |
-| Perceived value | | | |
-| Proves competence | | | |
-| Low prospect friction | | | |
-| Differentiated from field | | | |
-| **Total /7** | | | |
+| Criterion | Existing | Market alternative (the strongest competing offer form found, scored as evidence only) |
+|---|---|---|
+| Addresses #1 ICP pain | | |
+| Perceived value | | |
+| Proves competence | | |
+| Low prospect friction | | |
+| Differentiated from field | | |
+| **Total /7** | | |
 
 ---
 
 ### Recommendation
-[One paragraph - state the decision, name the offer, cite the evidence, note what to watch for.]
+[One paragraph - state the decision, name the existing offer, cite the evidence, note what to watch for. On Iterate or Swap, say that the replacement or reshaped offer is pending the Aaron offer call.]
 
 ---
 
 ### Locked offer
+
+Fill this block only on a **Go** (the existing offer, locked as it ran). On Iterate or Swap write "Pending: fresh Aaron offer call (aaron-lane.md, Call 1)" and fill it from the recorded call once it exists.
 
 **Offer name:**
 **What it is:** [one sentence]
@@ -741,11 +714,9 @@ Save the CTA at **direction-level** only (`lead_magnet_cta_direction`, a plain-E
 
 ---
 
-### If decision is Swap - experiment hypothesis
+### If decision is Iterate or Swap - hand-off to the Aaron offer call
 
-"Leading with [new offer] will outperform [existing offer] for [ICP] because [reason from research]."
-
-Route the new offer through `/lead-magnet-brainstorm` into a fresh multi-offer flight: the swap candidate plus the other qualifying candidates, run as simultaneous cells. Keep list, copy, and infrastructure frozen, so the offers are the only variable. `/experiment-design` formalizes the hypothesis as an offer-only experiment. (Aaron process alignment, operator directive 2026-09-22; supersedes a one-offer swap.)
+Record here the inputs handed to the fresh `/ask-aaron` offer call: the failure read (highest broken item, reply buckets, objections), the evidence clusters used (IDs), the existing offer and its results, and the Saturation Map of competitor forms (evidence only). Aaron proposes the replacement or reshaped offer; `/lead-magnet-brainstorm` in recorder mode records it. The recorded offers run as a fresh multi-offer flight of simultaneous cells with list, copy and infrastructure frozen, so the offers are the only variable, and `/experiment-design` formalizes the offer-only experiment from the offer Aaron named.
 ```
 
 Update `client-profile.yaml`:
@@ -756,34 +727,34 @@ offer:
   lead_magnet_details: <one sentence>
   lead_magnet_cta_direction: <plain-English ask direction, not final copy>
   offer_intelligence_run: YYYY-MM-DD
-  offer_decision: go | iterate | swap | swap-contrarian
+  offer_decision: go | iterate | swap
   saturation_status: saturated | crowded | open | insufficient_sample
   offer_validation_run: YYYY-MM-DD
   offer_validation_path: profiles/<business-slug>/offer-validations/YYYY-MM-DD-offer-validation.md
 ```
 
-Only add `offer_validation_run` and `offer_validation_path` when validation mode runs. Keep the existing offer fields compatible for downstream skills. On **Swap + test**, record the second offer as an entry in `offer.validation_arms` (same fields as the primary block, `/lead-magnet-brainstorm` Save Output) once it has passed that skill's gates; never write a second offer anywhere else.
+Only add `offer_validation_run` and `offer_validation_path` when validation mode runs. Keep the existing offer fields compatible for downstream skills. On **Swap + test**, the second offer is an entry in `offer.validation_arms` (same fields as the primary block, `/lead-magnet-brainstorm` Save Output) only after the Aaron offer call has named it and `/lead-magnet-brainstorm` in recorder mode has recorded it and run its rails; this skill never writes a new offer into the profile. On Iterate or Swap, leave the `lead_magnet*` fields as they are until that record exists.
 
 ---
 
 ## Common mistakes
 
-- **Using competitor offers as confirmation without checking saturation.** Three competitors offering free audits is not validation that yours will work. It is demand evidence and a fatigue warning at once. Count the field, then name the gap they leave before following it.
-- **Running the contrarian offer just because it's different.** Pattern interruption has value, but an offer disconnected from ICP pain is still a bad offer. The contrarian offer still needs to score well on pain relevance and competence proof - it just gets a pass on differentiation.
+- **Using competitor offers as confirmation without checking saturation.** Three competitors offering a free teardown is not validation that yours will work. It is demand evidence and a fatigue warning at once. Count the field, then name the gap they leave and pass both to the Aaron offer call.
+- **Authoring the replacement offer here.** On a Swap or an Iterate that needs a new offer, this skill records the evidence and hands off to a fresh Aaron offer call. It never names, ranks or writes the new offer itself.
 - **Swapping offer and copy at the same time.** Combined experiment. You will learn nothing about which change drove the result. Swap the offer, freeze everything else, run `/experiment-design`.
-- **Calling the offer broken before an arm has reached about 1,300 first-touch contacts.** Variance is too high below the flow's per-arm floor, and deliverability and list issues look identical to offer problems at low volumes (Aaron process alignment, operator directive 2026-09-22; supersedes "before 300 sends").
-- **Letting saturation close an archetype.** Saturation lowers rank and asks for the gap competitors leave. Competitor ad spend behind an offer is evidence of demand (Aaron, Sep 21), so a saturated archetype with a real gap can still run as an arm.
-- **Treating reply rate alone as an offer problem, or a copy fix as clearing the offer.** Rule out deliverability when one of its triggers fires (bounce above the house threshold, a placement-test flag, reply rate near 0.1%, contacts-per-positive jumping) and rule out list quality; then walk the diagnostic order (doctrine §2), where the offer sits above the copy. Open rate is never the trigger: opens are not tracked in this system (operator-approved Aaron alignment, 2026-09-21).
-- **Calling an offer a winner on positive replies alone.** Report time-agreed replies per 1,000 first touches beside the positive-reply rate; a positive lift with no rise in time-agreed replies is farming interest (doctrine §0, §4).
-- **Iterating the offer without changing the language.** Iteration means rewriting toward the ICP's own words from Vector 3. Keeping your language gets the same result.
-- **Skipping discovery mode because "the client already has a strong offer."** Strong relative to what? Run discovery first so the brainstorm is informed, not assumed.
+- **Calling the offer broken before an arm has reached about 1,300 first-touch contacts.** Variance is too high below the flow's per-arm floor, and deliverability and list issues look identical to offer problems at low volumes (operator directive 2026-09-22).
+- **Letting saturation rank, limit or close an offer.** The saturation count is evidence, reported by offer form with the gap competitors leave. Competitor ad spend behind an offer is evidence of demand, so a saturated form with a real gap is still open to the Aaron offer call. Aaron decides what is tested (`aaron-lane.md`).
+- **Treating reply rate alone as an offer problem, or a copy fix as clearing the offer.** Rule out deliverability when one of its triggers fires (bounce above the house threshold, a placement-test flag, reply rate near 0.1%, contacts-per-positive jumping) and rule out list quality; then walk the diagnostic order (Step 1), where the offer sits above the copy. Open rate is never the trigger: opens are not tracked in this system (operator-approved 2026-09-21).
+- **Calling an offer a winner on positive replies alone.** Report time-agreed replies per 1,000 first touches beside the positive-reply rate; a positive lift with no rise in time-agreed replies is farming interest.
+- **Iterating the offer without carrying the buyer's language into the hand-off.** The Aaron offer call needs the ICP's own words from Vector 3 and the first-party calls alongside the failure read. Handing over only your own description of the problem gets the same result.
+- **Skipping discovery mode because "the client already has a strong offer."** Strong relative to what? Run discovery first so the Aaron offer call is informed, not assumed.
 - **Reconstructing every pain from public strangers while the client's call recordings sit unopened.** Public buyer voice is a proxy. The client's own won and lost sales calls are the buyer saying it directly, in the exact words the offer should use, about this exact category. Ask for the recordings before you mine forums. If the client genuinely has none, state that in the brief rather than letting the gap pass unnoticed.
 - **Flattening pain into one ICP blob.** Two personas inside the same ICP feel different pains, and an offer aimed at their average is urgent to nobody. Every pain row carries a `persona`.
-- **Firing SATURATED off three competitors.** Three is not a field. Research 5 to 10, record the denominator, and mark the archetype INSUFFICIENT SAMPLE below 5 instead of guessing.
+- **Firing SATURATED off three competitors.** Three is not a field. Research 5 to 10, record the denominator, and mark the offer form INSUFFICIENT SAMPLE below 5 instead of guessing.
 - **Listing Reddit as researched when nothing was read.** The harness cannot read Reddit, and operator paste is the only route. Report the pasted threads and the quotes they gave, or write "Reddit: unread". A platform named in a list is not a platform read.
 - **Treating the persona research as buyer pain.** Vector 0 is a model's educated guess about the persona. It tells you where to look and what words to search with. Only a real buyer saying it, in public or on a client call, makes it pain.
 - **Typing counts by hand.** "Appeared in 12 threads" comes from `evidence_ledger.mjs stats`, never from a tally kept in the session. Hand counts drift and double-count syndicated quotes.
-- **Building offers before the Research QA verdict.** The Intersection step and the Candidate Generation Input wait for `/market-evidence synthesize`. A HOLD is carried forward with its labels (under `review_gates`, after the operator's Gate 2 decision), never skipped silently.
+- **Handing the offer call thin research before the Research QA verdict.** The Intersection step and the Candidate Generation Input wait for `/market-evidence synthesize`. A HOLD is carried forward with its labels (under `review_gates`, after the operator's Gate 2 decision), never skipped silently.
 - **Redoing research that already exists.** Step 0 reads the ledger and any older research first; a refresh fills gaps, it does not restart.
 - **Reading the ad creative instead of the ad angle.** Fifty variations of one angle is the finding. The headline wording and the imagery are the advertiser optimizing around something already proven, not the proof itself.
 
@@ -796,20 +767,20 @@ Only add `offer_validation_run` and `offer_validation_path` when validation mode
 | `/market-evidence` | Called after the vectors (`synthesize`: clusters, counts, opportunity scores and the Research QA gate) and after launch (`feedback`: replies and calls become evidence, dormant until the sending platform is live). This skill collects; `/market-evidence` counts, checks and learns. Standard: `market-evidence-standard.md`. |
 | `/icp-onboarding` | Runs immediately before this skill. Produces the ICP, the value prop, `icp_soft_preferences.personas_to_prioritize` (the persona list every pain row maps against), `sales_call_library` (whether the client's won and lost recordings exist and where, which the First-Party Call Vector reads before asking the client for anything), and `buyer_pain_hypothesis` (the client's unverified belief about buyer pain, which this skill confirms or overturns). |
 | `/lead-source-strategy` | Runs in Lead Source Plan Mode AFTER campaign selection, far downstream of this skill. The chain is: buyer and pain, then the offer, then the list built to fit that offer, then the copy. Nothing it produces is a prerequisite here. |
-| `/lead-magnet-brainstorm` | Runs after discovery mode. Reads the offer-intelligence.md brief to anchor archetype selection, using the first-party buyer language, the pain-by-persona table, the paid-ads angles, and the ICP language from Vector 3. |
-| `/offer-test-slate` | Shows this brief's findings to the client (buyer types, problems in the buyer's words, the gap competitors leave) beside the offers `/lead-magnet-brainstorm` builds from them, before the test. Client approval is optional. After the wave reads out, its scale review reports the results to the client and reviews the winner's `offer.qualification` rule alongside the winner's scale-up; it is not a volume gate (Aaron process alignment, operator directive 2026-09-22). |
+| `/lead-magnet-brainstorm` | Runs after discovery mode as the RECORDER of the Aaron offer call. It records Aaron's answer word for word and runs the rails; it does not select forms or generate candidates from this brief. |
+| `/offer-test-slate` | Shows this brief's findings to the client (buyer types, problems in the buyer's words, the gap competitors leave) beside the offers the Aaron offer call decided (recorded by `/lead-magnet-brainstorm`), before the test. Client approval is optional. After the wave reads out, its scale review reports the results to the client and reviews the winner's `offer.qualification` rule; it is not a volume gate (operator directive 2026-09-22). |
 | `/campaign-strategy` | Reads the locked offer from `client-profile.yaml` and the data-point catalog. The front-end offer suggestions section should defer to this output. |
-| `/experiment-design` | If validation mode decision = Iterate, Swap or Swap (Contrarian), this skill writes the offer-only experiment hypothesis that `/experiment-design` formalizes; the offers themselves run as a fresh multi-offer flight through `/lead-magnet-brainstorm`. |
-| `/roast` | Optional fast pre-lock stress test of a candidate offer (hands-off council → green-light / reshape / kill + the single cheapest 48-hour validation test). Useful for a new or contrarian offer before committing build and spend; complements this skill's evidence-based Go/Iterate/Swap rather than replacing it. |
-| `/ask-aaron` | Makes the offer call right after this skill's research passes the Research QA gate, and his call is final below the operator (the Aaron lane, call 1, `aaron-lane.md`); `/lead-magnet-brainstorm` records it. Outside that call, a persona consult for pressure-testing a candidate offer against Aaron Shepherd's diagnostic (is the buyer real and specific, is it a concrete deliverable or a service description, can every qualified yes be honored, his "easy for you to fulfill" applied at the planned send volume; the twenty-buyer figure was this system's safeguard, doctrine §13, and the deliverable-at-send-scale check sits at offer lock in `/lead-magnet-brainstorm`, Aaron process alignment, operator directive 2026-09-22) or choosing between offer cards. It never sends or spends; complements the evidence-based Go/Iterate/Swap here rather than replacing it. |
+| `/experiment-design` | If validation mode decision = Iterate or Swap, the hand-off to the Aaron offer call comes first; once Aaron has named the offer, the offer-only experiment hypothesis is written for `/experiment-design` to formalize, and the offers run as a fresh multi-offer flight recorded through `/lead-magnet-brainstorm`. |
+| `/roast` | Optional fast pre-lock stress test of a candidate offer (hands-off council → green-light / reshape / kill + the single cheapest 48-hour validation test). Useful for a new offer before committing build and spend; complements this skill's evidence-based Go/Iterate/Swap rather than replacing it. |
+| `/ask-aaron` | Makes the offer call right after this skill's research passes the Research QA gate, and his call is final below the operator (the Aaron lane, operator directive 2026-09-24, `aaron-lane.md`, Call 1). A fresh sub-agent reads Aaron's live Notion content bank and decides what offers are tested; this skill's brief is one of its inputs, and on a validation Iterate or Swap this skill hands the failure read and evidence to a new call. It never sends or spends; `/lead-magnet-brainstorm` records his call. Complements the evidence-based Go/Iterate/Swap verdict rather than replacing it. |
 | `/phase-2-research-offer` | Runs this discovery mode (or validation mode on a real existing offer) after Phase 1 (`/phase-1-onboarding`, which ran `/icp-onboarding`), then the Research QA gate, the Aaron offer call and `/lead-magnet-brainstorm`; `/data-point-discovery` follows once the offer is locked. `/cold-email-kickoff` routes to it (`phase-protocol.md`). |
 | `/cold-email-weekly-rhythm` | If a running campaign's raw reply rate drops below 1% after 300+ sends, its Monday 1% rule sends it to `/deliverability-incident-response` first; once that clears deliverability and the list, it opens validation mode here (a look, not a verdict: calling the offer broken needs about 1,300 first-touch contacts per arm) before copy or list change. Its cross-campaign offer diagnosis and `/market-evidence feedback`'s routing rules (repeated contradiction, `already_have` or `confusion` in replies) open validation mode too. |
 | `/email-deliverability-audit` | Run it first when a deliverability trigger fires: bounce above the house threshold, a placement-test flag (a trigger to investigate, never decisive alone), reply rate near 0.1%, or contacts-per-positive jumping. Open rate is never the trigger, because opens are not tracked in this system (open tracking stays off on the sending platform). Do not diagnose the offer while a trigger is open. |
 
 ## What to do next
 
-- **Discovery mode complete** (the Research QA verdict is PASS, or HOLD carried forward with labels, which under `review_gates` needs the operator's Gate 2 decision first): Hand off to `/lead-magnet-brainstorm`. It reads the brief at `profiles/<business-slug>/offer-intelligence.md`, starting from its `Candidate Generation Input` block. Nothing list-side or data-side has run at this point, and none of it is needed for the handoff.
-- **Validation - Go:** Proceed to `/campaign-strategy`. Offer is locked in `client-profile.yaml`. New offer arms are optional; the default test is segments and data sources plus positioning variants of this offer (Aaron, Apr 13).
-- **Validation - Iterate:** Rewrite using ICP language from Vector 3, re-score once, then route the rewrite to `/lead-magnet-brainstorm` as a cell in a fresh multi-offer flight. The market reads it, not the desk score (Aaron process alignment, operator directive 2026-09-22; supersedes "repeat until score hits 6+").
-- **Validation - Swap or Swap (Contrarian):** Route the new offer through `/lead-magnet-brainstorm` into a fresh multi-offer flight run as simultaneous cells, with list and copy frozen; `/experiment-design` formalizes the offer-only hypothesis (Aaron process alignment, operator directive 2026-09-22; supersedes a one-offer swap).
+- **Discovery mode complete** (the Research QA verdict is PASS, or HOLD carried forward with labels, which under `review_gates` needs the operator's Gate 2 decision first): Hand off to the Aaron offer call (`aaron-lane.md`, Call 1; recorded by `/lead-magnet-brainstorm` in recorder mode). It reads the brief at `profiles/<business-slug>/offer-intelligence.md`, starting from its `Candidate Generation Input` and `Saturation Map` sections. Nothing list-side or data-side has run at this point, and none of it is needed for the handoff.
+- **Validation - Go:** Proceed to `/campaign-strategy`. Offer is locked in `client-profile.yaml`. New offer arms are optional; the default test is segments and data sources plus positioning variants of this offer.
+- **Validation - Iterate:** Record the failure read and re-score the existing offer once, then hand off to a fresh Aaron offer call (Step 5). The reshaped offer comes from Aaron and is recorded by `/lead-magnet-brainstorm`; the market reads it, not the desk score (operator directive 2026-09-22).
+- **Validation - Swap:** Record the evidence and hand off to a fresh Aaron offer call (Step 5). The recorded offers run as a fresh multi-offer flight of simultaneous cells, with list and copy frozen; `/experiment-design` formalizes the offer-only hypothesis (operator directive 2026-09-22).
 

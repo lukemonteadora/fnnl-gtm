@@ -254,7 +254,7 @@ Research what helps a GTM decision, not every field that exists. One card per co
 | Company, website, date read | Traceability |
 | Who they sell to | Overlap with our ICP |
 | Main promise (their headline, verbatim) | What the buyer has already been told |
-| Front-end offer and its archetype letter | The saturation count |
+| Front-end offer and its form | The saturation count |
 | Pricing model or visible price | The buyer's reference point |
 | Named customers and case studies | Evidence of who buys, and why (`competitor_case_study` rows) |
 | Paid-ad angles, with variation counts and run length | Demand evidence for an angle (Vector 2) |
