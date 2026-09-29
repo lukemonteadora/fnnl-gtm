@@ -34,7 +34,7 @@ FN = r"\{\{first_name\}\}"
 # Offer-line frames: a regex on the offer paragraph (the email minus its PS). None = structure-only.
 OFFER = {
     "F1": rf"^{FN}, if we could .+ one free .+ for you\. Would that be worth sharing more\?$",
-    "F2": r"^If we could build you a no-cost .+, would that be useful\?$",
+    "F2": rf"^(?i:({FN}, )?if we could build you a no-cost .+, would that be useful\?)$",
     "F3": rf"^(?i:({FN}, )?if we could .+, (would that be|is that) worth sharing more\?)$",
     "F4": r"^(?i:hey, if we could send you .+ that .+, would that be worth sending over\?)$",
     "F5": rf"^{FN},? if we .+ in the next .+ at absolutely no cost\.\s+So, we would .+\. All you have to do is .+\.$",
@@ -128,7 +128,7 @@ def check_email(e, where, control_line=None, held=None):
                 rec("FAIL", where, "F7 without line_two")
             else:
                 check_offer_line(two, main[1], where + " line two")
-                if control_line and main[1] != control_line:
+                if control_line and norm(main[1]) != norm(control_line):
                     rec("WARN", where, "F7 line two differs from the control, so the variant tests more than the pain line")
             rec("WARN", where, "F7 has no verbatim source: structure checked, the pain line's cluster is confirmed by a person")
         base = two
@@ -183,7 +183,14 @@ def check_follow(f, where):
         rec("PASS", where, fid + (f" + {add}" if add else ""))
 
 
+def norm(line):
+    """Drop a leading first name and re-capitalize, so a name lead-in does not make the same line look different."""
+    line = re.sub(rf"^{FN}, ", "", line.strip())
+    return line[:1].upper() + line[1:]
+
+
 def cta(line):
+    line = norm(line)
     s = re.split(r"(?<=[.?!])\s+", line.strip())
     return s[-1] if s else ""
 

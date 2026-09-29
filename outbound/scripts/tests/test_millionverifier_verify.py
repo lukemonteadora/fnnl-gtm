@@ -240,6 +240,132 @@ class MillionVerifierVerifyTest(unittest.TestCase):
         self.assertEqual(self.calls(), [])
         self.assertFalse(self.out.exists())
 
+    # ---- client mirror, newest-wins, missing-cache warning (the cache is append-only live state) ----
+    def sandbox(self, rows=(("Ok", "ok@acme.com"), ("Bad", "bad@acme.com"))):
+        """A throwaway outbound/ tree: the CLI resolves ../profiles from its own folder, so a copy of it
+        under tmp/sbx/outbound/scripts keeps every cache file out of the real outbound/profiles."""
+        scripts = self.tmp / "sbx" / "outbound" / "scripts"
+        scripts.mkdir(parents=True)
+        cli = scripts / "millionverifier_verify.mjs"
+        shutil.copy(CLI, cli)
+        profiles = self.tmp / "sbx" / "outbound" / "profiles"
+        (profiles / "acme-co").mkdir(parents=True)
+        inp = profiles / "acme-co" / "leads.csv"
+        with inp.open("w", encoding="utf-8", newline="") as fh:
+            w = csv.writer(fh)
+            w.writerow(["first_name", "email"])
+            w.writerows(rows)
+        return cli, profiles, inp
+
+    def run_sbx(self, cli, inp, *args, key=FAKE_KEY):
+        env = dict(os.environ)
+        env.update({"MILLIONVERIFIER_API_KEY": key, "MV_STUB_SCENARIO": str(self.scenario), "MV_STUB_LOG": str(self.log)})
+        cmd = [NODE, "--import", STUB.as_uri(), str(cli), str(inp), "--out", str(self.out),
+               "--backoff-ms", "0", "--retries", "0", *args]
+        return subprocess.run(cmd, capture_output=True, text=True, env=env, timeout=60)
+
+    @staticmethod
+    def jsonl(path):
+        if not path.exists():
+            return []
+        return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+    def test_client_mirror_written_and_shared_cache_warning(self):
+        cli, profiles, inp = self.sandbox()
+        shared = profiles / "_cache" / "verify-cache.jsonl"
+        mirror = profiles / "acme-co" / "verify-cache.jsonl"
+        proc = self.run_sbx(cli, inp)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("WARNING: the verification cache", proc.stderr)      # shared cache missing: loud, not silent
+        self.assertIn("does not exist", proc.stderr)
+        self.assertEqual({r["email"] for r in self.jsonl(shared)}, {"ok@acme.com", "bad@acme.com"})
+        self.assertEqual(self.jsonl(mirror), self.jsonl(shared))            # every verdict mirrored to the client copy
+        self.assertNotIn(FAKE_KEY, mirror.read_text(encoding="utf-8"))
+        # second run: shared cache exists, no warning, nothing re-bought, nothing appended
+        self.log.unlink()
+        before = (shared.read_bytes(), mirror.read_bytes())
+        proc = self.run_sbx(cli, inp)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertNotIn("WARNING", proc.stderr)
+        self.assertEqual(self.calls(), [])
+        self.assertEqual((shared.read_bytes(), mirror.read_bytes()), before)
+
+    def test_deleted_shared_cache_is_survived_through_the_client_copy(self):
+        cli, profiles, inp = self.sandbox()
+        shared = profiles / "_cache" / "verify-cache.jsonl"
+        mirror = profiles / "acme-co" / "verify-cache.jsonl"
+        self.assertEqual(self.run_sbx(cli, inp).returncode, 0)
+        shared.unlink()                                                      # the failure this guards against
+        self.log.unlink()
+        proc = self.run_sbx(cli, inp)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("WARNING", proc.stderr)
+        self.assertIn("still read", proc.stderr)                             # the client copy is named as the survivor
+        self.assertEqual(self.calls(), [])                                   # no paid call: verdicts came from the mirror
+        self.assertTrue(all(r["cache_hit"] == "true" for r in self.out_rows().values()))
+        self.assertEqual(len(self.jsonl(mirror)), 2)                         # the mirror was never rewritten
+
+    def test_newest_verified_at_wins_not_the_last_line_or_file(self):
+        cli, profiles, inp = self.sandbox((("New", "new@acme.com"), ("Same", "same@acme.com")))
+        now = datetime.now(timezone.utc)
+        newer = (now - timedelta(days=1)).isoformat()
+        older = (now - timedelta(days=30)).isoformat()
+
+        def line(email, raw, gate, at):
+            return json.dumps({"email": email, "gate": gate, "raw_status": raw, "verified_at": at,
+                               "provider": "millionverifier"})
+        shared = profiles / "_cache" / "verify-cache.jsonl"
+        mirror = profiles / "acme-co" / "verify-cache.jsonl"
+        shared.parent.mkdir(parents=True)
+        # new@: the shared file (read first) holds the newer invalid; the client copy (read second) holds an older ok
+        # same@: one file, the newer ok comes first and an older invalid line follows it
+        shared.write_text("\n".join([line("new@acme.com", "invalid", "invalid", newer),
+                                     line("same@acme.com", "ok", "valid", newer),
+                                     line("same@acme.com", "invalid", "invalid", older)]) + "\n", encoding="utf-8")
+        mirror.write_text(line("new@acme.com", "ok", "valid", older) + "\n", encoding="utf-8")
+        proc = self.run_sbx(cli, inp)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertEqual(self.calls(), [])
+        out = self.out_rows()
+        self.assertEqual(out["New"]["email_status"], "invalid")
+        self.assertEqual(out["New"]["cache_hit"], "true")
+        self.assertEqual(out["Same"]["email_status"], "valid")
+        # and the other way round: the client copy is newer than the shared one
+        shared.write_text(line("new@acme.com", "ok", "valid", older) + "\n", encoding="utf-8")
+        mirror.write_text(line("new@acme.com", "invalid", "invalid", newer) + "\n", encoding="utf-8")
+        self.assertEqual(self.run_sbx(cli, inp).returncode, 0)
+        self.assertEqual(self.out_rows()["New"]["email_status"], "invalid")
+
+    def test_mirror_keeps_the_provider_filter(self):
+        cli, profiles, inp = self.sandbox((("Ok", "ok@acme.com"),))
+        mirror = profiles / "acme-co" / "verify-cache.jsonl"
+        fresh = datetime.now(timezone.utc).isoformat()
+        mirror.write_text(json.dumps({"email": "ok@acme.com", "gate": "invalid", "raw_status": "invalid",
+                                      "verified_at": fresh, "provider": "someothertool"}) + "\n", encoding="utf-8")
+        proc = self.run_sbx(cli, inp)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertEqual(self.calls(), ["ok@acme.com"])                      # another verifier's verdict is not reused
+        self.assertEqual(self.out_rows()["Ok"]["email_status"], "valid")
+
+    def test_no_mirror_without_a_client_folder_no_cache_or_test_key(self):
+        cli, profiles, inp = self.sandbox()
+        mirror = profiles / "acme-co" / "verify-cache.jsonl"
+        self.assertEqual(self.run_sbx(cli, inp, "--no-cache").returncode, 0)
+        self.assertFalse(mirror.exists())
+        self.assertFalse((profiles / "_cache").exists())
+        # the vendor test key returns random verdicts: not even a scratch --cache run may mirror them to a client
+        scratch = self.tmp / "scratch" / "cache.jsonl"
+        self.assertEqual(self.run_sbx(cli, inp, "--cache", str(scratch), key="API_KEY_FOR_TEST").returncode, 0)
+        self.assertTrue(scratch.exists())
+        self.assertFalse(mirror.exists())
+        # an input under a shared _folder has no client to mirror to
+        shared_in = profiles / "_cache" / "batch.csv"
+        shared_in.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(inp, shared_in)
+        self.assertEqual(self.run_sbx(cli, shared_in).returncode, 0)
+        self.assertFalse(mirror.exists())
+        self.assertEqual({p.name for p in (profiles / "_cache").iterdir()}, {"batch.csv", "verify-cache.jsonl"})
+
     def test_credits_is_the_free_endpoint(self):
         proc = self.run_cli("--credits")
         self.assertEqual(proc.returncode, 0, proc.stderr)

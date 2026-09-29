@@ -138,6 +138,46 @@ class FrameCheckTest(unittest.TestCase):
         self.assertEqual(code, 1, out)
         self.assertIn("F7 line one is a question", out)
 
+    def f2_call(self, second_body):
+        data = passing_call()
+        seq = data["aaron_campaign_call"]["campaigns"][0]["sequence"]
+        ps = "PS, the audit takes you two minutes to skim.\n"
+        seq["email_1_variants"] = [
+            {"label": "A", "frame": "F2", "ps": "P2", "line_two": None, "body": (
+                "{{first_name}}, if we could build you a no-cost renewal risk report that ranks each account, "
+                "would that be useful?\n\n" + ps)},
+            {"label": "B", "frame": "F2", "ps": "P2", "line_two": None, "body": second_body + "\n\n" + ps},
+        ]
+        return data
+
+    def test_f2_accepts_leading_first_name_and_ignores_it_for_cta(self):
+        no_name = ("If we could build you a no-cost renewal risk report that ranks each account, "
+                   "would that be useful?")
+        code, out = self.run_check([self.write_yaml("f2.yaml", self.f2_call(no_name))])
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("different CTAs", out)
+        self.assertIn("FAIL 0", out)
+
+    def test_f2_still_rejects_a_different_cta(self):
+        other = ("{{first_name}}, if we could build you a no-cost renewal risk report that ranks each account, "
+                 "would that be worth a look?")
+        code, out = self.run_check([self.write_yaml("f2bad.yaml", self.f2_call(other))])
+        self.assertEqual(code, 1, out)
+        self.assertIn("does not keep F2's fixed words", out)
+
+    def test_f7_control_comparison_ignores_leading_first_name(self):
+        line = "if we could audit, map and score one free renewal risk report for you, would that be worth sharing more?"
+        data = passing_call()
+        seq = data["aaron_campaign_call"]["campaigns"][0]["sequence"]
+        seq["email_1_variants"] = [
+            {"label": "A", "frame": "F3", "ps": None, "line_two": None, "body": "If we could audit, map and score one free renewal risk report for you, would that be worth sharing more?\n"},
+            {"label": "B", "frame": "F7", "ps": None, "line_two": "F3", "body": (
+                "Renewal season keeps catching accounts off guard.\n\n{{first_name}}, " + line + "\n")},
+        ]
+        code, out = self.run_check([self.write_yaml("f7name.yaml", data)])
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("differs from the control", out)
+
     def test_missing_record_exits_2(self):
         code, out = self.run_check(["--client", "nobody", "--profiles-dir", str(self.dir)])
         self.assertEqual(code, 2)

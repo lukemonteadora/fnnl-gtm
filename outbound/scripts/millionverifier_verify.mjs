@@ -38,6 +38,12 @@
  *   - Emails are lowercased and trimmed, and each distinct email is verified ONCE per file.
  *   - A fresh cached verdict (same normalized email, same provider, younger than --max-age-days) is reused, never
  *     re-bought. Transient outcomes are never cached. Each new verdict is appended to the cache as soon as it lands.
+ *   - THE CACHE IS APPEND-ONLY LIVE STATE. No script rewrites, moves or deletes it, and nobody should by hand: it is
+ *     the only record of what was already paid for, and client folders are gitignored with profiles/, so git cannot
+ *     bring it back. When the input CSV sits under outbound/profiles/<slug>/, every new verdict is also appended to
+ *     that client's own copy, profiles/<slug>/verify-cache.jsonl. Both files are read on each run and the newest
+ *     verified_at wins (not the last line). A shared cache that is missing prints a loud WARNING on stderr instead of
+ *     silently starting empty; the client copies are still read, so those verdicts survive.
  *   - On a fatal error (an `error` field in the reply, or an HTTP 4xx other than 429) the script stops taking new
  *     work, still writes the output with the unchecked rows marked `not_verified`, and exits 1. Paid verdicts are
  *     never lost, and a re-run of the same file costs nothing for the rows already cached. MillionVerifier's error
@@ -55,8 +61,10 @@
  * Options:
  *   --email-col <name>      email column (default: auto-detect email / email_address / work_email)
  *   --out <path>            output CSV (default <input>.millionverifier.csv)
- *   --cache <path>          verdict cache (default ../profiles/_cache/verify-cache.jsonl, gitignored with profiles/)
- *   --no-cache              neither read nor write the cache (still dedupes within the file)
+ *   --cache <path>          verdict cache (default ../profiles/_cache/verify-cache.jsonl, gitignored with profiles/).
+ *                           Append-only. When the input sits under profiles/<slug>/, each verdict is also mirrored to
+ *                           profiles/<slug>/verify-cache.jsonl and both are read (the newest verified_at wins).
+ *   --no-cache              neither read nor write either cache, mirror included (still dedupes within the file)
  *   --max-age-days <n>      a cached verdict older than this is re-verified (default 90, mirroring provider-routing.yaml
  *                           layers.verification.cache.max_age_days; pass it explicitly if that value changes)
  *   --concurrency <n>       parallel requests (default 4; the vendor's rate limit is not recorded in this repo)
@@ -193,26 +201,45 @@ async function verifyWithRetry(email, key, opts, stats) {
     role: '', verified_at: '', cache_hit: false, fresh: false, detail: `${last.detail} (after ${opts.retries + 1} attempt${opts.retries ? 's' : ''})` };
 }
 
-// ---- verdict cache (JSONL, one verdict per line, latest line wins) ----
-function loadCache(file) {
+// ---- verdict cache (JSONL, one verdict per line, append-only, the newest verified_at wins) ----
+// LIVE STATE: never rewrite, move or delete it. Every verdict is also mirrored to the client's own copy,
+// profiles/<slug>/verify-cache.jsonl, when the input sits under a client folder; both files are read, and a missing
+// shared cache is reported loudly, never silently. Only this script's own provider's verdicts are reused.
+const newer = (a, b) => !b || (Date.parse(a.verified_at) || 0) >= (Date.parse(b.verified_at) || 0);
+function loadCache(files) {
   const map = new Map();
-  if (!file || !fs.existsSync(file)) return map;
-  for (const line of fs.readFileSync(file, 'utf8').split(/\r?\n/)) {
-    if (!line.trim()) continue;
-    try {
-      const r = JSON.parse(line);
-      if (r && r.email && r.provider === PROVIDER) map.set(normEmail(r.email), r);  // another verifier's verdict is not reused
-    } catch { /* skip a torn line */ }
+  for (const file of files) {
+    if (!file || !fs.existsSync(file)) continue;
+    for (const line of fs.readFileSync(file, 'utf8').split(/\r?\n/)) {
+      if (!line.trim()) continue;
+      try {
+        const r = JSON.parse(line);
+        // another verifier's verdict is not reused
+        if (r && r.email && r.provider === PROVIDER && newer(r, map.get(normEmail(r.email)))) map.set(normEmail(r.email), r);
+      } catch { /* skip a torn line */ }
+    }
   }
   return map;
 }
-function appendCache(file, r) {
-  if (!file || !r.fresh || TRANSIENT_RAW.has(r.raw_status)) return;
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.appendFileSync(file, JSON.stringify({
+function appendCache(files, r) {
+  if (!r.fresh || TRANSIENT_RAW.has(r.raw_status)) return;
+  const line = JSON.stringify({
     email: normEmail(r.email), gate: r.gate, raw_status: r.raw_status, is_catch_all: r.is_catch_all,
     subresult: r.subresult, quality: r.quality, free: r.free, role: r.role, verified_at: r.verified_at, provider: PROVIDER,
-  }) + '\n');
+  }) + '\n';
+  for (const file of files) {
+    if (!file) continue;
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.appendFileSync(file, line);
+  }
+}
+// profiles/<slug>/verify-cache.jsonl when the input CSV sits under a client folder (not a shared _folder), else null
+function clientCachePath(input) {
+  const profiles = path.resolve(__dirname, '..', 'profiles');
+  const rel = path.relative(profiles, path.resolve(input));
+  const slug = rel.split(path.sep)[0];
+  if (!rel || rel.startsWith('..') || path.isAbsolute(rel) || !slug || slug.startsWith('_') || slug === rel) return null;
+  return path.join(profiles, slug, 'verify-cache.jsonl');
 }
 function freshCacheHit(cache, email, maxAgeDays) {
   const c = cache.get(normEmail(email));
@@ -325,7 +352,17 @@ async function main() {
   const emails = body.map((r) => normEmail(r[emailIdx]));
   const out = flag('--out') || input.replace(/\.csv$/i, '') + '.millionverifier.csv';
 
-  const cache = cachePath ? loadCache(cachePath) : new Map();
+  const clientCache = cachePath ? clientCachePath(input) : null;
+  const cacheFiles = [cachePath, clientCache].filter(Boolean);   // read both, write both (mirror)
+  if (cachePath && !fs.existsSync(cachePath)) {
+    console.error(`WARNING: the verification cache ${cachePath} does not exist, so this run starts a new shared one.`);
+    console.error('  It is append-only live state and is never moved or deleted on purpose. If it went missing, stop and');
+    console.error('  recover the original first (Recycle Bin or a backup), then re-run: appending to a fresh file hides the loss.');
+    console.error(clientCache && fs.existsSync(clientCache)
+      ? `  This client's own copy ${clientCache} exists and is still read, so its verdicts are not re-bought.`
+      : '  No client copy is available for this input, so every address will be verified again.');
+  }
+  const cache = cachePath ? loadCache(cacheFiles) : new Map();
   const byEmail = new Map();   // normalized email -> result
   const toVerify = [];         // distinct plausible emails that need a paid call
   const seen = new Set();
@@ -350,6 +387,8 @@ async function main() {
   if (key === VENDOR_TEST_KEY && cachePath && (flag('--cache') === undefined || cachePath.toLowerCase() === DEFAULT_CACHE.toLowerCase())) {
     usageExit('The vendor test key returns random verdicts, so it may not write to the shared verify cache. Re-run with --no-cache or --cache <scratch path>. Nothing was sent.');
   }
+  // The vendor test key returns random verdicts: never mirror those into a client folder either.
+  const writeFiles = key === VENDOR_TEST_KEY ? cacheFiles.filter((f) => f === cachePath) : cacheFiles;
   console.error(`[millionverifier] ${plan}`);
 
   const stats = { calls: 0, lowestCredits: null };
@@ -360,7 +399,7 @@ async function main() {
       try {
         const r = await verifyWithRetry(n, key, opts, stats);
         byEmail.set(n, r);
-        if (cachePath) appendCache(cachePath, r);
+        if (cachePath) appendCache(writeFiles, r);
       } catch (e) {
         if (!(e instanceof FatalError)) throw e;
         fatal = e.message;   // stop taking new work; keep every verdict already paid for

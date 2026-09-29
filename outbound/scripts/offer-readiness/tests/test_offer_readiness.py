@@ -237,11 +237,14 @@ class OfferReadinessTest(unittest.TestCase):
         out = self.ok(r)
         self.assertIn("offer 2: 2 mirrors", out)
         for b in mirrors(self.load(), 2):
-            self.assertIs(b["lead_magnet_client_ok"], True)  # bare yes; PyYAML reads a boolean
+            self.assertEqual(b["lead_magnet_client_ok"], "yes")  # written quoted, so PyYAML reads text, not a boolean
             self.assertEqual(b["lead_magnet_client_ok_by"], "Pat (client)")
             self.assertEqual(b["lead_magnet_client_ok_at"], "2026-01-07")
             self.assertTrue(b["lead_magnet_client_dependency"].startswith("CONFIRMED 2026-01-07: 14-day pilot"))
             self.assertEqual(b["status"], "active")
+        raw = self.prof.read_text(encoding="utf-8")
+        self.assertIn('lead_magnet_client_ok: "yes"', raw)      # quoted text, never a YAML 1.1 boolean
+        self.assertNotRegex(raw, r"(?m)^\s*lead_magnet_client_ok:\s*yes")
         self.assertIn("offer-approval · offer 2 · UPDATED: lead_magnet_client_ok = yes",
                       (self.d / "activity-log.md").read_text(encoding="utf-8"))
 
@@ -259,9 +262,12 @@ class OfferReadinessTest(unittest.TestCase):
         self.migrate_and_build()
         self.ok(run("offer_approval.py", "set", self.d, "offer-2", "no", "--by", "Pat (client)",
                     "--evidence", "Slack permalink", "--at", "2026-01-08"))
+        raw = self.prof.read_text(encoding="utf-8")
+        self.assertIn('lead_magnet_client_ok: "no"', raw)       # quoted text, never a YAML 1.1 boolean
+        self.assertNotRegex(raw, r"(?m)^\s*lead_magnet_client_ok:\s*no\b")
         p = self.load()
         for b in mirrors(p, 2):
-            self.assertIs(b["lead_magnet_client_ok"], False)  # bare no; PyYAML reads a boolean
+            self.assertEqual(b["lead_magnet_client_ok"], "no")  # written quoted, so PyYAML reads text, not a boolean
             self.assertEqual(b["status"], "vetoed")
             self.assertEqual(b["lead_magnet_client_dependency"], "client runs a 14-day pilot")
         ts = p["offer"]["test_slate"]

@@ -130,7 +130,7 @@ def main():
     if honored == {"agency"}:
         sys.exit("refused: agency-honored offer; its lead_magnet_client_ok stays not_needed")
 
-    new = {"lead_magnet_client_ok": a.value, "lead_magnet_client_ok_by": yaml_str(a.by),
+    new = {"lead_magnet_client_ok": yaml_str(a.value), "lead_magnet_client_ok_by": yaml_str(a.by),
            "lead_magnet_client_ok_at": yaml_str(a.at), "lead_magnet_client_ok_evidence": yaml_str(a.evidence)}
     changed, extra = 0, []
     for i, col, s, e in blocks:
