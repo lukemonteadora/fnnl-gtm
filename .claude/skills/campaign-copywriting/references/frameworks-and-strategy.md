@@ -164,7 +164,7 @@ Email 1 (the single new thread) closes with the sender's first name and the comp
 {phone}          ← only when client has supplied a sender phone (sender_persona.phone)
 ```
 
-**Legal requirements override style** (the doctrine's own rule, not Aaron's words: doctrine §11 states "Campaign caps, legal requirements, and opt-outs override." in the corpus author's voice): where a client's counsel or the recipient's jurisdiction requires a sender postal address or other identification, add exactly what is required as its own line and record it under Compliance in `copy.md` and in the activity log, as a compliance requirement, not a style choice. Confirm this per client before launch; the old city-and-country line was never a postal address.
+**Legal requirements override style** (the doctrine's own rule, not Aaron's words: doctrine §11 states "Campaign caps, legal requirements, and opt-outs override." in the corpus author's voice): where a client's counsel or the recipient's jurisdiction requires a sender postal address or other identification, add exactly what is required as its own line and record it under Compliance in `copy.md` and in the activity log, as a compliance requirement, not a style choice. (The opt-out is not part of this confirmation: opt-out handling is always the house default and is never asked, `../SKILL.md` Compliance item 0a.) Confirm this per client before launch; the old city-and-country line was never a postal address.
 
 In-thread follow-ups (Email 2 and optional Email 3) MUST still sign off, but the first name alone is enough. A follow-up with no sign-off is a hard failure. In the pre-write path, the follow-up steps are `{{email_2}}` / `{{email_3}}` followed by the first-name sign-off, set on the step.
 
@@ -190,6 +190,7 @@ Email 1 subject lines must be:
 - built with 0 to 2 variables (operator-approved Aaron alignment, 2026-09-21: Aaron says "one to two variables" and also shows zero-variable subjects, doctrine §9)
 - curiosity plus relevance, so a reader who does not care about the topic can tell (examples §3)
 - tested last: subject lines are his lowest-leverage lever (doctrine §9)
+- spun like everything else (HARD RULE, operator directive 2026-09-30): the Email 1 subject carries a spintax block in the sending platform's syntax, option A is the approved subject exactly as written, and every variant carries the identical block (`../SKILL.md`, Spintax Rules). Spinning does not make the subject a test variable.
 
 Avoid:
 
@@ -394,3 +395,4 @@ Rules:
 - Switch off a losing Email 1 variant in flight only on the read rules in `/experiment-design` (its ~1,300 first-touch floor, then the sequence plus grace), never on a ratio against the leader.
 - Each follow-up must move the conversation (strip it back, a different value prop or mechanism, or add to it, Hard Rule 21), not a minor rewrite of Email 1's CTA.
 - Every variant must pass the Copy QA Gate.
+- Spintax runs on every variant and never touches the one variable that separates B or C from A (`../SKILL.md`, Spintax Rules; Hard Rule 40). The reworded options inside a variant are noise within that variant, not a test arm.

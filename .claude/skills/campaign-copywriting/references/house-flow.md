@@ -89,7 +89,7 @@ Record the SQL/MQL decision and the risk reversal in Step 3 before writing final
 ### What To Do Silently
 
 0. **Check the List Gate first** (see List Gate above): confirm `leads.verified.csv` exists for this slice, it passed `/list-quality-scorecard` at grade B or better with a list-QA PASS (`verified-list-gate.md` condition 2), and the strategy is locked. If any fails, STOP and route to the producer: do not start copy.
-0a. **Opt-out ruling for Canada, the UK and Ireland.** This item now lives in `../SKILL.md`, section "Compliance: the opt-out ruling (Step 1, item 0a)", because it binds every path. Run it there.
+0a. **Opt-out handling (always the FNNL house default, never asked; operator directive 2026-09-30).** This item now lives in `../SKILL.md`, section "Compliance: the opt-out ruling (Step 1, item 0a)", because it binds every path. Run it there.
 1. Read all provided context.
 2. Identify target audience.
 3. Identify the trigger or reason this audience is being contacted.
@@ -308,7 +308,8 @@ A genuinely small market (roughly under 3,000 qualified contacts) or a tested ar
 - [x] Email 1 follows the Framework A default anatomy and closes with one soft permission CTA (default `Would that be worth sharing more?`, whitelist at Hard Rule 32) after the free deliverable and, when real, the scope disclosure; follow-ups use their approved slot CTA.
 - [x] Email 1 has three variants by default, each of B and C changing exactly one variable against A, each named above.
 - [x] Edited in Aaron's order (offer, unsupported facts, output and effort, one next action, filler, then length and style); every line has a job and a supporting fact.
-- [x] Checked against the rejection bank (`aaron-examples.md` §8) and the kill-list; nothing he rejected survives.
+- [x] Checked against the rejection bank (`outbound/reference/aaron-examples.md` §8) and the kill-list; nothing he rejected survives.
+- [x] Spintax (added after final copy, in the sending platform's syntax) is on the Email 1 subject and every unprotected body sentence of every step, option A is the approved wording exactly, and the read back of the paused draft confirmed it (`../SKILL.md`, Spintax Rules).
 - [x] Pre-send test passed: I would answer this email.
 - [x] CTAs reference confirmed deliverables only.
 - [x] Variables use `{{double_braces}}`.

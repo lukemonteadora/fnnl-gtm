@@ -34,7 +34,7 @@ an artifact this skill writes.
 - Subject lines, openers, second lines, follow-ups, CTAs
 - Any cold outreach copy being written or QA'd
 - The initial cold touch must also pass the Email 1 contract in `outreach-copy-framework.md` (B1 to B15): offer first with no greeting and no preamble (a logged B3 opener arm aside, with the offer in the very next sentence; operator decision 2026-09-23, Aaron pre-launch gap audit), 25 to 35 body words by default (with Aaron's floor and saturation exception), 2 to 3 main-body sentences (one for the one-liner), one primary ask, the scope disclosure whenever it reflects the real process, the soft permission CTA last, and the email subject rule (2 to 4 lowercase words, 0 to 2 variables). Any optional P.S. is declarative, short, and does one job, and it sits outside both the main-body sentence count and the word count (operator-approved Aaron alignment, 2026-09-21)
-- Every draft is also checked against Aaron's rejection bank (`aaron-examples.md` §8 in `/ask-aaron`) and his named bans (see Aaron's Named Bans below)
+- Every draft is also checked against Aaron's rejection bank (`aaron-examples.md` §8) and his named bans (see Aaron's Named Bans below)
 - When in doubt, choose the lower-hype rewrite
 
 ---
@@ -99,7 +99,7 @@ The rest are stated here:
 - A salesy sign-off ("Thanks for the time", doctrine §9), and opt-out lines or spintax artifacts in the body (doctrine §9; the opt-out mechanics live in the sending platform, see Unsubscribe / Closeout Line Rules).
 - The company-name variable as a default (examples §8: *"which I actually hate"*; B5 in `outreach-copy-framework.md`).
 
-The full row-by-row list, with his reasons and fixes, is `aaron-examples.md` §8 in `/ask-aaron`. Check every draft against it: it is a QA gate (`outreach-copy-framework.md`).
+The full row-by-row list, with his reasons and fixes, is `aaron-examples.md` §8. Check every draft against it: it is a QA gate (`outreach-copy-framework.md`).
 
 ---
 
@@ -358,7 +358,7 @@ Before approving any copy:
 
 ## What to do next
 
-**If flags cleared:** read `run_state.sending_platform` from the profile or campaign plan, and resolve the sending platform against the stack contract. Run only the workflows belonging to that one locked platform, in this order: its variant-syntax (spintax) pass first, then its campaign upload. Whatever tool fills the role, use its own native variation syntax and its own upload workflow. The variation pass touches the shared follow-up text only, never an Email 1 variant column, and the upload wires one variation per declared Email 1 column (`email_1_a`, `email_1_b`, `email_1_c` by default) on an even split, stopping rather than dropping Variant C (`/campaign-copywriting` Spintax Rules and Split testing; Aaron process alignment, operator directive 2026-09-22).
+**If flags cleared:** read `run_state.sending_platform` from the profile or campaign plan, and resolve the sending platform against the stack contract. Run only the workflows belonging to that one locked platform, in this order: its variant-syntax (spintax) pass first, then its campaign upload. Whatever tool fills the role, use its own native variation syntax and its own upload workflow. The variation pass covers every subject and every body sentence of every step, Email 1 variants included, with option A kept exact and the variant's one differing variable never spun (Hard Rule 40). The upload wires one variation per declared Email 1 column (`email_1_a`, `email_1_b`, `email_1_c` by default) on an even split, stopping rather than dropping Variant C (`/campaign-copywriting` Spintax Rules and Split testing; operator directive 2026-09-30).
 
 If `run_state.sending_platform` is unset, or the sending-platform role is empty in the contract, stop and route to `/stack-setup`. Do not guess a platform and do not fall back to a platform named in any example.
 
@@ -372,7 +372,7 @@ Do not show the off-path platform. Provider drift after QA is how campaigns get 
 
 - `/outreach-copywriting` - applies the cross-channel Framework A first-touch rule
 - `/campaign-copywriting` - produces the copy this skill screens
-- `/ask-aaron` - the sourced doctrine behind the risk-reversal and offer-first guidance above, and the source of the named kill-list and the rejection bank (`aaron-examples.md` §8); advisory only, does not relax this skill's rules
+- `/ask-aaron` (reads Aaron's live Notion notes; the citations here point at the frozen snapshot `aaron-doctrine.md` and `aaron-examples.md`) - the sourced doctrine behind the risk-reversal and offer-first guidance above, and the source of the named kill-list and the rejection bank (`aaron-examples.md` §8); advisory only, does not relax this skill's rules
 
 ## Activity Log Protocol
 
