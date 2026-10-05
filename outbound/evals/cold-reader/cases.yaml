@@ -1,0 +1,496 @@
+# CONSTRUCTED CASES. Every company, person, product and offer below is fictional and written for this file.
+# No client copy, no client data and no other workspace's material is used.
+#
+# The set is 20 emails: 10 segments, each with an UNCLEAR version (vague deliverable, planted jargon, no
+# sentence saying what the sender does) and a PLAIN rewrite of the same offer (specific deliverable, one plain
+# context sentence). Each email is read by one fictional reader, so a run holds 20 packets, one fresh sub-agent each. `expect: unclear`
+# means the reader should answer "cannot tell" on one of the fields named in `cannot_tell_any`; `expect: clear`
+# means no field may be "cannot tell". `jargon_terms` are the planted terms the reader should flag.
+#
+# These labels are constructed, not client or operator labels, so this benchmark proves the reader tier can tell
+# unclear copy from plain copy. It does not prove replies. The 20-row agreement check on real emails is the
+# separate second half of the keep rule (README).
+#
+# Version 2 (2026-09-30). The first baseline run (2/20 pass) showed the constructed plain rewrites never said WHY
+# the offer is free, so readers correctly answered "cannot tell" on why_these_terms. The plain versions now carry
+# one plain reason sentence, and the unclear versions are gold-labelled to fail on why_these_terms as well.
+
+- id: s01-unclear-p1
+  description: "CONSTRUCTED: unclear version, segment s01, reader 1"
+  vars:
+    persona:
+      title: "Owner"
+      company: "Maple Court Dental"
+      size: "6 staff"
+      sells: "family dentistry"
+      awareness: "you have not looked for this kind of service"
+    sender_name: "Sam Ortiz"
+    email:
+      subject: "question about calls"
+      body: |
+        Dana, if we could run a no-cost inbound capture leakage audit on your front-desk funnel, would that be worth sharing more?
+    signature: |
+      Sam Ortiz
+      Northfield Growth
+    gold:
+      label_status: constructed
+      expect: unclear
+      cannot_tell_any: ["what_offered", "who_sends", "why_these_terms"]
+      jargon_terms: ["inbound capture leakage audit", "funnel"]
+      forbidden_search_terms: ["Northfield Growth", "Sam Ortiz"]
+
+- id: s01-plain-p1
+  description: "CONSTRUCTED: plain version, segment s01, reader 1"
+  vars:
+    persona:
+      title: "Owner"
+      company: "Maple Court Dental"
+      size: "6 staff"
+      sells: "family dentistry"
+      awareness: "you have not looked for this kind of service"
+    sender_name: "Sam Ortiz"
+    email:
+      subject: "question about calls"
+      body: |
+        Dana, if we could show you which calls your practice missed after hours last month, and how many were new patients, at no cost, would that be worth sharing more?
+
+        We help dental practices answer the new-patient calls they currently miss. We do it free because most practices that see the list ask us to fix the calls.
+    signature: |
+      Sam Ortiz
+      Northfield Growth
+    gold:
+      label_status: constructed
+      expect: clear
+      forbidden_search_terms: ["Northfield Growth", "Sam Ortiz"]
+
+- id: s02-unclear-p1
+  description: "CONSTRUCTED: unclear version, segment s02, reader 1"
+  vars:
+    persona:
+      title: "President"
+      company: "Halvorsen Roofing"
+      size: "22 staff"
+      sells: "flat and low-slope commercial roofs"
+      awareness: "you have not looked for this kind of service"
+    sender_name: "Priya Nair"
+    email:
+      subject: "your bid response"
+      body: |
+        Curtis, if we could benchmark your lead-response SLA against best-in-class operators at no cost, would that be worth sharing more?
+    signature: |
+      Priya Nair
+      Ridgeway Digital
+    gold:
+      label_status: constructed
+      expect: unclear
+      cannot_tell_any: ["what_offered", "who_sends", "why_these_terms"]
+      jargon_terms: ["lead-response SLA", "best-in-class operators", "benchmark"]
+      forbidden_search_terms: ["Ridgeway Digital", "Priya Nair"]
+
+- id: s02-plain-p1
+  description: "CONSTRUCTED: plain version, segment s02, reader 1"
+  vars:
+    persona:
+      title: "President"
+      company: "Halvorsen Roofing"
+      size: "22 staff"
+      sells: "flat and low-slope commercial roofs"
+      awareness: "you have not looked for this kind of service"
+    sender_name: "Priya Nair"
+    email:
+      subject: "your bid response"
+      body: |
+        Curtis, if we could send you a one-page review, at no cost, showing how fast your company answers a new bid request and three ways to speed it up, would that be worth sharing more?
+
+        We are a small agency that works only with commercial roofing contractors. We do it free because most contractors who see the review ask us to set up the fixes.
+    signature: |
+      Priya Nair
+      Ridgeway Digital
+    gold:
+      label_status: constructed
+      expect: clear
+      forbidden_search_terms: ["Ridgeway Digital", "Priya Nair"]
+
+- id: s03-unclear-p1
+  description: "CONSTRUCTED: unclear version, segment s03, reader 1"
+  vars:
+    persona:
+      title: "Owner and pharmacist"
+      company: "Corner Well Pharmacy"
+      size: "8 staff"
+      sells: "prescriptions and compounding for one town"
+      awareness: "you have not looked for this kind of service"
+    sender_name: "Marcus Bell"
+    email:
+      subject: "your reimbursements"
+      body: |
+        Lindsay, if we could surface your reimbursement variance exposure at no cost, would that be worth sharing more?
+    signature: |
+      Marcus Bell
+      Harbor and Pine Analytics
+    gold:
+      label_status: constructed
+      expect: unclear
+      cannot_tell_any: ["what_offered", "who_sends", "why_these_terms"]
+      jargon_terms: ["reimbursement variance exposure"]
+      forbidden_search_terms: ["Harbor and Pine Analytics", "Marcus Bell"]
+
+- id: s03-plain-p1
+  description: "CONSTRUCTED: plain version, segment s03, reader 1"
+  vars:
+    persona:
+      title: "Owner and pharmacist"
+      company: "Corner Well Pharmacy"
+      size: "8 staff"
+      sells: "prescriptions and compounding for one town"
+      awareness: "you have not looked for this kind of service"
+    sender_name: "Marcus Bell"
+    email:
+      subject: "your reimbursements"
+      body: |
+        Lindsay, if we could show you which prescriptions your pharmacy is being reimbursed for below what it paid for them, at no cost, would that be worth sharing more?
+
+        We are a small analytics firm that reads reimbursement files for independent pharmacy owners. We do it free because most owners who see the list ask us to run it every month.
+    signature: |
+      Marcus Bell
+      Harbor and Pine Analytics
+    gold:
+      label_status: constructed
+      expect: clear
+      forbidden_search_terms: ["Harbor and Pine Analytics", "Marcus Bell"]
+
+- id: s04-unclear-p1
+  description: "CONSTRUCTED: unclear version, segment s04, reader 1"
+  vars:
+    persona:
+      title: "Founder"
+      company: "Sunroot Wellness"
+      size: "7 staff"
+      sells: "daily greens and electrolyte powders online"
+      awareness: "you have bought marketing help before"
+    sender_name: "Tessa Grant"
+    email:
+      subject: "your abandoned carts"
+      body: |
+        Kai, if we could activate a lifecycle retention layer for your DTC stack, at no cost, would that be useful?
+    signature: |
+      Tessa Grant
+      Loop and Lantern
+    gold:
+      label_status: constructed
+      expect: unclear
+      cannot_tell_any: ["what_offered", "who_sends", "why_these_terms"]
+      jargon_terms: ["lifecycle retention layer", "DTC stack"]
+      forbidden_search_terms: ["Loop and Lantern", "Tessa Grant"]
+
+- id: s04-plain-p1
+  description: "CONSTRUCTED: plain version, segment s04, reader 1"
+  vars:
+    persona:
+      title: "Founder"
+      company: "Sunroot Wellness"
+      size: "7 staff"
+      sells: "daily greens and electrolyte powders online"
+      awareness: "you have bought marketing help before"
+    sender_name: "Tessa Grant"
+    email:
+      subject: "your abandoned carts"
+      body: |
+        Kai, if we could write you two abandoned-cart emails for your store, free, and you decide whether to use them, would that be useful?
+
+        We write email flows for online supplement stores. We do it free because most stores that use them ask us to write the rest.
+    signature: |
+      Tessa Grant
+      Loop and Lantern
+    gold:
+      label_status: constructed
+      expect: clear
+      forbidden_search_terms: ["Loop and Lantern", "Tessa Grant"]
+
+- id: s05-unclear-p1
+  description: "CONSTRUCTED: unclear version, segment s05, reader 1"
+  vars:
+    persona:
+      title: "Managing partner"
+      company: "Bellamy and Frost CPAs"
+      size: "11 staff"
+      sells: "tax and bookkeeping for small businesses"
+      awareness: "you have not looked for this kind of service"
+    sender_name: "Daniel Cho"
+    email:
+      subject: "your onboarding"
+      body: |
+        Harold, if we could map your client intake workflow and optimize throughput for free, would that be worth sharing more?
+    signature: |
+      Daniel Cho
+      Quill Operations
+    gold:
+      label_status: constructed
+      expect: unclear
+      cannot_tell_any: ["what_offered", "who_sends", "why_these_terms"]
+      jargon_terms: ["intake workflow", "throughput"]
+      forbidden_search_terms: ["Quill Operations", "Daniel Cho"]
+
+- id: s05-plain-p1
+  description: "CONSTRUCTED: plain version, segment s05, reader 1"
+  vars:
+    persona:
+      title: "Managing partner"
+      company: "Bellamy and Frost CPAs"
+      size: "11 staff"
+      sells: "tax and bookkeeping for small businesses"
+      awareness: "you have not looked for this kind of service"
+    sender_name: "Daniel Cho"
+    email:
+      subject: "your onboarding"
+      body: |
+        Harold, if we could time how long your firm takes to onboard a new client, from first call to first filed return, and send you the findings for free, would that be worth sharing more?
+
+        We are an operations consultancy for small accounting firms. We do it free because most firms that see the findings ask us to fix the slow steps.
+    signature: |
+      Daniel Cho
+      Quill Operations
+    gold:
+      label_status: constructed
+      expect: clear
+      forbidden_search_terms: ["Quill Operations", "Daniel Cho"]
+
+- id: s06-unclear-p1
+  description: "CONSTRUCTED: unclear version, segment s06, reader 1"
+  vars:
+    persona:
+      title: "Owner"
+      company: "Ironwood Logistics"
+      size: "18 staff"
+      sells: "truckload freight brokerage"
+      awareness: "you have bought data services before"
+    sender_name: "Elena Ruiz"
+    email:
+      subject: "your lane rates"
+      body: |
+        Vince, if we could give you free visibility into lane-level rate intelligence, would that be worth sharing more?
+    signature: |
+      Elena Ruiz
+      Tallgrass Freight Data
+    gold:
+      label_status: constructed
+      expect: unclear
+      cannot_tell_any: ["what_offered", "who_sends", "why_these_terms"]
+      jargon_terms: ["lane-level rate intelligence", "visibility"]
+      forbidden_search_terms: ["Tallgrass Freight Data", "Elena Ruiz"]
+
+- id: s06-plain-p1
+  description: "CONSTRUCTED: plain version, segment s06, reader 1"
+  vars:
+    persona:
+      title: "Owner"
+      company: "Ironwood Logistics"
+      size: "18 staff"
+      sells: "truckload freight brokerage"
+      awareness: "you have bought data services before"
+    sender_name: "Elena Ruiz"
+    email:
+      subject: "your lane rates"
+      body: |
+        Vince, if we could send you a free comparison of what you paid on your ten busiest lanes last quarter against the going market rate, would that be worth sharing more?
+
+        We track truckload rates by lane and share them with freight brokers. We do it free because most brokers who see it ask for the weekly version.
+    signature: |
+      Elena Ruiz
+      Tallgrass Freight Data
+    gold:
+      label_status: constructed
+      expect: clear
+      forbidden_search_terms: ["Tallgrass Freight Data", "Elena Ruiz"]
+
+- id: s07-unclear-p1
+  description: "CONSTRUCTED: unclear version, segment s07, reader 1"
+  vars:
+    persona:
+      title: "Owner"
+      company: "Eastgate Property Management"
+      size: "10 staff"
+      sells: "residential rentals, about 300 units"
+      awareness: "you have not looked for this kind of service"
+    sender_name: "Owen Brooks"
+    email:
+      subject: "your vacancy listings"
+      body: |
+        Gloria, if we could optimize your vacancy marketing funnel for free, would that be worth sharing more?
+    signature: |
+      Owen Brooks
+      Keystone Listing Lab
+    gold:
+      label_status: constructed
+      expect: unclear
+      cannot_tell_any: ["what_offered", "who_sends", "why_these_terms"]
+      jargon_terms: ["vacancy marketing funnel", "optimize"]
+      forbidden_search_terms: ["Keystone Listing Lab", "Owen Brooks"]
+
+- id: s07-plain-p1
+  description: "CONSTRUCTED: plain version, segment s07, reader 1"
+  vars:
+    persona:
+      title: "Owner"
+      company: "Eastgate Property Management"
+      size: "10 staff"
+      sells: "residential rentals, about 300 units"
+      awareness: "you have not looked for this kind of service"
+    sender_name: "Owen Brooks"
+    email:
+      subject: "your vacancy listings"
+      body: |
+        Gloria, if we could go through your current vacancy listings and send you a free list of the photos and wording that are costing you showings, would that be worth sharing more?
+
+        We are a small team that improves rental listings for property managers. We do it free because most managers who see it ask us to fix the listings.
+    signature: |
+      Owen Brooks
+      Keystone Listing Lab
+    gold:
+      label_status: constructed
+      expect: clear
+      forbidden_search_terms: ["Keystone Listing Lab", "Owen Brooks"]
+
+- id: s08-unclear-p1
+  description: "CONSTRUCTED: unclear version, segment s08, reader 1"
+  vars:
+    persona:
+      title: "Founder and CEO"
+      company: "Rosterly"
+      size: "14 staff"
+      sells: "scheduling software for shift-based teams"
+      awareness: "you have bought marketing help before"
+    sender_name: "Nora Lindqvist"
+    email:
+      subject: "your comparison pages"
+      body: |
+        Wes, if we could audit your bottom-of-funnel SERP footprint for free, would that be worth sharing more?
+    signature: |
+      Nora Lindqvist
+      Fieldnote Search
+    gold:
+      label_status: constructed
+      expect: unclear
+      cannot_tell_any: ["what_offered", "who_sends", "why_these_terms"]
+      jargon_terms: ["bottom-of-funnel", "SERP footprint"]
+      forbidden_search_terms: ["Fieldnote Search", "Nora Lindqvist"]
+
+- id: s08-plain-p1
+  description: "CONSTRUCTED: plain version, segment s08, reader 1"
+  vars:
+    persona:
+      title: "Founder and CEO"
+      company: "Rosterly"
+      size: "14 staff"
+      sells: "scheduling software for shift-based teams"
+      awareness: "you have bought marketing help before"
+    sender_name: "Nora Lindqvist"
+    email:
+      subject: "your comparison pages"
+      body: |
+        Wes, if we could send you a free teardown of why your comparison pages are not showing up in Google for buyers searching for alternatives, would that be worth sharing more?
+
+        We do search engine work for small B2B software companies. We do it free because most companies that see it ask us to fix the pages.
+    signature: |
+      Nora Lindqvist
+      Fieldnote Search
+    gold:
+      label_status: constructed
+      expect: clear
+      forbidden_search_terms: ["Fieldnote Search", "Nora Lindqvist"]
+
+- id: s09-unclear-p1
+  description: "CONSTRUCTED: unclear version, segment s09, reader 1"
+  vars:
+    persona:
+      title: "Owner"
+      company: "Glow Harbor Med Spa"
+      size: "8 staff"
+      sells: "injectables, facials and laser treatments"
+      awareness: "you have not looked for this kind of service"
+    sender_name: "Jonah Weiss"
+    email:
+      subject: "your no-shows"
+      body: |
+        Celeste, if we could reduce your patient leakage with an automated engagement sequence at no cost, would that be worth sharing more?
+    signature: |
+      Jonah Weiss
+      Bright Chair Studio
+    gold:
+      label_status: constructed
+      expect: unclear
+      cannot_tell_any: ["what_offered", "who_sends", "why_these_terms"]
+      jargon_terms: ["patient leakage", "engagement sequence"]
+      forbidden_search_terms: ["Bright Chair Studio", "Jonah Weiss"]
+
+- id: s09-plain-p1
+  description: "CONSTRUCTED: plain version, segment s09, reader 1"
+  vars:
+    persona:
+      title: "Owner"
+      company: "Glow Harbor Med Spa"
+      size: "8 staff"
+      sells: "injectables, facials and laser treatments"
+      awareness: "you have not looked for this kind of service"
+    sender_name: "Jonah Weiss"
+    email:
+      subject: "your no-shows"
+      body: |
+        Celeste, if we could show you, free, how many booked appointments at your med spa end in a no-show and what reminder texts would win back, would that be worth sharing more?
+
+        We set up appointment reminder texts for med spas. We do it free because most spas that see the numbers ask us to set up the texts.
+    signature: |
+      Jonah Weiss
+      Bright Chair Studio
+    gold:
+      label_status: constructed
+      expect: clear
+      forbidden_search_terms: ["Bright Chair Studio", "Jonah Weiss"]
+
+- id: s10-unclear-p1
+  description: "CONSTRUCTED: unclear version, segment s10, reader 1"
+  vars:
+    persona:
+      title: "Owner"
+      company: "Kessler Precision Machining"
+      size: "16 staff"
+      sells: "CNC parts for equipment makers"
+      awareness: "you have not looked for this kind of service"
+    sender_name: "Ray Alvarez"
+    email:
+      subject: "your quotes"
+      body: |
+        Walt, if we could compress your RFQ-to-PO conversion latency at no cost, would that be worth sharing more?
+    signature: |
+      Ray Alvarez
+      Copperline Estimating
+    gold:
+      label_status: constructed
+      expect: unclear
+      cannot_tell_any: ["what_offered", "who_sends", "why_these_terms"]
+      jargon_terms: ["conversion latency", "compress"]
+      forbidden_search_terms: ["Copperline Estimating", "Ray Alvarez"]
+
+- id: s10-plain-p1
+  description: "CONSTRUCTED: plain version, segment s10, reader 1"
+  vars:
+    persona:
+      title: "Owner"
+      company: "Kessler Precision Machining"
+      size: "16 staff"
+      sells: "CNC parts for equipment makers"
+      awareness: "you have not looked for this kind of service"
+    sender_name: "Ray Alvarez"
+    email:
+      subject: "your quotes"
+      body: |
+        Walt, if we could send you a free report on how long your shop takes to return a quote, and how that compares with what buyers expect, would that be worth sharing more?
+
+        We help machine shops turn around quotes faster. We do it free because most shops that see the report ask us to help fix it.
+    signature: |
+      Ray Alvarez
+      Copperline Estimating
+    gold:
+      label_status: constructed
+      expect: clear
+      forbidden_search_terms: ["Copperline Estimating", "Ray Alvarez"]

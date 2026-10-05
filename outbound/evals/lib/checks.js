@@ -293,9 +293,89 @@ function cardLabels(output, context) {
   return result(misses.length === 0, hits / total, misses.length === 0 ? `matched ${hits}/${total}` : `matched ${hits}/${total}; ${misses.join('; ')}`);
 }
 
+// ── Cold-Reader Panel reader (cold-reader suite) ────────────────────────────
+// One answer is one reader's read of one email. Panel-level rules (any reader who cannot tell fails the email,
+// the two-thirds jargon rule and so on) live in outbound/scripts/cold_reader_panel.py; these checks test the
+// single reader answer against the case's gold, so the benchmark measures whether a reader tier can tell a
+// deliberately unclear email from a plain rewrite of the same offer.
+
+const READER_FIELDS = ['who_sends', 'what_offered', 'why_these_terms'];
+const READER_KINDS = ['offer', 'sender', 'cost', 'delivery', 'other'];
+const READER_REPLIES = ['yes', 'who_are_you', 'no', 'ignore'];
+
+function readerObject(output) {
+  const { value } = parseJson(output);
+  return value && typeof value === 'object' && !Array.isArray(value) ? value : undefined;
+}
+
+function isCannotTell(v) {
+  return /^\s*cannot tell\s*\.?\s*$/i.test(String(v ?? ''));
+}
+
+function readerSchema(output) {
+  const v = readerObject(output);
+  if (!v) return result(false, 0, 'not a JSON object');
+  const problems = [];
+  for (const f of READER_FIELDS) if (typeof v[f] !== 'string' || v[f].trim() === '') problems.push(`${f} missing or empty`);
+  if (!Array.isArray(v.still_want_to_know)) problems.push('still_want_to_know is not a list');
+  else {
+    if (v.still_want_to_know.length > 3) problems.push('more than 3 questions');
+    v.still_want_to_know.forEach((q, i) => { if (!q || typeof q.question !== 'string' || !READER_KINDS.includes(q.kind)) problems.push(`question ${i + 1} has no valid kind`); });
+  }
+  if (!Array.isArray(v.jargon)) problems.push('jargon is not a list');
+  else v.jargon.forEach((j, i) => { if (!j || typeof j.term !== 'string' || typeof j.plain_word !== 'string') problems.push(`jargon ${i + 1} needs term and plain_word`); });
+  if (!Array.isArray(v.fears)) problems.push('fears is not a list');
+  if (!READER_REPLIES.includes(v.reply)) problems.push('reply is not one of yes, who_are_you, no, ignore');
+  if (typeof v.reply_reason !== 'string') problems.push('reply_reason missing');
+  if (v.searches !== undefined && !Array.isArray(v.searches)) problems.push('searches is not a list');
+  return problems.length === 0 ? result(true, 1, 'schema ok') : result(false, 0, problems.join('; '));
+}
+
+// gold.expect is "clear" (no field may be "cannot tell") or "unclear" (at least one field must be, and when
+// gold.cannot_tell_any names fields, at least one of THOSE).
+function readerDiscrimination(output, context) {
+  const v = readerObject(output);
+  if (!v) return result(false, 0, 'no answer to score');
+  const gold = context?.vars?.gold || {};
+  const gaps = READER_FIELDS.filter(f => isCannotTell(v[f]));
+  if (gold.expect === 'clear') {
+    return gaps.length === 0 ? result(true, 1, 'clear email read as clear') : result(false, 0, `clear email, but "cannot tell" on ${gaps.join(', ')}`);
+  }
+  if (gold.expect === 'unclear') {
+    const want = Array.isArray(gold.cannot_tell_any) && gold.cannot_tell_any.length ? gold.cannot_tell_any : READER_FIELDS;
+    const hit = gaps.filter(f => want.includes(f));
+    return hit.length > 0 ? result(true, 1, `unclear email caught on ${hit.join(', ')}`) : result(false, 0, `unclear email not caught (expected "cannot tell" on one of ${want.join(', ')})`);
+  }
+  return result(false, 0, 'case gold has no expect: clear|unclear');
+}
+
+// Unclear cases list the jargon terms planted in the copy; the reader must flag at least one. Plain cases list none,
+// and the reader may flag at most one term.
+function readerJargon(output, context) {
+  const v = readerObject(output);
+  if (!v || !Array.isArray(v.jargon)) return result(false, 0, 'no jargon list to score');
+  const planted = (context?.vars?.gold?.jargon_terms || []).map(norm).filter(Boolean);
+  const flagged = v.jargon.map(j => norm(j && j.term)).filter(Boolean);
+  if (planted.length === 0) return flagged.length <= 1 ? result(true, 1, `plain email, ${flagged.length} term flagged`) : result(false, 0, `plain email, but ${flagged.length} terms flagged`);
+  const found = planted.filter(t => flagged.some(f => f.includes(t) || t.includes(f)));
+  return found.length > 0 ? result(true, found.length / planted.length, `flagged ${found.length}/${planted.length} planted terms`) : result(false, 0, 'flagged none of the planted jargon');
+}
+
+// The reader must never look up the sender. gold.forbidden_search_terms lists the sender's company, product and name.
+function readerBlindSearch(output, context) {
+  const v = readerObject(output);
+  if (!v) return result(false, 0, 'no reader object to score');
+  if (v.searches !== undefined && !Array.isArray(v.searches)) return result(false, 0, 'searches is not a list');
+  const searches = v.searches || [];
+  const banned = (context?.vars?.gold?.forbidden_search_terms || []).map(norm).filter(Boolean);
+  const bad = searches.filter(s => banned.some(b => norm(s && s.query).includes(b)));
+  return bad.length === 0 ? result(true, 1, `${searches.length} searches, none about the sender`) : result(false, 0, `${bad.length} search(es) looked up the sender`);
+}
+
 module.exports = {
   parseJson, norm, isBlank, inSource,
   vocSchema, vocVerbatim, vocGrounding, vocBlankDiscipline, vocLabels, vocRecall,
   fitSchema, fitVerdict,
   cardSchema, cardGrounding, cardLabels,
+  readerSchema, readerDiscrimination, readerJargon, readerBlindSearch, isCannotTell,
 };

@@ -1,0 +1,20 @@
+# Cold-Reader Panel benchmark: one (email, persona) -> the reader's structured comprehension answer
+# (outbound/reference/cold-reader-panel.md). The production job: the fresh reader sub-agent the panel runs once
+# per email and persona, handed cold-reader/prompt.md as its instruction.
+#   node outbound/evals/run_eval.mjs prepare cold-reader --tier sonnet
+#   node outbound/evals/run_eval.mjs grade cold-reader <run-id>
+# Each case is one email read by one persona. The email pairs in cases.yaml are CONSTRUCTED: an unclear version
+# and a plain rewrite of the same offer, with fictional companies and people, so the benchmark tests whether the
+# reader tells them apart and never depends on a client's copy. Real-email agreement is the separate 20-row check
+# (README keep rule).
+suite: cold-reader
+builder: reader
+required_vars: [persona, email, sender_name, signature, gold]
+cases:
+  pattern: "cases*.yaml"
+  example: cases.example.yaml
+checks:
+  - { metric: schema, fn: readerSchema }
+  - { metric: discrimination, fn: readerDiscrimination }
+  - { metric: jargon, fn: readerJargon }
+  - { metric: blind_search, fn: readerBlindSearch }

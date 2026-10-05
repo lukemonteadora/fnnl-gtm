@@ -61,6 +61,33 @@ function card({ vars }) {
   ];
 }
 
+// The reader sees only the persona, the email, the sender name and the signature (blind and independent).
+function reader({ vars }) {
+  const p = vars.persona || {};
+  return [
+    { role: 'system', content: readPrompt(promptFile('reader')) },
+    {
+      role: 'user',
+      content: [
+        'WHO YOU ARE:',
+        `title: ${p.title || 'unknown'}`,
+        `company: ${p.company || 'unknown'}`,
+        `company size: ${p.size || 'unknown'}`,
+        `what your company sells: ${p.sells || 'unknown'}`,
+        p.awareness ? `how well people in your field know this kind of service: ${p.awareness}` : null,
+        '',
+        'THE EMAIL YOU RECEIVED:',
+        `From: ${vars.sender_name}`,
+        `Subject: ${String(vars.email.subject || '').trim()}`,
+        '',
+        String(vars.email.body || '').trim(),
+        '',
+        String(vars.signature || '').trim(),
+      ].filter(l => l !== null).join('\n'),
+    },
+  ];
+}
+
 // vars.icp_prompt_file is relative to outbound/ (e.g. profiles/<slug>/icp-prompt.txt), matching how
 // client-profile.yaml records the locked prompt's path.
 function fit({ vars }) {
@@ -79,6 +106,7 @@ function fit({ vars }) {
 function promptFile(builder, vars = {}) {
   if (builder === 'voc') return path.join(EVALS, 'voc-extraction', 'prompt.md');
   if (builder === 'card') return path.join(EVALS, 'competitor-card', 'prompt.md');
+  if (builder === 'reader') return path.join(EVALS, 'cold-reader', 'prompt.md');
   if (builder === 'fit') {
     if (!vars.icp_prompt_file) throw new Error('company-fit case has no vars.icp_prompt_file');
     return path.resolve(REPO_OUTBOUND, vars.icp_prompt_file);
@@ -86,4 +114,4 @@ function promptFile(builder, vars = {}) {
   throw new Error(`unknown prompt builder: ${builder}`);
 }
 
-module.exports = { voc, card, fit, promptFile };
+module.exports = { voc, card, fit, reader, promptFile };

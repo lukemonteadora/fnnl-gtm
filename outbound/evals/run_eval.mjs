@@ -16,7 +16,7 @@
 //   node outbound/evals/run_eval.mjs grade <suite> <run-id> [--compare <baseline-run-id>] [--log]
 //                                    [--allow-missing] [--label "<why>"] [--verbose]
 //   node outbound/evals/run_eval.mjs list [<suite>]
-//   suites: voc-extraction, competitor-card, company-fit
+//   suites: voc-extraction, competitor-card, company-fit, cold-reader
 //
 // Everything it writes stays under outbound/evals/results/ (gitignored, local only), except the dated table
 // that `grade --log` appends to BENCHMARKS.md. No network, no keys, no dependencies beyond node itself.
@@ -34,7 +34,7 @@ const OUTBOUND = path.resolve(HERE, '..');
 const REPO = path.resolve(OUTBOUND, '..');
 const RESULTS = path.join(HERE, 'results');
 const BENCHMARKS = path.join(HERE, 'BENCHMARKS.md');
-const SUITES = ['voc-extraction', 'competitor-card', 'company-fit'];
+const SUITES = ['voc-extraction', 'competitor-card', 'company-fit', 'cold-reader'];
 const TIERS = ['haiku', 'sonnet', 'session'];
 // The checks where a candidate must MATCH the baseline (README keep rule); every other check allows 5 points.
 const HALLUCINATION_CHECKS = ['verbatim', 'grounding', 'blank_discipline'];

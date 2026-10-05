@@ -1,0 +1,50 @@
+# SYNTHETIC SMOKE-TEST CASES, loaded only with --example. NOT A BENCHMARK; a run on them is never logged.
+# Fictional company and people, one unclear and one plain version of the same offer.
+
+- id: s01-unclear-p1
+  description: "CONSTRUCTED: unclear version, segment s01, reader 1"
+  vars:
+    persona:
+      title: "Owner"
+      company: "Maple Court Dental"
+      size: "6 staff"
+      sells: "family dentistry"
+      awareness: "you have not looked for this kind of service"
+    sender_name: "Sam Ortiz"
+    email:
+      subject: "question about calls"
+      body: |
+        Dana, if we could run a no-cost inbound capture leakage audit on your front-desk funnel, would that be worth sharing more?
+    signature: |
+      Sam Ortiz
+      Northfield Growth
+    gold:
+      label_status: constructed
+      expect: unclear
+      cannot_tell_any: ["what_offered", "who_sends", "why_these_terms"]
+      jargon_terms: ["inbound capture leakage audit", "funnel"]
+      forbidden_search_terms: ["Northfield Growth", "Sam Ortiz"]
+
+- id: s01-plain-p1
+  description: "CONSTRUCTED: plain version, segment s01, reader 1"
+  vars:
+    persona:
+      title: "Owner"
+      company: "Maple Court Dental"
+      size: "6 staff"
+      sells: "family dentistry"
+      awareness: "you have not looked for this kind of service"
+    sender_name: "Sam Ortiz"
+    email:
+      subject: "question about calls"
+      body: |
+        Dana, if we could show you which calls your practice missed after hours last month, and how many were new patients, at no cost, would that be worth sharing more?
+
+        We help dental practices answer the new-patient calls they currently miss. We do it free because most practices that see the list ask us to fix the calls.
+    signature: |
+      Sam Ortiz
+      Northfield Growth
+    gold:
+      label_status: constructed
+      expect: clear
+      forbidden_search_terms: ["Northfield Growth", "Sam Ortiz"]
