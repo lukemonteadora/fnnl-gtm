@@ -1,11 +1,11 @@
 ---
 name: phase-3-list
-description: "Phase 3 of 4 for a cold-outbound client. Say \"Phase 3 for <client>\". Builds the TAM filter-first, the wave and Aaron's launch set, then runs the list engine to verified, QA'd contacts per campaign, and stops once at the list review."
+description: "Phase 3 of 4 for a cold-outbound client. Say \"Phase 3 for <client>\". Builds the TAM filter-first (AI Ark at scale), the wave and Aaron's launch set, then runs the list engine (reservoir first) to verified, QA'd contacts per campaign, and auto-approves straight into Phase 4; results surface at checkpoint B."
 ---
 
 # Phase 3: List
 
-**Say "Phase 3 for <client>" in a fresh thread, and this builds the verified campaign lists, then stops once.** The protocol every phase follows is `outbound/reference/phase-protocol.md`; read it first. This file only lists what Phase 3 does.
+**Say "Phase 3 for <client>" in a fresh thread, and this builds the verified campaign lists, then auto-approves straight into Phase 4** (ruling `checkpoints`, Aaron flow, see `aaron-flow.md` section 2). The protocol every phase follows is `outbound/reference/phase-protocol.md`; read it first. This file only lists what Phase 3 does.
 
 Paths resolve under `outbound/`. Client profiles are gitignored, so read them with Bash or Read.
 
@@ -28,9 +28,9 @@ Paths resolve under `outbound/`. Client profiles are gitignored, so read them wi
    - resolve the AI Ark enums, then read AI Ark `company_search` `totalElements` with the list's filters and keyword stack;
    - then read GetLeads `count_contacts` on the same definition. GetLeads is also the gap-fill when the AI Ark universe comes back thin;
    - record the route taken in `run_state.discovery_route`. A lookalike seeded from offer-fit companies is an option when the offer needs one or filters build a poor universe, not a must.
-   - **Phase A sample and the 25-account list QA.** An independent reviewer sub-agent checks the targeting. A failure gets one fix round. A second failure names the targeting question behind it: a stored ruling (`targeting:<topic>` in `rulings.md`, or `standing-rulings.md`) is applied and the slice reruns once; with no ruling, only that segment is held from Phase B and the question goes to Checkpoint 3 while the rest builds (`qa-loops` ruling). There is never a third round. The Phase 2 targeting preview exists to surface these questions before this phase.
-   - **Phase B.** The whole market is pulled inside the budget. Company fit is judged on the wave's companies by a Claude sub-agent fan-out per `/personalization-subagent-pattern` (disjoint slices, one output file per agent, merge and dedup by domain), never a third-party AI API.
-   - **The reporting guard.** Report the drop counts per segment and group, and flag at the top any slice under the 500-company floor.
+   - **Phase A sample and the 25-account list QA.** An independent reviewer sub-agent checks the targeting. A failure gets one fix round. A second failure names the targeting question behind it: a stored ruling (`targeting:<topic>` in `rulings.md`, or `standing-rulings.md`) is applied and the slice reruns once; with no ruling, only that segment is held from Phase B and the question carries forward to checkpoint B (Phase 4) while the rest builds (`qa-loops` ruling; Phase 3 has no human stop of its own). There is never a third round. The Phase 2 targeting preview (the AI Ark 200-row sample) exists to surface these questions before this phase.
+   - **Phase B.** The whole market is pulled inside the budget, AI Ark at scale (the refined search from Phase 2's 200-row sample, pulled via REST in slices to avoid the 10,000-result cap, per `aaron-flow.md` section 6), with GetLeads as the thin-universe company top-up. Company fit is judged once per `company_domain` (`company-level-only` ruling) on the wave's companies by a Claude sub-agent fan-out per `/personalization-subagent-pattern` (disjoint slices, one output file per agent, merge and dedup by domain), never a third-party AI API. Fit ships `good` and `maybe`; only `bad` drops, and an unsure `bad` stays `bad` labeled `needs_review`, never relabeled `maybe` (`fit-ship-rule` ruling).
+   - **The reporting guard.** Report the drop counts per segment and group. The 500-company and ~1,300-pooled floors are advisory notes, not stops (the 14 removed volume limits, `aaron-flow.md` section 13); `run_state.list_mode` (`volume` by default, `yield` when fewer than 2,000 companies pass fit) is logged with the reason when it switches (`list-mode` ruling).
 3. **Scoring, only when needed.** `/lead-scoring` (with `lead_score.py`) runs only when sending capacity forces a cut. It is optional for a first wave that ships every tier.
 4. **The wave.** `/campaign-strategy` drafts the whole-TAM first wave, with the offers as equal cells placed by fit. It also writes `run_state.capacity_request`, stated as a note at the checkpoint (a shared-pool figure). It is never a purchase, never a trim and never an approval question (`capacity` ruling).
 5. **The Aaron campaign and copy call, before any verification runs** (`outbound/reference/aaron-lane.md`, Call 2). The wave reveals and verifies only the contacts Aaron's launch set picks, never the whole TAM up front, which keeps per-contact spend inside the budget.
@@ -38,9 +38,10 @@ Paths resolve under `outbound/`. Client profiles are gitignored, so read them wi
    - He rules on which campaigns launch now, later or not at all, and writes every launching campaign's sequence. The copy waits in `aaron-copy-call.md` for Phase 4.
    - Run the client-fit check on his launch set and copy (`aaron-lane.md`, "Client-fit check"). No contradiction means his call is used as written, with no approval question. A contradiction with a client requirement, instruction or note stops the run and shows the operator both lines (one of the four mid-run stops).
    - `/campaign-strategy` rewrites the wave to his launch set. Log `run_state.aaron_lane.copy_call`.
-6. **The list engine**, on his `now` campaigns only, by `/email-waterfall`'s rules, with the provider order read from `outbound/reference/provider-routing.yaml`:
+6. **The list engine**, on his `now` campaigns only, by `/email-waterfall`'s rules, with the provider order read from `outbound/reference/provider-routing.yaml`. No per-company contact cap: every verified buyer at a fit company goes in, written round-robin by company inside each priority tier (`no-contacts-cap` ruling):
    - pick contacts per company and classify titles with `title_classify.py --spec <targeting-spec.yaml> --contacts <in.csv>`;
-   - plan and ledger every rung with `list_waterfall.py`: verify any email already on the row first, then the contact enrichment tool, then the email verifier (`millionverifier_verify.mjs`), then the fallback finder only on blanks and rejects, then the verifier again;
+   - plan and ledger every rung with `list_waterfall.py`: the reservoir (`reservoir.py lookup`) first for a recent (last 90 days) MillionVerifier `ok` on a matched person, keyed by LinkedIn slug with lowercase-email fallback (Aaron flow, see `aaron-flow.md` section 7); then any email already on the row; then the contact enrichment tool (AI Ark's email finder, then Prospeo, which never opens on a person AI Ark has not tried); then the email verifier (`millionverifier_verify.mjs`); then the fallback finder only on blanks and rejects; then the verifier again. The walk stops at the first `ok` (`every-email-verified` ruling). Every verdict is written back to the reservoir (`reservoir.py writeback`) after verification;
+   - **domain-match rule.** A candidate email's domain must match the company: a personal-domain email is dropped, and a work email on a different domain ships only when proven same company (a colleague already verified on it, or a brand domain the company's own site or AI Ark record names); otherwise it is dropped as a wrong-company email;
    - catch-all verdicts go to `leads.catchall-holdback.csv`, never to the fallback finder. Whether they ship is decided automatically by the sender-domain maturity per the `catch-all` ruling, so it is never a question; `risky`, `unknown`, `invalid` and unverified rows never ship and are never asked about;
    - `/list-quality-scorecard` at grade B or higher, then the split into `campaigns/<slug>/leads.verified.csv`.
 
@@ -56,23 +57,16 @@ Paths resolve under `outbound/`. Client profiles are gitignored, so read them wi
 - the variable columns that exist and how full each is (Phase 4 copy may use only these);
 - `later` and `drop` campaigns, with Aaron's reasons; the discovery route; the capacity request;
 - the path to `aaron-copy-call.md`;
-- the suppression status (a client do-not-contact export still owed holds Start only; the drafts are still built).
+- the suppression status (a client do-not-contact export still owed holds Start only; the drafts are still built);
+- verified contacts per campaign and the total; the QA report and the reviewer's manual sample findings per campaign (`list-qa-report.md`, `qa-sample.csv`), and the grade from `/list-quality-scorecard`;
+- the holdbacks (catch-alls, repeated errors), and anything held by a QA question with no stored ruling, naming the targeting question behind it;
+- the spend for this phase against the budget, with the balance report;
+- anything a rail, a tool balance or a client ask is still holding, for checkpoint B to show.
 
-## Checkpoint 3: the list review
+## Checkpoint 3: auto-approved
 
 Write the handoff, then run `python outbound/scripts/phase_state.py checkpoint <slug> 3 --handoff phases/phase-3-list.md`.
 
-The summary covers:
-- verified contacts per campaign, and the total;
-- the QA grade and the reviewer's sample findings;
-- the holdbacks (catch-alls, repeated errors), as information only;
-- Aaron's launch set, and any campaign under the floor he kept or folded, with his reason;
-- the capacity request, as a note;
-- the spend for this phase against the budget, with the balance report.
+Phase 3 has no human stop (ruling `checkpoints`). Everything a checkpoint would otherwise show here (verified contacts per campaign, the QA grade and reviewer findings, the holdbacks, Aaron's launch set and any floor exception with his reason, the capacity request, the phase spend) goes into the handoff instead, so checkpoint B (Phase 4) shows it alongside the launch review. A QA question with no stored ruling, or any other hold, carries forward the same way rather than being asked here.
 
-Then one native prompt:
-1. Approve the lists and move to copy and launch (recommended), or name a fix.
-2. Anything held by a QA question with no stored ruling (each answer is written to `rulings.md` as `targeting:<topic>`).
-3. Anything a rail, a tool balance or a client ask is holding.
-
-Record the answers, run `python outbound/scripts/phase_state.py approve <slug> 3 --answer "..."`, and close with: "Phase 3 is done. Open a new thread and say: Phase 4 for <client>."
+Then run `python outbound/scripts/phase_state.py approve <slug> 3 --answer "auto: Aaron flow, no checkpoint 3"`, log `DONE Phase 3 (auto-approved, Aaron flow)`, and close with: "Phase 3 is done. Open a new thread and say: Phase 4 for <client>." (Phase 4 may also start in the same thread.)

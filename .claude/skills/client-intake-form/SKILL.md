@@ -1,6 +1,6 @@
 ---
 name: client-intake-form
-description: Single-session client intake. Runs the client context sweep, key check and website scrape, pre-fills an intake form for the user to confirm, then writes intake-form.md and client-profile.yaml. The locked stack is recorded, never asked. Runs inside Phase 1. Use before /cold-email-kickoff.
+description: Single-session client intake. Runs the client context sweep, key check and website scrape, pre-fills an intake form (Aaron-flow fields included), then writes intake-form.md and client-profile.yaml. The locked stack is recorded, never asked. Runs inside Phase 1, which auto-approves; gaps go to checkpoint A, never asked mid-phase. Use before /cold-email-kickoff.
 ---
 
 # Client Intake Form
@@ -19,7 +19,7 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at the one checkpoint that closes each of the four phases, `phase-protocol.md`; `review_gates` is opt-in), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue. Never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work. Never idle.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at checkpoint A (Phase 2) and checkpoint B (Phase 4), while Phases 1 and 3 auto-approve (Aaron flow, see `aaron-flow.md`), `phase-protocol.md`; `review_gates` is opt-in), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue. Never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work. Never idle.
 
 ## Activity Log Protocol
 
@@ -76,9 +76,12 @@ Before presenting any questions, run the following discovery pass and build a pr
    - `offer_client_suggested`: from services/product pages, "what we offer" sections
    - `deliverable_constraints`: only a legal or truth limit the site states outright (e.g., "we never guarantee ROI"). Do not pre-fill operational limits from marketing copy: a turnaround the site advertises is not a ceiling on what the test may offer (operator directive 2026-09-22).
    - `tone`: from homepage copy voice (formal/casual, data-heavy/story-driven, direct/nurturing)
+   - The Aaron-flow fields, as fallbacks only (the sweep, call notes and intel feed outrank the site). **Aaron flow (see `aaron-flow.md`).** `competitors`: the competitors and "vs" pages (`website-profile.md` section 8). `recent_win`: the newest dated case study or testimonial, labelled as the site's showcase rather than confirmed as the latest win. `supplier_exclusions`: the vendor, IT, broker, agency and consultancy types that sell into the same buyers, inferred from integration and partner pages and labelled `inferred`. `why_now_signals`: any timing language the site uses ("just raised", "opening a new location"). `disqualifiers`: only what the site states outright ("not for companies under 10 staff").
    - Capabilities the site claims pre-fill `capability_boundary` as hypotheses labelled `website`, never as confirmed capabilities. Show the website snapshot (what they sell, the pricing model and range, the proof found, the offers they already run) above the form, and turn the file's "What the site does not say" list into `# REQUIRED` or confirm-or-correct fields.
 
 **Output of this pass:** A pre-fill map with field names, suggested values, and source labels. The Still Unknown lists from `context-sweep.md` and `slack-context.md` feed the `# REQUIRED` gaps, and their Conflicts sit next to the fields they touch. Use this to populate the form template below.
+
+**Aaron flow (see `aaron-flow.md`): the five Aaron fields are part of the pre-fill map.** `recent_win`, `disqualifiers`, `supplier_exclusions`, `why_now_signals` and `competitors` are filled from the call notes (`/client-onboarding-call-summarizer` extracts all five), the context sweep, the intel feed, existing research and then the website, in that order of trust. A field no source states stays blank and its profile path (for example `icp.recent_win`) is added to `icp.carried_to_checkpoint_a`. Never guess to fill one.
 
 **Optional transcript context:** If the user has a sales call, discovery call, onboarding call, or voice-memo transcript (the "go for a walk and talk" context dump), run it through `/client-onboarding-call-summarizer` first, then fold its "what we learned" notes into the pre-fill map and use its "Still Unknown" list to fill the `# REQUIRED` gaps. It accepts pasted text or Fathom/Otter/Zoom/Teams exports (no action-item list: it is the client-onboarding version, not the personal `anthropic-skills:ai-meeting-summarizer`). Meeting recaps are also filed by `/client-intel-sync` under `profiles/<business-slug>/_intel/meetings/` and listed in `client-intel.md`. A recap is the notetaker's summary, not a transcript: fold it in as pre-fill like the feed items in item 1, and when the full transcript of an onboarding or discovery call is reachable, run that through the summarizer instead.
 
@@ -89,6 +92,8 @@ Present the form below with pre-filled values where the discovery pass found the
 Put anything the context sweep needs the operator to see first at the very top of the form: the blocklists written to suppression (rows added, names still without a domain), the specific instructions it found, and each source it could not read with the one-line fix.
 
 Tell the user: "Here is your intake form with fields I've pre-filled from the context sweep, your environment and the business website. Confirm or correct any pre-filled value, and fill in the `# REQUIRED` fields. When done, paste or confirm the completed form back."
+
+**Aaron flow (see `aaron-flow.md`): the form is not presented in Phase 1, because Phase 1 has no human stop.** Fill it from the pre-fill map, take each labelled inference as the working value, and go straight to Step 3 and Step 4. A `# REQUIRED` field with no inference is written blank and its profile path (for example `icp.headcount_min`) added to `icp.carried_to_checkpoint_a`. The saved `intake-form.md` and the ICP, the segments and the five Aaron fields are shown at checkpoint A (the end of Phase 2) for information and correction; a correction the operator makes there wins. Under `review_gates` the form is presented as above.
 
 ```yaml
 # ─────────────────────────────────────────────
@@ -177,14 +182,38 @@ geography: [REQUIRED]
 geography_excluded: [leave blank if none]
 # Markets explicitly excluded.
 
-triggers: [leave blank if none]
-# Timing signals that make a prospect ready to buy. E.g.: "recently hired a new VP of Sales," "just raised Series A," "opened a new location"
+why_now_signals: [leave blank if none]
+# Two or three timing signals that make an account worth contacting now. E.g.: "recently hired a new VP of Sales," "just raised Series A," "opened a new location"
+# Aaron flow (see aaron-flow.md): used ONLY for send order inside a campaign, never to shrink the list.
+# Replaces the old `triggers` field; a returned form that still says `triggers:` is read as this field.
+
+recent_win: [pre-filled or blank]
+# Aaron flow (see aaron-flow.md). The most recent client that bought and did well: company, domain,
+# segment (sub-industry / what they sell), what they bought, the result, roughly when, and whether it can be named.
+# The ICP is built from this win first.
+# source: call notes, sweep or intel feed first; a website case study is only a fallback; confirm or correct
+
+disqualifiers: [pre-filled or blank]
+# Aaron flow (see aaron-flow.md). Who never buys, in plain words. E.g.: "solo practitioners," "companies with an in-house SDR team"
+# These are hard fit exclusions and feed company fit.
+
+supplier_exclusions: [pre-filled or blank]
+# Aaron flow (see aaron-flow.md). Companies that sell TO your buyers but never buy from you:
+# vendors, IT firms, insurance brokers, agencies, consultancies in the same market.
+# They feed company fit and the targeting spec's account.discovery_exclusions. Types are fine; example domains help.
+# source: inferred from the market unless the client named them; confirm or correct
+
+competitors: [pre-filled or blank]
+# Aaron flow (see aaron-flow.md). Named competitors, one per line: name and domain.
+# They feed account.discovery_exclusions (their own domains are excluded from lists, so exclusions_competitors
+# below defaults to these domains) and the copy's truth check.
+# source: website competitors and "vs" pages, sweep, call notes; confirm or correct
 
 scraping_preferences: [leave blank if none]
 # Any preferred or blocked lead sources, volume limits, or scraping constraints.
 
 exclusions_competitors: [leave blank if none]
-# Competitor domains or company names to exclude from lists.
+# Competitor domains or company names to exclude from lists. Aaron flow: defaults to the domains under `competitors` above.
 
 exclusions_customers: [leave blank if none]
 # Existing customer domains or company names to exclude from lists.
@@ -257,7 +286,7 @@ mailbox_mix: auto_recommend
 mailbox_mix_custom: [leave blank unless mailbox_mix = custom]
 # Specify mix if mailbox_mix = custom. E.g.: 70_google_30_microsoft
 
-## Reply Handling and Compliance (optional: anything left blank is resolved by the run first (speed-to-lead defaults to FNNL Agency, the booking link comes from the sweep) and asked at checkpoint 1 only if it still matters, otherwise at Gate D or copy)
+## Reply Handling and Compliance (optional: anything left blank is resolved by the run first (speed-to-lead defaults to FNNL Agency, the booking link comes from the sweep) and asked at checkpoint A only if it still matters (Aaron flow, see `aaron-flow.md`: replaces the old checkpoint 1, since Phase 1 auto-approves), otherwise at Gate D or copy)
 
 speed_to_lead_owner: [leave blank if not decided]
 # The named person who calls interested replies within the 5-minute target (Gate D). Named by the operator, never inferred.
@@ -285,17 +314,20 @@ When the user returns the completed form, run validation before writing any file
 - `geography` too vague (e.g., "international," "global," "anywhere"): stop. Explain that geography must be specific enough for source planning. Ask for at least a list of target countries or regions.
 - Any `# REQUIRED` field still blank: list all missing fields and stop.
 
+**Aaron flow (see `aaron-flow.md`): these checks never pause Phase 1.** A vague `geography` or a blank `# REQUIRED` field takes the best labelled inference as its working value (marked `assumed`), or stays blank when there is none, and its profile path (for example `icp.geography`) goes on `icp.carried_to_checkpoint_a` instead of stopping here. Then write the files.
+
 **Soft warnings (flag but do not stop):**
 - `headcount_min` and `headcount_max` span more than 5000 employees: note this is a wide range and `/lead-source-strategy` may recommend splitting into sub-campaigns.
 - `geography` includes markets known to have weak database coverage (e.g., Southeast Asia, sub-Saharan Africa): note that `/lead-source-strategy` will need to research local sources carefully.
 - `credentials_ready = partial` or `no`: warn that setup phases will stall without credentials.
 - `execution_mode = auto_execute` with `review_protocol: none`: the user has opted out of the phase checkpoints too. Note in one line that the run will go straight to paused drafts, with Start still theirs. The default pair (`auto_execute` plus `phase_checkpoints`) needs no confirmation.
-- `speed_to_lead_owner` or `booking_link` blank: note in one line that checkpoint 1 asks for it under `phase_checkpoints`, so phase 4 (Gate D) never stops for it; under `review_gates`, Gate D asks. Never fill either from inference.
+- `speed_to_lead_owner` or `booking_link` blank: note in one line that checkpoint A asks for it, only if the find-it-first order in `phase-protocol.md`/`aaron-flow.md` section 2.1 has no answer, so phase 4 (Gate D) never stops for it; under `review_gates`, Gate D asks. Never fill either from inference. (Aaron flow (see `aaron-flow.md`): this replaces the old checkpoint 1, since Phase 1 auto-approves.)
+- **Aaron flow (see `aaron-flow.md`):** `recent_win` blank (the ICP then starts from `best_customer` and the case studies, a weaker anchor), `supplier_exclusions` blank (company fit may let vendors and IT firms through), fewer than two `why_now_signals` (the send order falls back to the default scoring), or a `competitors` entry with no domain (that competitor cannot feed `account.discovery_exclusions` until the domain is found). Each is added to `icp.carried_to_checkpoint_a` by its profile path (`icp.recent_win`, `icp.supplier_exclusions`, `icp.why_now_signals`, `icp.competitors`), never asked here.
 - `legal_or_compliance_limits` holds no opt-out entry (any geography, including Canada, the UK and Ireland): record the FNNL house default yourself, citing "operator directive 2026-09-30, always house default". Never ask for it and never hold a checkpoint or copy for it. A stricter requirement from the client's own counsel, when already on record, is kept.
 - `client_comms.slack.status = unavailable`: Slack was never read for this client. Say so at the top of the confirmation, not the bottom, and note that `/continue-client` retries the check on the next resume. `none_found` only holds for the workspace that was searched, so name it.
 - Any other `context_sweep` source at `blocked` (Slack DMs, email, Drive; a core source with no connector in the session counts as blocked): say so at the top of the confirmation with the account it tried and the one-line fix. `/continue-client` retries it. Research and lists never wait on it, but while a core source (Slack channels, Slack DMs, email, Drive) stays blocked and not `waived_by_operator`, the draft upload stops and asks (`client-context-sweep.md`). Only the operator waives a source.
 - `context_sweep.unresolved_blocklist_names` above zero: a blocklist name has no domain yet, so it cannot block its company before email spend. List the names at the top and resolve them before list work.
-- All three proof fields (`referenceable_clients`, `case_studies`, `hard_numbers`) blank: warn that the proof-asset gate will fire at strategy/copy time and a proof-asset-request form (proof-asset-request.md) will go to the client to collect real evidence before copy that needs it is written. Collecting it now avoids that round-trip. (These three fields plus `triggers` are the **first self-gather source** for `/social-proof-bank`, which builds the full copy-ready Social Proof + Trigger Bank later in the flow: anything captured here is one less thing that skill has to ask the client for.) The named case-study/customer companies (with their domains, grouped by sub-industry / what-they-sell) also become `/social-proof-bank`'s case-study groups, which `/tam-build` matches its filter-built rows against to mark the rows a real offer-fit client win backs as `proven` (filter-first discovery, operator decision 2026-09-28, recorded in `run_state.discovery_route`). They seed a lookalike only for a group `/tam-build` sends down the lookalike route (the offer needs one or filters build a poor universe), and only there does `/social-proof-bank`'s **Seed-and-Proof Readiness** gate check them, 5 to 10 seeds, before that group's TAM is built. The result/timeframe/named-client facts are the copy proof on either route, so capturing them up front is worth the extra minute. Any proof-asset ask merges into the client's one unsent message, `client-asks.md` (`client-messages.md`), as plain text.
+- All three proof fields (`referenceable_clients`, `case_studies`, `hard_numbers`) blank: warn that the proof-asset gate will fire at strategy/copy time and a proof-asset-request form (proof-asset-request.md) will go to the client to collect real evidence before copy that needs it is written. Collecting it now avoids that round-trip. (These three fields plus `why_now_signals` (the old `triggers`) are the **first self-gather source** for `/social-proof-bank`, which builds the full copy-ready Social Proof + Trigger Bank later in the flow: anything captured here is one less thing that skill has to ask the client for.) The named case-study/customer companies (with their domains, grouped by sub-industry / what-they-sell) also become `/social-proof-bank`'s case-study groups, which `/tam-build` matches its filter-built rows against to mark the rows a real offer-fit client win backs as `proven` (filter-first discovery, operator decision 2026-09-28, recorded in `run_state.discovery_route`). They seed a lookalike only for a group `/tam-build` sends down the lookalike route (the offer needs one or filters build a poor universe), and only there does `/social-proof-bank`'s **Seed-and-Proof Readiness** gate check them, 5 to 10 seeds, before that group's TAM is built. The result/timeframe/named-client facts are the copy proof on either route, so capturing them up front is worth the extra minute. Any proof-asset ask merges into the client's one unsent message, `client-asks.md` (`client-messages.md`), as plain text.
 
 ## Step 4: Write Profile Files
 
@@ -333,10 +365,24 @@ icp:
   industries_out: <value>
   geography: <value>
   geography_excluded: <value>
-  triggers: <value>
+  why_now_signals: <value>   # Aaron flow (see aaron-flow.md): 2-3 signals, send order only, never a filter. Read from the form's `why_now_signals`, or its old `triggers` field when a returned form still uses it
+  triggers: <same list as why_now_signals>   # kept for readers not yet migrated; readers take icp.why_now_signals first and fall back to this key
+  recent_win:   # Aaron flow: the most recent client that bought and did well; null fields when unknown
+    company: <value or null>
+    domain: <value or null>
+    segment: <value or null>
+    what_they_bought: <value or null>
+    result: <value or null>
+    when: <value or null>
+    nameable: <true | false | unknown>
+    source: <source label>
+  disqualifiers: []   # Aaron flow: plain words, who never buys (hard fit exclusion, feeds company fit)
+  supplier_exclusions: []   # Aaron flow: [{type, examples: [<domain>], source}]; sell TO the buyers, never buy; feeds company fit and account.discovery_exclusions
+  competitors: []   # Aaron flow: [{name, domain, source}]; feed account.discovery_exclusions and the copy truth check
+  carried_to_checkpoint_a: []   # Aaron flow: profile paths the pre-fill could not answer, e.g. [icp.recent_win, icp.geography]; asked once at checkpoint A, never mid-phase
   scraping_preferences: <value>
   exclusions:
-    competitors: <value>
+    competitors: <value>   # Aaron flow: defaults to the domains in icp.competitors
     customers: <value>
   tone: <value>
 offer:
@@ -373,7 +419,7 @@ run_state:
   execution_mode: <auto_execute | review_gates>   # default auto_execute (operator directive 2026-09-24)
   review_protocol: <phase_checkpoints | none>     # default phase_checkpoints
   speed_to_lead_owner: <value or FNNL Agency>   # FNNL default when blank (operator 2026-09-24); not asked; read at Gate D
-  booking_link: <value or null>          # null is filled from the context sweep; asked at checkpoint 1 only if the sweep finds none; read by /lifecycle-copy for Gate D
+  booking_link: <value or null>          # null is filled from the context sweep; asked at checkpoint A only if the sweep finds none (Aaron flow, see `aaron-flow.md`); read by /lifecycle-copy for Gate D
   spend_ceiling_usd: 100   # the standing budget per client run, never asked (operator directive 2026-09-22)
   campaign_approval_brief_needed: <yes | no>
   offer_slate_approval: <optional | required>   # read by /offer-test-slate; default optional
@@ -435,9 +481,11 @@ Ready to launch. Run /cold-email-kickoff (Phase 1 continues in /phase-1-onboardi
 It will read this intake form and skip the interview phase.
 ```
 
+**Aaron flow (see `aaron-flow.md`):** add one line, `Carried to checkpoint A: <field names, or none>`, and continue into Phase 2 instead of waiting. The Phase 1 handoff lists the same fields.
+
 ## What downstream skills do with this form
 
-- `/cold-email-kickoff`: checks for `intake-form.md` at Step 1. If found, reads it, skips infrastructure questions, and sets `execution_mode` and `review_protocol` from the form. Under `phase_checkpoints`, checkpoint 1 never re-asks what the confirmed form already answers. This is the single entry-point orchestrator.
+- `/cold-email-kickoff`: checks for `intake-form.md` at Step 1. If found, reads it, skips infrastructure questions, and sets `execution_mode` and `review_protocol` from the form. **Aaron flow (see `aaron-flow.md`):** Phase 1 auto-approves (no checkpoint 1 any more); `icp.carried_to_checkpoint_a` never re-asks what the confirmed form already answers, and is asked once in checkpoint A's one batch at the end of Phase 2. This is the single entry-point orchestrator.
 - `/icp-onboarding`: checks for `icp.source: intake_form` in `client-profile.yaml`. If found, skips all interview questions and returns to caller.
 - `/lead-magnet-brainstorm`: checks `run_state.execution_mode`. If `auto_execute`, locks the test set (the top-ranked sendable offer as the primary plus every qualifying candidate as ranked validation arms) without pausing, then `/offer-test-slate` shows it to the client (approval optional, per `offer_slate_approval`).
 - `/campaign-strategy`: checks `run_state.execution_mode`. If `auto_execute`, selects top-recommended campaign without pausing.

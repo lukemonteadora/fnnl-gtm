@@ -1,6 +1,6 @@
 ---
 name: market-evidence
-description: "Turns collected research into counted, clustered, scored evidence and runs the Research QA gate (PASS, DEEPEN, HOLD); after launch, folds in replies. Use for \"synthesize the research\", \"cluster the pains\", \"run research QA\", \"update the research from replies\". Not for collecting research (/offer-intelligence)."
+description: "Turns collected research into counted, clustered, scored evidence and runs the Research QA gate (PASS, DEEPEN, HOLD); after launch, folds in replies. Under the Aaron flow default, synthesize runs as short clustering only, and the score and gate steps run only when Luke asks (aaron-flow.md section 4). Use for \"synthesize the research\", \"cluster the pains\", \"run research QA\", \"update the research from replies\". Not for collecting research (/offer-intelligence)."
 ---
 
 **From the former description:** Mode synthesize runs inside `/offer-intelligence` discovery, after its collection vectors and before `/lead-magnet-brainstorm`. It ingests the evidence batches into the client's evidence ledger with `scripts/research/evidence_ledger.mjs`, clusters pains in the buyers' own words, counts sightings honestly, and scores every cluster on the 8-factor opportunity rubric with cited evidence IDs; DEEPEN runs at most two targeted Stage 2 loops. Its outputs are `_research/pain-clusters.md` and the `research_artifacts` index. Mode feedback runs from `/cold-email-weekly-rhythm` at each arm read, and at least every two weeks while a wave is live: it turns human replies, objections, competitor mentions, timing reasons and client call notes into strong-tier evidence rows, re-clusters, adds evidence lines to `lead-magnets.md` and the offer arms, and writes a dated results review that routes next steps to the owning skills. Other triggers: is the research good enough, what did the market say, /market-evidence. It never collects research itself (that is `/offer-intelligence`), never locks an offer, never edits a live campaign, and never moves the offer-validation flip.
@@ -13,6 +13,8 @@ All `profiles/<business-slug>` paths in this skill resolve under `<outbound>/pro
 
 **Why this skill exists.** Research used to end as a narrative brief: quotes inside prose, counts typed by hand, no check that the evidence was good enough before offers were built, and no route for what prospects said after launch to change the research. This skill is the missing middle. `/offer-intelligence` collects, this skill counts, clusters, scores and checks, and `/lead-magnet-brainstorm` builds offers only from what passed. After launch, this skill turns the market's answers back into evidence. AI compresses the market here; it never invents it.
 
+**Aaron flow (see `aaron-flow.md`, section 4).** The default in this worktree is quick demand mining: a known market skips new research entirely, and an unfamiliar market gets one fanned-out research pass. Synthesize still ingests and clusters every time, but runs as short clustering only: Step 4 (Score) and Step 5 (Research QA gate) run only when Luke asks for them. This is the default, not a replacement; the full scored-and-gated pass below still runs in full whenever Luke asks or the client-facing stakes call for it.
+
 ## Material Decision Rule
 
 When this skill reaches a material fork, name the realistic options, recommend the strongest path, and explain why the main alternatives are weaker before committing. Ask before choices that affect spend beyond the approved budget, provider routing, source of truth, campaign direction, client-facing output or live systems. For low-risk reversible choices, state the recommendation and proceed.
@@ -21,7 +23,7 @@ When this skill reaches a material fork, name the realistic options, recommend t
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at the one checkpoint that closes each of the four phases, `phase-protocol.md`; `review_gates` is opt-in), proceed without pausing: the Research QA gate runs its bounded deepen loop and then proceeds with labels (below); it is never a silent pause. Under `review_gates`, the verdict rides along with Gate 2 (the offer-step review defined in `/cold-email-kickoff`), where the operator decides on a HOLD. Under `review_protocol: phase_checkpoints` (the new-client default), research and the offer are one phase (`/phase-2-research-offer`): the deepen loops run inside it automatically, exactly as under `auto_execute` (at most two, operator decision 2026-09-28), and the verdict and any HOLD reasons lead checkpoint 2, after the Aaron offer call (`aaron-lane.md`). Never re-ask a decision already recorded in `run_state`, the profile, memory or the operator's latest message.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at checkpoint A (Phase 2) and checkpoint B (Phase 4), while Phases 1 and 3 auto-approve (Aaron flow, see `aaron-flow.md`), `phase-protocol.md`; `review_gates` is opt-in), proceed without pausing: the Research QA gate runs its bounded deepen loop and then proceeds with labels (below); it is never a silent pause. Under `review_gates`, the verdict rides along with Gate 2 (the offer-step review defined in `/cold-email-kickoff`), where the operator decides on a HOLD. Under `review_protocol: phase_checkpoints` (the new-client default), research and the offer are one phase (`/phase-2-research-offer`): the deepen loops run inside it automatically, exactly as under `auto_execute` (at most two, operator decision 2026-09-28), and the verdict and any HOLD reasons lead checkpoint A (replaces the old checkpoint 2, `phase-protocol.md`), after the Aaron offer call (`aaron-lane.md`). Never re-ask a decision already recorded in `run_state`, the profile, memory or the operator's latest message. **Aaron flow default** (`aaron-flow.md` section 4): the Research QA gate (Step 5) is off by default and runs only when Luke asks; proceeding with the gate off under `auto_execute` or `phase_checkpoints` is not a pause and needs no separate approval.
 
 ## Activity Log Protocol
 
@@ -33,7 +35,7 @@ Before client work, **read** `profiles/<client>/activity-log.md` (its CURRENT ST
 |---|---|
 | `/offer-intelligence` discovery or validation finished its collection vectors | `synthesize` |
 | A deepen loop finished its targeted research | `synthesize` (re-run) |
-| "Is the research good enough to build offers?" | `synthesize` (the gate only, if the clusters are current) |
+| "Is the research good enough to build offers?" | `synthesize` (the gate only, if the clusters are current; under the Aaron flow default this question is Luke asking for the gate, aaron-flow.md section 4) |
 | `/cold-email-weekly-rhythm` reads an arm, or two weeks passed with a wave live | `feedback` |
 | The client shares call recordings, call notes or win/loss notes after launch | `feedback` |
 | "What did the market say?" / "update the research from replies" | `feedback` |
@@ -60,7 +62,7 @@ This skill makes no paid call and runs no primary research pass, so it writes no
 
 ### Step 0: Context (never redo research)
 
-Read the activity log, the `research_artifacts:` block, and everything already in `_research/`. Note which clusters exist, when the ledger was last refreshed, and which older research files `/offer-intelligence` Step 0 seeded. If the clusters are current and no new batches exist, skip to Step 5 (the gate) and say so.
+Read the activity log, the `research_artifacts:` block, and everything already in `_research/`. Note which clusters exist, when the ledger was last refreshed, and which older research files `/offer-intelligence` Step 0 seeded. If the clusters are current and no new batches exist, skip to Step 5 (the gate) and say so. **Aaron flow default:** skip straight to Step 6 instead, since Step 5 itself only runs when Luke asks.
 
 ### Step 1: Ingest
 
@@ -79,7 +81,7 @@ Group the active, non-hypothesis rows into problem clusters, written in the buye
 
 - **Who does it.** Up to about 150 rows: the session. Larger ledgers, or several segments: mid-model sub-agents (Agent tool `model: "sonnet"`), one segment or one disjoint row range each, each writing a proposed cluster map to its own file under the run folder. The session merges the maps, resolves overlaps, and writes the final file. Clusters that agents converged on from different rows are merged, not double-listed.
 - **Rules.** Cluster by the buyer's problem, not the client's features. Keep cluster IDs stable across runs; never renumber. Put each cluster's IDs on its `evidence:` line and any disagreeing rows on `counterevidence:`. A row may sit in more than one cluster when it genuinely speaks to both. `model_hypothesis` rows never go on an `evidence:` line; list which hypotheses were corroborated or overturned in the Summary instead.
-- **Fill each cluster block** from the rows themselves: who feels it, trigger, current workaround, why it fails, consequence, desired outcome, alternatives, objections, buyer language (verbatim, with IDs), confidence, open questions. Leave a field as "not found" rather than infer it.
+- **Fill each cluster block** from the rows themselves: who feels it, trigger, current workaround, why it fails, consequence, desired outcome, alternatives, objections, buyer language (verbatim, with IDs), confidence, open questions. Leave a field as "not found" rather than infer it. **Aaron flow short clustering (default):** fill only heading, `evidence:`, `counterevidence:`, who feels it, Counts, objections, buyer language and confidence; the remaining fields stay "not found" until Luke asks for the full pass.
 
 ### Step 3: Count
 
@@ -91,11 +93,11 @@ Paste each cluster's `counts_line` into its **Counts** line. Counts are never ty
 
 ### Step 4: Score
 
-Score every cluster on the 8-factor opportunity rubric (standard section 6), in the session (strongest model). Each non-zero score cites evidence IDs, or a profile field for reachability and ability to solve. A score with no citation is 0. Write the **Opportunity scores** table with a notes column holding the citations. The score orders clusters; it removes none.
+Score every cluster on the 8-factor opportunity rubric (standard section 6), in the session (strongest model). Each non-zero score cites evidence IDs, or a profile field for reachability and ability to solve. A score with no citation is 0. Write the **Opportunity scores** table with a notes column holding the citations. The score orders clusters; it removes none. **Aaron flow default** (`aaron-flow.md` section 4): this step does not run; write "not run (Aaron flow)" in place of the Opportunity scores table and order clusters by sighting count, then by strongest evidence tier, until Luke asks for the scored pass.
 
 ### Step 5: Research QA gate
 
-Run the 15 checks (standard section 7). Q1-Q4, Q6-Q8 and Q10 come from `stats`. For Q5, send 5 randomly chosen quotes from the top clusters to one small-model sub-agent (`model: "haiku"`) that re-reads each source (WebFetch, the built-in browser pane for a page WebFetch cannot render, or the raw capture for pastes and calls) and reports exact match, paraphrase or not found. The rest are judged against the files. Record each check as PASS, FLAG or FAIL, with a note, in the **Research QA** section.
+**Aaron flow default** (`aaron-flow.md` section 4): this step runs only when Luke asks. By default, write "not run (Aaron flow)" as the verdict plus one coverage line (sources read, clusters found, biggest gap if any) and go straight to Step 6 with `qa_verdict: not_run`. Step 3's mechanical FAIL fixes still apply regardless of whether the gate runs. When Luke asks for the gate, run the 15 checks (standard section 7). Q1-Q4, Q6-Q8 and Q10 come from `stats`. For Q5, send 5 randomly chosen quotes from the top clusters to one small-model sub-agent (`model: "haiku"`) that re-reads each source (WebFetch, the built-in browser pane for a page WebFetch cannot render, or the raw capture for pastes and calls) and reports exact match, paraphrase or not found. The rest are judged against the files. Record each check as PASS, FLAG or FAIL, with a note, in the **Research QA** section.
 
 **Evidence saturation (the stopping rule, added 2026-09-23).** Research stops when more of it would no longer change the decision, not when a source count is reached. Before the verdict, compare the cluster map before and after the newest evidence (the last collection batch, deepen run or feedback run; on a first synthesis, the last fifth of the rows by `evidence_id`) and record one line in the Research QA section:
 
@@ -112,8 +114,8 @@ Before offers are built, the research must show: independent sources (Q3), more 
 
 ### Step 6: Write and record
 
-- `pain-clusters.md`: Summary (every bullet cites cluster IDs), one section per cluster, Opportunity scores, Research QA, the **Language bank** (3 to 8 verbatim phrases per cluster, with IDs), and the Market feedback log (empty until launch).
-- `client-profile.yaml`: refresh `research_artifacts:` (`stage`, `qa_verdict`, `qa_date`, `last_refreshed`, `evidence_rows`, `clusters`, `top_clusters`, `files`, `legacy_files`, `coverage_gaps_stated_honestly`, each unread platform with its paste reading list) and mirror `stage` into `run_state.status.research_stage`. Re-parse the YAML after writing.
+- `pain-clusters.md`: Summary (every bullet cites cluster IDs), one section per cluster, Opportunity scores, Research QA, the **Language bank** (3 to 8 verbatim phrases per cluster, with IDs), and the Market feedback log (empty until launch). **Aaron flow default:** the Opportunity scores and Research QA sections read "not run (Aaron flow)" with the coverage line, until Luke asks for the full pass.
+- `client-profile.yaml`: refresh `research_artifacts:` (`stage`, `qa_verdict`, `qa_date`, `last_refreshed`, `evidence_rows`, `clusters`, `top_clusters`, `files`, `legacy_files`, `coverage_gaps_stated_honestly`, each unread platform with its paste reading list) and mirror `stage` into `run_state.status.research_stage`. Re-parse the YAML after writing. **Aaron flow default:** `stage` ends at `synthesized` (never advances to `qa_pass`/`qa_deepen`/`qa_hold`), `qa_verdict: not_run`, `qa_date: null`, until Luke asks for the gate.
 - Hand the cluster IDs to `/offer-intelligence` so its Intersection step, Pain by persona table and Candidate Generation Input cite them.
 - Activity log: one line with the verdict, the top clusters and their counts, and the gaps.
 
@@ -201,6 +203,7 @@ Before reporting a run complete, prove it against the files:
 - Every cluster heading in `pain-clusters.md` has an `evidence:` line, and every Counts line matches the latest `stats` output.
 - The verdict, the `research_artifacts:` block and `run_state.status.research_stage` agree, and the YAML re-parses.
 - In feedback mode, the number of reply rows ingested equals the human replies pulled minus exact duplicates (report both numbers).
+- Under the Aaron flow default, `qa_verdict: not_run` and `stage: synthesized` agree with Step 5 not having run; a `qa_pass`/`qa_deepen`/`qa_hold` verdict means Luke asked for the gate and it actually ran.
 
 ## Integration
 
@@ -221,3 +224,4 @@ Before reporting a run complete, prove it against the files:
 - **Synthesize DEEPEN**: `/offer-intelligence` Stage 2 with the deepen brief, then this mode again. The same under `review_protocol: phase_checkpoints`, inside Phase 2 with no stop (`/phase-2-research-offer`).
 - **Synthesize HOLD**: Gate 2 under `review_gates`; under `review_protocol: phase_checkpoints`, carried forward to the Aaron offer call with the reasons leading the Phase 2 checkpoint; under plain `auto_execute`, `/lead-magnet-brainstorm` with low-confidence labels and the missing evidence requested.
 - **Feedback done**: the routed skills in the results review, and `/cold-email-weekly-rhythm` for the reads it owns.
+- **Synthesize not run (Aaron flow default)**: straight to `/offer-intelligence` for the Intersection and the brief, clusters ordered by sighting count, then `/lead-magnet-brainstorm`; ask Luke for the scored-and-gated pass only when the stakes call for it.

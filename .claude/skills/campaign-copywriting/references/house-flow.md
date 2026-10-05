@@ -20,7 +20,7 @@ If any draft fails any required guide, rewrite internally until it passes. Do no
 
 ## How This Skill Works
 
-This skill operates like a structured intake flow. Under `review_gates`, confirm key decisions before final copy is produced. Under `auto_execute` (the new-client default since 2026-09-24), steps 1 to 3 run without a stop: pick the recommended direction, first-line strategy and structure, record them in `copy.md`, then write the final copy. Every QA gate below still applies in full, and the operator reviews the copy at the launch review (checkpoint 4, `/phase-4-copy-launch`; `outbound/reference/phase-protocol.md`).
+This skill operates like a structured intake flow. Under `review_gates`, confirm key decisions before final copy is produced. Under `auto_execute` (the new-client default since 2026-09-24), steps 1 to 3 run without a stop: pick the recommended direction, first-line strategy and structure, record them in `copy.md`, then write the final copy. Every QA gate below still applies in full, and the operator reviews the copy at the launch review (checkpoint B, `/phase-4-copy-launch`; `outbound/reference/phase-protocol.md`).
 
 The single-thread 2-to-3-step flow:
 

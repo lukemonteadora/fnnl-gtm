@@ -54,11 +54,17 @@ Once the platform is known, route in this order:
 | Volume | Sent per sender and per domain | Locked sending platform analytics |
 | Bounce rate | Per sender, domain, and campaign | Locked sending platform analytics |
 | Reply rate | Overall and per sender | Locked sending platform analytics |
+| Complaint proxy | Hostile replies per 1,000 sends (`hostile_per_1000`), beside bounce | `reply-scoring-core.md`, counted from `negative_hostile` replies |
 | Copy risk | Spam words, hype, hard CTA, em dashes | `/spam-word-checker` and `cold-email-copy-best-practices.md` |
 | List risk | Verification coverage, ICP drift, duplicate domains | `/list-quality-scorecard` |
 | Spam placement | Inbox placement test if available | The locked platform's own placement test, or an external seed-list tool |
+| Mailbox age | Sending days by domain/batch against the ~45 / 60-90 bands | `/cold-email-weekly-rhythm`'s mailbox age clock |
 
-**Run these as a recurring, multi-signal rhythm, not one dashboard number:** daily spam checks, weekly reply-rate reviews, seed tests, and forwarding tests. No single one of them is trustworthy alone.
+**Run these as a recurring, multi-signal rhythm, not one dashboard number:** daily spam checks, weekly reply-rate reviews, a placement test, and forwarding tests. No single one of them is trustworthy alone.
+
+**Complaint proxy, labeled a proxy on purpose.** Microsoft 365 senders give no Postmaster complaint data, so `hostile_per_1000` stands in for it. Report it beside bounce every time; there is no house threshold yet, so flag the number and its trend, not a pass/fail line.
+
+**Ordering, on a reply-rate drop (Aaron flow (see aaron-flow.md), section 10): deliverability outranks copy and offer.** Run the placement test before diagnosing copy or offer. If it reads under 70%, the problem is deliverability and the offer/copy diagnosis waits; if it reads over 85%, deliverability is clean and gets looked at last, after copy and offer.
 
 These same instruments are legitimate here as **infrastructure** diagnostics (is the sending layer healthy), and not as a campaign report card (did the campaign perform). Using them this way is not in tension with refusing to judge a campaign by spam-placement scores, platform reputation numbers, or bounce rate. Both the rhythm and that reconciliation are in `eric-deliverability-doctrine.md`.
 
@@ -143,11 +149,16 @@ Bad list and bad copy can look like deliverability failure. Do not skip this.
 
 ### 5. Spam Placement
 
-If available, run the selected platform's inbox placement test.
+Run the selected platform's inbox placement test (PlusVibe's own placement test where PlusVibe is the locked platform; ruling `placement-test`, standing-rulings.md, 2026-10-05). Its cost is read before first use (`/api-cost-governance`); the operator's OK is asked once, at checkpoint A, then stored as the ruling.
 
 A platform's own placement test applies only to that platform: its seed lists, metric names, and thresholds are not portable. If the locked platform has no placement test, use an external seed-list placement tool instead.
 
-Do not present spam-placement results as proven if no placement test was run.
+**Thresholds (Aaron flow (see aaron-flow.md), section 10):**
+- **>=85% inbox placement:** clean.
+- **70-85%:** grey zone. Re-run once with different senders before trusting the result either way.
+- **<70%:** critical. Pause the campaign and route to `/deliverability-incident-response`.
+
+Do not present spam-placement results as proven if no placement test was run. **A test not run is reported as a gap, never as a pass.**
 
 ## Report Format
 
@@ -168,6 +179,8 @@ Include:
 - Domains checked:
 - Overall reply rate:
 - Overall bounce rate:
+- Hostile replies per 1,000 sends (complaint proxy):
+- Placement test (date, inbox placement %, band, or "not run: <reason>"):
 - DNS failures:
 - Sender health failures:
 - List/copy risks:

@@ -1,6 +1,6 @@
 ---
 name: outreach-copywriting
-description: "Writes and QA-checks first-touch cold outreach for any channel (email, LinkedIn DMs and connection notes, SMS, X DMs). Use when writing, revising or reviewing initial outbound copy. Enforces the Framework A Email 1 contract, and full cold-email campaigns also go through /campaign-copywriting."
+description: "Writes and QA-checks first-touch cold outreach for any channel (email, LinkedIn DMs and connection notes, SMS, X DMs). Use when writing, revising or reviewing initial outbound copy. Enforces the Framework A Email 1 contract, and full cold-email campaigns also go through /campaign-copywriting, which applies that same shape without word bands for Aaron-lane copy (Aaron flow, see aaron-flow.md section 9)."
 ---
 
 **From the former description:** It covers other prospecting channels too, and serializing or preparing initial outbound copy for any of them. The Framework A Email 1 contract (Aaron Shepherd's measured winner anatomy, aligned 2026-09-21) is a hard rule, and full cold-email campaign work routes through `/campaign-copywriting`.
@@ -53,7 +53,9 @@ Apply the Framework A contract from `outreach-copy-framework.md` without substit
 
 (operator-approved Aaron alignment, 2026-09-21: "exactly 1 question" and the "mandatory parenthetical workload split" were relaxed to Aaron's stated positions, B14.)
 
-For email, include a compliant subject: 2 to 4 lowercase words, 0 to 2 variables, curiosity plus relevance, never deceptive ("your [the offer's own object]" and `fyi {{first_name}}` pass). For subjectless channels, omit it. Obey tighter platform character limits with the one-liner shape: drop the P.S. first, then the scope disclosure, before touching the offer.
+**Aaron flow (see `aaron-flow.md` section 9).** For full cold-email campaigns run through `/campaign-copywriting`'s recorder mode, there is no word band and no word cap: the frame's sentence count in `aaron-copy-frames.md` sets the length, so a longer frame needs no logged A/B arm the way the house 25-to-35-word default does. This file's word-band bullets above stay the house default for every other channel and for the stepwise authoring path the operator can still ask for.
+
+For email, include a compliant subject: 2 to 4 lowercase words, 0 to 2 variables, curiosity plus relevance, never deceptive ("your [the offer's own object]" and `fyi {{first_name}}` pass). For subjectless channels, omit it. Obey tighter platform character limits with the one-liner shape: drop the P.S. first, then the scope disclosure, before touching the offer. **Aaron-lane cold email instead uses two or three lowercase words, 0 to 2 variables, one subject per campaign, never A/B tested** (Aaron flow, see `aaron-flow.md` section 9).
 
 ## Editing Order
 

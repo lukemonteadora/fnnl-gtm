@@ -3,7 +3,7 @@ name: experiment-design
 description: "Designs single-variable cold email experiments (offer, list, copy): test order, sample sizes, confidence and success criteria, so one change is tested at a time. Use to improve a campaign, compare lists or copy, run offer-validation arms, or propose the next round of tests from the TAM."
 ---
 
-**From the former description:** Experiment types are offer-only, list-only, copy-only and combined. The test order is the offer, then the offer's positioning, then the CTA and delivery, with list cuts in parallel and subject lines last; confidence is weighted and success is judged on time-agreed replies beside positive replies. It prevents the number-one learning-loop mistake: changing list, copy and offer at once and losing all signal. Its Generative Proposal Mode mines `tam/tam.csv` (from `/tam-build`) and prior results to propose ranked, data-grounded experiment candidates for the next round.
+**From the former description:** Experiment types are offer-only, list-only, copy-only and combined, plus the broad-vs-stacked signal test arm (a labeled list-only variant; Aaron flow, see aaron-flow.md section 5). The test order is the offer, then the offer's positioning, then the CTA and delivery, with list cuts in parallel and subject lines last; confidence is weighted and success is judged on time-agreed replies beside positive replies. It prevents the number-one learning-loop mistake: changing list, copy and offer at once and losing all signal. Its Generative Proposal Mode mines `tam/tam.csv` (from `/tam-build`) and prior results to propose ranked, data-grounded experiment candidates for the next round.
 
 # Experiment Design
 ## Canonical Profile Root
@@ -36,7 +36,7 @@ Do not turn failed or unsafe paths into user-facing options. If this skill's QA 
 
 When asking the user, use the Claude Desktop native Interactive Inputs / Choice Prompts pattern from /clarification-first: recommended option first, short choices, and Custom answer last when a custom answer is plausible.
 
-## The four experiment types
+## The five experiment types
 
 ### A. List-only experiment
 - **What varies:** the list (targeting criteria)
@@ -63,6 +63,14 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 - **When to use:** first, before any copy test. `/campaign-strategy`'s Offer-Validation Wave is the first wave, and it runs this way over the whole qualified TAM at full volume (Aaron process alignment, operator directive 2026-09-22; supersedes "the primary offer plus at least one arm", 2026-09-21). First-wave offer count = `max(3, floor(qualified_contacts / 2000))`, where `qualified_contacts` is the wave's send-eligible contacts, capped at the number of qualifying candidates (fewer than 3 only when fewer qualify, and the report says so) (Aaron, Apr 6: about one front-end offer per 2,000 leads; May 4: always test three or four). Every offer is launched the same day with no head start for the desk-ranked primary, placed by fit as equal split-test cells on shared ground, and only arms beyond the count queue. Each offer is read pooled across the segments it runs in, and offers are compared only on shared ground (operator decision 2026-09-23; replaces the offer x segment matrix, Aaron Apr 6 "run them across all of your campaigns" and Apr 13). For a client with per-buyer-type offer sets (`offer.segments`), the formula runs per buyer-type segment on that segment's qualified contacts. `/offer-intelligence` hands its Swap hypotheses here. Aaron tests three or four offers (doctrine §5), one variable at a time (doctrine §5 step 9).
 - **How it is judged:** per arm, on `/campaign-strategy`'s pooled flip (PROVEN / DEAD / HOLD on raw positive replies, never pooled across arms), not on the sample table in Step 3, and read per Step 6. Among PROVEN arms the winner is the one that does not lose on time-agreed replies per 1,000 first touches, picked at matched cell counts on shared ground only (an offer alone in a segment is judged there only against the PROVEN and DEAD lines); a PROVEN arm that farms interest is reshaped, not scaled. **Losers are switched off by two things only:** the absolute DEAD line, and the winner pick. At the winner pick (made on matched cell counts on shared ground), arms still in HOLD stop receiving new first touches, their live sequences finish, the untouched rows the winner fits go to it (rows it does not fit go to the strongest offer that fits them, and two PROVEN offers with no shared ground each scale on their own ground; operator decision 2026-09-23), and the parked arm's read is recorded as unresolved so it can return as a later test (Aaron process alignment, operator directive 2026-09-22; supersedes 'another arm's win never retires it'). Never cut an arm because it trails the leader by a ratio at the floor: at ~1,300 contacts an arm exactly as good as the leader shows 2 or fewer positives about 37% of the time (Poisson, mean 3.25). Aaron switches weak angles off by hand and gives no threshold (Mar 9). With `offer.segments`, each buyer-type segment flips, picks its own winner and scales it on its own; a segment never borrows another segment's winner.
 - **Confidence on learnings:** HIGH on the offer, once each arm's pooled read decides; LOW on copy and list.
+
+### E. Broad vs stacked (the signal test arm; Aaron flow, see aaron-flow.md section 5 and section 13 items 2 and 11)
+- **What varies:** list composition only, and only between two arms. The control is the broad arm: the offer-filtered list exactly as `/campaign-strategy` already built and is sending it. The variant is the stacked arm: the same list narrowed to the rows that also carry one additional signal, or a small stack of signals joined onto the contact row by `company_domain` (a strict subset of the broad arm, never a different audience).
+- **What stays fixed:** copy (same sequence and same Email 1 variant set as the broad arm), offer, infrastructure split, sequence timing, and every targeting filter the broad arm already applies. Only the signal-based narrowing changes.
+- **What you learn:** whether stacking that signal lifts positive reply rate and time-agreed replies enough to justify running on less volume, or whether the broad arm already captures the value a stacked slice would claim.
+- **When to use:** only once a broad campaign for the segment is already live (it is the control, not a fresh baseline) and a candidate signal has enough carrying rows to be read against the Step 3 minimums. **This is the only way a stacked-signal slice is tested.** It never launches as a standalone campaign and it never waits for a proven offer first (the removed limit, Aaron flow section 13 item 2): signals already order the send inside the broad campaign via `/lead-scoring` P1 to P5 from day one, and a stacked arm is run beside that, not instead of it. A company-level count such as the ≥500-company guide is advisory sizing information for this arm, never a launch gate (section 13 item 9). At most one stacked arm runs per broad campaign at a time: one labeled test, not a menu of parallel signal cuts.
+- **How it is judged:** exactly like any list-only experiment (Steps 6 and 7): once the stacked arm reaches its sample floor and sequence plus grace, read positive reply rate and time-agreed replies per 1,000 first touches against the broad arm. A win does not spin the stacked slice into its own campaign; it raises that signal's rank in the broad campaign's send order going forward, and a loss drops the signal back down without retiring the broad arm.
+- **Confidence on learnings:** HIGH on whether that signal (or signal stack) predicts reply, once read against the Step 3 minimum; LOW on copy and offer, both held fixed.
 
 ## Generative Proposal Mode (propose experiments from the TAM)
 
@@ -196,7 +204,7 @@ Use this framework when reporting:
 
 ```
 Experiment: <name>
-Type: List-only | Copy-only | Combined
+Type: List-only (incl. Broad-vs-stacked) | Copy-only | Combined
 Variable: <what changed>
 
 Result: <winner name> at <positive reply rate>% vs <baseline>%
@@ -226,7 +234,7 @@ HIGH only if: experiment type isolates the variable AND sample size meets the mi
 
 If you're just starting out, **don't run controlled copy experiments** until you have a baseline. You need a control before you can test a single variable. **The offer is the exception** (operator-approved Aaron alignment, 2026-09-21): the Offer-Validation Wave tests it in the first wave, as offer-only arms over the whole qualified TAM, each in every first-wave segment it fits (type D above), because the offer is the highest-leverage lever and every later test sits on top of it (doctrine §3, §5). The Email 1 variant set each arm carries is identical across arms, so it never competes with the offer read.
 
-**Positioning tests of the winner start as soon as the winner is picked** (Aaron process alignment, operator directive 2026-09-22; supersedes "reserve positioning tests of the winning offer for Wave 2+, once a slice's baseline exists"). They run inside the big campaigns that carry the winner to the rest of the TAM, as in-campaign Email 1 variants with one variable changed per variant (Step 5), and losing variants are switched off in flight by the same two things as offer arms, never by a ratio at the floor: the absolute DEAD line on the variant's own count, and the pick of a winning variant (Step 8) at matched counts (Aaron, Apr 6: the second phase of testing is the value prop or pain of the winning offer). **Signal-test slices are the one place copy stays frozen:** a signal slice (the bounded testing allocation after the offer is proven, `/campaign-strategy`) holds the offer and copy approach constant so its reply difference attributes to the signal, which is the point of running it.
+**Positioning tests of the winner start as soon as the winner is picked** (Aaron process alignment, operator directive 2026-09-22; supersedes "reserve positioning tests of the winning offer for Wave 2+, once a slice's baseline exists"). They run inside the big campaigns that carry the winner to the rest of the TAM, as in-campaign Email 1 variants with one variable changed per variant (Step 5), and losing variants are switched off in flight by the same two things as offer arms, never by a ratio at the floor: the absolute DEAD line on the variant's own count, and the pick of a winning variant (Step 8) at matched counts (Aaron, Apr 6: the second phase of testing is the value prop or pain of the winning offer). **The broad-vs-stacked signal test arm (type E above) is the one place copy stays frozen on purpose, and it does not wait for anything:** it runs as soon as a broad campaign is live and a candidate signal has enough rows, never gated on the offer being proven first (Aaron flow, see aaron-flow.md section 5 and section 13 item 2). It holds the offer and copy approach identical to the broad arm so its reply difference attributes to the signal alone, which is the point of running it.
 
 **The test order (Aaron's; doctrine §5 step 9, §9; operator-approved Aaron alignment, 2026-09-21):**
 1. **The offer** (the offer-validation arms: which free deliverable the market wants)
@@ -268,7 +276,7 @@ experiment:
   name: <short name>
   hypothesis: <one sentence>
   evidence: <the cluster or evidence IDs its "because" cites, e.g. [C-02, E-0014], or unevidenced | contrarian>   # added 2026-09-24 (Step 1)
-  type: offer-only | list-only | copy-only | combined
+  type: offer-only | list-only | copy-only | combined | broad-vs-stacked   # broad-vs-stacked added 2026-10-05 (Aaron flow, type E above)
   variable: <what changes>
   constants: <list of what stays fixed>
 

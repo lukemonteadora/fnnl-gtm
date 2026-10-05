@@ -65,7 +65,7 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at the one checkpoint that closes each of the four phases, `phase-protocol.md`; `review_gates` is opt-in), proceed without pausing: author the slate, record it, and continue the flow. Claude never sends the slate to the client. The operator sends it, and records the send date and any client response (see State fields). Stop only for the policy's hard-stops.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at checkpoint A (Phase 2) and checkpoint B (Phase 4), while Phases 1 and 3 auto-approve (Aaron flow, see `aaron-flow.md`), `phase-protocol.md`; `review_gates` is opt-in), proceed without pausing: author the slate, record it, and continue the flow. Claude never sends the slate to the client. The operator sends it, and records the send date and any client response (see State fields). Stop only for the policy's hard-stops.
 
 `run_state.offer_slate_approval` decides whether the flow waits for the client:
 
@@ -111,9 +111,9 @@ If `lead-magnets.md` has no ranked candidates, `/lead-magnet-brainstorm` has not
    - Every quote in "What we found" is verbatim from a real call, review or post on file. Never fabricate or tidy a quote, and never present a public quote as coming from the client's own calls.
    - Every number traces to a saved artifact. Where the artifacts do not hold a reason, write `Not captured in current artifacts.` rather than inventing one.
    - Plain words for a sharp outsider: gloss a specialist term the first time it appears; describe offers by what the prospect gets.
-6. **Stop at the Markdown (plain-text outputs, operator decision 2026-09-28, every mode).** `offer-test-slate.md` in the client's profile folder is the deliverable. A deck or DOCX is built only when the operator asks for that format in chat (see Rendering); mention that in one line at checkpoint 2, and never build one first. Rendering and slide QA never sit on the path to the list.
+6. **Stop at the Markdown (plain-text outputs, operator decision 2026-09-28, every mode).** `offer-test-slate.md` in the client's profile folder is the deliverable. A deck or DOCX is built only when the operator asks for that format in chat (see Rendering); mention that in one line at checkpoint A, and never build one first. Rendering and slide QA never sit on the path to the list.
 7. **Record** `offer.test_slate` in `client-profile.yaml` (see State fields) and log it.
-8. **Hand it to the operator** with one line on what it is, the path, and the "Needs your OK" asks. Then continue the flow per `run_state.offer_slate_approval`; under `review_protocol: phase_checkpoints`, the flow first stops at the Phase 2 checkpoint (`/phase-2-research-offer`) and continues only after the operator answers it.
+8. **Hand it to the operator** with one line on what it is, the path, and the "Needs your OK" asks. Then continue the flow per `run_state.offer_slate_approval`; under `review_protocol: phase_checkpoints`, the flow first stops at checkpoint A (end of Phase 2, `/phase-2-research-offer`; Aaron flow, see aaron-flow.md section 2) and continues only after the operator answers it.
 
 ### Slate template (client-facing Markdown)
 
@@ -368,7 +368,7 @@ python outbound/scripts/offer-readiness/offer_approval.py set <client-dir> <aaro
 | `/lead-magnet-brainstorm` | Records Aaron's offer call as the ranked test set (primary plus validation arms), with every candidate and the per-offer honoring fields this skill presents. |
 | `/ask-aaron` | Makes the offer call this slate explains (the Aaron lane, call 1, `aaron-lane.md`). The slate never re-ranks it. |
 | `/offer-intelligence` | Produces the research the "What we found" section summarizes. |
-| `/phase-2-research-offer` | Runs slate mode at step 6, after the offer lock and before the Phase 2 checkpoint; `/data-point-discovery` follows in Phase 3. Under `review_gates`, `/cold-email-kickoff` runs it at the same point. |
+| `/phase-2-research-offer` | Runs slate mode at step 6, after the offer lock and before checkpoint A (end of Phase 2); `/data-point-discovery` follows in Phase 3. Under `review_gates`, `/cold-email-kickoff` runs it at the same point. |
 | `/campaign-strategy` | Applies the first-wave offer count from the list, enforces the per-offer launch condition (`lead_magnet_client_ok`; a `pending` offer is planned and drafted with Start held, never sent), files the capacity request (`run_state.capacity_request`) the client's sending fleet is sized to, reads out the wave, sends the winner to the rest of the TAM, and triggers scale-review mode as a report alongside that scale-up. Reads `offer.scale_review.confirmed_capacity_per_week` as a send cap only for a client-supplied deliverable. |
 | `/campaign-copywriting` | Writes copy for every offer in the flight: a `pending` offer's campaign is drafted and Start-held, with no unconfirmed client term, and a `no` or vetoed offer gets none (its Confirmed Deliverable Gate reads the same fields; Offer Readiness, `offer-readiness.md`). |
 | `/campaign-approval-brief` | The later, campaign-level brief (lists, sources, copy), also Markdown by default. This skill is the earlier, offer-level one. They share the client-prose rules, and the design library when a deck is asked for. |
@@ -376,5 +376,5 @@ python outbound/scripts/offer-readiness/offer_approval.py set <client-dir> <aaro
 
 ## What to do next
 
-- **Slate done:** the Phase 2 checkpoint, then Phase 3 (`/phase-3-list`, which opens with `/data-point-discovery`), unless `run_state.offer_slate_approval = required`, in which case wait for the client's answer first.
+- **Slate done:** checkpoint A, then Phase 3 (`/phase-3-list`, which opens with `/data-point-discovery` and auto-approves, section 0 of `/autonomous-execution-policy`), unless `run_state.offer_slate_approval = required`, in which case wait for the client's answer first.
 - **Scale review done:** record the qualification cap. The winner is already scaling through `/campaign-strategy` (held to the confirmed capacity only for a client-supplied deliverable); schedule the next flight of queued offers.

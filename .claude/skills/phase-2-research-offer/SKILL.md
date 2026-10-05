@@ -1,15 +1,15 @@
 ---
 name: phase-2-research-offer
-description: "Phase 2 of 4 for a cold-outbound client. Say \"Phase 2 for <client>\". Researches buyer pain, runs the Research QA gate and the Aaron offer call, locks the offers, sizes each offer's list from counts, previews the targeting, then stops once at the offer checkpoint."
+description: "Phase 2 of 4 for a cold-outbound client. Say \"Phase 2 for <client>\". Runs Aaron's quick demand mining and the Aaron offer call, locks the offers, sizes each offer's list with the AI Ark 200-row sample, then stops once at checkpoint A, the one up-front batch for the rest of the run."
 ---
 
 # Phase 2: Research and offer
 
-**Say "Phase 2 for <client>" in a fresh thread, and this runs research through to locked offers, then stops once.** The protocol every phase follows is `outbound/reference/phase-protocol.md`; read it first. This file only lists what Phase 2 does.
+**Say "Phase 2 for <client>" in a fresh thread, and this runs research through to locked offers, then stops once at checkpoint A.** The protocol every phase follows is `outbound/reference/phase-protocol.md`; read it first. This file only lists what Phase 2 does.
 
 Paths resolve under `outbound/`. Client profiles are gitignored, so read them with Bash or Read.
 
-**The ask policy governs every step** (`phase-protocol.md` section 3). Find the answer first. The one up-front batch for the rest of the run is Checkpoint 2 below; small calls are decided and listed under "Calls I made", and anything else becomes a hold on the touched item or a note. The mid-run stops are a tool out of balance or down, spend over the budget, Aaron's call contradicting a client requirement (step 4), a missing required key, and the kickoff Step 6 draft-upload stop.
+**The ask policy governs every step** (`phase-protocol.md` section 3). Find the answer first. The one up-front batch for the rest of the run is checkpoint A below; small calls are decided and listed under "Calls I made", and anything else becomes a hold on the touched item or a note. The mid-run stops are a tool out of balance or down, spend over the budget, Aaron's call contradicting a client requirement (step 4), a missing required key, and the kickoff Step 6 draft-upload stop.
 
 ## Start
 
@@ -26,12 +26,15 @@ Paths resolve under `outbound/`. Client profiles are gitignored, so read them wi
 ## Steps (hands-free, unless the profile's older review setting adds stops; `phase-protocol.md` section 3)
 
 1. **Offer path.** Take the new-offer path unless a real existing offer has cold-outbound evidence: a live campaign, 300+ sends, reply data from those sends, or an approved campaign artifact. In that case run `/offer-intelligence` in validation mode instead of step 2's discovery mode. Results from other channels (meetings booked by phone, referrals, ads) are proof facts and research input, not validation evidence. A form-suggested offer is never evidence either; it goes to Aaron as an input he rules on. Report the path at the checkpoint.
-2. **Research**, per `market-evidence-standard.md`.
-   - Run `/offer-intelligence` in discovery mode. It reads the research that already exists first and never redoes it. Older research that predates the evidence ledger is seeded into `_research/evidence.csv` by its Step 0, and the old files stay where they are. It covers every confirmed segment.
-   - The primary pass is a logged deep-research run or its declared Claude sub-agent fan-out (`/ai-model-routing`; no third-party AI API). Check it with `node outbound/scripts/research/research_routing_check.mjs --skill offer-intelligence --client <slug> --json`.
-3. **Research QA gate.** Run `/market-evidence synthesize`: it clusters, counts and scores the evidence and returns PASS, DEEPEN or HOLD, recorded in `run_state.status.research_stage`.
-   - **DEEPEN:** runs at most two targeted loops on the named gaps inside this phase, with no stop (operator decision 2026-09-28). It ends as PASS with low-confidence labels, or HOLD.
-   - **HOLD:** carried forward, never a silent block. Every cluster is labelled low confidence, the reasons lead the checkpoint, and the missing evidence (usually call recordings) goes into `client-asks.md`.
+2. **Research: Aaron's quick demand mining, not a full discovery pass** (Aaron flow, see `aaron-flow.md` section 4).
+   - Run `/offer-intelligence` in discovery mode under that section's known-market / unfamiliar-market branch. A **known market** (the client already has a `recent_win` or case studies in the segment, or another FNNL client's research covers the same vertical) reuses what exists and skips new research. An **unfamiliar market** gets one quick Claude sub-agent fan-out pass on the allowed routes only: WebSearch for LinkedIn/X objections and competitor chatter, Reddit only when the operator pasted threads, the Meta Ad Library's read-only pane, and competitors' own sites. No third-party AI API.
+   - Evidence still goes into `_research/evidence.csv` through `evidence_ledger.mjs`, whichever branch ran. It covers every confirmed segment.
+   - Check the pass, when one ran, with `node outbound/scripts/research/research_routing_check.mjs --skill offer-intelligence --client <slug> --json` (it verifies a logged sub-agent fan-out, not a specific route).
+3. **Research QA gate: off by default** (Aaron flow, see `aaron-flow.md` section 4). Run `/market-evidence synthesize` as a short clustering pass: it counts and groups the evidence with no PASS/DEEPEN/HOLD gate unless the operator asks for the gate this run.
+   - **When the operator asks for the gate,** it scores the evidence and returns PASS, DEEPEN or HOLD, recorded in `run_state.status.research_stage`.
+     - **DEEPEN:** runs at most two targeted loops on the named gaps inside this phase, with no stop (operator decision 2026-09-28). It ends as PASS with low-confidence labels, or HOLD.
+     - **HOLD:** carried forward, never a silent block. Every cluster is labelled low confidence, the reasons lead the checkpoint, and the missing evidence (usually call recordings) goes into `client-asks.md`.
+   - **When the gate did not run,** say so plainly at the checkpoint rather than implying a PASS; the clustering pass's groupings still inform the offer call.
 4. **The Aaron offer call** (`outbound/reference/aaron-lane.md`, Call 1).
    - Run it as one fresh `/ask-aaron` sub-agent in the background, covering every segment.
    - Keep it blind: point it at a stripped copy of the profile with no `offer:` block. First move two things out of that block into a short inputs file:
@@ -49,12 +52,14 @@ Paths resolve under `outbound/`. Client profiles are gitignored, so read them wi
    - resolve the AI Ark enums first, then read AI Ark `company_search` `totalElements` for the company count;
    - read GetLeads `count_contacts` for the contact count. This step only counts; it never exports or reveals an email;
    - record both counts per offer, then estimate the Phase 3 spend (the contact enrichment tool plus the email verifier per contact) against `run_state.spend_ceiling_usd` (`/api-cost-governance`).
-   - **Targeting preview (operator decision 2026-09-30).** This is how Phase 3's list QA stops coming back to the operator: its targeting questions are found and answered here, at Checkpoint 2, before the list is built.
-     1. **Pull a sample.** For each locked offer, run GetLeads `search_contacts` on the same list definition (`limit: 100`) and dedupe by company domain until about 25 distinct companies remain. This is a search, never an export, so it needs no export OK and `confirmed=true` is never set. When the response offers a full export (`has_more`, `export_offer`), that is not asked here: the export OK waits for Checkpoint 2. Request the company's LinkedIn About text in `columns` (find its name with `get_available_columns`), since nothing can be classified without it. When 100 rows give fewer than 25 companies, page with `offset`. A `fair_use_limit` (HTTP 402) stops the step under `/tool-balance-guard`. Save the sample to `_research/targeting-preview/<offer-slug>.csv`.
-     2. **Classify it against the ICP and that offer.** The session reads the 25 companies itself (name, About text, industry, headcount) against Aaron's traits and disqualifiers, or fans them out to Claude sub-agents per `/personalization-subagent-pattern`. No third-party AI API.
-     3. **Collect the ambiguous categories.** Group the companies the classification could not place cleanly into plain categories, such as "internal AI copilots", "brokers" or "apparel". A category is ambiguous when the ICP and Aaron's traits could reasonably be read either way for it.
-     4. **Look each one up first.** Search `rulings.md` and `standing-rulings.md` for a `targeting:<topic>` key that answers it. A category a ruling answers is applied and listed under "Calls I made" with the ruling. Each unanswered category becomes a Checkpoint 2 question with the recommended answer first (the answer Aaron's traits and disqualifiers point to).
-     5. **Keep it a preview.** Preview verdicts never ship or drop a company. The Phase 3 fit run and its agreement gate are unchanged. Record the categories found, and how many sample companies each covers, in `_research/targeting-preview/summary.md`.
+   - **Targeting preview: the AI Ark 200-row sample loop** (Aaron flow, see `aaron-flow.md` section 6; full procedure in `ai-ark-people-discovery.md`). Per `phase-protocol.md`'s checkpoint table, this sample loop is also the targeting preview for checkpoint A: it is how Phase 3's list QA stops coming back to the operator, by finding and answering the targeting questions here, before the list is built at scale.
+     1. **Pull exactly 200 people, AI Ark only.** For each locked offer, run the first search idea with every filter (including `discovery-exclusions`), pulling two pages of 100 people (no email reveal, about 100 AI Ark credits). People-first; no parallel multi-tool people search; GetLeads and Prospeo are not people-discovery rungs here. Save the sample under `_research/targeting-preview/<offer-slug>.csv`.
+     2. **Roll up to companies and score fit.** Roll the 200 people up to distinct companies and score each company's fit (good / maybe / bad) via batched Claude sub-agents against Aaron's traits and disqualifiers (`model-jobs` ruling: batched by the hundred, merged by id, never one sub-agent per row). No third-party AI API.
+     3. **Mine keywords.** Run `keyword_mine.py` class-balanced on good vs. bad (≥90% one-sided) to surface include/exclude keyword candidates.
+     4. **Review and refine.** Claude reviews the candidates for relevance; kept ones are added to a refined search. A fresh validation sample confirms the fit rate rose before the refined search is used at scale in Phase 3.
+     5. **Collect the ambiguous categories.** Group the companies the fit scoring could not place cleanly into plain categories, such as "internal AI copilots", "brokers" or "apparel". A category is ambiguous when the ICP and Aaron's traits could reasonably be read either way for it.
+     6. **Look each one up first.** Search `rulings.md` and `standing-rulings.md` for a `targeting:<topic>` key that answers it. A category a ruling answers is applied and listed under "Calls I made" with the ruling. Each unanswered category becomes a checkpoint A question with the recommended answer first (the answer Aaron's traits and disqualifiers point to).
+     7. **Keep it a preview.** Preview verdicts never ship or drop a company at this sample size. The Phase 3 fit run and its agreement gate are unchanged, and the refined search carries the same `discovery-exclusions`. Record the categories found, the keyword candidates kept, and the validation fit-rate change in `_research/targeting-preview/summary.md`.
 8. **Client asks.** Merge anything an offer needs from the client into the one unsent message in `client-asks.md` (create it if Phase 1 never did), per `outbound/reference/client-messages.md`: one yes or no per offer that needs the client (keyed `[offer-<rank>]`), one rough capacity question, the sample when one exists. HOLD evidence is listed under `## Internal` and is not asked. The sample is a promise, so "more later?" is not asked. Run the question filter and the "Before you send" list in that file. Nothing is sent automatically.
 9. **Offer Readiness.** Once the offers are recorded, fill each offer's readiness fields and write the read-only board per `outbound/reference/offer-readiness.md`: each offer's Start rail, what is missing and who owes it. A client approval is recorded only as that file describes, never inferred.
 
@@ -65,25 +70,29 @@ Paths resolve under `outbound/`. Client profiles are gitignored, so read them wi
 - the counts per offer and segment, and the spend estimate against the budget;
 - the ideas Aaron considered but did not test, and his divergences and pushback;
 - each offer's readiness status;
-- the targeting answers from Checkpoint 2 (and those stored rulings already gave), each stored as a `targeting:<topic>` ruling, with the path to `_research/targeting-preview/summary.md`;
+- the targeting answers from checkpoint A (and those stored rulings already gave), each stored as a `targeting:<topic>` ruling, with the path to `_research/targeting-preview/summary.md`;
+- the DNC answer, the speed-to-lead owner, the booking link and any sweep source Phase 1 could not resolve, now answered (or still open and reason why);
+- the PlusVibe placement-test OK (or declined, or not yet asked), stored as the `placement-test` ruling;
 - the paths to `aaron-offer-call.md`, `lead-magnets.md`, `_research/pain-clusters.md` and `offer-test-slate.md`.
 
-## Checkpoint 2
+## Checkpoint A
 
 Write the handoff, then run `python outbound/scripts/phase_state.py checkpoint <slug> 2 --handoff phases/phase-2-offer.md`.
 
 The summary covers:
-- what the buyers are struggling with (the top pain clusters in their own words, with counts and the Research QA verdict; HOLD reasons first);
+- what the buyers are struggling with (the top pain clusters in their own words, with counts; the gate's PASS/DEEPEN/HOLD verdict when the operator ran it this phase, or a plain note that the gate did not run and this is the quick-demand-mining clustering pass instead);
 - Aaron's offers in his order with his reasons, **for information**. They passed the client-fit check and are used as recorded (the `aaron-auto` ruling); they are not an approval question. The operator may still swap one in the answer, and the swap wins, recorded as the operator's call over Aaron's;
 - the ideas he did not test;
-- the list size per offer and the spend estimate;
+- the list size per offer (from the AI Ark 200-row sample) and the spend estimate;
 - the targeting preview: the ambiguous categories it found per offer, and under "Calls I made" the ones a stored ruling already answered;
 - the readiness board: each offer's Start rail, what is missing and who owes it. Display only; it adds no question.
 
-Then one native prompt, recommended answers first. This is the one up-front batch for the rest of the run, so Phase 3 and Phase 4 can run straight through. Its first option is always "Approve and go to Phase 3 (recommended)", which moves the run on rather than signing off Aaron's offers; a swap the operator wants rides in that same answer. The questions after it follow, each only when it applies (at most four in all):
-1. **The targeting questions from the preview**, one per unanswered category, each with the recommended answer first. When there are many, group them into one multi-select question ("Which of these count as in-target?") with the recommended ones pre-listed first, or one question per offer.
-2. **The GetLeads export OK**, only when the `getleads-export` ruling is not already in `rulings.md`. It is asked once per client and covers every export in Phase 3 and every later wave. Never set `confirmed=true` without it.
-3. A spend-budget raise, only when the Phase 3 estimate would cross `run_state.spend_ceiling_usd`.
-4. One more targeted research pass, only when a HOLD or a low-confidence cluster sits under the leading offer.
+Then one native prompt, recommended answers first. This is checkpoint A, the one up-front batch for the rest of the run (ruling `checkpoints`), so Phase 3 and Phase 4 can run straight through with no further human stop until checkpoint B. Its first option is always "Approve and go to Phase 3 (recommended)", which moves the run on rather than signing off Aaron's offers; a swap the operator wants rides in that same answer. The questions after it follow, each only when it applies (at most four in all; a second prompt only when more remain):
+1. **The targeting questions from the 200-row sample preview**, one per unanswered category, each with the recommended answer first. When there are many, group them into one multi-select question ("Which of these count as in-target?") with the recommended ones pre-listed first, or one question per offer.
+2. **Anything Phase 1 carried forward** (Aaron flow, see `aaron-flow.md` section 2.1): the do-not-contact answer, the speed-to-lead owner, the booking link, and any core sweep source still blocked, each only when Phase 1's handoff flagged it open.
+3. **The GetLeads export OK**, only when the `getleads-export` ruling is not already in `rulings.md`. It is asked once per client and covers every export in Phase 3 and every later wave. Never set `confirmed=true` without it.
+4. **The PlusVibe placement-test OK** (ruling `placement-test`), only when it is not already in the client's `rulings.md`. Read the test's cost first (`/api-cost-governance` when it has one) and show it in the question. Asked once per client; the answer (and the cost read) is stored in `rulings.md` either way. A decline is recorded as a stated gap for Phase 4's Gate B to carry forward, never presented later as a pass.
+5. A spend-budget raise, only when the Phase 3 estimate would cross `run_state.spend_ceiling_usd`.
+6. One more targeted research pass, only when a HOLD or a low-confidence cluster sits under the leading offer and the operator wants the gate run.
 
-Record the answers in the handoff and the activity log, and write each one to the client's `rulings.md` the same turn (a backfilled client gets the file from the template in `standing-rulings.md`): each targeting answer as `targeting:<topic>`, the export OK as `getleads-export`, and any offer swap as the operator's call. A targeting answer the operator says holds for every client goes to `standing-rulings.md` instead. Then run `python outbound/scripts/phase_state.py approve <slug> 2 --answer "..."`, and close with: "Phase 2 is done. Open a new thread and say: Phase 3 for <client>."
+Record the answers in the handoff and the activity log, and write each one to the client's `rulings.md` the same turn (a backfilled client gets the file from the template in `standing-rulings.md`): each targeting answer as `targeting:<topic>`, the export OK as `getleads-export`, the placement-test answer as `placement-test`, any carried-forward Phase 1 item under its own key (`dnc`, `run_state.speed_to_lead_owner`, `run_state.booking_link`, `sweep:<source>`), and any offer swap as the operator's call. A targeting answer the operator says holds for every client goes to `standing-rulings.md` instead. Then run `python outbound/scripts/phase_state.py approve <slug> 2 --answer "..."`, and close with: "Phase 2 is done. Open a new thread and say: Phase 3 for <client>."

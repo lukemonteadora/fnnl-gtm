@@ -62,6 +62,12 @@ Read the whole transcript and pull everything relevant to these field groups (th
 - **Capability boundary:** deliverable strengths, operational limits, legal / compliance limits.
 - **Exclusions & constraints:** competitors / customers to exclude, banned words, regulated-industry constraints.
 - **Anything else valuable:** facts about the client, market, competitors, or context worth keeping in the record even if it does not map to a single field.
+- **The five Aaron-flow fields. Aaron flow (see `aaron-flow.md`).** An onboarding call is where these are usually captured, so extract each one explicitly as pre-fill. Write **"not stated"** for any the call did not cover, never a guess, and list it under Still Unknown:
+  - `icp.recent_win`: the most recent client that bought and did well (company, domain if said, segment, what they bought, the result, roughly when, whether it can be named).
+  - `icp.disqualifiers`: who never buys, in the client's plain words.
+  - `icp.supplier_exclusions`: companies that sell to the buyers but never buy (vendors, IT firms, insurance brokers, agencies, consultancies in the same market), as the client named them.
+  - `icp.why_now_signals`: the two or three signals the client says make an account worth contacting now. If the client names more, keep the three they stress most and list the rest in Notes.
+  - `icp.competitors`: every competitor named, with its domain only when said or shown on the call. Never look one up and present it as said.
 
 ## Output
 
@@ -101,6 +107,11 @@ Use this structure (note: **no action-item section**):
 | delivery facts and capacity remarks (scale-review context, not a filter) | | |
 | proof points (customers, metrics) | | |
 | exclusions (competitors / customers) / banned words | | |
+| icp.recent_win (most recent client that bought and did well) | <value, or "not stated"> | |
+| icp.disqualifiers (who never buys) | <value, or "not stated"> | |
+| icp.supplier_exclusions (sell to the buyers, never buy) | <value, or "not stated"> | |
+| icp.why_now_signals (two or three) | <value, or "not stated"> | |
+| icp.competitors (name, domain if said) | <value, or "not stated"> | |
 
 ## Still Unknown: Ask In Onboarding
 <the gaps. Every onboarding field the call did NOT cover, phrased as the question /icp-onboarding or /client-intake-form should ask. This replaces the personal version's action items: it is "what's missing for the ICP record," not "to-dos.">
@@ -109,7 +120,7 @@ Use this structure (note: **no action-item section**):
 <anything ambiguous, contradictory, or that needs the operator's judgment; missing-information flags. Omit if none.>
 ```
 
-Always include the **Maps To Onboarding Fields** table and the **Still Unknown** section, even if sparse. A field with no signal is itself a useful "ask this in onboarding" flag. **Never fabricate a value to fill a row**; write `n/a` and push it to Still Unknown.
+Always include the **Maps To Onboarding Fields** table and the **Still Unknown** section, even if sparse. A field with no signal is itself a useful "ask this in onboarding" flag. **Never fabricate a value to fill a row**; write `n/a` and push it to Still Unknown. The last five rows of the table are the Aaron-flow fields. **Aaron flow (see `aaron-flow.md`):** they are always present, and a row the call did not cover says "not stated" rather than a guess or `n/a`. `/icp-onboarding` and `/client-intake-form` read these rows as pre-fill, and a "not stated" field goes to checkpoint A, never asked mid-phase.
 
 ## What to do next
 

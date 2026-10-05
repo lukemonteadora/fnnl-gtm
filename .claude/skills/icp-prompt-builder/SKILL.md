@@ -40,7 +40,7 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at the one checkpoint that closes each of the four phases, `phase-protocol.md`; `review_gates` is opt-in), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue. Never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work. Never idle.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at checkpoint A (Phase 2) and checkpoint B (Phase 4), while Phases 1 and 3 auto-approve (Aaron flow, see `aaron-flow.md`), `phase-protocol.md`; `review_gates` is opt-in), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue. Never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work. Never idle.
 
 ## Activity Log Protocol
 
@@ -76,7 +76,7 @@ Confirm:
 
 - Ideal customer
 - Must-have filters
-- Disqualifiers
+- Disqualifiers, including `icp.disqualifiers` (who never buys, in plain words) and `icp.supplier_exclusions` (companies that sell to the buyers but never buy: vendors, IT firms, brokers, agencies, consultancies in the same market). Aaron flow (see `aaron-flow.md` section 3).
 - Soft preferences
 - Campaign signal from `lead-source-plan.md`
 - Fields available in the sample CSV
@@ -87,6 +87,7 @@ Pick a mixed batch:
 
 - Likely good fits
 - Likely bad fits
+- At least one supplier or vendor that sells into the same market, when `icp.supplier_exclusions` names any (Aaron flow, see `aaron-flow.md`), so the prompt is tested on the look-alike that never buys
 - Edge cases
 - Different industries, sizes, and geographies
 
@@ -116,6 +117,11 @@ Must match:
 
 Disqualify if:
 - <disqualifier>
+- <each icp.disqualifiers entry, in plain words>
+
+Never a buyer (they sell to the buyers but never buy; Aaron flow, see `aaron-flow.md`):
+- <each icp.supplier_exclusions entry: vendors, IT firms, brokers, agencies, consultancies in this market>
+A company whose business is selling to or serving the target buyers, rather than being one, is bad even when its industry and size match.
 
 Available fields:
 - <CSV fields>
@@ -133,7 +139,7 @@ Return JSON per company:
 }
 ```
 
-For the **TAM fit-gate** use, return `fit_status` (`good` | `maybe` | `bad`) instead of `qualified`. `bad` is reserved for a genuinely outside-market company, wrong entity, or no plausible customer relationship. Adjacent industries, serviceable sizes, approved expansion markets, and other imperfect but real prospects are `maybe`. Keep `confidence` as `fit_confidence` and drop `signal_supported` because there is no campaign signal yet. `/tam-build` enriches `good` and `maybe`; `/lead-scoring` later ranks them.
+For the **TAM fit-gate** use, return `fit_status` (`good` | `maybe` | `bad`) instead of `qualified`. `bad` is reserved for a genuinely outside-market company, wrong entity, or no plausible customer relationship. Under the Aaron flow (see `aaron-flow.md` section 3) a supplier that sells to the buyers but never buys (`icp.supplier_exclusions`, `icp.disqualifiers`) is `bad` with a `fit_reason` naming the exclusion. Adjacent industries, serviceable sizes, approved expansion markets, and other imperfect but real prospects are `maybe`. Keep `confidence` as `fit_confidence` and drop `signal_supported` because there is no campaign signal yet. `/tam-build` enriches `good` and `maybe`; `/lead-scoring` later ranks them.
 
 ### 4. Score 10 Rows
 

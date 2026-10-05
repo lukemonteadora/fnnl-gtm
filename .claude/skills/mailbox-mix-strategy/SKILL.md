@@ -165,7 +165,28 @@ Plan the split at purchase time so the halves come out balanced:
 The split is recorded here, but the `Batch N.1`/`Batch N.2` tags are physically applied to the senders later,
 at import, by the sending platform's inbox-manager skill (whichever pack `/stack-setup` activated for the
 `sending_platform` slot). Not here. This skill only ensures the planned purchase can be cleanly halved and
-notes the intended split.
+notes the intended split. See **Mailbox lifespan and the replacement batch** below for when a half ages out
+and needs replacing, not just resting.
+
+## Mailbox lifespan and the replacement batch (Aaron flow (see aaron-flow.md), section 10)
+
+The rotation split above answers "which half sends now." This section answers "when does a batch need
+replacing, not just resting." `/cold-email-weekly-rhythm` owns the **mailbox age clock**: every domain and
+batch tracked by **sending days actually used**, not calendar days (a day only counts if the inbox sent on
+it). This skill is sized and ordered off that clock's read, through the bands below:
+
+- **Under ~45 sending days:** healthy, no action here.
+- **~45 sending days:** `/cold-email-weekly-rhythm` sizes and orders the replacement batch through this
+  skill, and warmup starts now, so the new batch is ready before the old one needs retiring.
+- **~60-90 sending days:** retire the batch (sooner if a health flag, bounce, the complaint proxy, or a
+  failed placement test, hits it first).
+- **Nothing is purchased without the operator's approval of the infrastructure setup total**, every time,
+  regardless of what the age clock recommends.
+
+**Honest cost: expect an overlap.** The old batch keeps sending while the new batch warms (roughly a
+2-week warmup), so for that stretch both batches are billed, on top of the cost of the mirror half that is
+already resting as warmed backup under the Rotation Batch Split. Size the budget ask to the operator for the
+overlap, not just the steady-state fleet cost.
 
 ## Output
 

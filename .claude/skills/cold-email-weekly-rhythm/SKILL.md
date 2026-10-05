@@ -47,7 +47,7 @@ Open Google Calendar / Outlook / Apple Reminders / whatever you actually look at
 | Cold email: Friday campaign retrospectives | Every Friday, 3:00 pm |
 | Cold email: Inbox rotation | Every other Monday, 11:00 am |
 | Cold email: market feedback (`/market-evidence` feedback; see Weekly Scheduled Review Step 5) | Every other Monday while a wave is live, plus at each arm read (dormant until the sending platform is live) |
-| Cold email: Monthly spam placement test | 1st of each month, 10:00 am |
+| Cold email: Monthly PlusVibe placement test | 1st of each month, 10:00 am |
 | Cold email: Monthly TAM refresh + experiment proposal | 1st of each month, 11:00 am |
 | Cold email: Quarterly experiment review | First Monday of each quarter, 1:00 pm |
 
@@ -91,7 +91,7 @@ Also list each client's pending offer approvals (Offer Readiness, operator decis
 
 **Step 2: Inbox / reply check.** Run the reply-scoring skill for the locked `run_state.sending_platform`, if `/stack-setup` activated a pack that provides one, plus a master-inbox read. If no pack is active, read that platform's own reply export and master inbox directly and classify with `reply-scoring-core.md`; if neither can be read, say so and fail loud rather than reporting "no replies". Classify everything that came in since the last run (`positive_interested` / `positive_soft` / `positive_referral` / `not_now` / `wrong_person` / `negative_hostile` / `bounce`) and **surface the ones that need a human**: every interested reply, every referral, every hostile, and **every positive still unanswered** (all three positive classes with no human reply yet), time-agreed first, each with the minutes since it arrived. List all of them, never a top-N cut (Aaron process alignment, operator directive 2026-09-22). Also tag each positive reply whose thread moves toward a time as **time-agreed** (the magnet-inflation guard's sending-platform proxy, `/campaign-strategy`), because winner picks and scaling are judged on it (operator-approved Aaron alignment, 2026-09-21; doctrine §0, §2 step 5). Beside it, report **`meeting_book_rate`** exactly as `reply-scoring-core.md` defines it (meetings booked / positive replies), counting bookings from the client's booking calendar or CRM when one is readable, otherwise from the operator's reported count, and say which. When neither source exists, report it as "not measured" with the reason, never a count inferred from threads, because a thread cannot see a phone booking (Aaron process alignment, operator directive 2026-09-22). It measures reply handling, not offer demand, so it never replaces time-agreed replies per 1,000 first touches for picking arms. Then run the **speed-to-lead audit**: for every positive, the minutes from its reply to the first human reply (from the thread) and, on a direct, trial or service offer, to the first call (from the call log or CRM, or operator-reported), against the 5-minute target, with every miss listed. This audit checks the response path; it is not the response path (**Speed to lead**, below, is). It **never auto-replies** (replying is a human action). This step is the weekly catch-up, so any interested reply found here without a human touch is a speed-to-lead miss to report. Negative/unsubscribe/bounce feed the suppression loop as usual.
 
-**Step 3: Deliverability flags.** Read the trailing 7-day fleet reply rate and bounce rate (the Monday-audit signal). Flag any campaign under the 1% reply-rate rule and any inbox bouncing above 2%. A deliverability flag **blocks** any launch-new or scale proposal for the affected senders until it's cleared via `/deliverability-incident-response`, because you don't pour volume onto a leaking fleet.
+**Step 3: Deliverability flags.** Read the trailing 7-day fleet reply rate and bounce rate (the Monday-audit signal). Flag any campaign under the 1% reply-rate rule and any inbox bouncing above 2%. Beside bounce, report the **complaint proxy**: `hostile_per_1000` (hostile replies per 1,000 sends, `reply-scoring-core.md`), since M365 senders give no Postmaster complaint data (Aaron flow (see aaron-flow.md), section 10). There is no house threshold yet; report the number and its trend. Also read the **mailbox age clock** (below) for any domain crossing into the ~45-sending-day band. A deliverability flag **blocks** any launch-new or scale proposal for the affected senders until it's cleared via `/deliverability-incident-response`, because you don't pour volume onto a leaking fleet.
 
 **Step 3b: Catch-all reintroduction (HARD RULE: runs EVERY week for EVERY campaign that has a holdback; operator directive 2026-06-26).** Catch-alls are held OUT of campaigns on young domains and reintroduced once the sending domains mature (see `/email-waterfall` → *Catch-All Timing*). **This skill is the standing owner + scheduler of that reintroduction**. Launching a campaign valid-only automatically creates this obligation, and this step discharges it. It is **not optional and not skippable**: every weekly run, scan every active campaign for a per-campaign **holdback** of catch-alls (a non-empty `leads.catchall-holdback.csv`, or paused catch-all leads in the live campaign: the `profiles/_catchall-removal/` registry lists them). For each one:
 
@@ -132,6 +132,16 @@ Compute, from the inbox tracker and the locked platform's analytics:
 
 **Verdict:** a new signal slice is launchable only if headroom can give it enough daily volume to reach its sample-size minimum within ~3–4 weeks (a near-floor slice needs full daily volume, and its read waits for the floor, then the sequence plus grace, `/experiment-design` Step 6). The first wave and the winner's scale-up are never trimmed to headroom. Capacity is sized to the volume, never trimmed (Aaron process alignment, operator directive 2026-09-22; supersedes the capacity trim at launch). If the fleet delivers less than `daily_sends_needed`, the wave still covers the whole TAM at the allocated rate and the runway stretches; report days to cover (in Monday-to-Friday sending days, against `run_state.capacity_request`: `daily_sends_needed` vs `allocated_daily_sends`). Offers and TAM rows are never cut to fit. Put any shortfall to the operator as a capacity request: size the fleet to the request through `/mailbox-mix-strategy`, or assign a ready pre-warmed group from `/mailbox-pool-staging`, and any mailbox purchase needs the operator's approval of the setup total (outside the \$100 run budget). If headroom is too thin for a new slice: **don't launch new**. Either **scale onto the rested rotation half** (the cheap capacity already warmed) or **propose a domain purchase cycle** through the setup skill for `run_state.infrastructure_stack` for the operator's approval (~2-week lead, so flag it early). The verdict is what bounds Step 5: the engine never proposes more new signal slices than the warmed fleet can actually carry.
 
+### Mailbox age clock (Aaron flow (see aaron-flow.md), section 10)
+
+Track every mailbox and domain by **sending days actually used**, not calendar days: a day only counts if the inbox sent on it. Roll this up by domain and by rotation batch (oldest and median sending-days-in-use, plus a count in each band), reading from whichever source is available, in this order: the locked sending platform's own account-age/sending stats first, then `/mailbox-mix-strategy`'s central tracker, then the rotation-swap log, then a manual derivation from the first-send date and the inbox's pause history as the last resort.
+
+- **Under ~45 sending days:** healthy, no action.
+- **~45 sending days:** order and warm the replacement batch now (`/mailbox-mix-strategy`), so the new batch is ready before the old one needs retiring. This is a recommendation only, never an auto-buy: nothing is purchased without the operator's approval of the infrastructure setup.
+- **~60-90 sending days:** retire the batch (rotate it out of active sending). Retire sooner than the band if a health flag (bounce, the complaint proxy, or a failed placement test) hits that batch first; a health flag always overrides the age clock.
+
+Report the roll-up in Step 3, the Monday audit, and the Outputs digest (below), beside bounce and the complaint proxy. This clock tracks infrastructure age, not campaign performance, so it never substitutes for the deliverability-flag or placement-test checks above.
+
 ### Cross-campaign offer/copy-flop diagnosis
 
 This fires only when Gate B says the portfolio is mature enough. The inference is **licensed by Wave-1 design**: a coverage wave holds **offer and copy constant** while the **list/signal varies** across campaigns (positioning variants of the winner, when running, are the same variant set in every big campaign, so they stay part of the common factor). So if **many campaigns across different signals are all below the client's established positive-reply baseline while deliverability is clean**, the failing factor is the **common** one: **offer or copy, not the list** (the lists differed).
@@ -167,8 +177,9 @@ If there's no warmed headroom to scale into, the Scale move surfaces a **capacit
 
 - **What to launch next week**: the proposed new signal slice(s) or scale-ups, each with its signal, matching company count, and one-line rationale (or "hold, at capacity / not enough data yet").
 - **Replies to handle:** counts of interested / referral / hostile, with every positive still unanswered listed (no top-N cut), plus speed to lead: whether it ran on the platform's webhook alert or in sweep mode (sweep mode until the receiver exists, so the 5-minute call is a target, not yet a mechanism), the latency audit (time to first human reply, time to first call against the 5-minute target) and every miss.
-- **Deliverability flags**: any campaign under 1% or inbox over 2% bounce.
-- **Offer read:** per campaign, and per arm in an Offer-Validation Wave (pooled across the segments it runs in, shown by segment, with offers compared only on shared ground), the positive-reply rate beside time-agreed replies per 1,000 first touches and `meeting_book_rate` (Step 2, with its source: calendar/CRM, operator-reported, or not measured), plus each validation arm's flip state (PROVEN / DEAD / HOLD), any farming-interest label, and any arm parked at a winner pick with its read unresolved (operator-approved Aaron alignment, 2026-09-21; `meeting_book_rate` and parked arms added by Aaron process alignment, operator directive 2026-09-22).
+- **Deliverability flags**: any campaign under 1% or inbox over 2% bounce, the complaint proxy (`hostile_per_1000`, beside bounce) and its trend, and the mailbox age clock roll-up (oldest/median sending days by domain, counts in each band, any domain at ~45 needing a replacement order or at 60-90 needing retirement).
+- **Meeting book rate:** `meeting_book_rate` (Step 2, meetings booked / positive replies, `reply-scoring-core.md`), with its source (calendar/CRM, operator-reported, or not measured), reported on its own as a reference point, not a benchmark (Aaron flow (see aaron-flow.md), section 11).
+- **Offer read:** per campaign, and per arm in an Offer-Validation Wave (pooled across the segments it runs in, shown by segment, with offers compared only on shared ground), the positive-reply rate beside time-agreed replies per 1,000 first touches (Step 2, with its source: calendar/CRM, operator-reported, or not measured), plus each validation arm's flip state (PROVEN / DEAD / HOLD), any farming-interest label, and any arm parked at a winner pick with its read unresolved (operator-approved Aaron alignment, 2026-09-21; parked arms added by Aaron process alignment, operator directive 2026-09-22).
 - **Capacity:** the plain "room for one more / at capacity" verdict, plus days to cover the TAM against `run_state.capacity_request` and any capacity request put to the operator.
 
 **`profiles/<client>/portfolio-review.md`**: newest-first log, the audit trail behind the digest:
@@ -177,9 +188,10 @@ If there's no warmed headroom to scale into, the Scale move surfaces a **capacit
 ## <YYYY-MM-DD> Weekly Review: <client>
 - Portfolio maturity: <N mature campaigns / M signals>  → diagnosis run? <yes/no>
 - Replies: <interested>/<referral>/<hostile>; unanswered positives (all): [...]; speed to lead: <webhook | sweep mode>, first human reply <median min>, calls within 5 min <n of m>, misses: [...]
-- Offer read: positive-reply rate <x%> | time-agreed per 1,000 first touches <y> | meeting_book_rate <z% (calendar/CRM | operator-reported | not measured)> (per arm and segment while validating; arm flip states; parked arms)
+- Offer read: positive-reply rate <x%> | time-agreed per 1,000 first touches <y> (per arm and segment while validating; arm flip states; parked arms)
+- Meeting book rate: <z% (calendar/CRM | operator-reported | not measured)> (reference point, not a benchmark)
 - Market feedback: <ran `/market-evidence` feedback (n replies ingested; results review in `_research/pain-clusters.md`; routed to: ...) | not due (last run YYYY-MM-DD) | no wave live | dormant: sending platform not live>
-- Deliverability: <clean | flags: ...>
+- Deliverability: <clean | flags: ...>; complaint proxy: <hostile_per_1000>; mailbox age clock: <oldest/median sending days; bands: <45 N, ~45 N, 60-90 N>
 - Capacity: <headroom verdict>
 - TAM signal freshness: <fresh | refreshed this run | refresh proposed>
 - Decision: <launch-new | scale | both | hold | diagnose-offer>
@@ -194,7 +206,7 @@ If there's no warmed headroom to scale into, the Scale move surfaces a **capacit
 Interested replies are handled in real time, not in a weekly sweep (Aaron process alignment, operator directive 2026-09-22; supersedes "the Wednesday sweep is the system", house). Aaron's setter is on every interested reply within about 5 minutes (Sep 14, Sep 21). Where no active pack provides a reply manager for the locked sending platform, this section is the reply cadence; where one does, run this same cadence through it.
 
 - **Owner.** Read the named speed-to-lead owner from `run_state.speed_to_lead_owner` and the `Speed-to-lead owner:` header line of the campaign's `interested-reply.md`, both recorded at Gate D, reply readiness, before the operator's Start. If either is missing on a live campaign, that is a Gate D breach: say so in the digest and route to the operator, because only the operator names the owner.
-- **Target.** The owner gives every interested reply a human touch within 5 minutes during the send window. A yes to a direct, trial or service offer gets a short reply proposing two specific times plus the calendar, with no re-selling, and then a call from the `## Call Script` in `interested-reply.md` (Aaron, Sep 21). A costly front end (a trial, a service, custom work) routes the yes through the `offer.qualification` form before the free unit is promised. A promised asset is delivered first, with no times, and the next step goes one layer down (Jul 13, ledger R03); call timing there stays the house reading of Aaron's unresolved ledger R20 (`/lifecycle-copy`). No blanket booking link on every positive.
+- **Target.** The owner gives every interested reply a human touch within 5 minutes during the send window. A yes to a direct, trial or service offer gets a short reply proposing two specific times plus the calendar, with no re-selling, and then a call from the `## Call Script` in `interested-reply.md` (Aaron, Sep 21). A costly front end (a trial, a service, custom work) routes the yes through the `offer.qualification` form before the free unit is promised. A promised asset is delivered first, with no times, and the next step goes one layer down (Jul 13, ledger R03); the delivery email itself stays pure value with no calendar push. **Every interested reply still gets a call, asset requests included** (ruling `call-every-interested-reply`, standing-rulings.md, 2026-10-05; Aaron flow (see aaron-flow.md), section 11): the call follows the asset, it does not replace it. Call timing otherwise stays the house reading of Aaron's unresolved ledger R20 (`/lifecycle-copy`). No blanket booking link on every positive.
 - **Phone.** The number comes from the replier's own signature or reply first, then from the contact-enrichment slot's phone reveal where the stack contract declares one: one lookup per replier, inside the run's standing budget. If neither gives a number, the reply is the touch and the digest says so.
 - **Mechanism, target state.** The locked sending platform's interested-reply webhook, where the platform offers one, raises a human alert and the owner acts on it.
 - **Mechanism, today.** The always-on webhook receiver does **not** exist yet. Until it does, the reply sweep runs several times a day, Monday to Friday (for example at the start, middle and end of the send window), the 5-minute call is a target rather than a mechanism, and every weekly digest says speed to lead is running in sweep mode. Run the sweep with the inbox manager for the locked `run_state.sending_platform`, if `/stack-setup` activated a pack that provides one. If no pack is active, use that platform's own master inbox directly. If neither exists, say so and do the sweep by hand from whatever the platform exposes, rather than implying coverage.
@@ -219,11 +231,15 @@ Interested replies are handled in real time, not in a weekly sweep (Aaron proces
 - Fleet reply rate over last 7 days: must be >=1% (the 1% rule)
 - Flagged campaigns (`flag_low_reply = TRUE`)
 - Flagged inboxes (`flag_high_bounce = TRUE`)
+- Hostile replies per 1,000 sends (the complaint proxy, `reply-scoring-core.md`), beside bounce, and its trend
+- Mailbox age clock: any domain at ~45 sending days (order/warm the replacement) or 60-90 (retire)
 
 **Action:**
 
+- A deliverability check starts with a PlusVibe placement test (ruling `placement-test`, standing-rulings.md, 2026-10-05): >=85% inbox clears the list for triage; 70-85% is a grey zone, re-run once with different senders before trusting it; <70% is critical, pause and go to `/deliverability-incident-response`. A test not run is reported as a gap, never as a pass.
 - If any campaign failed the 1% rule: run `/deliverability-incident-response` → triage decision tree. If the triage clears deliverability and the list, and the campaign has 300+ sends, open `/offer-intelligence` validation mode for it as a look, never a verdict (calling an offer arm dead stays with `/campaign-strategy`'s pooled read at ~1,300+ first touches). This is the per-campaign validation trigger the offer diagnosis above refers to.
 - If bounce rate spiked above 2%: pause the offending campaign immediately, then triage
+- If a domain's age clock reads ~45 sending days: open `/mailbox-mix-strategy` to order and warm the replacement batch (recommendation only; nothing is purchased without the operator's approval).
 - If everything clean: log the check in a weekly journal, close the tab
 
 ---
@@ -299,14 +315,15 @@ For each one:
 - Retire failing inboxes through the locked inbox manager.
 - Remove retired inboxes from active campaigns.
 - Keep warmup and sending settings consistent with the selected platform manager skill (both halves stay warmed even while one rests).
+- Update the **mailbox age clock** (sending days by domain and batch, above): roll it forward from this rotation's sending data, and flag any domain newly into the ~45 or 60-90 band.
 
-**If a rotation half is getting thin (failures leave <half the mirror healthy):** kick off a new domain purchase cycle using the setup skill selected by locked `run_state.infrastructure_stack`. It takes about 2 weeks from purchase to sendable, so you need to start early.
+**If a rotation half is getting thin (failures leave <half the mirror healthy), OR the mailbox age clock shows domains crossing into the ~45-sending-day band:** kick off a new domain purchase cycle using the setup skill selected by locked `run_state.infrastructure_stack`. It takes about 2 weeks from purchase to sendable, so you need to start early. This is a recommendation; the operator approves any purchase (Aaron flow (see aaron-flow.md), section 10).
 
 ---
 
-## Monthly (1st of the month): Spam placement test (25 min active, test runs ~20 min)
+## Monthly (1st of the month): PlusVibe placement test (25 min active, test runs ~20 min)
 
-**Run:** the spam-placement test available for the locked sending platform: its own native placement test where it has one, or an external inbox-placement tool where it does not.
+**Run:** PlusVibe's own placement test (ruling `placement-test`, standing-rulings.md, 2026-10-05; Aaron flow (see aaron-flow.md), section 10). Read its cost on the FNNL plan before first use (`/api-cost-governance`); the operator's OK is asked once, at checkpoint A, and then stored as the ruling, not re-asked every run. A test not run this month is stated as a gap in the digest, never reported as a pass.
 
 **Review:**
 
@@ -315,9 +332,9 @@ For each one:
 
 **Action:**
 
-- **>=90% inbox placement:** great. Keep doing what you're doing.
-- **80-90%:** yellow. Look at spam-filter-details. Start fixing the highest-frequency trigger next week.
-- **<80%:** red. Pause the campaign, run `/deliverability-incident-response`, fix before sending more.
+- **>=85% inbox placement:** clean. Keep doing what you're doing; the offer/copy diagnosis above is looked at last, not first.
+- **70-85%:** grey zone. Re-run once with different senders before trusting the number either way; look at spam-filter-details and start fixing the highest-frequency trigger next week.
+- **<70%:** critical. Pause the campaign, run `/deliverability-incident-response`, fix before sending more.
 
 ---
 
@@ -345,7 +362,7 @@ Read all `experiments/*.json` from the last quarter. Identify patterns:
 - Which list sources produced the best leads?
 - Which copy angles resonated (Observation → Implication? Pain? Social proof?)
 - Which ICP archetypes converted best?
-- What was the `meeting_book_rate` (meetings booked / positive replies, `reply-scoring-core.md`), and is it moving toward Aaron's self-reported ~25%, aiming for 30% (Sep 21)? If it sits well under that while positives are healthy, the gap is in the reply machine (speed to lead, the call script, the qualification step, the confirmation page), not the offer.
+- What was the `meeting_book_rate` (meetings booked / positive replies, `reply-scoring-core.md`), read on its own, as a reference point and not a benchmark (Aaron's self-reported 20-25%, aiming for 30%, is a reference point only, Aaron flow (see aaron-flow.md), section 11)? If it sits well under the client's own trend while positives are healthy, the gap is in the reply machine (speed to lead, the call script, the qualification step, the confirmation page), not the offer.
 - Which arms were parked unresolved at a winner pick, and is any worth bringing back as a later test?
 
 **Output:** a 1-page Q<N> retrospective saved to `profiles/<business-slug>/retrospectives/<YYYY>-Q<N>.md` with:

@@ -23,7 +23,7 @@ Things break. When they do, you need a playbook, not panic. This skill is the tr
 
 | Symptom | Most likely cause | First action | Fix time |
 |---|---|---|---|
-| Reply rate dropped sharply | Deliverability: emails in spam | Run spam placement test | 1-14 days |
+| Reply rate dropped sharply | Deliverability: emails in spam | Run the placement test first, before any offer/copy diagnosis | 1-14 days |
 | Bounce rate spiked >3% | Bad list OR domain reputation | Check bounce types | 1-3 days |
 | Domain blacklisted | Shared IP bad actor OR your domain got flagged | Check blacklists, rotate if needed | 7-30 days |
 | Inbox blocked in warmup | Warmup network flagged sending patterns | Pause, investigate, maybe replace | 1-7 days |
@@ -55,9 +55,11 @@ Are ALL campaigns dropping, or just one?
 
 ### Step 3: Fleet-wide drop (check these in order)
 
-1. **Spam placement test** through the locked sending platform's available tooling. Run it via `/email-deliverability-audit` when the locked platform has its own placement test; if it has none, use an external seed-list placement tool and say which one was used.
+1. **Placement test, run first, before any offer/copy diagnosis** (Aaron flow (see aaron-flow.md), section 10), through the locked sending platform's own placement test (PlusVibe's own, ruling `placement-test`); if the locked platform has none, use an external seed-list placement tool and say which one was used.
    - If inbox placement <70% → real deliverability issue, skip to Step 4
+   - If inbox placement 70-85% → grey zone, re-run once with different senders before trusting it either way
    - If inbox placement >85% → deliverability is fine, look at copy/targeting instead
+   - A test not run is a gap to report, never treated as a pass
 
 2. **Check domain authentication** through `/email-deliverability-audit`
    - Missing DKIM on any domain -> fix immediately through the setup skill selected by locked `run_state.infrastructure_stack`
@@ -78,14 +80,14 @@ Are ALL campaigns dropping, or just one?
 Time-ordered actions:
 
 1. **Immediate (today):** Pause the highest-volume campaign. Stop damage.
-2. **Day 1:** Run spam placement test on 2-3 sender subsets (tag=active vs tag=new). Find which cohort is worst.
+2. **Day 1:** Run the placement test on 2-3 sender subsets (tag=active vs tag=new). Find which cohort is worst.
 3. **Day 1:** Check the spam-filter detail report from that placement test, specifically which filters are firing. Common: `DKIM_INVALID`, `HTML_MESSAGE`, `LINK_REDIRECT`. Each has a specific fix.
 4. **Day 2:** Fix the identified issues:
    - DKIM_INVALID → verify DKIM records across all domains, re-publish if needed
    - HTML_MESSAGE → simplify email body (fewer fonts, no inline CSS, no tracking pixels)
    - LINK_REDIRECT → remove or reduce links in email 1 (ideally 0 links)
 5. **Day 3-14:** Slow down send volume. Cut daily send per inbox by 50% for a week. Reputation rebuilds slowly.
-6. **Day 14:** Re-test spam placement. If back above 85% → resume normal volume.
+6. **Day 14:** Re-run the placement test. If back above 85% → resume normal volume. If it reads 70-85%, re-run once with different senders before calling it recovered; under 70%, stay in this decision tree.
 
 ## Decision tree: "bounce rate spiked"
 
@@ -185,7 +187,7 @@ Send the campaign's email 1 to a fresh @gmail.com account (yours, not in the cam
 
 ### Step 3: A/B test
 
-Create two versions: your current and a stripped-down version. Send 50 leads each. Check which has better reply rate after 7 days.
+Create two versions: your current and a stripped-down version. Run the placement test on both instead of a small comparison send: a 50-leads-each split is too thin to read (Aaron flow (see aaron-flow.md), section 10). If you still want a reply-rate comparison, read it only once each arm has reached about 1,000 sends, never at 50 leads each.
 
 ## The 72-hour "total failure" checklist
 

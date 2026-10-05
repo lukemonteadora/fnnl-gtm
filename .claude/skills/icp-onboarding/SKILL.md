@@ -1,6 +1,6 @@
 ---
 name: icp-onboarding
-description: Conversational ICP intake that writes client-profile.yaml. Skipped when an intake form filled the profile; otherwise runs the context sweep and website scrape first, then asks confirm-or-correct questions with pre-filled answers. Runs in Phase 1. Never asks about the locked sending stack.
+description: Conversational ICP intake that writes client-profile.yaml, Aaron-flow fields included. Skipped when an intake form filled the profile; otherwise runs the context sweep and website scrape first, then asks confirm-or-correct questions with pre-filled answers. Runs in Phase 1, which auto-approves; any gap goes to checkpoint A, never asked here. Never asks about the locked sending stack.
 ---
 
 # ICP Onboarding
@@ -31,9 +31,9 @@ When asking the user, use the Claude Desktop native Interactive Inputs / Choice 
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at the one checkpoint that closes each of the four phases, `phase-protocol.md`; `review_gates` is opt-in), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue - never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work - never idle.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at checkpoint A (Phase 2) and checkpoint B (Phase 4), while Phases 1 and 3 auto-approve (Aaron flow, see `aaron-flow.md`), `phase-protocol.md`; `review_gates` is opt-in), proceed without pausing: pick the strongest option per this skill's rubric, record it to `run_state`/profile, and continue - never re-ask a decision already in `run_state`, the profile, memory, or the operator's latest message. Stop only for the policy's hard-stops (spend over the approved ceiling, live send, credentials, provider/source-of-truth change, safety gates). On a long async wait, background-poll and move to other productive work - never idle.
 
-**Under `review_protocol: phase_checkpoints` (the new-client default, operator directive 2026-09-24) the interview does not run as a series of prompts.** Build the whole profile from the pre-fill map (the context sweep first, then the website profile, existing research and any form), take the recommended answer for every item the map covers, and hand the draft back to `/phase-1-onboarding` for the Phase 1 checkpoint (at most 4 questions, `phase-protocol.md`). Before anything reaches that prompt, resolve it yourself (operator directive 2026-09-24, detailed under "Resolve it yourself first" in `/cold-email-kickoff`):
+**Under `review_protocol: phase_checkpoints` (the new-client default, operator directive 2026-09-24) the interview does not run as a series of prompts.** Build the whole profile from the pre-fill map (the context sweep first, then the website profile, existing research and any form), take the recommended answer for every item the map covers, and write the profile. **Aaron flow (see `aaron-flow.md`): Phase 1 has no human checkpoint, so nothing here is asked mid-phase.** Every item the pre-fill map cannot answer, including the five Aaron fields (pre-fill item 6 below), is written `null` with its field name added to `icp.carried_to_checkpoint_a`, and the draft hands straight to Phase 2; checkpoint A (the end of Phase 2) shows the ICP, the segments and the five Aaron fields for information and correction, and asks `icp.carried_to_checkpoint_a` in its one batch. Before anything reaches that batch, resolve it yourself (operator directive 2026-09-24, detailed under "Resolve it yourself first" in `/cold-email-kickoff`):
 - The sending pool is read from PlusVibe.
 - The booking link comes from the sweep.
 - The speed-to-lead owner defaults to FNNL Agency.
@@ -84,6 +84,13 @@ Before asking any question, build a pre-fill map silently. **Item 1, the client 
 4. Check any existing `client-profile.yaml` for prior values.
 5. **Existing research, checked before any question (added 2026-09-23).** Read the `research_artifacts:` block in `client-profile.yaml`, anything under `profiles/<business-slug>/_research/` (`pain-clusters.md`, `market-sample.md`, `competitors-and-ads.md`), an existing `offer-intelligence.md`, and any research files from before the evidence ledger existed (`market-evidence-standard.md` section 1: they are referenced where they sit, never moved). Every question they already answer (named customers, competitors, the market definition, triggers, geography) is pre-filled with the source label `source: research (<file>)`, so the interview never re-asks what research already answered. Research pre-fills; it never overwrites the client's own view: question 14 still records the client's belief as `buyer_pain_hypothesis` with `status: unverified`, and the research clusters stay in `_research/`.
 
+6. **The five Aaron-flow fields, pre-filled before anything is asked. Aaron flow (see `aaron-flow.md`).** Fill each from the sources above, in this order of trust: the call notes (`onboarding-call-notes*.md` from `/client-onboarding-call-summarizer`, which extracts all five), the context sweep (`context-sweep.md`, `slack-context.md`), the client intel feed (`client-intel.md`), existing research, then the website. A field no source states stays `null` and goes on `icp.carried_to_checkpoint_a`. Never guess to fill one.
+   - `icp.recent_win`: the most recent client that bought and did well (Aaron builds the ICP from a past win). Call notes and the sweep first. The newest dated case study or testimonial on `website-profile.md` is only a fallback, labelled `website:<url>`, because a site's showcase is not always the latest win.
+   - `icp.disqualifiers`: who never buys, in plain words (for example "solo practitioners" or "companies that already run an in-house SDR team"). Feeds company fit (`/icp-prompt-builder`). The call and the sweep usually say it; the site rarely does.
+   - `icp.supplier_exclusions`: companies that sell *to* the buyers but never buy themselves (vendors, IT firms, insurance brokers, agencies and consultancies in the same market). Feeds `account.discovery_exclusions` in the targeting spec (ruling `discovery-exclusions`) and company fit. Infer the likely types from the market (the site's integration and partner pages, the research's competitor list) and label them `inferred`. A type the client named carries its source label.
+   - `icp.why_now_signals`: two or three signals that make an account worth contacting now. Read an existing `icp_soft_preferences.triggers` first (older profiles store them there). Send order only (`/lead-scoring`); never a filter and never a reason to build a separate campaign.
+   - `icp.competitors`: named competitors, each with its domain when known (`null` when not). Feeds `account.discovery_exclusions` (their domains and employees are never prospects) and the copy's truth check. Start from `website-profile.md` section 8 (the competitors and "vs" pages), then the sweep, the call and existing research.
+
 Use this pre-fill map to suggest answers for every interview question. Present each question as a confirm-or-correct native choice prompt with the suggested value as the recommended option. The user clicks to accept or types a correction - they do not answer from blank.
 
 ## Inputs
@@ -118,7 +125,7 @@ Keep two questions apart, because mixing them shrinks the list for no reason.
 - **FIT is who could buy:** the market definition (the optional `market_definition:` block in Step 4), the hard filters (buying function and seniority, headcount, industries in and out, geography, excluded domains), and the offer-fit disqualifiers set at offer lock (`offer.offer_fit_disqualifiers`).
 - **TIMING is why now:** triggers and signals, such as a new leader in the seat, funding, hiring for the problem, or a tool change.
 
-**Timing signals and priority scores order the work; they never exclude a company.** They decide which companies go first and which slice a campaign carries (`/lead-scoring`, `/campaign-strategy`), and a company showing no signal today stays in the TAM. Only hard filters and offer-fit disqualifiers exclude. So every trigger is stored as a soft preference (Step 3). If a "trigger" actually decides who could buy (like the free-trial filter above, for an offer that sells trial sign-ups), it is a fit filter: record it with the hard filters, or let the offer carry it in `offer.icp_inclusion`, never under triggers.
+**Timing signals and priority scores order the work; they never exclude a company.** They decide which companies go first (`/lead-scoring`), and a company showing no signal today stays in the TAM. **Aaron flow (see `aaron-flow.md`):** the two or three `icp.why_now_signals` set send order only; they never define a campaign or a slice, and they never shrink the list. Only hard filters and offer-fit disqualifiers exclude. So every trigger is stored as a soft preference (Step 3). If a "trigger" actually decides who could buy (like the free-trial filter above, for an offer that sells trial sign-ups), it is a fit filter: record it with the hard filters, or let the offer carry it in `offer.icp_inclusion`, never under triggers.
 
 ## Output
 
@@ -176,7 +183,7 @@ Batch these into native multi-question confirm-or-correct prompts: group related
 4. Hard minimum and maximum headcount
 5. Industries, categories, or market segments in or out, in plain business language. The in-list is a starting point that `/tam-build` turns into a keyword stack for the pull (generated by Claude Code, never a provider's industry-taxonomy filter; Aaron, Apr 13: "we scrap the industry filters altogether"). The out-list stays a named exclusion list.
 6. Countries, states, regions, or cities in scope and out of scope. This is required because source coverage changes by market.
-7. Relevant buying triggers. These are list-relevance signals (they make the list more relevant); using one in copy is optional
+7. Relevant buying triggers. These are list-relevance signals (they make the list more relevant); using one in copy is optional. **Aaron flow (see `aaron-flow.md`):** the two or three strongest are stored as `icp.why_now_signals` (item 24) and used for send order only, never to shrink the list
 8. Preferred sources, blocked sources, or custom scraping limits for lead sourcing
 9. Competitors, customers, partners, or domains that must be excluded
 10. Current offer or ask suggested by the client or form
@@ -193,6 +200,14 @@ Items 16 to 20 are optional (added 2026-09-23). They describe the market definit
 18. **Sales motion:** how they sell (field sales, inside sales, a self-serve trial, a partner channel).
 19. **Relevant technology:** the tools whose presence makes the offer relevant (for example the CRM or billing platform the offer plugs into).
 20. **Maturity levels:** the stages the offer fits (for example seed to Series B, or owner-operated to multi-site).
+
+Items 21 to 25 are the Aaron-flow fields. **Aaron flow (see `aaron-flow.md`), from Aaron's 09-16, 09-17 and 09-21 notes.** They are pre-filled by pre-fill item 6 and never asked mid-phase: an item with no pre-fill goes on `icp.carried_to_checkpoint_a` and is asked once, in checkpoint A's one batch.
+
+21. **Recent win (`icp.recent_win`):** the most recent client that bought and did well: the company, its domain, its segment, what it bought, the result, roughly when, and whether it can be named. The ICP is built from this win first.
+22. **Disqualifiers (`icp.disqualifiers`):** who never buys, in plain words. These are hard fit exclusions and feed company fit.
+23. **Supplier exclusions (`icp.supplier_exclusions`):** companies that sell to the buyers but never buy (vendors, IT firms, insurance brokers, agencies, consultancies in the same market). They feed company fit and the targeting spec's `account.discovery_exclusions`.
+24. **Why-now signals (`icp.why_now_signals`):** two or three signals that make an account worth contacting now. Send order only (Step 3), never a filter and never a reason to split the campaign.
+25. **Competitors (`icp.competitors`):** named competitors with their domains. They feed the targeting spec's `account.discovery_exclusions` (their own domains and employees are never prospects) and the copy's truth check.
 
 Use this pattern for open-text intake:
 
@@ -246,6 +261,7 @@ Rules:
 - Buying function and seniority are usually hard. Individual titles are not filters set here: the offer generates the full stack at lock.
 - Industry is hard only when the market is truly vertical, and even then it reaches the pull as a keyword stack plus `industries_out` exclusions, never a provider taxonomy filter.
 - Headcount edges are often soft.
+- **Aaron flow (see `aaron-flow.md`):** `icp.disqualifiers` and `icp.supplier_exclusions` are always hard exclusions, and `icp.why_now_signals` are always send order only, so skip the question above for all three.
 - Triggers are always soft, so skip the question above for them: a trigger is timing, which orders the work and never excludes a company (Fit vs Timing, above; 2026-09-23, supersedes "usually soft"). They are list-relevance signals, and using one in copy is optional (Aaron process alignment, operator directive 2026-09-22; supersedes "personalization signals"). A criterion that decides who could buy is a fit filter, not a trigger, and gets the question like any other filter.
 - Every hard filter here is a starting point the locked offer may widen or narrow (`offer.icp_inclusion`).
 
@@ -262,6 +278,23 @@ business:
 
 icp:
   source: icp-onboarding
+  # Aaron flow (see aaron-flow.md): the five fields below are pre-filled from the call notes, sweep,
+  # intel feed, research and website before anything is asked. Unknown = null, and the field name
+  # goes on carried_to_checkpoint_a. They are shown at checkpoint A (end of Phase 2), not confirmed here.
+  recent_win:                     # the most recent client that bought and did well; the ICP starts here
+    company: <name, or null>
+    domain: <domain, or null>
+    segment: <sub-industry / what-they-sell group>
+    what_they_bought: <offer or service>
+    result: <outcome, as stated>
+    when: <YYYY-MM or approximate>
+    nameable: <true|false|unknown>
+    source: <call_notes|slack:#<channel> <date>|email:<subject> <date>|intel:<source> <date>|research:<file>|website:<url>>
+  disqualifiers: []               # plain words: who never buys (hard fit exclusion; feeds company fit, /icp-prompt-builder)
+  supplier_exclusions: []         # [{type: <e.g. "IT managed service providers">, examples: [<domain>], source: <label or inferred>}]; they sell TO the buyers and never buy; feeds company fit and account.discovery_exclusions in the targeting spec (ruling discovery-exclusions)
+  why_now_signals: []             # two or three; send order only (lead-scoring), never a filter. Readers fall back to icp_soft_preferences.triggers when this is empty
+  competitors: []                 # [{name: <name>, domain: <domain or null>, source: <label>}]; feed account.discovery_exclusions (their own domains are also excluded from lists) and the copy truth check
+  carried_to_checkpoint_a: []     # field names the pre-fill could not answer, e.g. [icp.recent_win, icp.disqualifiers]; asked once at checkpoint A, never mid-phase
 
 buyer_pain_hypothesis:
   status: unverified              # ALWAYS unverified here. Only /offer-intelligence can change this.
@@ -370,7 +403,7 @@ icp_hard_filters:   # the starting point, not the ceiling: the locked offer's of
   excluded_domains: []
 
 icp_soft_preferences:
-  triggers: []   # TIMING: list-relevance signals that order the work and never exclude (Fit vs Timing); copy use optional
+  triggers: []   # TIMING: list-relevance signals that order the work and never exclude (Fit vs Timing); copy use optional. Aaron flow: mirror icp.why_now_signals here on write, so readers not yet migrated still see them
   personas_to_prioritize: []
 
 legal:
@@ -384,6 +417,8 @@ created_at: <YYYY-MM-DD>
 
 Print the YAML back to the user and ask if it looks right.
 
+**Aaron flow (see `aaron-flow.md`):** do not ask here. Write the profile, list `icp.carried_to_checkpoint_a` in the Phase 1 handoff, and let checkpoint A show the ICP, the segments and the five Aaron fields for information and correction. Under `review_gates` the confirm prompt above still applies.
+
 Do not overwrite an existing `client-profile.yaml` without explicit confirmation.
 
 ## Common Gotchas
@@ -394,12 +429,13 @@ Do not overwrite an existing `client-profile.yaml` without explicit confirmation
 - A location like "Europe" or "Nordics" is too loose unless the client can explain which countries matter first. Source availability is country-specific.
 - Do not force a data provider's industry taxonomy, at onboarding or later. Industries-in reach the pull as a keyword stack Claude Code generates (`/tam-build`). Only where a tool needs a taxonomy value for an exclusion (a hard-no vertical) is `industries_out` mapped onto that tool's values.
 - Never make a trigger a hard filter. Timing orders the work and never excludes (Fit vs Timing); a trigger used as a filter shrinks the list too far.
+- Do not confuse supplier exclusions with competitors or disqualifiers. A supplier sells to the buyers (their IT firm, their broker), a competitor sells what the client sells, and a disqualifier is a buyer type that never buys. All three are kept off the list and feed company fit; competitors and supplier exclusions also feed `account.discovery_exclusions`. Aaron flow (see `aaron-flow.md`).
 
 ## What To Do Next
 
 After `client-profile.yaml` exists (an empty infrastructure or platform slot does not hold this; it stops only the step that uses it):
 
-- New guided start or full locked-platform launch: `/cold-email-kickoff` (the single entry-point orchestrator); inside a run, control returns to `/phase-1-onboarding` for its remaining steps and the Phase 1 checkpoint
+- New guided start or full locked-platform launch: `/cold-email-kickoff` (the single entry-point orchestrator); inside a run, control returns to `/phase-1-onboarding` for its remaining steps. **Aaron flow (see `aaron-flow.md`):** Phase 1 auto-approves (no human checkpoint; the one exception is a website no route can read), and the run continues straight into Phase 2, where checkpoint A asks `icp.carried_to_checkpoint_a` in its one batch
 - Phase 2 (`/phase-2-research-offer`) then continues through `/offer-intelligence` discovery mode, which now includes the research sample (`_research/market-sample.md`), the evidence ledger (`_research/evidence.csv`) and `/market-evidence` synthesize with its Research QA gate (a DEEPEN verdict runs up to 2 targeted loops automatically, operator decision 2026-09-28), then the Aaron offer call (`outbound/reference/aaron-lane.md`, Call 1), and then `/lead-magnet-brainstorm`, where the offers lock.
 - Guarded draft automation: `/auto-research-public`, only after setup is complete and sender readiness is verified through the locked platform manager
 

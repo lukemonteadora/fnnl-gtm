@@ -131,7 +131,7 @@ Do not start from a generic title list. Read the real inputs first.
    - Exact buyers, strong equivalents, influencers, adjacent stakeholders, and unrelated roles.
    - Authority levels in company-size context. A CEO at a 20-person business and a CEO at a 5,000-person business do not automatically have the same buying proximity.
    - Verified company and contact timing signals.
-4. Save `lead-scoring-rubric.yaml` as normal YAML with `schema_version`, `score_version`, client, offer, segments, fixed component tables, explicit exclusions, normalization mappings, confidence thresholds, and a default same-wave contact cap of 2.
+4. Save `lead-scoring-rubric.yaml` as normal YAML with `schema_version`, `score_version`, client, offer, segments, fixed component tables, explicit exclusions, normalization mappings, and confidence thresholds. There is no same-wave contact cap to save (ruling `no-contacts-cap`; Aaron flow, see `aaron-flow.md` section 8): `list_qa.py` writes the send file round-robin by company inside each priority tier instead.
 5. Add `evidence_columns` for all seven components. Each entry lists only real headers from its normalized scoring input. The script rejects a missing or invented header.
 6. Validate that the component maxima sum to exactly 10.0 and that every named input column exists or is explicitly marked derived.
 
@@ -272,6 +272,10 @@ Priority tiers:
 
 Once the contact output (`contacts.scored.csv`, or `leads.scored.csv` on the external-campaign path) is written, push it to the list workbench's `scored` table as described above, and put the "pushed N/N rows to scored (list_stage=scored)" count, or the CSV-only fallback note, in the scoring report.
 
+## Signal ordering: contact signals outrank company signals (Aaron flow, see `aaron-flow.md` section 5)
+
+Within the send order a contact-level signal outranks a company-level (`co_*`) signal: a contact-level hit (for example `contact_new_in_seat`) ranks a person ahead of a peer at the same priority tier whose only signal is a joined `co_*` company flag. This is an ordering rule inside the tier, never a separate campaign, and never a reason to build a stacked-signal slice outside `/experiment-design`'s labeled test-arm path.
+
 ## Score confidence
 
 Score confidence measures evidence coverage, not lead quality.
@@ -288,8 +292,9 @@ A tier of `none`, `unsupported`, or `unrelated` counts as present evidence when 
 
 Use a stratified sample that includes exact fits, adjacent fits, weak fits, missing-data rows, hard exclusions, wrong companies, and wrong titles.
 
-- Under `review_gates`, show the component points and reasons for two 10-row rounds. Lock only after two consecutive rounds need no correction or the operator explicitly locks it.
-- Under `auto_execute`, run the same sample checks and rubric validation. Auto-lock only when all schema and invariant checks pass AND the independent rubric-lock check passes: a fresh Claude Code sub-agent that never saw the tier reasons judges the same stratified 20 rows and agrees with the role tier on at least 17 of them (added 2026-09-24: schema checks alone could lock a rubric that ranks the wrong people first). This is a check on the rubric, separate from the 20-row agreement check `/ai-model-routing` runs before moving a job down a model tier. On disagreement, fix the targeting spec or the rubric mapping and re-run, at most two rounds. Still under 17 of 20 after the second round means no auto-lock: `scoring_stage` stays `rubric_ready`, and the scoring report leads with the disagreements for the operator, because a wrong rubric would order the whole first wave's reveal spend. Stop on an invalid rubric, unsupported tier, missing company join, or unexplained exclusion.
+**Aaron flow (see `aaron-flow.md` section 12): the score only orders the send, so it auto-locks on `lead_score.py`'s own schema and invariant checks, with no review rounds.** This replaces the two-10-row-round `review_gates` path and the 20-row sub-agent agreement check that used to gate `auto_execute`: a rubric that ranks a role tier wrong still ships, because the score orders the send inside a wave and never decides who is contacted. Stop only on a script-level failure: an invalid rubric, an unsupported tier, a missing company join, or an unexplained exclusion.
+
+A stratified sample (exact fits, adjacent fits, weak fits, missing-data rows, hard exclusions, wrong companies, wrong titles) stays useful as a spot-check an operator can run by hand; it is advisory and never blocks the lock.
 
 ## Refresh
 
