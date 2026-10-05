@@ -36,7 +36,7 @@ showing a clean 0% bounce rate.
 
 Usage:
   python list_feedback.py --dir <campaignDir> --leads-export leads_export.csv \
-      [--replies replies_scored.csv] [--min-sends 30] [--bounce-ceiling 0.03]
+      [--replies replies_scored.csv] [--min-sends 1000] [--bounce-ceiling 0.03]
 
 No network calls, no spend.
 """
@@ -151,7 +151,9 @@ def main(argv: list[str] | None = None) -> int:
                     help="the sending platform's lead export for the campaign (column names UNVERIFIED for the "
                          "current platform)")
     ap.add_argument("--replies", help="first replies classified with reply-scoring-core.md classes")
-    ap.add_argument("--min-sends", type=int, default=30, help="smallest group that earns a recommendation")
+    ap.add_argument("--min-sends", type=int, default=1000,
+                     help="smallest group that earns a recommendation (aaron-flow.md section 13: an arm is "
+                          "read at about 1,000 prospects or sends)")
     ap.add_argument("--bounce-ceiling", type=float, default=0.03)
     ap.add_argument("--out", help="default <dir>/list-feedback-report.md")
     args = ap.parse_args(argv)

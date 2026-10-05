@@ -25,6 +25,9 @@ sys.modules["list_waterfall"] = list_waterfall
 assert SPEC.loader is not None
 SPEC.loader.exec_module(list_waterfall)
 list_common = sys.modules["list_common"]
+# list_waterfall.py's own `import reservoir` (sys.path.insert on its own folder) already loaded the real
+# reservoir.py as a module; reuse that instance rather than loading it a second time under a second name.
+reservoir = sys.modules["reservoir"]
 
 
 FNNL_PROVIDERS = {"aiark", "prospeo", "getleads", "millionverifier"}
@@ -198,6 +201,9 @@ class WaterfallTestCase(unittest.TestCase):
         self.write_contacts(base_contacts())
         self.write_spec(base_spec())
         self.pid = {row["first_name"]: (row["person_id"] or list_common.person_id(row)) for row in base_contacts()}
+        # Aaron flow (see aaron-flow.md section 7). No --reservoir by default: the 35 pre-reservoir tests must
+        # keep running exactly as before. A test sets self.reservoir_path (via write_reservoir()) to opt in.
+        self.reservoir_path = None
 
     def tearDown(self):
         self.temp.cleanup()
@@ -227,8 +233,24 @@ class WaterfallTestCase(unittest.TestCase):
         return status, out.getvalue(), err.getvalue()
 
     def state_args(self):
-        return ["--dir", self.campaign, "--contacts", self.contacts_path, "--spec", self.spec_path,
+        args = ["--dir", self.campaign, "--contacts", self.contacts_path, "--spec", self.spec_path,
                 "--routing", self.routing_path]
+        if self.reservoir_path:
+            args += ["--reservoir", self.reservoir_path]
+        return args
+
+    def write_reservoir(self, records):
+        """records: list of dicts with whatever reservoir.FIELDS keys matter for the test (linkedin_url or
+        email for the key, company_domain, verdict, verified_at, source). Sets self.reservoir_path so every
+        state_args() call from here on passes --reservoir; a test that wants no reservoir never calls this."""
+        store = {}
+        for rec in records:
+            key = reservoir.record_key(rec.get("linkedin_url"), rec.get("email"))
+            store[key] = {f: str(rec.get(f) or "") for f in reservoir.FIELDS} | {"key": key}
+        path = self.root / "reservoir.jsonl"
+        reservoir.save_store(path, store)
+        self.reservoir_path = path
+        return path
 
     def plan(self, *extra, layer="email", expect=0):
         status, out, err = self.cli("plan", *self.state_args(), "--layer", layer, *extra)
@@ -1088,6 +1110,110 @@ class LiveRoutingTests(WaterfallTestCase):
         status, _, err = self.cli("plan", *self.state_args(), "--layer", "phone")
         self.assertEqual(2, status)
         self.assertIn("no usable layers.phone.order", err)
+
+
+class ReservoirRung0Tests(WaterfallTestCase):
+    """Aaron flow (see aaron-flow.md section 7): the reservoir is rung 0 of the email waterfall. --reservoir is
+    optional (ReservoirRung0Tests opts in via write_reservoir()); every other test class never passes it, so
+    the pre-reservoir behaviour is unchanged for them (checked by the full suite staying green)."""
+
+    def test_rung0_hit_ships_without_any_finder_call(self):
+        self.write_reservoir([{
+            "linkedin_url": "https://www.linkedin.com/in/ada-one", "email": "ada@alpha.com",
+            "company_domain": "alpha.com", "verdict": "valid", "verified_at": "2026-09-20", "source": "aiark",
+        }])
+        self.plan()
+        # No finder is paid while the reservoir candidate is unresolved: VERIFY_PENDING halts evaluate_email
+        # before next_rung ever runs for A1.
+        for provider in FIXTURE_EMAIL_ORDER:
+            self.assertNotIn("A1", self.queue_ids(f"queue-email-{provider}.csv"))
+        self.assertIn("ada@alpha.com", [row["email"] for row in self.queue("queue-verify.csv")])
+        self.drive({}, {"ada@alpha.com": "valid"})
+        self.finalize()
+        verified = self.by_pid("leads.verified.csv")
+        self.assertEqual("ada@alpha.com", verified["A1"]["email"])
+        self.assertFalse(any(pid == "A1" for _, pid in self.queued), "A1 should never reach a finder queue")
+
+    def test_rung0_miss_when_stale_falls_through_to_the_normal_finder_order(self):
+        self.write_reservoir([{
+            "linkedin_url": "https://www.linkedin.com/in/ada-one", "email": "ada@alpha.com",
+            "company_domain": "alpha.com", "verdict": "valid", "verified_at": "2026-01-01", "source": "aiark",
+        }])
+        self.plan()  # 2026-01-01 is well over the 90-day window from today
+        self.assertIn("A1", self.queue_ids("queue-email-aiark.csv"))
+        self.assertNotIn("ada@alpha.com", [row["email"] for row in self.queue("queue-verify.csv")])
+
+    def test_rung0_catch_all_on_refresh_still_stops_to_holdback_not_to_a_finder(self):
+        """A stored `valid` record that re-verifies catch_all in THIS campaign is treated like any other
+        catch_all candidate under on_catch_all: stop (FNNL's unchanged catch-all timing rule, D3): it stops
+        the walk and goes to the holdback, never falling through to a finder."""
+        self.write_routing(lambda r: r["layers"]["email"].update({"on_catch_all": "stop"}))
+        self.write_reservoir([{
+            "linkedin_url": "https://www.linkedin.com/in/ada-one", "email": "ada@alpha.com",
+            "company_domain": "alpha.com", "verdict": "valid", "verified_at": "2026-09-20", "source": "aiark",
+        }])
+        self.drive({}, {"ada@alpha.com": "catch_all"})
+        self.finalize()
+        holdback = self.by_pid("leads.catchall-holdback.csv")
+        self.assertIn("A1", holdback)
+        self.assertFalse(any(pid == "A1" for _, pid in self.queued))
+
+
+class NoContactsCapAndColleagueProofTests(WaterfallTestCase):
+    """Ruling no-contacts-cap (aaron-flow.md section 8): contacts_per_account: all is the default; a number
+    stays a one-run operator override (FNNL keeps the override, A-Sales removed the field). Also the
+    every-email-verified colleague-proof promotion (classify_candidate / self.proven_domains)."""
+
+    def test_no_cap_all_means_every_eligible_person_at_the_account_ships(self):
+        self.write_spec(base_spec(contacts_per_account="all", max_contacts_per_account=None))
+        finds = {("aiark", pid): f"{pid.lower()}@alpha.com" for pid in ("A1", "A2", "A3", "A4")}
+        verdicts = {f"{pid.lower()}@alpha.com": "valid" for pid in ("A1", "A2", "A3", "A4")}
+        self.drive(finds, verdicts)
+        self.finalize()
+        verified = self.by_pid("leads.verified.csv")
+        for pid in ("A1", "A2", "A3", "A4"):
+            self.assertIn(pid, verified, pid)
+        accounts = {row["company_domain"]: row for row in read_rows(self.work / "account-status.csv")}
+        self.assertEqual("all", accounts["alpha.com"]["required"])
+        self.assertEqual("ACCOUNT_ALL_WORKED", accounts["alpha.com"]["state"])
+
+    def test_numeric_override_still_caps_at_the_given_number(self):
+        self.write_spec(base_spec(contacts_per_account=3, max_contacts_per_account=3))
+        finds = {("aiark", pid): f"{pid.lower()}@alpha.com" for pid in ("A1", "A2", "A3")}
+        verdicts = {f"{pid.lower()}@alpha.com": "valid" for pid in ("A1", "A2", "A3")}
+        self.drive(finds, verdicts)
+        self.finalize()
+        accounts = {row["company_domain"]: row for row in read_rows(self.work / "account-status.csv")}
+        self.assertEqual("3", accounts["alpha.com"]["required"])
+        self.assertEqual("ACCOUNT_SATISFIED", accounts["alpha.com"]["state"])
+        stagger = self.by_pid("leads.stagger.csv")
+        self.assertIn("A4", stagger)  # the 4th person at a 3-capped account is not_needed, not shipped
+
+    def test_second_domain_allowed_by_colleague_proof(self):
+        """A1 and A2 (colleagues at alpha.com) both verify valid on othercorp.com. Each proves the domain for
+        the OTHER, not for themselves (the self-promotion case list_waterfall.py must refuse: see
+        test_domain_mismatch_is_flagged_and_does_not_fill_a_slot, where A1 alone on a mismatch domain still
+        goes to review)."""
+        self.plan()
+        self.respond("aiark", {"A1": "ada@othercorp.com", "A2": "amy@othercorp.com"})
+        self.drive({}, {"ada@othercorp.com": "valid", "amy@othercorp.com": "valid"})
+        self.finalize()
+        verified = self.by_pid("leads.verified.csv")
+        self.assertEqual("ada@othercorp.com", verified["A1"]["email"])
+        self.assertEqual("amy@othercorp.com", verified["A2"]["email"])
+
+    def test_brand_domain_from_company_alt_domains_proves_a_mismatch_with_no_colleague_needed(self):
+        rows = base_contacts()
+        for row in rows:
+            if row["person_id"] == "A1":
+                row["company_alt_domains"] = "othercorp.com"
+        write_rows(self.contacts_path, CONTACT_HEADER + ["company_alt_domains"], rows)
+        self.plan()
+        self.respond("aiark", {"A1": "ada@othercorp.com"})
+        self.drive({}, {"ada@othercorp.com": "valid"})
+        self.finalize()
+        verified = self.by_pid("leads.verified.csv")
+        self.assertEqual("ada@othercorp.com", verified["A1"]["email"])
 
 
 if __name__ == "__main__":

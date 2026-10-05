@@ -547,6 +547,98 @@ class PortedPolicyTest(ListQATestBase):
         self.assertEqual(set(qa.domain.exact), expected)
 
 
+class RoundRobinSendOrderTest(ListQATestBase):
+    """No contacts cap (ruling no-contacts-cap, aaron-flow.md section 8 / section 13 item 1): the campaign file
+    is written round-robin by company inside each priority tier, so one company's buyers are never all sent the
+    same day. "all" is an explicit no-cap value and a positive number still works as a one-run override cap."""
+
+    def send_order_rows(self):
+        # Same job_title (tier "exact") on every row so title_role_tier classifies identically and the only
+        # ranking difference across rows is lead_score, which keeps the expected round-robin order simple to state.
+        return [
+            lead("Faith", "Apple", "coa.com", lead_score="9.5"),
+            lead("Gina", "Apple", "coa.com", lead_score="9.2"),
+            lead("Henry", "Bravo", "cob.com", lead_score="9.4"),
+            lead("Iris", "Bravo", "cob.com", lead_score="9.0"),
+            lead("Oscar", "Delta", "cod.com", lead_score="7.8"),
+            lead("Paula", "Delta", "cod.com", lead_score="7.2"),
+            lead("Nora", "Charlie", "coc.com", lead_score="7.5"),
+        ]
+
+    def test_default_no_cap_round_robins_by_company_inside_each_tier(self):
+        spec = target_spec()
+        spec["buyers"]["max_contacts_per_account"] = None
+        self.spec_path.write_text(yaml.safe_dump(spec, sort_keys=False), encoding="utf-8")
+        write_csv(self.dir / "leads.verified.csv", HEADER, self.send_order_rows())
+        code, _, err = self.run_qa()
+        self.assertEqual(code, 0, err)
+        ready = read_csv(self.dir / "leads.verified.csv")
+        # P1 (coa.com, cob.com) sent first, round-robin by company; P2 (cod.com, coc.com) after, same pattern.
+        # No overflow: every row ships, so no company's rows cluster together inside a tier.
+        self.assertEqual(
+            ["faith@coa.com", "henry@cob.com", "gina@coa.com", "iris@cob.com",
+             "oscar@cod.com", "nora@coc.com", "paula@cod.com"],
+            [r["email"] for r in ready],
+        )
+        self.assertEqual(7, len(ready))
+        self.assertEqual([], read_csv(self.dir / "leads.stagger.csv"))
+
+    def test_all_is_treated_as_no_cap(self):
+        spec = target_spec()
+        spec["buyers"]["max_contacts_per_account"] = "all"
+        self.spec_path.write_text(yaml.safe_dump(spec, sort_keys=False), encoding="utf-8")
+        write_csv(self.dir / "leads.verified.csv", HEADER, self.send_order_rows())
+        code, _, err = self.run_qa()
+        self.assertEqual(code, 0, err)
+        ready = read_csv(self.dir / "leads.verified.csv")
+        self.assertEqual(7, len(ready))
+        self.assertEqual(
+            ["faith@coa.com", "henry@cob.com", "gina@coa.com", "iris@cob.com",
+             "oscar@cod.com", "nora@coc.com", "paula@cod.com"],
+            [r["email"] for r in ready],
+        )
+        report = (self.dir / "list-qa-report.md").read_text(encoding="utf-8")
+        self.assertIn('max_contacts_per_account/contacts_per_account = "all": no contacts cap '
+                      '(ruling no-contacts-cap)', report)
+
+    def test_numeric_override_still_caps_density_and_overflow_goes_to_stagger(self):
+        spec = target_spec()
+        spec["buyers"]["max_contacts_per_account"] = 1
+        self.spec_path.write_text(yaml.safe_dump(spec, sort_keys=False), encoding="utf-8")
+        write_csv(self.dir / "leads.verified.csv", HEADER, self.send_order_rows())
+        code, _, err = self.run_qa()
+        self.assertEqual(code, 0, err)
+        ready = read_csv(self.dir / "leads.verified.csv")
+        # cap=1: each company's lower-ranked contact overflows to stagger; the survivors still round-robin.
+        self.assertEqual(
+            ["faith@coa.com", "henry@cob.com", "oscar@cod.com", "nora@coc.com"],
+            [r["email"] for r in ready],
+        )
+        stagger = self.by_email("leads.stagger.csv")
+        self.assertEqual({"gina@coa.com", "iris@cob.com", "paula@cod.com"}, set(stagger))
+        for row in stagger.values():
+            self.assertEqual(row["stagger_reason"], "density_overflow")
+
+    def test_order_for_send_unit_groups_by_tier_before_round_robin(self):
+        # Direct unit test of the two new functions, independent of the full QA pipeline, mirroring how
+        # FixRegressionTest exercises list_qa helpers directly.
+        rows = [
+            {"company_domain_norm": "a.com", "email_domain": "a.com", "priority_tier": "P2",
+             "title_role_tier": "exact", "wave_slot": "primary", "lead_score": "7.0", "qa_status": "pass",
+             "_idx": 0, "email": "a-p2@a.com"},
+            {"company_domain_norm": "a.com", "email_domain": "a.com", "priority_tier": "P1",
+             "title_role_tier": "exact", "wave_slot": "primary", "lead_score": "9.0", "qa_status": "pass",
+             "_idx": 1, "email": "a-p1@a.com"},
+            {"company_domain_norm": "b.com", "email_domain": "b.com", "priority_tier": "P1",
+             "title_role_tier": "exact", "wave_slot": "primary", "lead_score": "9.9", "qa_status": "pass",
+             "_idx": 2, "email": "b-p1@b.com"},
+        ]
+        ordered = list_qa.order_for_send(rows)
+        # Both P1 rows (b then a, by score) come before the one P2 row, even though a.com's P2 row was listed
+        # first in the input and a.com appears in both tiers.
+        self.assertEqual(["b-p1@b.com", "a-p1@a.com", "a-p2@a.com"], [r["email"] for r in ordered])
+
+
 class SampleTest(ListQATestBase):
     def ready_tiers(self):
         return {r["title_role_tier"] for r in read_csv(self.dir / "leads.verified.csv")}

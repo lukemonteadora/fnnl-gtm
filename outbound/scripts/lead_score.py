@@ -317,10 +317,11 @@ def validate_rubric(rubric: dict[str, Any]) -> dict[str, Any]:
     if not math.isclose(rubric["eligibility"]["marketable_min_score"], 2.0):
         raise ScoreError("eligibility.marketable_min_score must equal 2.0")
 
-    cap = int(rubric.get("same_wave_contact_cap", 2))
-    if cap < 1:
-        raise ScoreError("same_wave_contact_cap must be at least 1")
-    rubric["same_wave_contact_cap"] = cap
+    # No contacts cap (ruling no-contacts-cap, aaron-flow.md section 12/13): the score only orders the
+    # send, so it auto-locks on this script's own checks with no review rounds. Every eligible contact is
+    # same-wave eligible; list_qa.py's split spreads a company's contacts round-robin across the campaign
+    # file instead. A rubric that still sets same_wave_contact_cap is accepted and ignored.
+    rubric["same_wave_contact_cap"] = None
     rubric["score_version"] = score_version
     return rubric
 
@@ -663,7 +664,7 @@ def score_contacts(
         )
         for rank, row in enumerate(contacts, start=1):
             row["contact_rank_in_company"] = str(rank)
-            row["same_wave_eligible"] = "true" if rank <= rubric["same_wave_contact_cap"] else "false"
+            row["same_wave_eligible"] = "true"
 
     scored.sort(
         key=lambda row: (
@@ -706,7 +707,7 @@ def build_report(
         f"- Companies: {len(company_rows)} total, {company_eligible} eligible.",
         f"- Contacts: {len(contact_rows)} total, {len(eligible)} eligible, {len(ineligible)} excluded.",
         f"- Eligible contacts on an unclassified relationship (blank market and offer, or blank role): {unknown_relationship}. Missing evidence lowers confidence and never excludes.",
-        f"- Same-wave cap: {rubric['same_wave_contact_cap']} contacts per company; {staggered} eligible contacts held for a later company stagger.",
+        f"- Same-wave cap: none (ruling no-contacts-cap); {staggered} eligible contacts held for a later company stagger.",
         "- Every eligible score from P1 through P5 remains in the outreach queue.",
         "",
         "## Priority distribution",

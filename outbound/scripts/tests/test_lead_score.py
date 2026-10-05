@@ -387,18 +387,35 @@ class LeadScoringTests(unittest.TestCase):
         self.assertEqual("4.3", row["company_score"])
         self.assertEqual("6.8", row["lead_score"])
 
-    def test_contacts_are_ranked_and_only_two_are_same_wave_eligible(self):
+    def test_contacts_are_ranked_and_every_eligible_one_is_same_wave_eligible(self):
+        # no-contacts-cap (ruling no-contacts-cap, aaron-flow.md section 12/13): the score only orders the send,
+        # so every eligible contact at a company is same-wave eligible regardless of rank; list_qa.py's
+        # round-robin-by-company split spreads the company's contacts across the campaign file instead.
         contacts = [
             contact("committee.example", first="Cory", role="influencer", authority="influencer", timing="none"),
             contact("committee.example", first="Alex", role="exact", authority="ideal", timing="strong"),
             contact("committee.example", first="Blair", role="strong", authority="decision_capable", timing="useful"),
         ]
-        status, _, error, _, output, _ = self.run_score([company("committee.example")], contacts)
+        status, _, error, _, output, report = self.run_score([company("committee.example")], contacts)
         self.assertEqual(0, status, error)
         rows = read_csv(output)
         self.assertEqual(["1", "2", "3"], [row["contact_rank_in_company"] for row in rows])
-        self.assertEqual(["true", "true", "false"], [row["same_wave_eligible"] for row in rows])
+        self.assertEqual(["true", "true", "true"], [row["same_wave_eligible"] for row in rows])
         self.assertEqual(["Alex", "Blair", "Cory"], [row["first_name"] for row in rows])
+        self.assertIn("Same-wave cap: none (ruling no-contacts-cap); 0 eligible contacts held for a later "
+                      "company stagger.", report.read_text(encoding="utf-8"))
+
+    def test_a_rubric_still_setting_same_wave_contact_cap_is_accepted_and_ignored(self):
+        data = rubric()
+        data["same_wave_contact_cap"] = 1
+        contacts = [
+            contact("ignored-cap.example", first="Cory", role="influencer", authority="influencer", timing="none"),
+            contact("ignored-cap.example", first="Alex", role="exact", authority="ideal", timing="strong"),
+        ]
+        status, _, error, _, output, _ = self.run_score([company("ignored-cap.example")], contacts, data)
+        self.assertEqual(0, status, error)
+        rows = read_csv(output)
+        self.assertEqual(["true", "true"], [row["same_wave_eligible"] for row in rows])
 
     def test_invalid_rubric_and_unavailable_evidence_column_fail_loud(self):
         bad_points = rubric()

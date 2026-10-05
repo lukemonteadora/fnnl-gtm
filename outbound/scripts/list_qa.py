@@ -389,8 +389,23 @@ def build_context(spec: dict[str, Any], spec_path: Path, campaign_dir: Path) -> 
     policy = clean(buyers.get("personal_email_policy") or "fail").lower()
     if policy not in {"fail", "review", "allow"}:
         raise QAError(f"SPEC ERROR: buyers.personal_email_policy must be fail, review or allow, not {policy!r}")
+    # No contacts cap (ruling no-contacts-cap, aaron-flow.md section 8 / section 13 item 1): every verified buyer
+    # at a fit company ships. The campaign file is written round-robin by company inside each priority tier
+    # instead of holding buyers back, so a spec no longer needs a per-company cap to spread a company's buyers
+    # across the send. "all" is the explicit no-cap value; a positive number still works as a one-run override
+    # cap for this run only (FNNL keeps the override, unlike the house ruling's unconditional removal).
     cap = buyers.get("max_contacts_per_account", buyers.get("contacts_per_account"))
-    max_contacts = int(cap) if as_float(cap) is not None and float(cap) > 0 else None
+    cap_text = clean(cap).lower()
+    if cap_text == "all":
+        max_contacts = None
+        notes.append("buyers.max_contacts_per_account/contacts_per_account = \"all\": no contacts cap "
+                      "(ruling no-contacts-cap)")
+    elif as_float(cap) is not None and float(cap) > 0:
+        max_contacts = int(cap)
+        notes.append(f"buyers.max_contacts_per_account/contacts_per_account = {max_contacts}: one-run override "
+                      "cap (ruling no-contacts-cap default is no cap)")
+    else:
+        max_contacts = None
 
     ce = buyers.get("contact_exclusions") or {}
     ex_name_rx = []
@@ -978,6 +993,44 @@ def apply_density(rows: list[dict[str, Any]], cap: int | None) -> int:
 # ---------------------------------------------------------------------------
 # Step 6: outputs
 # ---------------------------------------------------------------------------
+TIER_SEND_ORDER = {"P1": 0, "P2": 1, "P3": 2, "P4": 3, "P5": 4}
+
+
+def round_robin_by_company(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Round 1 takes every company's best-ranked contact (by rank_key), round 2 the next, and so on, so one
+    company's buyers are never all sent the same day. Ties keep a stable order."""
+    per: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for r in rows:
+        per[r["company_domain_norm"] or r["email_domain"]].append(r)
+    for members in per.values():
+        members.sort(key=rank_key)
+    domains = list(per)
+    order: list[dict[str, Any]] = []
+    depth = 0
+    while True:
+        layer = [per[d][depth] for d in domains if len(per[d]) > depth]
+        if not layer:
+            break
+        layer.sort(key=rank_key)
+        order.extend(layer)
+        depth += 1
+    return order
+
+
+def order_for_send(ready: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """No contacts cap (ruling no-contacts-cap): the campaign file is written round-robin by company inside
+    each priority tier instead of capping a company's contacts, so one company's buyers are spread across the
+    send instead of all going out the same day. Grouped by priority_tier (P1..P5, blank/other last), then
+    round-robin by company within each tier."""
+    by_tier: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for r in ready:
+        by_tier[clean(r.get("priority_tier")).upper()].append(r)
+    out: list[dict[str, Any]] = []
+    for tier in sorted(by_tier, key=lambda t: TIER_SEND_ORDER.get(t, 99)):
+        out.extend(round_robin_by_company(by_tier[tier]))
+    return out
+
+
 def append_queue(path: Path, header: list[str], new_rows: list[dict[str, Any]],
                  rejudged: tuple[set[str], set[str]]) -> tuple[int, int]:
     """Append rows to a shared queue file (union header). Returns (added, skipped).
@@ -1150,7 +1203,7 @@ def find_anomalies(rows: list[dict[str, Any]], ready: list[dict[str, Any]], ctx:
         out.append({"level": "WARNING", "key": "one_employer_many_domains", "count": len(offenders),
                     "base": len(ready), "share": share(len(offenders), len(ready)), "limit": 0.0,
                     "title": f"One real employer behind several company domains (same email domain), over the "
-                             f"{ctx.max_contacts or 'unset'}-per-company cap or on two offers: "
+                             f"{ctx.max_contacts or 'no cap'}-per-company cap or on two offers: "
                              f"{plural(len(org), 'employer')}, {plural(len(offenders), 'campaign-ready contact')} "
                              f"({groups}{more})",
                     "fix": "The per-company cap runs on company_domain, so one employer listed under brand sites, "
@@ -1536,7 +1589,7 @@ def build_report(ctx: Context, campaign_dir: Path, input_path: Path, rows: list[
           f"- Catch-all holdback ({HOLDBACK_FILE}): {len(routed['holdback'])}. Verified catch-alls wait for the "
           "Catch-All Timing gate (about 2 to 3 weeks of positive sending on the sending domains).",
           f"- Stagger queue ({STAGGER_FILE}): {len(routed['stagger'])}. Contacts over the "
-          f"{ctx.max_contacts or 'unset'}-per-company cap, kept for a later wave.", ""]
+          f"{ctx.max_contacts or 'no cap'}-per-company cap, kept for a later wave.", ""]
 
     # (6) six-dimension table
     L += ["## Six-dimension row gate", "", "Every input row, per dimension. The worst dimension decides the row: FAIL "
@@ -1718,7 +1771,8 @@ def cmd_run(args: argparse.Namespace) -> int:
     out_header = merged_header(header, extra)
     routed: dict[str, list[dict[str, Any]]] = {k: [r for r in rows if r["qa_status"] == k]
                                                for k in ("pass", "rejected", "review", "holdback", "stagger")}
-    ready = routed["pass"]
+    ready = order_for_send(routed["pass"])
+    routed["pass"] = ready
     write_csv(out_path, out_header, ready)
     write_csv(campaign_dir / REJECTED_FILE, out_header, routed["rejected"])
     for r in routed["review"]:

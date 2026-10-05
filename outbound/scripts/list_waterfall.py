@@ -45,11 +45,15 @@ Usage:
         [--skip-provider P --skip-reason TEXT] [--unskip-provider P] [--allow-draft]
         [--operator-approved-skip]   (required with every --skip-provider: the operator said in chat
                                       to go on without that provider; /tool-balance-guard)
+        [--reservoir PATH] [--reservoir-max-age-days N]   (Aaron flow, aaron-flow.md section 7: rung 0
+                                      of the email waterfall; optional, off by default)
   list_waterfall.py record --dir D --layer email|phone|people|verify [--provider P] --results F [--routing R]
         (the verify layer takes the verifier key from the routing file: --routing, or the
         file the last plan used, which plan writes to _waterfall/status.json)
-  list_waterfall.py status --dir D --contacts C --spec S --routing R
+  list_waterfall.py status --dir D --contacts C --spec S --routing R [--reservoir PATH]
   list_waterfall.py finalize --dir D --contacts C --spec S --routing R [--allow-pending]
+        [--reservoir PATH] [--reservoir-max-age-days N]   (finalize also writes every aiark/prospeo
+                                      candidate's verdict back to the reservoir when --reservoir is given)
 
 Exit codes: 0 ok; 2 input or contract error (nothing recorded); 3 finalize
 refused because waterfall work is still pending.
@@ -62,6 +66,7 @@ import json
 import re
 import sys
 from collections import Counter, defaultdict
+from datetime import date
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -83,6 +88,9 @@ from list_common import (  # noqa: E402
     truthy,
     write_csv,
 )
+# Aaron flow (see aaron-flow.md section 7). The lead reservoir is rung 0 of the email waterfall; reservoir.py
+# is a sibling, standard-library-only module in this same scripts folder (no PyYAML dependency).
+import reservoir  # noqa: E402
 
 
 TIERS = ["exact", "strong", "influencer", "adjacent", "weak"]
@@ -172,6 +180,8 @@ ACCOUNT_COLUMNS = ["company_domain", "required", "ready", "state", "persons_trie
 
 ACCOUNT_MEANING = {
     "ACCOUNT_SATISFIED": "has the full number of ready contacts; nobody else there is worked",
+    "ACCOUNT_ALL_WORKED": "no contacts cap (ruling no-contacts-cap): every eligible person was worked, "
+                          "and at least one is ready to send",
     "ACCOUNT_PARTIAL": "has some ready contacts but fewer than needed, and nobody eligible is left to try",
     "ACCOUNT_NO_READY_CONTACT": "every eligible person was tried and none ended with a sendable email",
     "ACCOUNT_IN_PROGRESS": "still has waterfall work pending",
@@ -208,6 +218,18 @@ def field_value(row: dict[str, Any], name: str) -> str:
 
 def missing_inputs(row: dict[str, Any], fields: Iterable[str]) -> list[str]:
     return [name for name in fields if not field_value(row, name)]
+
+
+def account_alt_domains(p: dict[str, Any]) -> frozenset[str]:
+    """Ruling every-email-verified (aaron-flow.md section 8): a brand domain the company's own record names.
+    Reads an optional `company_alt_domains` column (comma- or pipe-separated domains). No current FNNL contacts
+    file populates this column, so this degrades gracefully to an empty set until one does; it is a stated gap,
+    not a guess at a format no tool emits."""
+    raw = field_value(p["row"], "company_alt_domains")
+    if not raw:
+        return frozenset()
+    parts = re.split(r"[|,]", raw)
+    return frozenset(norm_domain(part) for part in parts if norm_domain(part))
 
 
 def parse_number(value: Any, default: float) -> float:
@@ -555,13 +577,35 @@ def next_rung(
 # The engine: every state, recomputed
 # ---------------------------------------------------------------------------
 class Engine:
-    def __init__(self, persons: list[dict[str, Any]], spec: dict[str, Any], routing: dict[str, Any], ledger: Ledger):
+    def __init__(self, persons: list[dict[str, Any]], spec: dict[str, Any], routing: dict[str, Any], ledger: Ledger,
+                 reservoir_path: Path | None = None, reservoir_max_age_days: int = reservoir.DEFAULT_MAX_AGE_DAYS):
         self.persons = persons
         self.spec = spec
         self.routing = routing
         self.ledger = ledger
+        # Aaron flow (see aaron-flow.md section 7). Loaded once; a missing path or missing file is a graceful
+        # no-op (empty store), so the waterfall runs exactly as before when no reservoir is given.
+        self.reservoir_path = reservoir_path
+        self.reservoir_max_age_days = reservoir_max_age_days
+        self.reservoir_store = reservoir.load_store(reservoir_path) if reservoir_path else {}
+        self.reservoir_today = date.today()
+        # Ruling every-email-verified (aaron-flow.md section 8). A work email on a domain that is not the
+        # person's own company domain ships only when that domain is proven same-company: a colleague at the
+        # same company already verified on it (computed below, once per account, from this run's own ledger).
+        # Keyed domain -> set of pids whose own candidate proved it, so a person never proves it for themselves.
+        self.proven_domains: dict[str, set[str]] = {}
         buyers = spec_buyers(spec)
-        self.required = max(1, int(parse_number(buyers.get("contacts_per_account"), 2)))
+        raw_cap = buyers.get("contacts_per_account")
+        cap_token = str(raw_cap).strip().lower() if raw_cap is not None else ""
+        if raw_cap is None or cap_token in {"all", "unlimited", ""}:
+            # Ruling no-contacts-cap (aaron-flow.md section 8, locked doctrine): every verified buyer at a fit
+            # company ships; "all" (or the field left out) is the default. A number here is a one-run operator
+            # override only (FNNL keeps this override; A-Sales removed the field entirely).
+            self.required: int | None = None
+            self.required_label = "all"
+        else:
+            self.required = max(1, int(parse_number(raw_cap, 1)))
+            self.required_label = str(self.required)
         self.work_required = as_bool(buyers.get("work_email_required"), True)
         self.policy = str(buyers.get("personal_email_policy") or "fail").strip().lower()
         self.phone_required = as_bool(buyers.get("phone_required"), False)
@@ -615,7 +659,16 @@ class Engine:
                 cand["verdict"] = "personal_rejected"  # rejected without a verifier call
                 return
         elif domain not in CONSUMER_DOMAINS and not same_org_domain(domain, p["company"]):
-            cand["kind"] = "mismatch"
+            provers = self.proven_domains.get(domain, set()) - {p["pid"]}
+            if provers or domain in account_alt_domains(p):
+                # Ruling every-email-verified (aaron-flow.md section 8): a colleague (a different person) at
+                # the same company already verified valid on this domain, or the company's own record names
+                # it as a brand domain. Either way it is proven same-company, not a wrong-company email. A
+                # person's own candidate never proves the domain for themselves (provers excludes p["pid"]).
+                cand["kind"] = "work"
+                cand["colleague_verified_domain"] = True
+            else:
+                cand["kind"] = "mismatch"
         verdict, line, needs, exhausted = self.verdict_for(cand["email"])
         cand.update(verdict=verdict, verdict_line=line, needs_verify=needs, transient_exhausted=exhausted)
 
@@ -637,6 +690,17 @@ class Engine:
             self.classify_candidate(p, cand)
             by_email[email] = cand
             cands.append(cand)
+
+        # Aaron flow (see aaron-flow.md sections 7-8). Rung 0: a reservoir match verified `valid` within the
+        # freshness window is tried before the email the row carries or any paid finder. MillionVerifier still
+        # verifies it fresh in this campaign's own ledger (the reservoir only ever saves a finder credit).
+        if self.reservoir_store:
+            rec, _why = reservoir.find_for_person(
+                self.reservoir_store, row.get("linkedin_url"), field_value(row, "email"), p["company"],
+                self.reservoir_max_age_days, self.reservoir_today,
+            )
+            if rec:
+                add(rec["email"], "reservoir")
 
         add(field_value(row, "email"), ROW_EXISTING)
         for line in attempts:
@@ -744,10 +808,27 @@ class Engine:
         for company in sorted(groups):
             everyone = groups[company]
             eligible = sorted((p for p in everyone if p["eligible"]), key=priority_key)
-            account = {"company": company, "persons": eligible, "all": everyone, "required": self.required}
+            account = {"company": company, "persons": eligible, "all": everyone, "required": self.required,
+                       "required_label": self.required_label}
             for position, p in enumerate(eligible, start=1):
                 p["priority_order"] = position
+            self.proven_domains = {}
+            for p in eligible:
                 p["ev"] = self.evaluate_email(p)
+            # Ruling every-email-verified (aaron-flow.md section 8), second pass: a colleague at this same
+            # company already verified valid on a domain that first looked like a mismatch proves that domain
+            # same-company, so any candidate there is promoted from mismatch to work and re-evaluated. Keyed by
+            # pid, not just by domain: a person's OWN valid-but-wrong-domain email never proves itself (that
+            # would promote any deliverable wrong-company address), it only proves the domain for a colleague.
+            mismatch_proof: dict[str, set[str]] = defaultdict(set)
+            for p in eligible:
+                for cand in p["ev"]["cands"]:
+                    if cand["kind"] == "mismatch" and cand["verdict"] == "valid":
+                        mismatch_proof[email_domain(cand["email"])].add(p["pid"])
+            if mismatch_proof:
+                self.proven_domains = dict(mismatch_proof)
+                for p in eligible:
+                    p["ev"] = self.evaluate_email(p)
             self._assign_roles(account)
             self.accounts.append(account)
 
@@ -758,7 +839,24 @@ class Engine:
             account.update(state="ACCOUNT_NO_ELIGIBLE_PERSON", ready=0, tried=0, promotions=0)
             return
         ready = [p for p in eligible if p["ev"]["state"] == "READY"]
-        if len(ready) >= required:
+        if required is None:
+            # Ruling no-contacts-cap (aaron-flow.md section 8, locked doctrine): every verified buyer at a fit
+            # company ships, so there is no per-account stop, no "ready_over_cap" and no "waiting" for a slot.
+            for p in eligible:
+                state = p["ev"]["state"]
+                if state == "READY":
+                    p["role"] = "ready"
+                elif state == "EXHAUSTED":
+                    p["role"] = "finished"
+                else:
+                    p["role"] = "active"
+            if any(p["role"] == "active" for p in eligible):
+                account["state"] = "ACCOUNT_IN_PROGRESS"
+            elif ready:
+                account["state"] = "ACCOUNT_ALL_WORKED"
+            else:
+                account["state"] = "ACCOUNT_NO_READY_CONTACT"
+        elif len(ready) >= required:
             wave = {p["pid"] for p in ready[:required]}
             for p in eligible:
                 state = p["ev"]["state"]
@@ -789,7 +887,10 @@ class Engine:
             else:
                 account["state"] = "ACCOUNT_NO_READY_CONTACT"
         for p in eligible:
-            if p["priority_order"] <= required:
+            if required is None:
+                p["wave_slot"] = "primary"
+                p["wave_slot_reason"] = "every eligible person at the account is worked (ruling no-contacts-cap)"
+            elif p["priority_order"] <= required:
                 p["wave_slot"] = "primary"
                 p["wave_slot_reason"] = f"within the top {required} by buyer priority"
             elif p["role"] in ("ready", "active", "finished"):
@@ -1276,7 +1377,7 @@ def cmd_plan(args: argparse.Namespace) -> int:
         out.extend(run_skip_lines(ledger, "people", layer_order(cfg)))
         status.update(companies=dict(states), pending=pending)
     else:
-        engine = Engine(persons, spec, routing, ledger)
+        engine = Engine(persons, spec, routing, ledger, args.reservoir, args.reservoir_max_age_days)
         eligible = engine.eligible_persons()
         account_states = Counter(account["state"] for account in engine.accounts)
         person_states = Counter(person_state(p) for p in eligible)
@@ -1285,7 +1386,7 @@ def cmd_plan(args: argparse.Namespace) -> int:
             out.append(f"email waterfall plan: {plural(len(engine.accounts), 'account')}, "
                        f"{plural(len(eligible), 'eligible person')} "
                        f"({sum(stats['ineligible'].values())} not eligible), "
-                       f"{engine.required} ready contacts needed per account "
+                       f"{engine.required_label} ready contacts needed per account "
                        f"(routing {routing.get('routing_version')}).")
             out.append(f"accounts: {counts_text(account_states)}")
             out.append(f"persons: {counts_text(person_states)}")
@@ -1550,7 +1651,8 @@ def load_state(args: argparse.Namespace, enforce_spec: bool) -> tuple[dict, dict
     routing = load_routing(args.routing)
     header, persons, stats = load_contacts(args.contacts)
     ledger = Ledger(read_jsonl(ledger_path(args.dir)))
-    engine = Engine(persons, spec, routing, ledger)
+    engine = Engine(persons, spec, routing, ledger,
+                    getattr(args, "reservoir", None), getattr(args, "reservoir_max_age_days", reservoir.DEFAULT_MAX_AGE_DAYS))
     return spec, routing, header, persons, stats, engine
 
 
@@ -1588,12 +1690,38 @@ def cmd_status(args: argparse.Namespace) -> int:
 # ---------------------------------------------------------------------------
 # finalize
 # ---------------------------------------------------------------------------
+def reservoir_writeback_candidates(engine: Engine) -> list[dict[str, Any]]:
+    """Aaron flow (see aaron-flow.md section 7). Every distinct candidate email an aiark or prospeo rung found
+    for a person, with a real MillionVerifier gate, written back so a later list never re-pays that finder for
+    the same person. row_existing and reservoir-sourced candidates are excluded by reservoir.ALLOWED_SOURCES
+    (they may be client-supplied or already came from the reservoir itself)."""
+    rows: list[dict[str, Any]] = []
+    for p in engine.eligible_persons():
+        row = p["row"]
+        for cand in p["ev"]["cands"]:
+            if cand["source"] not in reservoir.ALLOWED_SOURCES or cand["verdict"] not in GATES:
+                continue
+            rows.append({
+                "first_name": field_value(row, "first_name"),
+                "last_name": field_value(row, "last_name"),
+                "linkedin_url": field_value(row, "linkedin_url"),
+                "job_title": field_value(row, "job_title"),
+                "company_name": field_value(row, "company_name"),
+                "company_domain": p["company"],
+                "email": cand["email"],
+                "verdict": cand["verdict"],
+                "verified_at": verified_at(cand),
+                "source": cand["source"],
+            })
+    return rows
+
+
 def build_outputs(engine: Engine, header: list[str], phone_ran: bool) -> dict[str, list[dict[str, Any]]]:
     verified, holdback, review, stagger, attempts, accounts = [], [], [], [], [], []
     for account in engine.accounts:
         eligible = account["persons"]
         accounts.append({
-            "company_domain": account["company"], "required": engine.required, "ready": account["ready"],
+            "company_domain": account["company"], "required": engine.required_label, "ready": account["ready"],
             "state": account["state"], "persons_tried": account["tried"], "promotions": account["promotions"],
         })
         for p in eligible:
@@ -1702,7 +1830,7 @@ def build_report(engine: Engine, spec: dict[str, Any], routing: dict[str, Any], 
         f"- Eligible persons: {len(eligible)} across {plural(len(engine.accounts), 'account')}. "
         f"Not eligible: {sum(stats['ineligible'].values())}"
         + (f" ({counts_text(stats['ineligible'])})." if stats["ineligible"] else "."),
-        f"- Ready contacts needed per account: {engine.required}. Work email required: "
+        f"- Ready contacts needed per account: {engine.required_label}. Work email required: "
         f"{'yes' if engine.work_required else 'no'}. Personal email policy: {engine.policy}.",
         "- Most tools a person may use, by buyer tier: "
         + ", ".join(f"{tier} {engine.caps[tier]}" for tier in TIERS)
@@ -1724,8 +1852,8 @@ def build_report(engine: Engine, spec: dict[str, Any], routing: dict[str, Any], 
         "| Result | Accounts | What it means |",
         "|---|---:|---|",
     ]
-    for state in ("ACCOUNT_SATISFIED", "ACCOUNT_PARTIAL", "ACCOUNT_NO_READY_CONTACT", "ACCOUNT_IN_PROGRESS",
-                  "ACCOUNT_NO_ELIGIBLE_PERSON"):
+    for state in ("ACCOUNT_SATISFIED", "ACCOUNT_ALL_WORKED", "ACCOUNT_PARTIAL", "ACCOUNT_NO_READY_CONTACT",
+                  "ACCOUNT_IN_PROGRESS", "ACCOUNT_NO_ELIGIBLE_PERSON"):
         lines.append(f"| {state} | {account_states.get(state, 0)} | {ACCOUNT_MEANING[state]} |")
     pending_people = sum(1 for p in eligible if p["role"] == "active")
     lines += [
@@ -1754,8 +1882,12 @@ def build_report(engine: Engine, spec: dict[str, Any], routing: dict[str, Any], 
         "",
     ]
     promoted = [p for p in eligible if p["wave_slot"] == "promoted_fallback"]
-    lines.append(f"{plural(len(promoted), 'person')} outside an account's top {engine.required} were worked because "
-                 "someone above them was exhausted.")
+    if engine.required is None:
+        lines.append("No contacts cap (ruling no-contacts-cap): every eligible person at every account is worked, "
+                     "so there is no fallback promotion to report.")
+    else:
+        lines.append(f"{plural(len(promoted), 'person')} outside an account's top {engine.required_label} were "
+                     "worked because someone above them was exhausted.")
     for p in promoted[:25]:
         lines.append(f"- {p['pid']} ({p['company']}, {person_state(p)}): {p['wave_slot_reason']}")
     if len(promoted) > 25:
@@ -2025,6 +2157,14 @@ def cmd_finalize(args: argparse.Namespace) -> int:
                                            "leads.review.csv", "leads.stagger.csv"))
     if placed != len(eligible):
         raise WaterfallError(f"internal check failed: {placed} rows written for {len(eligible)} eligible persons")
+    reservoir_tally = None
+    if args.reservoir:
+        # Aaron flow (see aaron-flow.md section 7). Every distinct aiark/prospeo candidate this run verified
+        # goes back into the reservoir, so the next list for this or another client never re-pays a finder for
+        # the same person. Reuses the store Engine.__init__ already loaded, so this is the only read of it.
+        reservoir_rows = reservoir_writeback_candidates(engine)
+        reservoir_tally = reservoir.writeback_rows(reservoir_rows, engine.reservoir_store, engine.reservoir_today)
+        reservoir.save_store(args.reservoir, engine.reservoir_store)
     lines = []
     if str(spec.get("status") or "").lower() != "locked":
         lines.append(f"note: the targeting spec is status={spec.get('status')!r}, not locked.")
@@ -2032,6 +2172,10 @@ def cmd_finalize(args: argparse.Namespace) -> int:
         lines.append(f"finalized with {plural(len(pending), 'person')} still pending (--allow-pending); they are in "
                      "leads.stagger.csv.")
     lines += [f"{name}: {plural(count, 'row')}" for name, count in counts.items()]
+    if reservoir_tally is not None:
+        saved = sum(v for k, v in reservoir_tally.items() if k not in
+                    ("refused_source_not_an_fnnl_finder", "skipped_no_email", "skipped_no_verdict"))
+        lines.append(f"reservoir updated: {plural(saved, 'record')} written to {args.reservoir}.")
     lines.append("email-waterfall-report.md written. Next: /list-quality-scorecard.")
     print("\n".join(lines))
     return 0
@@ -2053,6 +2197,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         p.add_argument("--spec", required=True, type=Path, help="targeting-spec.yaml")
         p.add_argument("--routing", required=True, type=Path, help="provider-routing.yaml")
         p.add_argument("--allow-draft", action="store_true", help="accept a targeting spec that is not locked")
+        # Aaron flow (see aaron-flow.md section 7). Optional and off by default: no --reservoir means the
+        # waterfall behaves exactly as it did before the reservoir existed.
+        p.add_argument("--reservoir", type=Path, default=None,
+                       help="lead reservoir store (rung 0 of the email waterfall); omit to run without one")
+        p.add_argument("--reservoir-max-age-days", type=int, default=reservoir.DEFAULT_MAX_AGE_DAYS,
+                       help=f"reservoir freshness window in days (default {reservoir.DEFAULT_MAX_AGE_DAYS})")
 
     plan = sub.add_parser("plan", help="write the next queue per provider")
     state_args(plan)

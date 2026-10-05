@@ -16,6 +16,10 @@ Markdown file whose first ```yaml block holds `aaron_campaign_call`, or a bare .
 Exit code 0 means no FAIL (WARN lines are structure-only frames or items a person must confirm, such as
 a campaign being held until its asset exists). Exit code 1 means at least one email broke its frame.
 Exit code 2 means the record could not be found or read. Regex and PyYAML only; no network call.
+
+Aaron flow (see aaron-flow.md): F11 is live and checked on its exact fixed words, F11-v2 (a three-line
+frame) and FU5 are added, S6 ("quick idea") is added, and subject length is governed by SUBJECT_WORDS
+(2 or 3 words) instead of a word cap; the frame's own sentence count still governs email length.
 """
 import argparse
 import io
@@ -40,18 +44,27 @@ OFFER = {
     "F5": rf"^{FN},? if we .+ in the next .+ at absolutely no cost\.\s+So, we would .+\. All you have to do is .+\.$",
     "F6": rf"^{FN}, (I|we) just .+\. (Do you mind|Mind) if I send it to you\?$",
     "F6-v2": rf"^{FN}, just built an? .+ that .+\. Open to testing it for free\.$",
-    "F8": None, "F9": None, "F10": None, "F11": None,
+    # F11 is live (confirmed from the raw captions 2026-09-30), so it is checked on his exact fixed words.
+    "F11": rf"^{FN}, if I had a way to .+ to .+, and you only pay per .+, would that be worth a quick test\?$",
+    # F11-v2 is three lines (question, "Asking" line, "Thinking" line). The word after "Asking" is a caption
+    # guess, so it is not fixed. Its lines are joined before matching (MULTI_LINE below).
+    "F11-v2": (rf"^{FN}, do you currently offer an? .+\? Asking(?: \w+)? I found a way to .+\. "
+               r"Thinking I could .+ and we could sort out .+ if you're open to that kind of thing\.$"),
+    "F8": None, "F9": None, "F10": None,
 }
+# Frames written as several short lines. Their main paragraphs are joined into one line before the offer check,
+# so the blank-line layout Aaron uses and a single-newline layout are checked the same way.
+MULTI_LINE = {"F11-v2"}
 STRUCTURE_HINT = {
     "F8": r"(?i)would you be open to trying it out.*shoot you over the",
     "F9": r"Happy to share the thinking if you're open\.$",
     "F10": r"(?i)^we're not here to sell you anything",
-    "F11": r"(?i)if I had a way to .+ would that be worth a quick test\?",
 }
 PS = {
     "P1": r"^PS, thought it'd be relevant since .+\.$",
     "P2": r"^PS, .+ takes you .+ to .+\.$",
-    "P3": r"^PS,? (tested this for .+ recently\. .+|.+ went from .+ to .+ using this exact process\.)$",
+    "P3": (r"^PS,? (tested this for .+ recently\. .+|.+ went from .+ to .+ using this exact process\."
+           r"|we've actually just run this exact same process for .+ who ended up getting .+ in .+\.)$"),
     "P3c": r"^PS, .+ saw an? \d[\d,.]*% lift in .+\.$",
     "P4": r"^PS, obviously this is free, no call required\. I'll just send it over to you and then you can decide if it's worth .+\.$",
     "P5": r"^PS, we're doing a small batch of complimentary .+\.$",
@@ -61,6 +74,9 @@ FOLLOW = {
     "FU2": r"^Should I send you a two-minute .+ showing you exactly how .+\?$",
     "FU3": None,
     "FU4": None,
+    # FU5 is live (Sep 21, raw captions): his "if it's easier" video Email 2. "if it's easier" offers an easier
+    # route to the same thing and does not name the non-reply, so it passes the standalone rule.
+    "FU5": rf"^{FN}, (?i:if it's easier, I can send over a quick video elaborating on how we .+\.)$",
 }
 FU3_WORDS = r"FYI, this isn't|this doesn't take a lot of time"
 SUBJECT = {
@@ -69,7 +85,10 @@ SUBJECT = {
     "S3": r"^your (recent|new) [a-z0-9 ]+$",
     "S4": r"^[a-z0-9 ]+ problem$",
     "S5": r"^your [a-z0-9 ]+$",
+    "S6": r"^quick idea$",
 }
+# Aaron flow (aaron-flow.md section 7): two or three lowercase words, one subject per campaign.
+SUBJECT_WORDS = (2, 3)
 DR = {
     "DR": rf"^Great {FN}, here's a link to .+\.\s*\[link\]\s*Curious to get your take on it\.$",
     "DR-input": rf"^Great {FN}, here's a link to .+\.\s*\[link\]\s*.+\.$",
@@ -133,6 +152,8 @@ def check_email(e, where, control_line=None, held=None):
             rec("WARN", where, "F7 has no verbatim source: structure checked, the pain line's cluster is confirmed by a person")
         base = two
     else:
+        if fid in MULTI_LINE and main:
+            main = [" ".join(main)]
         if len(main) != 1:
             rec("FAIL", where, f"{fid} is one offer paragraph, found {len(main)}")
         else:
@@ -192,7 +213,13 @@ def norm(line):
 def cta(line):
     line = norm(line)
     s = re.split(r"(?<=[.?!])\s+", line.strip())
-    return s[-1] if s else ""
+    if not s:
+        return ""
+    # A one-sentence frame (F11, F4) is its whole body, so its slot fills differ between arms.
+    # Only the closing clause after the last comma is the CTA there. Aaron flow (see aaron-flow.md).
+    if len(s) == 1 and "," in s[0]:
+        return s[0].rsplit(",", 1)[1].strip()
+    return s[-1]
 
 
 def load_record(path):
@@ -258,8 +285,10 @@ def main(argv=None):
         held = bool(c.get("hold")) or bool(re.search(r"\bHOLD\b", str(c.get("why", ""))))
         sf, subj = seq.get("subject_frame"), str(seq.get("subject") or "")
         if sf not in SUBJECT:
-            rec("FAIL", f"{slug} subject", f"subject_frame {sf!r} is not S1 to S5")
-        elif not re.match(SUBJECT[sf], subj) or subj != subj.lower() or not 2 <= len(subj.split()) <= 4:
+            rec("FAIL", f"{slug} subject", f"subject_frame {sf!r} is not S1 to S6")
+        elif not SUBJECT_WORDS[0] <= len(subj.split()) <= SUBJECT_WORDS[1]:
+            rec("FAIL", f"{slug} subject", f"{subj!r} is {len(subj.split())} words; the Aaron flow allows 2 or 3")
+        elif not re.match(SUBJECT[sf], subj) or subj != subj.lower():
             rec("FAIL", f"{slug} subject", f"{subj!r} does not keep {sf}")
         else:
             rec("PASS", f"{slug} subject", sf)
@@ -267,10 +296,15 @@ def main(argv=None):
         control = next((split(v.get("body") or "")[0][0] for v in variants
                         if v.get("frame") != "F7" and split(v.get("body") or "")[0]), None)
         ctas = set()
+        # T5 (his own test, Sep 21): an F11-v2 arm run against an F11 arm keeps its soft partnership close,
+        # so its CTA is left out of the shared-CTA count. Only when the campaign also has an F11 arm.
+        has_f11 = any(v.get("frame") == "F11" for v in variants)
         for v in variants:
             n_email += 1
             check_email(v, f"{slug} E1-{v.get('label')}", control, held)
             m, _ = split(v.get("body", ""))
+            if v.get("frame") == "F11-v2" and has_f11:
+                continue
             if m:
                 last = cta(m[-1])
                 if last.endswith("?") or re.search(r"(?i)open to|let me know|happy to share", last):
