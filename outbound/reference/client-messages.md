@@ -4,7 +4,7 @@ The one home for how a client's asks are written, merged and filed (operator dec
 
 `profiles/<slug>/client-asks.md` holds **at most one unsent message** to the client: one greeting, one numbered list, one sign-off, one `Sent:` line. The operator sends it, or the teammate the operator names. **Claude never sends it:** it never emails it, never posts it to Slack or any other channel, and never shares a linked sheet or doc with the client. It drafts the file and stops.
 
-**When it is written.** The message is drafted at checkpoint 1 and updated at checkpoints 3 and 4 (`/cold-email-kickoff`, "Client asks never hold the flow"; `phase-protocol.md`). Any skill with a client ask in between (for example `/social-proof-bank`'s proof request, or `/proof-asset-request`) merges into the same message. Client asks never hold the flow: only the one thing that cannot happen without the answer waits, as each class below says. The message asks only what blocks a launch (the ask policy, `phase-protocol.md` section 3; "Writing the message" below), and the operator's pasted answers are filed as "Filing the answers the operator pastes back" says.
+**When it is written.** The message is drafted in Phase 1, shown at checkpoint A and updated through checkpoint B (Aaron flow, see `aaron-flow.md`; `/cold-email-kickoff`, "Client asks never hold the flow"; `phase-protocol.md`). Any skill with a client ask in between (for example `/social-proof-bank`'s proof request, or `/proof-asset-request`) merges into the same message. Client asks never hold the flow: only the one thing that cannot happen without the answer waits, as each class below says. The message asks only what blocks a launch (the ask policy, `phase-protocol.md` section 3; "Writing the message" below), and the operator's pasted answers are filed as "Filing the answers the operator pastes back" says.
 
 ## Layout (in this order)
 
@@ -61,7 +61,7 @@ Ask a question only when all three hold:
 
 1. **It blocks a launch.** A specific campaign or offer cannot be started without the answer (`BLOCKS-UPLOAD` or `BLOCKS-START`, both of which hold Start only). Name that campaign or offer to yourself before writing the item.
 2. **Only the reader can answer it.**
-3. **It is not already answered.** Look first, in this order: `rulings.md` and `standing-rulings.md`, the profile, the handoffs and activity log, `client-intel.md`, the context sweep and Slack context, then a targeted read-only search (`phase-protocol.md` section 3, rule 1).
+3. **It is not already answered.** Look first, in this order: this file's own `## Sent` entries and `#### Answers` blocks in `client-asks.md`, `rulings.md` and `standing-rulings.md`, the profile, the handoffs and activity log, `client-intel.md`, the context sweep and Slack context, then a targeted read-only search (`phase-protocol.md` section 3, rule 1). Aaron flow (see aaron-flow.md), section 11: an item already answered anywhere in that chain is never re-asked.
 
 Drop the item, with one activity-log line giving the reason, when any of these is true:
 
@@ -80,13 +80,14 @@ A good message usually has one to three questions. If more pass the test, keep t
 - **Name nothing internal.** No file, skill, script, phase, gate, checkpoint, cluster or evidence ID. No internal terms (TAM, arm, rail, wave, Aaron, the locked stack), and no tool the reader does not use.
 - **Put the facts in the message:** the prices, the names, the numbers, the offer in plain words. The reader must be able to answer without opening anything.
 - **Refer only to things the reader owns or knows:** their price sheet, their doc, their people.
+- **Readable by a founder on either side** (Aaron flow (see aaron-flow.md), section 11): the first time a jargon term, a regulation, or an industry acronym shows up, gloss it in plain English in the same sentence or the next. Each offer states, in plain words, what the prospect sends, what they get back, and who does the work (us or them).
 
 ### 4. The shape, in this order
 
 1. **Greeting and purpose (one or two lines).** What we are doing, and that there are N questions before launch.
 2. **What we looked at (one or two lines).** The real scale: sends, replies, sources.
 3. **What we found (three to five bullets).** Only the findings the questions depend on, with numbers from saved files, rounded honestly ("about").
-4. **What we decided.** The offers in plain words, who we target and who we do not, and what changes. When an offer has a sample, promise a real example before anything goes out.
+4. **What we decided.** The offers in plain words, who we target and who we do not, and what changes. When an offer has a sample, promise a real example before anything goes out. When this replaces or drops an offer the client already saw, say so in one line: what it replaces and why.
 5. **Already done (optional, one or two lines).** Only what touches the reader or their systems, such as a blocklist write in a shared workspace.
 6. **The questions, numbered.** Each one has:
    - a bold question;
@@ -94,9 +95,30 @@ A good message usually has one to three questions. If more pass the test, keep t
    - what happens with a partial answer ("if some are off-limits, that offer uses the rest");
    - the easiest valid answer, where one exists ("'None' is a fine answer").
 7. **Priority line.** Which question matters most and what it holds, for example: "If you only have a minute, question 1 matters most. Without it, that offer does not start."
-8. **Sign-off** in the operator's name.
+8. **Sign-off**, in the name of whoever sends it, unless a client-specific ruling names someone else to sign (file that choice in `rulings.md` once, read it from there after).
 
-Keep sections 2 to 5 under about 250 words. Write in the operator's voice: casual, with contractions and plain words, and no spaced em dashes.
+**Skeleton (generic, fill in the brackets):**
+
+```text
+Hi <name>, quick update on <client>'s campaign before we launch / scale.
+
+We looked at <N> sends across <N> sources this week.
+
+What we found:
+- <finding, with a rounded number from a saved file>
+- <finding>
+
+What we decided: <offer(s) in plain words, who it targets, what changes, what it replaces if anything>.
+
+A couple of things before we go further:
+1. **<question>?** <why, tied to a finding above>. If <partial case>, <what happens>. ("None" is a fine answer, where true.)
+
+If you only have a minute, question <n> matters most: without it, <what holds>.
+
+<sign-off>
+```
+
+Keep sections 2 to 5 under about 250 words, up to about 450 fine when plain-English glosses push it over. Write in the operator's voice: casual, with contractions and plain words, and no spaced em dashes.
 
 ### 5. Hand it to the operator
 
@@ -104,7 +126,9 @@ In chat, show the message, then a short "Before you send" list:
 
 - any question the operator could delete because our own side may own it, and what else to delete with it;
 - any figure that is dated rather than live, with its source and date;
-- what was dropped and why, one line each.
+- any send/reply/interested count re-read live from the sending tool (a read-only call) just before handover, rather than trusted from an older saved file;
+- what was dropped and why, one line each;
+- what an earlier note already covered or this one replaces, one line.
 
 The `What each unblocks:` list and the item classes stay in the file, never in the message.
 

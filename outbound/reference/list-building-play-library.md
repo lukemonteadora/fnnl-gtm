@@ -115,7 +115,7 @@ Three rules that decide the verdict:
 
 1. **The ≥500-company floor is a hard count, not a judgment.** It counts **companies**, not verified contacts. A slice with 800 companies qualifies even if it yields 390 verified contacts. A slice with 300 companies does not ship regardless of contact count.
 2. **The message-differential test.** Would this group get a materially different pain, a different proof, and a different vocabulary? If the honest answer is no, it is a tag, not a campaign. This is the single most common mistake: building ten lists that all get the same email.
-3. **Contact-level signals outrank company-level signals** at equal viability (`/campaign-strategy`, HARD RULE). A why-now about the *person* beats a state of the *company*. The strongest slices stack one of each.
+3. **Contact-level signals outrank company-level signals** at equal viability (`/campaign-strategy`, HARD RULE). A why-now about the *person* beats a state of the *company*. The strongest slices stack one of each. The concrete example: `contact_new_in_seat` (a decision-maker under 12 months in seat, from AI Ark's role-tenure filter on the people search, Aaron flow, see aaron-flow.md section 6) outranks a company-level why-now like hiring or funding when both are available for the same slice.
 
 ### The grouping axes, ranked by how much they change the message
 

@@ -23,6 +23,8 @@ Split into three tables for width. Rows are always the six tools. Clay and PlusV
 
 ### Table 1. Discovery
 
+**Aaron flow (see `aaron-flow.md` section 6; people-discovery ruling, `standing-rulings.md` 2026-10-05).** This table records technical capability per tool, not the routing decision. People search runs in AI Ark only, through REST `outbound/scripts/aiark_people.mjs` (the MCP `people_search` tool cannot send keyword excludes, so the refined, exclusion-bearing pull always goes through REST), never the bulk People Export route or the MCP `email_finder` tool. GetLeads' and Prospeo's own people-search surfaces below are real capabilities but are **not people-discovery rungs**: this file does not route traffic to them for that purpose, whatever the Y/PARTIAL below says they can technically do.
+
 | Tool | Company discovery | Lookalike discovery | People discovery (no email reveal) | Exact-title filtering | Tenure / new-in-seat | Company matching key |
 |---|---|---|---|---|---|---|
 | **AI Ark** | **Y, the source of truth.** `company_search` over 70M+ companies with firmographic, technographic, funding, headcount-growth and geo filters. Enums must be resolved first (`industry_search`, `technology_search`, `location_search` or the `ark://reference/*` resources); guessed values silently return wrong results. Page size 25 by default, 100 max, 0-based, with `totalElements`. [C-disc] | UNVERIFIED | **Y.** `people_search`, 400M to 500M profiles (vendor claim, unaudited), returns title, seniority, function and company linkage without revealing email. [C-cdisc] | UNVERIFIED | UNVERIFIED | UNVERIFIED (company linkage exists; which key it filters on is not recorded) |

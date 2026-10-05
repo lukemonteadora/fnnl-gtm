@@ -85,22 +85,20 @@ Never assume a provider applied headcount, geography, industry, title, seniority
 
 Each field has its own waterfall, each waterfall has its own success test, and **a failure advances only the layer that failed.** A failed email is not a failed person. A failed people search at one provider is not proof the account has no buyer.
 
-### Waterfall A: find the right person (per account)
+### Waterfall A: people discovery (Aaron flow, see aaron-flow.md section 6; ruling `people-discovery`)
 
-Order: `provider-routing.yaml` `layers.people_discovery.order`. For each account:
+**The per-account, next-provider model below is retired.** People discovery now runs as one AI Ark advanced people search per vertical, carrying the account filters and the full title stack together, refined on a 200-row sample before it runs at scale. The full procedure (the loop, the request body, the standing excludes, the at-scale pull) is `outbound/reference/ai-ark-people-discovery.md`; it is not restated here. GetLeads and Prospeo are not people-discovery rungs: GetLeads `count_contacts` stays the free size cross-check, and the company widening top-up stays for a thin universe.
 
-- Run the next provider for accounts still short of `buyers.min_target_persons_per_account` people whose titles **pass** title classification.
-- **Success is TARGET_PERSON_FOUND, not PERSON_FOUND.** A provider returning a Head of Engineering when the target is Revenue Operations found a person but not a target person, so the next provider runs for that account.
-- Before accepting a genuine zero, retry once with the widened net `/tam-build` already defines.
+- **Success is still TARGET_PERSON_FOUND, not PERSON_FOUND.** The search's title stack and seniority filters narrow for this up front, but every returned person still goes through title classification: a Head of Engineering returned for a Revenue Operations search is a person found, not a target person.
+- Before accepting a genuine zero for an account, the widened net is a broader vertical search (more title variants, a loosened seniority band, per the sample loop's own refine steps in `ai-ark-people-discovery.md`), never a second tool.
 - Never invent a contact, never loosen the targeting automatically, never discover people from search-engine results.
-- Run each provider at the concurrency the routing file allows. A provider not yet proven clean under concurrent calls runs serially (`/tam-build` Layer 1d), because some single-account APIs silently return another domain's rows when called in parallel.
-- **Stop:** the account holds the required target persons, or every provider has been tried (then PERSON_NOT_FOUND, PERSON_FOUND_NO_TARGET, or TARGET_PARTIAL, recorded per account).
+- **Stop:** the account's companies hold the required target persons after the AI Ark pull and title classification, or the refined search still leaves it short after validation (then PERSON_NOT_FOUND, PERSON_FOUND_NO_TARGET, or TARGET_PARTIAL, recorded per account).
 
-Mechanics: `list_waterfall.py plan --layer people`, run the queue, merge the returned rows into `contacts.csv`, run `title_classify.py`, `record`, plan again.
+Mechanics: `aiark_people.mjs sample|plan|pull` (per vertical), roll the returned people up to companies, merge into `contacts.csv`, run `title_classify.py`, `record`, refine and re-pull per the sample loop.
 
 ### Waterfall B: make the SAME person campaign-ready (email)
 
-Order: `layers.email.order`, which mirrors the contract's recorded order: the contact enrichment tool's first rung, then its gap-fill rung. For each active person:
+**Rung 0 is the reservoir** (`reservoir.py lookup`, a MillionVerifier `ok` within the last 90 days; Aaron flow, see aaron-flow.md section 7; ruling `every-email-verified`), checked before any row's own carried email or a fresh finder call. Order after that: `layers.email.order`, which mirrors the contract's recorded order: the contact enrichment tool's first rung, then its gap-fill rung. For each active person:
 
 - Rows that already carry an email go to verification first; no finder runs on them.
 - Otherwise the next rung runs. **Every candidate email is verified by the email verifier as soon as it is found**, before the next rung, so the waterfall stops the moment a usable email exists. Never collect candidates from every rung and verify at the end.
@@ -119,11 +117,13 @@ When a person's waterfall is exhausted without a `valid`, the planner promotes t
 
 **The contact file handed to the email step keeps every eligible person at each account**, with rank 3 and beyond marked (`same_wave_eligible = false`) rather than cut. A file trimmed to the same-wave pair first leaves the planner nobody to promote, so person fallback would pass every test and never fire on a real build.
 
-### Waterfall D: contacts per account
+### Waterfall D: every verified contact ships, ordered round-robin by company
 
-`buyers.contacts_per_account` (default 2, the same number as the scoring rubric's `same_wave_contact_cap`) sets how many campaign-ready contacts an account needs. The planner keeps that many people active at once. **Stop:** the account holds that many `valid` contacts. Everyone else at the account is not needed this wave and goes to the stagger file, never deleted. Five enriched people when two are required is waste. The cap is a send-simultaneity guard at one company, never a tier hold: every eligible account is in the first wave.
+**No per-account contact cap** (Aaron flow, see aaron-flow.md section 13; ruling `no-contacts-cap`; replaces the former `buyers.contacts_per_account` default-2 stop and its `same_wave_contact_cap` mirror). Every person who clears Waterfall B's `valid` bar at a fit company goes into the campaign; nobody is held back as "not needed this wave."
 
-**The planner owns active-wave membership.** A promoted person is written with `wave_slot = promoted_fallback` and a `wave_slot_reason` naming who was exhausted above them. The waterfall's leak guard and the scorecard's stagger step accept `promoted_fallback` rows up to the per-account cap; they do not reset them to the stagger queue because the person's original `contact_rank_in_company` was 3 or more.
+**Stop:** there is no per-account stop here. Waterfall D now only orders the send file: `list_qa.py` writes it round-robin by company inside each priority tier (the spec's buyer-priority order), so one company is never all sent on the same day.
+
+**The planner still owns active-wave membership for priority, not for count.** A promoted person keeps `wave_slot = promoted_fallback` with a `wave_slot_reason` naming who was exhausted above them; that field now tracks priority-fallback order only, since there is no per-account cap left to enforce.
 
 ### Waterfall E: phone (only when needed)
 
@@ -136,7 +136,7 @@ Runs only when the spec sets `buyers.phone_required: true` (a calling campaign, 
 | A people | the account holds `min_target_persons_per_account` title-fit people, or every people provider was tried |
 | B email | a verifier `valid` on the company domain, a verified catch-all (to the holdback), every rung used, or the tier's depth cap reached |
 | C fallback | the account is satisfied, or no approved person is left |
-| D per account | `contacts_per_account` campaign-ready contacts |
+| D ordering | no cap (Aaron flow, see aaron-flow.md section 13): every verified contact ships, round-robin by company inside each priority tier |
 | E phone | first phone found, or every phone rung tried |
 | Account QA | ICP fail confirmed, or the account passes |
 
@@ -209,7 +209,7 @@ Layers are `people`, `email`, `verify`, `phone`, plus control lines that skip or
 - the spec's contact exclusions;
 - the leads already active on the sending platform (`--active-leads`, an export of the client's leads from the platform locked in `run_state.sending_platform`), which catches cross-campaign duplicates. That export's column names are unverified until the platform is live, so check the columns the script read against the export before trusting a zero-duplicate result. Before the platform holds any lead, the flag is simply omitted.
 
-**Dedupe** at contact level (same email, same LinkedIn), person level (same first name + last name + company), and account density (more than `max_contacts_per_account` goes to stagger, not deleted).
+**Dedupe** at contact level (same email, same LinkedIn) and person level (same first name + last name + company). No per-account density cap (Aaron flow, see aaron-flow.md section 13; ruling `no-contacts-cap`): every deduped contact at a fit company ships; `list_qa.py` orders the file round-robin by company inside each priority tier instead of staggering an account's contacts out of the wave.
 
 **The 6-dimension gate.** Every row is judged on six dimensions. Critical failures are never hidden inside one blended score.
 

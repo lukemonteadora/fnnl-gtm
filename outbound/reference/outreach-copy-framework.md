@@ -40,6 +40,8 @@ The offer comes before any of this. If the offer is weak, the copy cannot rescue
 
 **B1. Default anatomy: Aaron's measured winner** (the 1.5M-email study, S02 2026-05-11, doctrine §9).
 
+> **Aaron flow (see `aaron-flow.md` section 9).** The word counts, sentence counts and subject shape below govern house-flow copy. Aaron-lane copy, recorded in `/campaign-copywriting` recorder mode, has no word cap: the named frame's own sentence count in `aaron-copy-frames.md` governs instead, and the subject is two or three lowercase words built on a subject frame (S1 to S6), one per campaign, never A/B tested. Every other rail below (no greeting, offer-first, one primary ask, the rejection bank) still applies.
+
 - **Subject:** 2 to 4 words, all lowercase, 0 to 2 variables, curiosity plus relevance. Never deceptive: no "FW:" or fake thread, and no emergency, invoice or account-fault framing (doctrine §9, examples §3).
 - **Body:** 25 to 35 words, 2 to 3 sentences, one to two lines, plus an optional PS that is excluded from the count because it stays short and does one job (operator-approved Aaron alignment, 2026-09-21). **No greeting** (doctrine §9: *"you don't even use hey, hi, hello, greetings, or anything."*): "Hey", "Hi" and "Hello" fail, and a bare first name is not a greeting.
 - **Opens straight on the offer:** *"no pain, no observation, no preamble"* (doctrine §9, §13).

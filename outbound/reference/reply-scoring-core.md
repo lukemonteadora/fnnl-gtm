@@ -1,6 +1,6 @@
 # Reply Scoring Core (shared by the reply-scoring skill for whichever sending platform is locked)
 
-Canonical, platform-agnostic core for reply scoring: the classification schema, the classification prompt, the reply-handling router, the suppression write-back, the shared `meeting_book_rate` definition, the speed-to-lead chain, and the unanswered-positives list with its response-latency audit. A per-platform reply-scoring skill owns **fetch mechanics and output formatting**; this file owns the parts that must stay **identical across platforms** so they never drift. Edit shared logic here, not in two places.
+Canonical, platform-agnostic core for reply scoring: the classification schema, the classification prompt, the reply-handling router, the suppression write-back, the shared `meeting_book_rate` definition, the shared complaint-proxy definition, the speed-to-lead chain, and the unanswered-positives list with its response-latency audit. A per-platform reply-scoring skill owns **fetch mechanics and output formatting**; this file owns the parts that must stay **identical across platforms** so they never drift. Edit shared logic here, not in two places.
 
 Route to the reply-scoring skill for the platform locked in `run_state.sending_platform`, if `/stack-setup` activated a pack that provides one (the Smartlead and EmailBison packs ship `/positive-reply-scoring` and `/emailbison-positive-reply-scoring`). If no pack is active, pull the replies from that platform's native surface (its API, its export, or the inbox itself) and apply everything below unchanged: the schema, prompt, router, and write-back are the same work regardless of where the replies came from.
 
@@ -18,8 +18,18 @@ meeting_book_rate = meetings booked / (positive_interested + positive_soft + pos
 
 - **Numerator: where the bookings come from.** Count them from the client's booking calendar or CRM when one is readable, otherwise from the operator's reported count, and say in the report which of the two the number came from. At the time of writing (2026-09-23) the stack contract's `crm` slot is not chosen and no calendar tool is recorded, so the operator's count is the likely source until one is. Never count bookings from reply threads alone: a meeting booked on the 5-minute call or through the qualification form leaves no trace in the email thread. If neither source exists, report the rate as "not measured" and say why.
 - **Denominator:** the same three-class positive bucket as `positive_reply_rate`. Aaron's own denominator is his "interested responses", which he does not define, so using the whole positive bucket is an assumption, stated here so nobody reads it as his definition.
-- **Benchmark:** Aaron self-reports about 25% (22 meetings from 83 interested responses), about 20% by the end of that week, and aims for 30% (Sep 21). All of his numbers are self-reported.
-- **What it answers:** how well the reply machine (the reply, the call, the qualification step, the subsequence, the pre-call confirmation page) turns positives into meetings. Report it per offer arm too, but it never picks an arm: time-agreed replies per 1,000 first touches still does, because it measures demand per contact sent, not reply handling. When positives are healthy and `meeting_book_rate` sits well under Aaron's ~25%, fix the reply machine through `/lifecycle-copy` and the speed-to-lead chain below before blaming the offer.
+- **Reference, not a benchmark** (Aaron flow (see aaron-flow.md), section 11). Aaron self-reports about 20-25% (22 meetings from 83 interested responses, about 20% by the end of that week), and aims for 30% (Sep 21). All of his numbers are self-reported, from a different client and reply machine, so treat them as a reference point to sanity-check against, never as a target a client is judged against. Report `meeting_book_rate` on its own.
+- **What it answers:** how well the reply machine (the reply, the call, the qualification step, the subsequence, the pre-call confirmation page) turns positives into meetings. Report it per offer arm too, but it never picks an arm: time-agreed replies per 1,000 first touches still does, because it measures demand per contact sent, not reply handling. When positives are healthy and `meeting_book_rate` sits well under its own trend, fix the reply machine through `/lifecycle-copy` and the speed-to-lead chain below before blaming the offer.
+
+## Complaint proxy: hostile replies per 1,000 sends (shared definition)
+
+(Aaron flow (see aaron-flow.md), section 10.) This is the one definition every skill and report uses for the complaint proxy; the others point here.
+
+```text
+hostile_per_1000 = (negative_hostile replies / total_sent) * 1,000
+```
+
+**Why a proxy:** Microsoft 365 senders give no Postmaster complaint data, so there is no direct spam-complaint number to read. Hostile replies are the closest observable stand-in: a visible, angry reaction correlates with the invisible "report spam" clicks that leave no trace. **Denominator:** `total_sent`, the same send count `positive_reply_rate` and `bounce_rate` use. Report it weekly, beside bounce, in `/email-deliverability-audit` and `/cold-email-weekly-rhythm`'s Monday audit and Slack digest. **There is no house threshold yet:** report the number and its trend, not a pass/fail line, until enough runs establish one.
 
 ## Classification schema
 
@@ -33,7 +43,7 @@ Every reply is classified into exactly one bucket. Classify only the **first** r
 | `neutral_question` | Clarifying question, no commitment yet | no |
 | `negative_notnow` | "Not right now, maybe later" | no |
 | `negative_notfit` | "Not a fit" / "we don't need this" | no |
-| `negative_hostile` | Angry reply, complaint, report, threat | no (track separately as a risk signal) |
+| `negative_hostile` | Angry reply, complaint, report, threat | no (track separately as a risk signal; counted in the complaint proxy above) |
 | `unsubscribe` | Explicit opt-out | no |
 | `ooo` | Out-of-office auto-reply | no (exclude from denominators) |
 | `bounce` | Technical bounce / delivery failure | no (exclude from denominators) |

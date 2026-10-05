@@ -61,6 +61,15 @@ account:
     existing_customer_domains: []   # or point to a file below
     existing_customers_file: null   # profiles/<slug>/existing-customers.csv (column company_domain)
     internal_domains: []   # the agency's and client's own domains; emails on these are always suppressed
+  # Aaron flow (see aaron-flow.md). Ruling discovery-exclusions: every AI Ark discovery
+  # search carries these from the first call, so wrong companies never cost a credit.
+  # Filled from the 200-row sample's keyword refinement (ai-ark-people-discovery.md) and
+  # from icp.supplier_exclusions / icp.competitors. Per client: never copied between clients.
+  discovery_exclusions:
+    keywords_exclude: []   # WORD-mode phrases that mark a wrong company (each kept only after the sample audit)
+    keywords_include: []   # phrases the good companies share (added to the include keywords)
+    industries_exclude: [] # exact AI Ark catalog values, resolved with the free lookup first
+    domains_exclude: []    # supplier, competitor and current-client domains not already listed above
   timing:
     required: []           # empty = no timing gate (the default). Only a campaign that is literally built on a signal sets this.
     preferred: []          # signals that raise priority, never gate
@@ -69,16 +78,20 @@ account:
 # BUYER FIT (person level)
 # ---------------------------------------------------------------------------
 buyers:
-  # How many campaign-ready contacts each account needs in the active wave. The
-  # waterfall stops working an account as soon as it has this many; it promotes the
-  # next approved person only when a higher-priority person's contact waterfall is
-  # exhausted. Mirrors lead-scoring's same_wave_contact_cap (default 2).
-  contacts_per_account: 2
-  # Density ceiling for the active wave. Rows above it stay in the stagger queue, never deleted.
-  max_contacts_per_account: 2
+  # Aaron flow (see aaron-flow.md). Ruling list-mode: one list process, one dial.
+  # volume (default) or yield (fewer than 2,000 companies pass company fit; log the reason).
+  list_mode: volume
+  # Ruling no-contacts-cap: no per-company contact cap. "all" means every verified buyer
+  # at a fit company goes into the campaign, written round-robin by company inside each
+  # priority tier (list_qa.py) so one company is not all sent the same day. A number
+  # here is an operator override for one run only, logged with the reason.
+  contacts_per_account: all
+  # No density ceiling under no-contacts-cap. null = no cap. A number is an operator override.
+  max_contacts_per_account: null
   # People discovery: an account counts as "target person found" once this many
   # people pass title fit. Below it, the next people-discovery provider runs for
-  # that account only. Usually equal to contacts_per_account.
+  # that account only. Under the Aaron flow this applies only to the companies the
+  # GetLeads top-up adds (their people still come from AI Ark by company domain).
   min_target_persons_per_account: 2
 
   work_email_required: true

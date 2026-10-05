@@ -35,9 +35,18 @@
 # off stops the run and asks the operator (/tool-balance-guard; overrides the
 # 2026-06-19 "finder down, enricher becomes finder" exception). Neither order
 # is benchmarked.
+#
+# 2026-10-05 (operator, the Aaron-flow port, outbound/reference/aaron-flow.md):
+# advanced people search runs in AI ARK ONLY (layers.people_discovery below).
+# One people search per vertical carries the company filters and the title
+# stack, is refined on a 200-row sample with include and exclude keywords, and
+# runs at scale through REST (scripts/aiark_people.mjs). GetLeads and Prospeo
+# are no longer people-discovery rungs. The reservoir (profiles/_reservoir/,
+# scripts/reservoir.py) is rung 0 of the email waterfall; the contract's email
+# order is unchanged. Not benchmarked.
 
 schema_version: 1
-routing_version: 2026-09-28-filter-first-balance-guard
+routing_version: 2026-10-05-aiark-people-first
 status: contract_order_not_benchmarked
 
 providers:
@@ -45,11 +54,12 @@ providers:
     name: AI Ark
     access: mcp_or_rest        # hosted MCP + REST, AI_ARK_API_KEY (stack contract approved_stack)
     concurrency: untested      # unverified: the contract records no concurrency or rate limit
-    cost_note: "AI Ark pricing is vendor-confirmed per the contract (credits). Email finding MUST use /v1/people/email-finder, which charges 0 credits when no valid email is found. NEVER use the bulk /v1/people/export path: it bills 0.5 credits PER PROFILE EVEN ON A MISS (contact_enrichment.notes)"
+    cost_note: "AI Ark pricing is vendor-confirmed per the contract (credits). Email finding uses a route that charges 0 credits when no email is found: /v1/people/export/single per shipped person (unverified live, see endpoints.email_finder) or /v1/people/email-finder on a search trackId. NEVER use the bulk /v1/people/export path: it bills 0.5 credits PER PROFILE EVEN ON A MISS (contact_enrichment.notes)"
     endpoints:
       company_discovery: "company_search (primary call). Resolve enums first with industry_search, technology_search and location_search; guessed values silently return wrong results. Page size default 25, max 100, 0-based pages; surface totalElements"
-      people_discovery: "people_search: titles, seniority, function and company linkage WITHOUT revealing email (qualify before paying for reveal)"
-      email_finder: "/v1/people/email-finder (0 credits on a miss)"
+      people_discovery: "REST POST /v1/people through scripts/aiark_people.mjs (0.5 credits per result, no email reveal): titles, seniority, function and the company text fit needs. The MCP people_search has no keyword exclude, so refined searches never use it (outbound/reference/ai-ark-people-discovery.md)"
+      email_finder: "per shipped person: /v1/people/export/single by person id (1 credit only when an email is found, per AI Ark's CLI source 2026-10-05; UNVERIFIED LIVE, the first run confirms a miss bills 0). /v1/people/email-finder (0 credits on a miss) works on a whole search page's trackId, so it would also pay for people at companies fit dropped"
+      email_finder_path_verified: false   # set true, with the date, after the first live run shows a miss billing 0 credits
       not_a_finder: "/v1/people/export is never a rung (0.5 credits per profile even on a miss)"
     email_note: "labels CATCH_ALL as its own email type alongside SMTP, which is why it leads the email waterfall. Keep that label as its own column: it is a second catch-all signal, never the send gate (MillionVerifier's verdict is)"
   prospeo:
@@ -87,6 +97,11 @@ layers:
     # lookup_decision_makers always returns VALID emails and bills 1 credit per
     # record, so it is a reveal, not a discovery rung. Record the route used in
     # run_state.discovery_route (filter | lookalike; missing reads as filter).
+    # Aaron flow (2026-10-05): the filter route is people-first. The pull is
+    # the vertical's refined AI Ark people search (layers.people_discovery)
+    # rolled up to companies; company_search totalElements is read as the
+    # count and cross-check, and a company-only company_search pull runs only on
+    # the lookalike route or for a step that needs companies before people.
     # /tam-build runs this layer.
     route_default: filter
     order: [aiark]             # company_search after enum resolution (industry_search, technology_search, location_search); the source-of-truth company universe (company_discovery.notes)
@@ -115,33 +130,38 @@ layers:
   # --- Person level ----------------------------------------------------------
   contact_new_in_seat:
     # unverified: a candidate Layer-1 contact-discovery signal (people who
-    # started their current role recently). Both filters are "found in schemas,
-    # not in contract" (provider-capability-matrix.md) and untested on FNNL's
-    # account. Use it only as a discovery filter, never as a reveal.
-    order: [prospeo, getleads]
+    # started their current role recently). Use it only as a discovery filter,
+    # never as a reveal. 2026-10-05: advanced people search runs in AI Ark only
+    # (ruling people-discovery), so this filter rides on the AI Ark people
+    # search as contact.experience.current.duration.currentJob (a max of N
+    # months), documented in AI Ark's CLI filter list, untested on FNNL's
+    # account. The Prospeo (person_time_in_current_role) and GetLeads
+    # (job_start_date_min) filters it used before are no longer people-search
+    # rungs; the signal still only sets send order, never shrinks the list.
+    order: [aiark]
     requires:
-      prospeo: [company_domain]     # search_person person_time_in_current_role (months) or person_job_change (new company or promotion within 30 to 365 days)
-      getleads: [company_domain]    # search_contacts / count_contacts domains[] + job_start_date_min (current-role start date)
-    evidence: "operator decision 2026-09-28; not benchmarked, not in the contract"
+      aiark: [company_domain]       # people search contact.experience.current.duration.currentJob.max.month (or the start date on the returned rows)
+    evidence: "operator decisions 2026-09-28 and 2026-10-05; not benchmarked, not in the contract"
 
   people_discovery:
-    # Per account, in order, until the account holds min_target_persons_per_account
-    # people whose titles PASS title_classify.py. A provider returning people who
-    # all fail title fit counts as a miss for that account (PERSON_FOUND is not
-    # TARGET_PERSON_FOUND), so the next provider runs for that account only.
-    # AI Ark people_search is the contract's contact-discovery tool; GetLeads is
-    # the secondary contact source; Prospeo's search-time filters are usable as a
-    # secondary discovery source when a filter AI Ark lacks decides the slice
-    # (contact_discovery.notes, approved_stack also_covers). The contract names
-    # GetLeads as THE secondary source, so it runs before Prospeo; the relative
-    # order of those two is otherwise unverified.
-    order: [aiark, getleads, prospeo]
+    # AI ARK ONLY (operator 2026-10-05, ruling people-discovery). Discovery is
+    # one AI Ark people search per vertical that carries the company filters and
+    # the offer's title stack, refined on a 200-row sample (include and exclude
+    # keywords mined from the fit and wrong-fit companies) before it runs at
+    # scale in slices under the 10,000-result cap. The procedure is
+    # outbound/reference/ai-ark-people-discovery.md; the runner is
+    # scripts/aiark_people.mjs (REST, because the MCP has no keyword exclude).
+    # Companies added by the GetLeads widening top-up still get their people
+    # from AI Ark, by company domain. GetLeads and Prospeo are not rungs here.
+    # The standing excludes ride on every call (ruling discovery-exclusions).
+    # The main vertical search runs through aiark_people.mjs, not the planner.
+    # `list_waterfall.py plan --layer people` now plans only the per-company
+    # pass for companies the GetLeads top-up added, on AI Ark alone.
+    order: [aiark]
     requires:
-      aiark: [company_domain]       # people_search, no email reveal; which company key it filters on is unverified
-      getleads: [company_domain]    # search_contacts domains[] + job_titles[], up to 100 rows per call (live MCP schema 2026-09-24)
-      prospeo: [company_domain]     # search_person filters.company.websites.include (live MCP schema 2026-09-24); 1 credit per page with results
+      aiark: [company_domain]       # per-company pass for top-up companies: the vertical search's filters plus account.domain include
     retry_on_error: 1
-    evidence: "stack contract contact_discovery.notes and approved_stack; quality and cost unmeasured"
+    evidence: "operator directive 2026-10-05 (AI Ark only, 200-row sample loop); quality and cost unmeasured"
 
   email:
     # The contract's waterfall (lead_data.contact_enrichment.notes):
@@ -153,6 +173,11 @@ layers:
     #          (invalid, unknown, error, disposable);
     #   STEP 4 MillionVerifier on everything Prospeo returned.
     # The planner stops a person at the first MillionVerifier `valid`.
+    # Rung 0 (Aaron flow, 2026-10-05): the reservoir. A person whose email
+    # MillionVerifier rated ok in the last 90 days (profiles/_reservoir/,
+    # scripts/reservoir.py lookup) is verified on that email first, before any
+    # finder rung is paid. It is a lookup, not a provider, so it is not in
+    # `order`; every verdict is written back after verification.
     order: [aiark, prospeo]
     # A catch_all verdict is NOT a rejection: it goes to the holdback, never to
     # Prospeo (contact_enrichment.notes step 3). `stop` ends that person's
@@ -170,7 +195,7 @@ layers:
     requires_attempted:
       prospeo: [aiark]
     requires:
-      aiark: [first_name, last_name, company_domain]     # /v1/people/email-finder; its exact input fields are not recorded in the contract (unverified). The planner needs a real name on every finder rung anyway
+      aiark: [first_name, last_name, company_domain]     # /v1/people/export/single takes the AI Ark person id from discovery (or a LinkedIn URL); unverified live. The planner needs a real name on every finder rung anyway
       prospeo: [first_name, last_name, company_domain]   # enrich-person minimum match: name plus a company identifier (contact_enrichment.notes); LinkedIn-URL-alone is unproven
     # Buyer-priority depth: the most rungs a person of each role tier may use.
     # Default is the full waterfall for every tier. Lower a tier only with a

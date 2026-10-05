@@ -4,6 +4,8 @@
 
 **The source.** Every frame cites the section of `aaron-examples.md` (or `aaron-doctrine.md`) it comes from. Those two files are now a frozen snapshot in this folder (2026-09-29: `/ask-aaron` no longer carries a corpus and reads Aaron's live Notion notes instead), so the authority is his live Notion section. If a frame here ever disagrees with what his notes show today, his notes win and this file gets fixed. A newer model email found live in his Notion section can be added as a new frame, labelled live and dated. Follow-up for the operator: retire the frozen snapshot and rebuild these frames from Notion.
 
+**Frame refresh.** Before every Call 2, `aaron-lane.md`'s "Frame refresh" procedure checks Aaron's Notion study notes published after this file's newest change-log date and adds any new model email, subject pattern or CTA as a new dated live frame here. Frames are only ever added, never deleted.
+
 **Why frames, in his own words.** His portability rule: *"it's the script framework that's doing all of the heavy lifting here, not the specific words."* Change only the offer, the pain point and the CTA language. So a frame fixes the skeleton and the connecting words, and the client's own words fill the slots. Two failures sit on either side of that:
 
 - **Too loose:** an email "in his spirit" that uses none of his frames. That is what the first copy written through the lane did, and it is what this file exists to stop.
@@ -14,7 +16,7 @@
 1. **Pick the frame per email** from its "use when" line, then fill every slot. Keep the slot order and the sentence count. Keep the fixed words (marked in **bold** in each template) exactly, apart from case and the first-name token.
 2. **Fill slots with this client's facts only.** Each slot names its job, taken from his own teardowns. A slot you cannot fill truthfully is cut only where the frame marks it optional. Otherwise pick another frame.
 3. **Record a frame map** for every email: the frame id, then one row per slot with his source line, our line, and the slot's job. `/campaign-copywriting` checks that map before it writes `copy.md` (and `variants.yaml`, both under `profiles/<slug>/campaigns/<campaign-slug>/`).
-   - **Name frames so a script can check them.** `frame` holds exactly one id from this file (F1 to F11, F6-v2, FU1 to FU4, DR, DR-input); `subject_frame` holds S1 to S5. A combination goes in its own field: `ps` for the PS frame (P1 to P5, P3c), `line_two` for the offer line under F7, and `add` for the FU3 or FU4 move on top of FU1 or FU2. Never write a combination into `frame` itself ("F6 + P4" is `frame: F6` plus `ps: P4`).
+   - **Name frames so a script can check them.** `frame` holds exactly one id from this file (F1 to F11, F6-v2, F11-v2, FU1 to FU5, DR, DR-input); `subject_frame` holds S1 to S6. A combination goes in its own field: `ps` for the PS frame (P1 to P5, P3c), `line_two` for the offer line under F7, and `add` for the FU3 or FU4 move on top of FU1 or FU2. Never write a combination into `frame` itself ("F6 + P4" is `frame: F6` plus `ps: P4`).
    - `python outbound/scripts/aaron_frame_check.py --client <slug>` (or `python outbound/scripts/aaron_frame_check.py <file>`) runs the conformance check below on the YAML record. By default it reads `outbound/profiles/<slug>/aaron-copy-call.md`. It is regex plus PyYAML, with no network call.
 4. **Variants test his own tests** (the list at the end), each a different frame or a frame's documented option. A variant never invents a structure no frame has.
 5. **The rails still bind** (`aaron-lane.md`): truth, spam words, no em dashes, `{{double_braces}}` variables that exist, compliance. A frame never licenses a claim the client can't back.
@@ -22,6 +24,8 @@
 **Truth gates on existence frames.** Frames that say the thing already exists ("I just built", "I just ran") are true only once the asset exists. Use one only when the campaign is held until the asset is built, and mark the gate in the frame map. The conditional frames ("if we could") make no existence claim, which is why they are his default for offers still being built.
 
 **Variables.** `{{first_name}}` goes where his frame puts the first name (he writes it lowercase as "first name" in his drafts). Industry and role nouns written into a campaign are slot fillers, not variables. A per-contact variable (a handle, a case study, an observed fact) is used only where the frame has that slot and the column exists.
+
+**Personalization (Aaron, 2026-09-28: "no one has ever booked a meeting over a compliment about the coffee shop down the street").** No scraped compliment and no per-lead AI body. The two company variables are `{{sells_to_vertical}}` (who the prospect's own company sells to) and `{{service_offered}}` (what they sell), written once per shipped company by batched Claude sub-agents from the text the fit pass already read, not per contact. Every email also carries at least one real, hand-written detail that ties to why this prospect would buy, kept to the few details the frame has slots for. No PlusVibe `{{variable}}` ships blank: `outbound/scripts/copy_var_gate.py` checks every variable the copy uses against the lead file before upload, per `aaron-flow.md` section 9.
 
 ## Email 1 frames
 
@@ -134,11 +138,30 @@ Subject, belief shift, mirror line, what we're building, then the money line and
 
 Take the shape, not his close (his ends on "worth a quick coffee chat", a meeting ask). Close with a permission CTA from the set below. **Use when** there's no front-end offer and the service itself is the offer (the `direct_offer` exception).
 
-### F11. The pay-per-result test (live candidate, Sep 21)
+### F11. The pay-per-result test (live, Sep 21)
 
 > **if I had a way to** [deliver the outcome]**…** [the pay-per-result term: **and you only pay per** [unit]]**, would that be worth a quick test?**
 
-His newest Email 1, from the Sep 21 Notion capture. **Live candidate:** the wording on file is the capture's summary, not a creator-claim line or the transcript, so read the transcript before relying on it. **Use when** the client really charges per result.
+| Slot | What goes there |
+| --- | --- |
+| outcome | the result he'd deliver, named plainly |
+| pay-per-result term | the unit they'd pay per (a lead, a booked call, a sale) |
+| CTA | "would that be worth a quick test?" (its own CTA; see the CTA set) |
+
+From the Sep 21 Notion capture; confirmed live against his raw captions. **Use when** the client really charges per result.
+
+### F11-v2. The question opener with the soft partnership close (live, Sep 21)
+
+> {{first_name}}, do you currently offer a [entry point]? Asking [as] I found a way to [outcome]. Thinking I could [next step] and we could sort out [partnership term] if you're open to that kind of thing.
+
+| Slot | What goes there |
+| --- | --- |
+| entry point | the specific thing they'd need to already offer |
+| outcome | the result the sender's way delivers |
+| next step | the small next action (a draft, a quick build, a test) |
+| partnership term | a real, plain payment or revenue-share term, named honestly |
+
+A second line into F11's pay-per-result idea, built as a question opener instead of a statement. **Use when** F11 also applies and the campaign is testing the two openers against each other (see T5 below). Its CTA ("we could sort out [partnership term] if you're open to that kind of thing") is F11-v2's own and does not swap with the shared CTA set.
 
 ## Follow-up frames (examples 7.1, doctrine 11)
 
@@ -148,20 +171,22 @@ Every follow-up stands alone, as if it were the first email read. It never names
 - **FU2. The lower-friction de-escalation (his Loom follow-up).** **Should I send you a two-minute** [video or recording] **showing you exactly how this works?** ("there's zero commitment involved and just curiosity")
 - **FU3. Add to it.** Email 1's offer line again, plus one thing Email 1 left out: a pre-handled objection (fixed words **FYI, this isn't** [X] or **this doesn't take a lot of time**), one benefit layer, the risk reversal, or the one proof point he often saves "for email two". His rule for choosing: "If you are already using a stripped-back version like this, you'd probably have to add to it."
 - **FU4. Mechanism switch.** A different, easier way to get the same thing: "a document covering how you'd go about this", or a video "explaining how it was done".
+- **FU5. The "if it's easier" video one-liner.** **{{first_name}}, if it's easier, I can send over a quick video elaborating on how we** [mechanism]**.**
 
-FU1 and FU2 are his verbatim lines. FU3 and FU4 are moves he describes, not follow-ups he wrote out, so the conformance check tests them on structure (and FU3's fixed words where used).
+FU1, FU2 and FU5 are his verbatim lines. FU3 and FU4 are moves he describes, not follow-ups he wrote out, so the conformance check tests them on structure (and FU3's fixed words where used).
 
-## Subject frames (examples 3)
+## Subject frames (examples 6; Aaron, Sep 21 and Sep 28)
 
-Two to four words, all lowercase, curiosity plus enough relevance to imply the topic. His endorsed patterns:
+**Two or three words, all lowercase, reading like an internal note typed on a phone** (Aaron flow, see aaron-flow.md section 9). Curiosity plus enough relevance to imply the topic; never pad past 3 words. His endorsed patterns:
 
-- **S1. question about** [topic] ("That one's always a good one.")
+- **S1. question about** [topic] ("That one's always a good one." One word under the cap.)
 - **S2. fyi** {{first_name}}
 - **S3. your recent** [observed thing] / **your new** [observed thing] (needs a real observed thing)
 - **S4.** [topic] **problem** (needs a checked, real problem; never an implied account fault)
-- **S5. your** [the thing the offer works on] (Sep 21 "your trial"; a live candidate from the capture's summary, which `/spam-word-checker` already accepts)
+- **S5. your** [the thing the offer works on] (Sep 21 "your trial"; confirmed live, which `/spam-word-checker` already accepts)
+- **S6. quick idea** (live, Sep 28; his own note that a plain subject like this does as well as a crafted one)
 
-Never a fake thread, a fake forward, an emergency or an invoice. When a campaign runs an offer test across two halves, keep one subject for both halves so the subject doesn't confound the offer read.
+Never a fake thread, a fake forward, an emergency or an invoice. **One subject per campaign, never A/B tested.** When a campaign runs an offer test across two halves, keep one subject for both halves so the subject doesn't confound the offer read.
 
 ## CTA set (examples 4, doctrine 9)
 
@@ -174,6 +199,9 @@ Use his words, and **one CTA across every Email 1 variant in a campaign that car
 - **Open to testing it for free.** (F6 variation)
 - **would you be open to trying it out** plus **Let me know and I'll shoot you over the** [link] (F8)
 - **Happy to share the thinking if you're open.** (F9 only)
+- **would that be worth a quick test?** (F11 only; its pay-per-result CTA)
+- **and we could sort out** [a real partnership term] **if you're open to that kind of thing.** (F11-v2 only; does not swap with the shared CTA set)
+- **if it's easier, I can send over a quick video** (FU5 only; its follow-up CTA)
 
 Never a meeting ask in a cold email.
 
@@ -183,7 +211,7 @@ One PS at most, one proof point at most, never in line one or two.
 
 - **P1. Relevance:** **PS, thought it'd be relevant since** [fact].
 - **P2. Effort and ease:** **PS,** [turnaround] **takes you** [time] **to** [skim or try].
-- **P3. Proof we did the work:** **PS tested this for** [twin] **recently.** [plain result] / [client] **went from** [X] **to** [Y] **using this exact process.** Both forms say the sender did this exact work for a close twin, so use them only when that is true. A plain, named, legible number, same mechanism, on file.
+- **P3. Proof we did the work:** **PS tested this for** [twin] **recently.** [plain result] / [client] **went from** [X] **to** [Y] **using this exact process.** / **PS, we've actually just run this exact same process for** [client] **who ended up getting** [X result] **in** [Y time]**.** All three forms say the sender did this exact work for a close twin, so use them only when that is true. A plain, named, legible number, same mechanism, on file. The third form runs only as an A/B arm, since naming a result that specific adds sales friction and should be tested against the plainer first form, not shipped by default.
 - **P3c. A named client's plain result:** [client] **saw a** [N]% **lift in** [plain metric]. His acronym-rule fix ("Nani Swimwear saw a 942% lift in ads to cart.", examples 6). This is the honest form for a customer's result on the same mechanism when we didn't do the work for them.
 - **P4. Risk reduction:** **PS, obviously this is free, no call required. I'll just send it over to you and then you can decide if it's worth** [running].
 - **P5. Small batch:** **PS, we're doing a small batch of complimentary** [deliverables]. True only if the batch is really limited.
@@ -202,6 +230,7 @@ No call pitch in it ("caught in like a trapdoor"). The call ask lives one layer 
 - **T2. PS against no PS:** the same frame, with and without its PS.
 - **T3. Direct to offer against the call-out:** F3 against F1 with a relevance fact, or against a one-line call-out opener (examples 2.1 to 2.3).
 - **T4. The two-line pain pair against the one-liner:** F7 against the one-liner it is built on (F4, F6 or F6-v2).
+- **T5. The question opener against the plain offer (live, Sep 21):** F11-v2 against F11.
 
 A campaign's variants are chosen from these. "One change against A" is a house convention; here, a variant changes the frame, as his own tests do.
 
@@ -210,13 +239,15 @@ A campaign's variants are chosen from these. "One change against A" is a house c
 For every email, before `copy.md` is written:
 
 1. It names a frame id that exists in this file, with any combination in `ps`, `line_two` or `add`.
-2. Its sentences follow that frame's slot order, and its sentence count matches (optional slots may be dropped only where marked). F7, FU3 and FU4 have no verbatim source, so they are checked on structure only.
+2. Its sentences follow that frame's slot order, and its sentence count matches (optional slots may be dropped only where marked). F7, FU3 and FU4 have no verbatim source, so they are checked on structure only. **Aaron flow (see aaron-flow.md section 9): the sentence count is the length rule.** There is no word cap on Aaron-lane copy, and the 25-to-35-word contract in `/spam-word-checker` and `/personalization-subagent-pattern` does not apply to it.
 3. The frame's fixed words are present, apart from case and the first-name token, and the CTA is from the set.
 4. Every slot is filled with this client's words: no sentence of his is carried over with only the nouns swapped where the slot needs our own fact.
 5. An existence frame (F6, F6-v2) sits on a campaign held until the asset exists.
-6. Follow-ups pass the standalone rule, and a campaign's Email 1 variants that carry a CTA share one.
+6. Follow-ups pass the standalone rule, and a campaign's Email 1 variants that carry a CTA share one (F11-v2 is the stated exception when it runs against F11 in T5, since its CTA is its own).
 7. Where a frame's fixed words would say something untrue, truth wins: the email keeps the truthful words, and the frame map says which fixed word changed and why.
+8. **The context slot.** Where a campaign's awareness note gives a `context_budget`, the copy may use up to that many plain sentences saying who the sender is or why they're reaching out, on top of the frame's own slots; it is not part of any frame's sentence count. The Cold-Reader Panel (`cold-reader-panel.md`) is optional and checks this only when the operator asks for it on a run.
+9. **The subject.** One subject per campaign, built on a subject frame (S1 to S6), two or three lowercase words, never A/B tested (Aaron flow, see aaron-flow.md section 9).
 
-**Change log.** 2026-09-24: built from the corpus as of 2026-09-18; the same day, Aaron's first frame rebuild flagged eleven places the first draft misread his examples (F6 and F6-v2 slots, P3c, F7 as structure-only, FU3 and FU4, the Sep 21 subject, opener and Email 1, DR-input, the CTA rule), and each was fixed here. 2026-09-28: ported into this workspace. Frame ids, fixed words and the check are unchanged; paths point at this workspace's `outbound/profiles/<slug>/`.
+**Change log.** 2026-09-24: built from the corpus as of 2026-09-18; the same day, Aaron's first frame rebuild flagged eleven places the first draft misread his examples (F6 and F6-v2 slots, P3c, F7 as structure-only, FU3 and FU4, the Sep 21 subject, opener and Email 1, DR-input, the CTA rule), and each was fixed here. 2026-09-28: ported into this workspace. Frame ids, fixed words and the check are unchanged; paths point at this workspace's `outbound/profiles/<slug>/`. 2026-10-05: frame refresh (Aaron flow, see aaron-flow.md section 9): F11 confirmed live with its slot table; F11-v2 added (the question opener with the soft partnership close) and paired with F11 as T5; FU5 added (the "if it's easier" video one-liner); P3 gained a third, more specific form that runs only as an A/B arm; S6 added ("quick idea"); the subject rule tightened from 2-to-4 words to two or three lowercase words, one per campaign, never A/B tested; the personalization rule (`sells_to_vertical`, `service_offered`) and the context-slot and subject conformance items were added. Frames are only added here, never deleted.
 
 A failure goes back to a fresh Aaron sub-agent for one fix round, like any rail failure. If it still fails, that email is held and shown at the launch review.

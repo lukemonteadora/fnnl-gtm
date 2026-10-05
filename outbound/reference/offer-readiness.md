@@ -161,7 +161,7 @@ A campaign belongs to an offer when its `leads.verified.csv` carries an `offer` 
 
 ## Where it runs
 
-- **Phase 2 (`/phase-2-research-offer`).** The recorder writes the fields at lock (`/lead-magnet-brainstorm`). Step 8 merges the offer items into the current message of `client-asks.md` (`client-messages.md`). Then run `readiness_fields.py` if the fields are missing, and `build_readiness.py`. Checkpoint 2 shows the board: display only, no new question.
+- **Phase 2 (`/phase-2-research-offer`).** The recorder writes the fields at lock (`/lead-magnet-brainstorm`). Step 8 merges the offer items into the current message of `client-asks.md` (`client-messages.md`). Then run `readiness_fields.py` if the fields are missing, and `build_readiness.py`. Checkpoint A shows the board: display only, no new question.
 - **Phase 4 (`/phase-4-copy-launch`).**
   - Step 2 builds the samples.
   - Step 3 runs `build_reply_playbook.py` after the reply files.

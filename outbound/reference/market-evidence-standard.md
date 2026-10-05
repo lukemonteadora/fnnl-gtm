@@ -30,7 +30,7 @@ outbound/profiles/<slug>/
     runs/<YYYY-MM-DD>-<purpose>/   raw captures and working notes for one research run
 ```
 
-- **Run folders.** `<purpose>` is one of `discovery`, `validation`, `deepen-1`, `deepen-2`, `feedback`, `refresh`, or `website` (the onboarding website scrape: its page captures and extract files, per `client-website-scrape.md`; it writes no ledger rows). Inside: `batch-<vector>-<n>.json` (ingest inputs), optional `<vector>-notes.md` (narrative working notes), raw captures named by how they were read (`paste-<platform>-<n>.md` for operator pastes, `browser-<site>-<n>.md` for browser-pane reads, `webfetch-<site>-<n>.md` for WebFetch reads, `websearch-<n>.md` for saved search results, `replies-<date>.json` for a reply pull), and `calls/` for transcripts or pointers to them.
+- **Run folders.** `<purpose>` is one of `discovery`, `quick` (Aaron flow's single fanned-out pass for an unfamiliar market, aaron-flow.md section 4), `validation`, `deepen-1`, `deepen-2`, `feedback`, `refresh`, or `website` (the onboarding website scrape: its page captures and extract files, per `client-website-scrape.md`; it writes no ledger rows). Inside: `batch-<vector>-<n>.json` (ingest inputs), optional `<vector>-notes.md` (narrative working notes), raw captures named by how they were read (`paste-<platform>-<n>.md` for operator pastes, `browser-<site>-<n>.md` for browser-pane reads, `webfetch-<site>-<n>.md` for WebFetch reads, `websearch-<n>.md` for saved search results, `replies-<date>.json` for a reply pull), and `calls/` for transcripts or pointers to them.
 - **Older research is referenced, never moved.** A client whose research was written before the ledger existed keeps those files where they are. The next research run for that client reads them at `/offer-intelligence` Step 0 and seeds the ledger from them, recording `raw_ref` back to the older file.
 - **Everything under `profiles/` is gitignored.** Research is local-disk only, like all client data.
 
@@ -65,6 +65,8 @@ The tier comes from the evidence type. An extractor may lower a tier (say why in
 **A one-line mention is supporting, whatever the platform.** "Good" needs a first-person account with enough context to know the situation.
 
 **`source_class`** (kept from the existing flow, and still what the 3-source floor counts): `buyer_quote` (a buyer describing their own problem in public), `first_party_call`, `outbound_reply`, `job_posting`, `competitor_claim`, `analyst_claim`, `news`, `model_hypothesis`. A competitor's own customer complaining in a review is a `buyer_quote` with `competitor_mentioned` filled.
+
+**Aaron flow (see `aaron-flow.md`, section 4).** These tiers and the ledger mechanics are unchanged under the Aaron flow default; what changes is volume and depth, not the typing rules. A known market may add no new rows at all. An unfamiliar market gets one fanned-out research pass (WebSearch/WebFetch by batched Claude sub-agents, plus the browser pane for LinkedIn/X and Meta Ad Library, and competitor sites), typed and tiered exactly as above, into a `quick` run folder.
 
 ## 3. The evidence ledger (`_research/evidence.csv`)
 
@@ -143,7 +145,11 @@ counterevidence: E-0042
 - Every cluster stays visible, however weak. Weak ones are labelled and ranked, never deleted (operator directive 2026-09-22).
 - Cluster by the problem the buyer has, not by the client's product features.
 
+**Aaron flow short clustering (default, see `aaron-flow.md` section 4).** Fill only the heading, `evidence:`, `counterevidence:`, Who feels it, Counts, Objections, Buyer language and Confidence; leave the rest "not found" until Luke asks for the full cluster write-up. `Opportunity scores` and `Research QA` read "not run (Aaron flow)" plus one coverage line, and clusters are ordered by sighting count, then evidence tier, instead of by score.
+
 ## 6. Opportunity scoring
+
+**Aaron flow (see `aaron-flow.md` section 4):** this section runs only when Luke asks for the scored pass; by default clusters order by sighting count, then strongest evidence tier, and the table reads "not run (Aaron flow)".
 
 Eight factors, 0 to 2 each, total out of 16. **A non-zero score must cite evidence IDs** (factors 1-5, 8) **or a profile field** (factors 6-7). A score with no citation is 0. The total orders the clusters; it never removes one.
 
@@ -161,6 +167,8 @@ Eight factors, 0 to 2 each, total out of 16. **A non-zero score must cite eviden
 Ties break on evidence strength, then frequency. A compelling phrase is not a score: a cluster that reads well but cites nothing scores low, and that is the point.
 
 ## 7. Research QA gate
+
+**Aaron flow (see `aaron-flow.md` section 4):** off by default. `/market-evidence synthesize` writes "not run (Aaron flow)" as the verdict plus one coverage line, and runs the gate below only when Luke asks for it.
 
 Run by `/market-evidence synthesize` before any offer is built. The mechanical checks come from `evidence_ledger.mjs stats`; the rest are judged against the files. Each check is PASS, FLAG or FAIL, with a note.
 
@@ -185,7 +193,7 @@ Run by `/market-evidence synthesize` before any offer is built. The mechanical c
 **Verdicts:**
 
 - **PASS.** At least one cluster scores 10 or more out of 16 and passes Q1-Q10. Offer creation may begin. All clusters, including weak ones, go forward with their labels.
-- **DEEPEN.** The gaps are fixable with more research inside this workspace (thin independence, stale evidence, an ICP mismatch, a readable platform the ICP uses that nobody read, a failed quote check). Write a deepen brief naming each gap and the vector or read route that fixes it, run Stage 2 on those gaps only, then re-run the gate. **At most two deepen loops.** After the second, the verdict is PASS with low-confidence labels, or HOLD. Under `review_protocol: phase_checkpoints` (the new-client default since 2026-09-24) the loops run the same way, automatically, inside Phase 2 (`/phase-2-research-offer`, `phase-protocol.md`, operator decision 2026-09-28), and the verdict leads checkpoint 2. **A platform unread because of policy is never a DEEPEN reason.** Reddit, G2, Quora or LinkedIn with nothing pasted, and a platform whose read route has not passed its test (section 9), are recorded as a stated coverage gap with a paste reading list for the operator. More research here cannot read them, so they never start a loop.
+- **DEEPEN.** The gaps are fixable with more research inside this workspace (thin independence, stale evidence, an ICP mismatch, a readable platform the ICP uses that nobody read, a failed quote check). Write a deepen brief naming each gap and the vector or read route that fixes it, run Stage 2 on those gaps only, then re-run the gate. **At most two deepen loops.** After the second, the verdict is PASS with low-confidence labels, or HOLD. Under `review_protocol: phase_checkpoints` (the new-client default since 2026-09-24) the loops run the same way, automatically, inside Phase 2 (`/phase-2-research-offer`, `phase-protocol.md`, operator decision 2026-09-28), and the verdict leads checkpoint A (replaces the old checkpoint 2, `phase-protocol.md`). **A platform unread because of policy is never a DEEPEN reason.** Reddit, G2, Quora or LinkedIn with nothing pasted, and a platform whose read route has not passed its test (section 9), are recorded as a stated coverage gap with a paste reading list for the operator. More research here cannot read them, so they never start a loop.
 - **HOLD.** More public research cannot fix it: everything rests on hypotheses, the client cannot solve any cluster, or the ICP cannot be reached. Under `review_gates`, the operator decides at Gate 2 (the offer-step review defined in `/cold-email-kickoff`). Under `review_protocol: phase_checkpoints`, it is carried forward inside Phase 2 as under plain `auto_execute` (the Aaron offer call still runs), the HOLD reasons lead the Phase 2 checkpoint (`/phase-2-research-offer`), where the operator decides, and the missing evidence goes into `client-asks.md` (`client-messages.md`). Under plain `auto_execute`, proceed with every cluster labelled low confidence, the HOLD reasons flagged at the top of the report, and the missing evidence (usually call recordings) requested from the client. Never a silent block, never a silent pass.
 
 ## 8. Staged depth
@@ -194,7 +202,8 @@ Research costs nothing here. The session, its sub-agents, WebSearch, WebFetch an
 
 | Stage | When | Scope | Depth |
 |---|---|---|---|
-| **Stage 1** | Every new client, market, segment or offer direction | Research sample (10-25 companies), first-party calls, persona hypotheses, 5-10 competitors, ad angles, job posts | 20 to 30 public quotes. One primary pass (the `/deep-research` harness, or its 4 to 8 sub-agent fallback). Up to 4 extraction sub-agents on the small tier, each on a disjoint set of raw captures |
+| **Aaron quick pass** (default, `aaron-flow.md` section 4) | A known market (skip; no new research) or an unfamiliar market under the Aaron flow default | Known market: nothing new. Unfamiliar market: one fanned-out pass | One pass, 3 sub-agents on disjoint routes (LinkedIn/X and Meta Ad Library via the browser pane, competitor sites, WebSearch/WebFetch elsewhere). No quote-count floor; saturation (section 7) decides when to stop |
+| **Stage 1** | Luke asks for the full pass, or the client-facing stakes call for it | Research sample (10-25 companies), first-party calls, persona hypotheses, 5-10 competitors, ad angles, job posts | 20 to 30 public quotes. One primary pass (the `/deep-research` harness, or its 4 to 8 sub-agent fallback). Up to 4 extraction sub-agents on the small tier, each on a disjoint set of raw captures |
 | **Stage 2** | Only on a DEEPEN verdict, or before a high-stakes offer, and only on the named clusters and gaps | Readable platforms not yet read, competitor review mining, and a paste reading list for the platforms only a paste can reach | 50 to 150 more quotes on the named clusters, per loop. 2 to 6 sub-agents, one per named gap |
 | **Stage 3** | Only after the offer locks | The list build (`/data-point-discovery` onward), with the 25-account list QA before Phase B spend | the existing list-build rules |
 
@@ -317,9 +326,9 @@ The `research_artifacts:` block is the standard index. `/market-evidence` keeps 
 ```yaml
 research_artifacts:
   method: <how the last pass ran: primary provenance (claude-deep-research or claude-subagent-fanout), sub-agents, read routes used (WebSearch, WebFetch, browser pane, operator pastes)>
-  stage: none | collected | synthesized | qa_pass | qa_deepen | qa_hold
-  qa_verdict: PASS | DEEPEN | HOLD
-  qa_date: YYYY-MM-DD
+  stage: none | collected | synthesized | qa_pass | qa_deepen | qa_hold   # Aaron flow default: ends at synthesized until Luke asks for the gate
+  qa_verdict: PASS | DEEPEN | HOLD | not_run   # not_run is the Aaron flow default (aaron-flow.md section 4)
+  qa_date: YYYY-MM-DD                  # null while qa_verdict is not_run
   last_refreshed: YYYY-MM-DD
   last_feedback: YYYY-MM-DD            # the last /market-evidence feedback run, or null before launch
   evidence_rows: <n>

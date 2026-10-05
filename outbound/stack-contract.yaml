@@ -476,6 +476,12 @@ lead_data:
       Same enum pre-step as company_discovery applies.
       GetLeads is the secondary contact source, 402M contacts with 179 fields per
       lead (52 contact, 127 company), reachable through its MCP.
+      ADVANCED PEOPLE SEARCH RUNS IN AI ARK ONLY (operator directive 2026-10-05):
+      one people search per vertical carrying the company filters and the title
+      stack, refined on a 200-row sample before it runs at scale
+      (outbound/reference/ai-ark-people-discovery.md). GetLeads stays in the
+      stack for the 0-credit count_contacts size check and the thin-universe
+      company top-up; it and Prospeo are no longer people-discovery rungs.
 
   contact_enrichment:
     tool: AI Ark -> Prospeo (waterfall)
@@ -523,6 +529,12 @@ lead_data:
       which charges 0 credits when no valid email is found. The bulk
       /v1/people/export path bills 0.5 credits PER PROFILE EVEN ON A MISS (vendor's
       worked example: 1,000 rows costs 500 credits whether 700 or 1,000 resolve).
+      PER-PERSON ROUTE (2026-10-05, Aaron-flow port): /v1/people/export/single by
+      person id carries the same no-charge-on-a-miss rule (1 credit only when an
+      email is found, per AI Ark's CLI source) and lets the run pay only for people
+      at companies fit shipped, which a search page's email-finder trackId cannot.
+      UNVERIFIED LIVE: the first run confirms a miss bills 0 before it is used at
+      scale; if it does not, the rung goes back to /v1/people/email-finder.
       COST EVIDENCE IS ASYMMETRIC, DO NOT CLAIM CHEAPEST-FIRST IS SATISFIED YET:
       AI Ark's pricing is vendor-confirmed, Prospeo's is third-party only (reported as
       39 / 99 / 199 / 369 USD, UNCONFIRMED, their pricing page is JavaScript-rendered).

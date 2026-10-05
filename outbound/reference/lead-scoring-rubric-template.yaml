@@ -113,4 +113,5 @@ confidence:
   high_min: 0.85
   medium_min: 0.65
 
-same_wave_contact_cap: 2
+# No per-company contact cap (ruling no-contacts-cap; Aaron flow, see aaron-flow.md section 8):
+# list_qa.py writes the send file round-robin by company inside each priority tier instead.

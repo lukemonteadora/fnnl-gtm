@@ -111,6 +111,8 @@ aaron_offer_call:
 
 ## Call 2: the campaign and copy call
 
+**Before the call: run the Frame refresh** (below). It keeps `aaron-copy-frames.md` current with Aaron's newest Notion study notes before he is asked to build on it.
+
 **Inputs (paths):** the locked `offer` block and `lead-magnets.md`, `aaron-offer-call.md`, `campaign-strategy.md` (the drafted wave with company and contact counts per campaign and segment), the column list of `tam/contacts.scored.csv` (the variables that exist, and how full each is), `social-proof-bank.md`, `_research/pain-clusters.md` (the Language bank), the compliance facts on record (`capability_boundary.legal_or_compliance_limits`, the opt-out handling), and `aaron-copy-frames.md` (his copy frames). Tell him the house copy defaults exist in `outreach-copy-framework.md` as context only.
 
 **Every email is built on one of his real examples, frame by frame (operator rule, 2026-09-24).** The first copy written through the lane read as "in Aaron's spirit" but was built on none of his example emails. So Call 2's prompt also carries this line, word for word:
@@ -118,6 +120,10 @@ aaron_offer_call:
 - "Operator's copy rule (2026-09-24, it outranks house defaults and binds this call): build every email on one of your own real example emails, frame by frame. Keep that example's structure, sentence count, slot order and fixed connecting words, and change only the slots (the offer, the pain, the relevance fact, the proof), as your portability rule says. The frames are in `outbound/reference/aaron-copy-frames.md`. Name the frame for every subject, email and delivery reply, and record a frame map: one row per slot with your source line, our line and the slot's job. If a frame in that file misreads your examples, list it under `frame_library_issues` and build from your corpus, which is the authority."
 
 This is the operator's rule, so it binds Aaron. It is not a house style default that yields to him (see "What now yields to Aaron"). Which frame fits, which of his tests the variants run and every slot's words stay Aaron's call.
+
+**Length, subject and personalization go into the prompt as one line, word for word (Aaron flow, see aaron-flow.md section 9):** "There is no word cap on this copy: your frame's sentence count sets the length, not a house word band. The subject is two or three lowercase words that read like an internal note typed on a phone, built on one of your subject frames (S1 to S6), one subject per campaign, never A/B tested. Give at least one real, hand-written detail per email that ties to why this prospect would buy."
+
+**Per-contact variables go into the prompt with their fill rate.** Before the call, read how full the `sells_to_vertical` and `service_offered` columns are on the shipped companies for this wave (from the fit pass that wrote them). Tell Aaron the fill rate in plain terms (for example "these two variables are filled for most shipped companies, blank for a few") and ask him for `variable_fallbacks` (a fallback wording for a blank variable) or a `no_variable_version` for the campaign (`blank_variable_route: novar`). Record whichever he gives; `outbound/scripts/copy_var_gate.py` enforces it before upload (see the rails below). No PlusVibe `{{variable}}` ever ships blank.
 
 **Consult file:** `profiles/<slug>/aaron-copy-call.md`
 
@@ -136,7 +142,7 @@ aaron_campaign_call:
       why: "<one line>"
       sequence:              # only for launch: now
         subject: "<shared Email 1 subject>"
-        subject_frame: <S1 to S5 from aaron-copy-frames.md>
+        subject_frame: <S1 to S6 from aaron-copy-frames.md>  # subject: one per campaign, two or three lowercase words, never A/B tested (Aaron flow)
         email_1_variants:
           - label: A
             frame: <one F id from aaron-copy-frames.md, never a combination>
@@ -157,6 +163,8 @@ aaron_campaign_call:
             frame_map:
               - {slot: "<slot>", aaron_source: "<his line>", ours: "<our line>", job: "<the slot's job>"}
       variables_used: [<only columns that exist in contacts.scored.csv>]
+      variable_fallbacks: {<var>: "<fallback wording>", ...}   # or null; see Length/subject/personalization above
+      blank_variable_route: <novar | null>   # novar: copy_var_gate.py uploads a second, no-variable version of this campaign
       proof_used: <proof bank row id, or none>
   delivery_replies:          # one per offer
     - offer: <offer name>
@@ -172,19 +180,32 @@ aaron_campaign_call:
 
 **New prospect-facing reply lines are his call too** (Offer Readiness, `offer-readiness.md`). Any line a prospect will read that has no Aaron frame yet (an FAQ answer or an over-cap reply in the `## Notes` block of `interested-reply.md`) goes to a fresh `/ask-aaron` sub-agent call with the same rails. The house never writes it, and the yes-reply stays his `DR` delivery reply word for word.
 
+## Frame refresh (before every Call 2; Aaron flow, see aaron-flow.md section 9)
+
+1. **Find the cutoff.** Read `aaron-copy-frames.md`'s change-log, newest entry, for the latest date already covered.
+2. **List what's new.** Have the Aaron sub-agent (same live-Notion read as the calls above) list any Notion study note, topic-synthesis update or `Partial` transcript published after that cutoff.
+3. **Get the exact wording.** For anything that looks like a new model email, subject pattern or CTA, read the raw captions or transcript, not just a summary, before adding it as a frame.
+4. **Add new dated frames.** Each new frame is labelled live and dated, following the format already in the file (template, slot table where it has slots, Use-when line).
+5. **Only add, never delete.** If a new note conflicts with an existing frame, record the conflict in the frame and keep both until the operator resolves it; an old frame is never removed to make room.
+6. **Log it.** A change-log entry in `aaron-copy-frames.md` (what was added, or "no notes after `<cutoff>`"), plus one activity-log line: `UPDATED aaron-copy-frames.md: frame refresh` or `EXISTS frame refresh: no notes after <cutoff>`.
+7. **Report the checker gap.** A brand-new frame id is unknown to `outbound/scripts/aaron_frame_check.py` until that script is updated to recognize it. Until then, the recorder confirms the new frame's conformance by hand and notes the gap in `copy.md`.
+
 ## The rails (Aaron cannot override these)
 
 Keep this list short. These are safety, truth and plumbing, not style.
 
 1. **Truth.** No invented client, result, number, feature or capability. Proof must be on file (profile or proof bank), capabilities must be in `capability_boundary`, and a pain line either traces to a cluster or is a genuine question (`market-evidence-standard.md` section 13).
-2. **Deliverability and format.** `/spam-word-checker` passes; no em dashes; variables are `{{double_braces}}` and exist as columns with a fallback; the signature is never in the body; `variants.yaml` matches `copy.md` exactly and uses the block-scalar body format. The spintax rule in `/campaign-copywriting` runs on his text as a deliverability step and never changes an offer, a claim or a CTA.
+2. **Deliverability and format.** `/spam-word-checker` passes; no em dashes; variables are `{{double_braces}}` and exist as columns; the signature (`{{sender_signature}}`) is never in the body and is never gated; `variants.yaml` matches `copy.md` exactly and uses the block-scalar body format. The spintax rule in `/campaign-copywriting` runs on his text as a deliverability step and never changes an offer, a claim or a CTA. **No blank variable ever ships:** `python outbound/scripts/copy_var_gate.py --variants <variants.yaml> --leads <leads.verified.csv> --out-dir <dir> [--novar-variants <variants.novar.yaml>]` runs before upload; a blank row's variable is filled from `variable_fallbacks` or, where the campaign gave a `no_variable_version`, routed to the `--novar-variants` upload instead; a row that fits neither is held, never sent with a hole. `--check-only` reports without writing. Exit 0 means every row placed, 1 a config error, 4 means rows were held.
+
+**Length is not a rail (Aaron flow, see aaron-flow.md section 9).** Aaron-lane copy has no word cap: the frame's sentence count in `aaron-copy-frames.md` governs its length, not the 25-to-35-word Email 1 band or the follow-up cap that `/spam-word-checker` and `/personalization-subagent-pattern` hold the house flow to. The subject is two or three lowercase words, one per campaign, never A/B tested.
 3. **Obtainable targeting.** Every `icp_inclusion` check and signal dependency can be collected on the locked stack (the Signal-Capability Check), inside the approved six tools and the zero-workbench-credit rule.
 4. **Compliance.** The opt-out handling (always the FNNL house default for every geography, operator directive 2026-09-30, unless the client's own counsel requires something stricter and it is already on record; `/campaign-copywriting` step 0a), and any sender identification the client requires.
 5. **List safety.** Suppression and blocklists apply, only verified emails ship, a client veto is honored, and a client-honored offer sends only after the client's OK (it is drafted before that, with Start held).
 6. **Money and launch.** The run's spend budget (`run_state.spend_ceiling_usd`) holds, uploads to the sending platform create paused drafts only, and the operator presses Start.
 7. **House plumbing.** Plain-text files, the locked stack and `run_state` field names.
+8. **Comprehension: the Cold-Reader Panel (optional, operator ask only).** The panel (`cold-reader-panel.md`, `outbound/scripts/cold_reader_panel.py`) is not run by default. It runs only when the operator asks for it on a run, and when it does not run, nothing is held waiting for it. When it does run, its word ceiling and any batched Aaron fix round apply only for that run.
 
-**When a rail fails:** send the failing item back to a fresh Aaron sub-agent with the rail it broke, for one fix round. Never let house copy logic rewrite it. If it still fails, hold only that item (that offer, that variant), keep everything else moving, and show it at the next checkpoint with Aaron's version, the rail it breaks and the reason.
+**When a rail fails:** send the failing item back to a fresh Aaron sub-agent with the rail it broke, for one fix round (two for rail 8, when it runs). Never let house copy logic rewrite it. If it still fails, hold only that item (that offer, that variant), keep everything else moving, and show it at the next checkpoint with Aaron's version, the rail it breaks and the reason.
 
 ## What now yields to Aaron
 
@@ -210,4 +231,4 @@ The lane applies to every offer and copy step run in this workspace from 2026-09
 
 ## Scope
 
-This workspace only. `/lifecycle-copy` (the interested-reply and pre-call copy) is not in the lane yet, apart from the new reply lines above. The mirrored `/ask-aaron` skill carries no doctrine at all and reads Notion live (2026-09-29, mirrored here 2026-09-30); the standing exception lives in the call prompt above, not in his skill files. The copy side is not yet live-Notion: `aaron-copy-frames.md` and the frozen copy-QA reference remain until the operator asks to retire them.
+This workspace only. `/lifecycle-copy` (the interested-reply and pre-call copy) is not in the lane yet, apart from the new reply lines above. The mirrored `/ask-aaron` skill carries no doctrine at all and reads Notion live (2026-09-29, mirrored here 2026-09-30); the standing exception lives in the call prompt above, not in his skill files. Under the Aaron flow (see aaron-flow.md section 9) both calls reason from his live Notion section with no snapshot fallback, and the Frame refresh above adds his newest model emails to `aaron-copy-frames.md` before every Call 2; `aaron-copy-frames.md` and the frozen copy-QA reference remain as the recorded frame library until the operator asks to retire them.
