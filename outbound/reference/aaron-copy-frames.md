@@ -86,7 +86,7 @@
 | task list | effort: the sender's work in prose | real tasks only |
 | one small act | "one prospect action (effort)"; "They know exactly what's going to happen." | the one thing they do |
 
-His quote shows the two lines only. Where a CTA is added, it comes from the CTA set below and the frame map marks it as an addition.
+His quote shows the two lines only. Where a CTA is added, it comes from the CTA set below, ends on a question mark (the operator rule in the CTA set), and the frame map marks it as an addition.
 
 **Use when:** the deliverable has a real date and the prospect does one thing.
 
@@ -191,6 +191,8 @@ Never a fake thread, a fake forward, an emergency or an invoice. **One subject p
 ## CTA set (examples 4, doctrine 9)
 
 Use his words, and **one CTA across every Email 1 variant in a campaign that carries one** ("Standardize the CTA across all of them to one line"). The one exception is his own line-count test, whose one-liner arm has no CTA at all.
+
+**Operator rule (Luke, 2026-10-06): every close ends on a question mark.** A CTA below written as a statement ships as a question ("Worth sharing more?", "Open to testing it for free?"), and `aaron_frame_check.py` accepts either ending on every frame that closes on a statement.
 
 - **Would that be worth sharing more?** (his signature; "Worth sharing more." and "Is that worth sharing more?" are his variants)
 - **would that be useful?** (F2)

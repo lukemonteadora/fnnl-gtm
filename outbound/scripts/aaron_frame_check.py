@@ -36,20 +36,22 @@ CONSULT_FILE = "aaron-copy-call.md"
 FN = r"\{\{first_name\}\}"
 
 # Offer-line frames: a regex on the offer paragraph (the email minus its PS). None = structure-only.
+# Every frame that closes on a statement also accepts "?": the operator rule (Luke, 2026-10-06) is that every
+# cold email ends its ask as a question, e.g. "Worth sharing more?" (aaron-copy-frames.md, CTA set).
 OFFER = {
     "F1": rf"^{FN}, if we could .+ one free .+ for you\. Would that be worth sharing more\?$",
     "F2": rf"^(?i:({FN}, )?if we could build you a no-cost .+, would that be useful\?)$",
     "F3": rf"^(?i:({FN}, )?if we could .+, (would that be|is that) worth sharing more\?)$",
     "F4": r"^(?i:hey, if we could send you .+ that .+, would that be worth sending over\?)$",
-    "F5": rf"^{FN},? if we .+ in the next .+ at absolutely no cost\.\s+So, we would .+\. All you have to do is .+\.$",
+    "F5": rf"^{FN},? if we .+ in the next .+ at absolutely no cost\.\s+So, we would .+\. All you have to do is .+[.?]$",
     "F6": rf"^{FN}, (I|we) just .+\. (Do you mind|Mind) if I send it to you\?$",
-    "F6-v2": rf"^{FN}, just built an? .+ that .+\. Open to testing it for free\.$",
+    "F6-v2": rf"^{FN}, just built an? .+ that .+\. Open to testing it for free[.?]$",
     # F11 is live (confirmed from the raw captions 2026-09-30), so it is checked on his exact fixed words.
     "F11": rf"^{FN}, if I had a way to .+ to .+, and you only pay per .+, would that be worth a quick test\?$",
     # F11-v2 is three lines (question, "Asking" line, "Thinking" line). The word after "Asking" is a caption
     # guess, so it is not fixed. Its lines are joined before matching (MULTI_LINE below).
     "F11-v2": (rf"^{FN}, do you currently offer an? .+\? Asking(?: \w+)? I found a way to .+\. "
-               r"Thinking I could .+ and we could sort out .+ if you're open to that kind of thing\.$"),
+               r"Thinking I could .+ and we could sort out .+ if you're open to that kind of thing[.?]$"),
     "F8": None, "F9": None, "F10": None,
 }
 # Frames written as several short lines. Their main paragraphs are joined into one line before the offer check,
@@ -57,7 +59,7 @@ OFFER = {
 MULTI_LINE = {"F11-v2"}
 STRUCTURE_HINT = {
     "F8": r"(?i)would you be open to trying it out.*shoot you over the",
-    "F9": r"Happy to share the thinking if you're open\.$",
+    "F9": r"Happy to share the thinking if you're open[.?]$",
     "F10": r"(?i)^we're not here to sell you anything",
 }
 PS = {
@@ -76,7 +78,7 @@ FOLLOW = {
     "FU4": None,
     # FU5 is live (Sep 21, raw captions): his "if it's easier" video Email 2. "if it's easier" offers an easier
     # route to the same thing and does not name the non-reply, so it passes the standalone rule.
-    "FU5": rf"^{FN}, (?i:if it's easier, I can send over a quick video elaborating on how we .+\.)$",
+    "FU5": rf"^{FN}, (?i:if it's easier, I can send over a quick video elaborating on how we .+[.?])$",
 }
 FU3_WORDS = r"FYI, this isn't|this doesn't take a lot of time"
 SUBJECT = {
