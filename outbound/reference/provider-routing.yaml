@@ -59,7 +59,7 @@ providers:
       company_discovery: "company_search (primary call). Resolve enums first with industry_search, technology_search and location_search; guessed values silently return wrong results. Page size default 25, max 100, 0-based pages; surface totalElements"
       people_discovery: "REST POST /v1/people through scripts/aiark_people.mjs (0.5 credits per result, no email reveal): titles, seniority, function and the company text fit needs. The MCP people_search has no keyword exclude, so refined searches never use it (outbound/reference/ai-ark-people-discovery.md)"
       email_finder: "per shipped person: /v1/people/export/single by person id (1 credit only when an email is found, per AI Ark's CLI source 2026-10-05; UNVERIFIED LIVE, the first run confirms a miss bills 0). /v1/people/email-finder (0 credits on a miss) works on a whole search page's trackId, so it would also pay for people at companies fit dropped"
-      email_finder_path_verified: false   # set true, with the date, after the first live run shows a miss billing 0 credits
+      email_finder_path_verified: true    # 2026-10-06 (propfuel, outbound/scripts/aiark_email_single.mjs): 25 lookups, 23 found = 23 credits, 2 misses = HTTP 404 "no email found" at 0 credits (balance 47,579.7 to 47,556.7); X-Credit header is negative (-1.0); person emails at body.email.output[], body.company.contact.email is the org inbox
       not_a_finder: "/v1/people/export is never a rung (0.5 credits per profile even on a miss)"
     email_note: "labels CATCH_ALL as its own email type alongside SMTP, which is why it leads the email waterfall. Keep that label as its own column: it is a second catch-all signal, never the send gate (MillionVerifier's verdict is)"
   prospeo:
