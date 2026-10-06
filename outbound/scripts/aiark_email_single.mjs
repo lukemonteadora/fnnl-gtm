@@ -161,7 +161,10 @@ async function main() {
       if (Number.isFinite(charged)) { spent += charged; sawHeader = true; }
       fs.appendFileSync(rawPath, scrub(JSON.stringify({ person_id: row.person_id, http: r.http, credit: r.credit, body: r.body })) + '\n');
       detail = { http: r.http, credits: r.credit };
-      if (r.http >= 200 && r.http < 300) {
+      if (r.http >= 200 && r.http < 300 && r.body?.id && String(r.body.id) !== String(row.person_id)) {
+        // Cross-talk guard (safe to shard): a reply for a different person is never recorded as this person's email.
+        status = 'error'; detail.error = `response id ${r.body.id} does not match requested person`;
+      } else if (r.http >= 200 && r.http < 300) {
         const hits = personEmails(r.body);
         if (hits.length) {
           const best = pickEmail(hits, row.company_domain);
