@@ -19,6 +19,12 @@ copy uses a {{variable}}:
      copy's own tokens must then be filled on that row; otherwise the row is held in leads.held-blank-var.csv.
   4. Re-reads the outputs: every input row is in exactly one file, and no upload row has a blank token. Any miss is
      an error, never a warning.
+  5. Reports how each token must be written in the copy PlusVibe receives (summary key `plusvibe_tokens`). PlusVibe
+     stores any lead value that is not a standard field as `custom_<name>` and renders an unmatched token blank
+     (stack-contract.yaml sending_platform.notes, found live 2026-10-06), so the recorded copy keeps the plain column
+     name and the upload rewrites each token under `custom` to `{{custom_<name>}}`, sending the value in
+     custom_variables under its plain key. `plusvibe_upload_token()` gives builders the same mapping. Report only:
+     the lead files keep their plain column names.
 
 Also writes fallback-preview.md (every email that uses a token with a fallback, shown with the fallback in place)
 and copy-var-gate.json (counts). Never edits the copy.
@@ -42,7 +48,14 @@ import yaml
 TOKEN = re.compile(r"\{\{\s*([A-Za-z0-9_]+)\s*\}\}")
 
 # PlusVibe fills these itself at send time: never a lead-file column, never gated as blank.
-SENDER_VARS = {"sender_signature"}
+SENDER_VARS = {"sender_signature", "sender_first_name"}
+
+# PlusVibe lead fields that keep their own name as a body token. Confirmed: the help page shows first_name and
+# company_name; the operator confirmed last_name and email (2026-10-06). The rest are /lead/add fields whose
+# rendering as a body token is not yet seen on a live preview.
+PV_STANDARD_CONFIRMED = {"first_name", "last_name", "company_name", "email"}
+PV_STANDARD_UNCONFIRMED = {"notes", "address_line", "city", "country", "country_code", "phone_number",
+                           "company_website", "linkedin_person_url", "linkedin_company_url"}
 
 DASHES = (chr(0x2014), chr(0x2013))  # em dash, en dash
 
@@ -58,6 +71,25 @@ def tokens_in(variants: dict) -> set[str]:
             for field in ("subject", "body"):
                 found.update(find_tokens(str(v.get(field) or "")))
     return found - SENDER_VARS
+
+
+def plusvibe_upload_token(name: str) -> str:
+    """The token as PlusVibe's sent copy must carry it: custom lead variables take a custom_ prefix."""
+    if name in SENDER_VARS or name in PV_STANDARD_CONFIRMED or name in PV_STANDARD_UNCONFIRMED:
+        return name
+    return name if name.startswith("custom_") else f"custom_{name}"
+
+
+def plusvibe_tokens(tokens: set[str]) -> dict:
+    return {
+        "standard": sorted(t for t in tokens if t in PV_STANDARD_CONFIRMED),
+        "standard_unconfirmed": sorted(t for t in tokens if t in PV_STANDARD_UNCONFIRMED),
+        "custom": {t: "{{" + plusvibe_upload_token(t) + "}}" for t in sorted(tokens)
+                   if t not in PV_STANDARD_CONFIRMED | PV_STANDARD_UNCONFIRMED and not t.startswith("custom_")},
+        "note": "recorded copy keeps the plain name; the upload rewrites each custom token (inside a fallback block "
+                "too) and sends the value in custom_variables under its plain key. Preview any standard_unconfirmed "
+                "token on one real lead.",
+    }
 
 
 def render(text: str, values: dict) -> str:
@@ -118,7 +150,13 @@ def main(argv=None) -> int:
     cols += aliased
     missing_cols = sorted((used | novar_used) - set(cols))
     if missing_cols:
-        return fail(f"the copy uses {', '.join('{{' + c + '}}' for c in missing_cols)} but {a.leads} has no such column")
+        msg = f"the copy uses {', '.join('{{' + c + '}}' for c in missing_cols)} but {a.leads} has no such column"
+        prefixed = [c for c in missing_cols if c.startswith("custom_")]
+        if prefixed:
+            msg += (f". {', '.join('{{' + c + '}}' for c in prefixed)} carries PlusVibe's custom_ prefix: recorded copy "
+                    f"keeps the plain column name ({', '.join('{{' + c[len('custom_'):] + '}}' for c in prefixed)}) and "
+                    "the upload adds the prefix")
+        return fail(msg)
 
     upload, to_novar, held = [], [], []
     blank_counts = {t: 0 for t in sorted(used)}
@@ -190,6 +228,7 @@ def main(argv=None) -> int:
         "variables_used": sorted(used),
         "read_from_co_columns": aliased,
         "variables_without_fallback": unfallen,
+        "plusvibe_tokens": plusvibe_tokens(used | novar_used),
         "unused_fallbacks": sorted(set(fallbacks) - used),
         "blank_variable_route": route or None,
         "rows_in": len(rows), "rows_upload": len(upload), "rows_upload_with_fallback": sum(1 for r in upload if r["copy_var_fallback"]),

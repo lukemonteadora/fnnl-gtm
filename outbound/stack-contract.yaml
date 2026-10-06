@@ -289,6 +289,26 @@ infrastructure:
          pulls full bodies. Triage write-back via POST /lead/data/update.
          TRAP: POST /lead/update/status is sending-state control (COMPLETED, PAUSED,
          UNPAUSED), NOT triage. Triage labels go through /lead/data/update.
+      CUSTOM VARIABLES TAKE A custom_ PREFIX IN THE COPY (found live 2026-10-06 on
+      PropFuel's drafts, where lead_data showed custom_sells_to_vertical; PlusVibe
+      help article 8682003 "How to personalize your emails"). Any lead value that is
+      not a standard field, sent in the /lead/add custom_variables object under its
+      PLAIN key (sells_to_vertical, never pre-prefixed) or as an extra CSV column, is
+      stored as custom_<name>, and the email body must reference it as
+      {{custom_<name>}}. An unmatched token renders BLANK, silently, so a wrong name
+      is a broken sentence, not an error. The fallback form needs the prefix on the
+      inner token too: {{fallback|{{custom_<name>}}|default}}. Standard lead fields
+      keep their own names: first_name and company_name are confirmed as body tokens
+      by the help page, last_name and email by the operator; the other /lead/add
+      fields (notes, address_line, city, country, country_code, phone_number,
+      company_website, linkedin_person_url, linkedin_company_url) are API fields
+      whose rendering as a body token is UNCONFIRMED, so preview one real lead before
+      relying on one. Sender fields ({{sender_first_name}}, {{sender_signature}}) are
+      platform fills, never lead columns. RULE: recorded copy (variants.yaml,
+      copy.md) keeps the plain column name ({{sells_to_vertical}}), because the frame
+      check and copy_var_gate.py read it against the lead file; the upload maps every
+      non-standard token to {{custom_<name>}}. copy_var_gate.py reports that mapping
+      under plusvibe_tokens.
       Base https://api.plusvibe.ai/api/v1, header x-api-key, workspace_id required on
       every endpoint, 5 req/sec. Docs at developer.plusvibe.ai, with a
       machine-readable endpoint index at developer.plusvibe.ai/llms.txt .
