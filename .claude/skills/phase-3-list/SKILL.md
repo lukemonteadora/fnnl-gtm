@@ -54,6 +54,7 @@ Paths resolve under `outbound/`. Client profiles are gitignored, so read them wi
 
 "What the next phase needs" carries:
 - per launching campaign: its slug, offer, segment, verified contacts and companies, the grade, the catch-alls held back, and the path to `leads.verified.csv`;
+- **Launch set keys:** one line, comma-separated, one key per launching campaign: `offer-<aaron_rank>@<segment>`, or `op-<slug>@<segment>` for an offer the operator added or kept outside Aaron's call. Include every operator override of his launch set. Phase 4 compares this line with the reply guide's manifest (`/reply-guide`, "Phase 4 refresh check");
 - the variable columns that exist and how full each is (Phase 4 copy may use only these);
 - `later` and `drop` campaigns, with Aaron's reasons; the discovery route; the capacity request;
 - the path to `aaron-copy-call.md`;

@@ -15,6 +15,9 @@ Paths resolve under `outbound/`. Client profiles are gitignored, so read them wi
 2. Read the read set (`phase-protocol.md` section 2). Phase 3's handoff is the input.
 3. **The verified-list gate.** Copy is written only for a campaign in Phase 3's launch set with a verified `leads.verified.csv` at grade B or higher and a passed manual QA (`verified-list-gate.md`). Campaign folders the handoff does not name are old runs, so ignore them. Staging belongs to Phase 3 (`phase-protocol.md` section 5); a backfilled client that arrives unstaged is a missing Phase 3 output (section 7).
 4. **Client answers owed.** If `client-asks.md` has a `### Sent <date>` message with no `#### Answers` block under it, the first thing said in the thread is one line asking the operator to paste what came back ("none came back" is a valid answer and skips them all). File what is pasted the same turn per `client-messages.md` ("Filing the answers the operator pastes back"). This never holds the phase: copy starts while the answers are owed.
+5. **Reply guide refresh check** (ruling `reply-guide`; `/reply-guide`, "Phase 4 refresh check"). Run `python outbound/scripts/reply_guide.py diff outbound/profiles/<slug> --launch-set "<the Launch set keys line from Phase 3's handoff>"`.
+   - **Exit 0:** the guide still matches. Skip the rebuild and note it under "Calls I made".
+   - **Exit 2:** campaigns were added, changed or removed in Phase 3, or no guide exists yet. Run `/reply-guide` in `refresh` mode now, before step 3's reply machine, so the per-campaign reply files are built from the current guide. Name what changed at checkpoint B.
 
 **The ask policy governs every step below** (`phase-protocol.md` section 3; `outbound/reference/standing-rulings.md`). Find the answer first, decide small calls and list them under "Calls I made", and stop mid-run only for the four stops that section names (a tool out of balance or down, spend over the budget, Aaron's call contradicting a client requirement, a missing required key), plus the named fifth: the Step 6 upload stop below.
 
@@ -34,6 +37,8 @@ Paths resolve under `outbound/`. Client profiles are gitignored, so read them wi
    - `offer.qualification`, wherever the offer has a costly front end.
 
    New prospect-facing lines (FAQ answers, an over-cap reply) come from a fresh `/ask-aaron` sub-agent.
+
+   **Build these files from the reply guide** (`reply-guide.md`, `/reply-guide`). Its lines, already reviewed by Aaron and written in the client's voice (ruling `reply-voice-client`), are the source. Never name the agency or its staff in a reply, and never write "we work with <Client>". When a file and the guide disagree, the guide wins and both are updated together.
 4. **Spintax, on every subject and every body of every step** (HARD RULE, operator directive 2026-09-30). Apply the sending platform's spintax syntax from `outbound/stack-contract.yaml` to the recorded copy: Email 1, each Email 1 variant, Email 2 and Email 3, subject lines included, with every unprotected body sentence spun and option A kept as Aaron's exact wording, per the spintax rule in `/campaign-copywriting`. It never changes an offer, a claim or a CTA. Step 7's read-back checks it.
 5. **Launch settings, then senders.**
    - **Launch settings.** The sender-side settings (sender names, signature) are inherited from the client's earlier campaign on the sending platform, read-only, when the profile or the operator supplies it; the target-side ones are derived from this campaign (timezone, send days, hours and daily limits from the leads and senders; step waits from Aaron's sequence). None of these is asked (`launch-settings` ruling).
@@ -62,6 +67,7 @@ Write the handoff, then run `python outbound/scripts/phase_state.py checkpoint <
 Checkpoint B is the second and last human checkpoint (ruling `checkpoints`): it shows Phase 3's results and holds alongside Phase 4's own, since Phase 3 auto-approved with nothing shown at the time. The summary covers:
 - Phase 3, carried forward: verified contacts per campaign and the total, the QA grade and the reviewer's manual sample findings, the holdbacks (catch-alls, repeated errors), Aaron's launch set and any floor exception with his reason, the capacity request, and the Phase 3 spend against the budget;
 - the built drafts (names, ids, lead counts, sender counts);
+- the reply guide: unchanged since Phase 2, or rebuilt (what was added or removed), with the PDF path and any booking-link warning;
 - Gates A to D, each passed or with the exact fix (Gate B states plainly when the PlusVibe placement test did not run, per the `placement-test` ruling);
 - anything a rail held, shown with Aaron's version and the rail it breaks, including any Phase 3 QA question still unanswered;
 - each arm's Start rail, and Aaron's divergences from the house defaults;

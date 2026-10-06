@@ -62,6 +62,7 @@ Paths resolve under `outbound/`. Client profiles are gitignored, so read them wi
      7. **Keep it a preview.** Preview verdicts never ship or drop a company at this sample size. The Phase 3 fit run and its agreement gate are unchanged, and the refined search carries the same `discovery-exclusions`. Record the categories found, the keyword candidates kept, and the validation fit-rate change in `_research/targeting-preview/summary.md`.
 8. **Client asks.** Merge anything an offer needs from the client into the one unsent message in `client-asks.md` (create it if Phase 1 never did), per `outbound/reference/client-messages.md`: one yes or no per offer that needs the client (keyed `[offer-<rank>]`), one rough capacity question, the sample when one exists. HOLD evidence is listed under `## Internal` and is not asked. The sample is a promise, so "more later?" is not asked. Run the question filter and the "Before you send" list in that file. Nothing is sent automatically.
 9. **Offer Readiness.** Once the offers are recorded, fill each offer's readiness fields and write the read-only board per `outbound/reference/offer-readiness.md`: each offer's Start rail, what is missing and who owes it. A client approval is recorded only as that file describes, never inferred.
+10. **The reply guide** (ruling `reply-guide`, operator directive 2026-10-06). Run `/reply-guide` in `build` mode for every offer locked for testing. It writes `reply-guide.md`, the PDF at `exports/<Client>-Reply-Guide.pdf`, and `reply-guide.manifest.json` with the launch-set keys. Everything is in the client's voice and checked by `reply_guide.py`. Held or internal offers go to `reply-guide-internal.md`, which is never exported. This step never asks a question and never holds the phase. Aaron's review of the house lines runs inside it.
 
 ## Handoff: `phases/phase-2-offer.md`
 
@@ -73,7 +74,8 @@ Paths resolve under `outbound/`. Client profiles are gitignored, so read them wi
 - the targeting answers from checkpoint A (and those stored rulings already gave), each stored as a `targeting:<topic>` ruling, with the path to `_research/targeting-preview/summary.md`;
 - the DNC answer, the speed-to-lead owner, the booking link and any sweep source Phase 1 could not resolve, now answered (or still open and reason why);
 - the PlusVibe placement-test OK (or declined, or not yet asked), stored as the `placement-test` ruling;
-- the paths to `aaron-offer-call.md`, `lead-magnets.md`, `_research/pain-clusters.md` and `offer-test-slate.md`.
+- the paths to `aaron-offer-call.md`, `lead-magnets.md`, `_research/pain-clusters.md` and `offer-test-slate.md`;
+- the reply guide: the PDF path, the launch-set keys in its manifest, the Aaron pass status, and any booking-link warning.
 
 ## Checkpoint A
 
@@ -86,6 +88,7 @@ The summary covers:
 - the list size per offer (from the AI Ark 200-row sample) and the spend estimate;
 - the targeting preview: the ambiguous categories it found per offer, and under "Calls I made" the ones a stored ruling already answered;
 - the readiness board: each offer's Start rail, what is missing and who owes it. Display only; it adds no question.
+- the reply guide PDF, ready to hand to whoever will answer the inbox, with any booking-link warning. Display only; it adds no question.
 
 Then one native prompt, recommended answers first. This is checkpoint A, the one up-front batch for the rest of the run (ruling `checkpoints`), so Phase 3 and Phase 4 can run straight through with no further human stop until checkpoint B. Its first option is always "Approve and go to Phase 3 (recommended)", which moves the run on rather than signing off Aaron's offers; a swap the operator wants rides in that same answer. The questions after it follow, each only when it applies (at most four in all; a second prompt only when more remain):
 1. **The targeting questions from the 200-row sample preview**, one per unanswered category, each with the recommended answer first. When there are many, group them into one multi-select question ("Which of these count as in-target?") with the recommended ones pre-listed first, or one question per offer.

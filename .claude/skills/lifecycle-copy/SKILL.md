@@ -31,6 +31,12 @@ Here `<outbound>` is the root of this skill library - resolve it to wherever the
 
 This skill writes copy only. It does not package DOCX, upload, or send. The DOCX skills format what this skill produces; they explicitly route back here when their source file is missing.
 
+**The client's voice, and the reply guide as the source (rulings `reply-voice-client` and `reply-guide`, operator directive 2026-10-06).** Replies go out as the client:
+- Use "we", "our team" and "I'm with <Client>".
+- Never write "we work with <Client>", never name the agency or any agency staff, and never put the agency's name in a link.
+- When the client has a `reply-guide.md` (built by `/reply-guide` in Phase 2), build `interested-reply.md` and `pre-call.md` from its lines rather than writing new ones. When the two disagree, the guide wins and both are updated together.
+- Reply files written before 2026-10-06 that disclose the agency are history. Never copy from them.
+
 ## When to use
 
 - **Before every campaign's Start (required).** As soon as `/campaign-copywriting` has produced `variants.yaml` for the campaign, write `interested-reply.md` (one reply template per category plus the `## Call Script`) and `pre-call.md` (the `## Confirmation Page` plus the pre-call sequence). Both are Gate D (reply readiness) inputs, so the operator's Start waits on them: a first reply inside 5 minutes cannot happen when the templates are only written after the first positive lands (Aaron, Sep 21: replies drafted "based on templates that we've established for each client specifically and what their offer is", then fired off "almost immediately"). The orchestration skills (`/cold-email-kickoff`, `/continue-client`) enforce the gate. (Aaron process alignment, operator directive 2026-09-22; supersedes writing these two files only on request or once a positive reply exists.)
