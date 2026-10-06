@@ -28,6 +28,7 @@ It never sends, uploads or posts anything. The guide is a file the operator hand
    - Questions and pushback are kept only where they apply to this client.
    - Proof comes only from public, nameable lines.
    - Offers are described in plain words. No cold copy is quoted.
+   - **Every campaign section opens with "What they get after a yes"** (template Part 1, operator directive 2026-10-06). It covers the short version, the steps from the yes to the result, an example of what the end recipient sees (from the offer's recipe or worked sample, with that sample organisation's facts swapped for `{single-brace}` placeholders) and the not-a-fit line. Each campaign also gets the "Can I see what it looks like?" reply. Anything the client hasn't confirmed is written as "set on the call".
 4. **Aaron's pass on the house lines.** Send one fresh `/ask-aaron` sub-agent every prospect-facing line that isn't his own `delivery_reply`, with the prompt rule "write in the client's voice; never name the agency" (`aaron-lane.md`, new reply lines). Use his returned lines as written, unless one breaks the voice ruling or a truth rail. Then one fix round goes back to him, and if it still fails, keep the template line and list it under "Calls I made". In `refresh` mode, send only new or changed lines. Record `aaron_pass` in the manifest. With no Notion access, set `aaron_pass: pending` and say so at the checkpoint. The guide is still built.
 5. **Write the manifest** `outbound/profiles/<slug>/reply-guide.manifest.json`:
    ```json
@@ -53,7 +54,7 @@ Read the launch set from the Phase 3 handoff (`phases/phase-3-list.md`, "Launch 
 ```
 python outbound/scripts/reply_guide.py diff outbound/profiles/<slug> --launch-set "<comma-separated keys>"
 ```
-- **Exit 0, unchanged:** skip the rebuild and note "reply guide unchanged" under "Calls I made".
+- **Exit 0, unchanged:** skip the rebuild and note "reply guide unchanged" under "Calls I made". If the manifest's `aaron_pass` is still `pending`, run step 4 (Aaron's pass) and step 6 (re-render) only.
 - **Exit 2, changed or no manifest:** run `refresh` (steps 1 to 7) before `/lifecycle-copy`. Name what was added or removed at checkpoint B.
 
 ## Rules that bind every run

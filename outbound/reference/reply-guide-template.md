@@ -42,6 +42,16 @@ Part 1 holds the build rules. Part 2 is the template itself. Everything in Part 
 - **Numbers.** The only numbers allowed are the public proof lines in 9.6, written exactly as the client publishes them. Never quote reply rates, past campaign results or unpublished claims.
 - **No cold copy in the guide.** Phase 2 has no cold copy yet. Describe each offer in plain words, and tell campaigns apart by their offer, never by a quoted email or a subject line. That way a skipped Phase 4 rebuild never leaves a stale quote behind.
 
+### "What they get after a yes" is required for every campaign (operator directive 2026-10-06)
+
+The people answering the inbox ask "what does the draft look like, what do I actually send them?" and "what do they get when a positive reply comes in?". So every campaign section opens with a **What they get after a yes** block, before any reply template. It has four parts:
+1. **The short version.** One or two sentences: what they get, and what it costs them in time.
+2. **Step by step.** Numbered steps from the yes to the result. Say who does each step ("we", "you"), and say what the prospect has to do and what it costs. Anything the client hasn't confirmed (start date, capacity, minimums) is written as "set on the call", never as a promise.
+3. **What it looks like.** A short, real example of the deliverable: the first message a lapsed member gets, the opening section of the draft, or the first rows of the list. Build it from the offer's recipe or worked sample. Swap the sample association's own facts for `{single-brace}` placeholders, label it as an example, and say the real wording is agreed with them.
+4. **If they don't qualify.** One line with the honest outcome, pointing to the not-a-fit reply.
+
+Add the "Can I see what it looks like?" reply (in the blocks below) to every campaign. It pastes the example. An asset offer sends the finished draft as its delivery email, so the guide shows a trimmed sample of it instead.
+
 ### Outputs (all under `outbound/profiles/<slug>/`)
 
 | File | What it is |
@@ -62,7 +72,7 @@ Part 1 holds the build rules. Part 2 is the template itself. Everything in Part 
 
 **What this is.** This guide is for whoever answers replies to <Client>'s outreach emails. For each kind of reply it gives the email to send and the next step to take. It covers <<FILL: the number in words>> campaigns.
 
-**How to use it.** First work out which campaign the reply came from (section 3). Then find what the person said in the table in section 2 and open the matching reply. Fill in the parts in `{{curly brackets}}`. Read the full thread once, then send your reply on the same thread.
+**How to use it.** First work out which campaign the reply came from (section 3). Then find what the person said in the table in section 2 and open the matching reply. To explain what happens after a yes, each campaign's section opens with "What they get after a yes". Fill in the parts in `{{curly brackets}}`. Read the full thread once, then send your reply on the same thread.
 
 ---
 
@@ -130,6 +140,23 @@ Part 1 holds the build rules. Part 2 is the template itself. Everything in Part 
 
 **What we offered:** <<FILL: the offer in one plain sentence, in the prospect's terms.>>
 
+### What they get after a yes
+
+**The short version:** <<FILL: what they get, and that they spend one <<length>> call and we do the rest.>>
+
+**Step by step**
+1. **They book the setup call** using the link in the yes reply. On it our team: <<FILL: the 2 to 4 things the call settles, such as connecting their system, picking who gets it, agreeing the wording>>.
+2. **We build it and they approve it.** Nothing goes out until they say so.
+3. <<FILL: what we run or deliver, and what the people on the receiving end see>>.
+4. <<FILL: where the results land (for example, saved to their database) and what they see at the end>>.
+
+**What they need to do:** <<FILL>>. **What it costs them:** nothing. **How soon it starts and how big it can be:** set on the setup call. Don't promise a date or a number in a reply.
+
+**What it looks like (an example).** This shows the shape. The real wording is agreed with each prospect on the setup call.
+<<FILL: the first message or screen the end recipient gets, as a blockquote, with {single-brace} placeholders, plus a short table of any branching follow-up.>>
+
+**If they don't qualify,** we say so honestly on the call. Use the not-a-fit reply if it comes up by email.
+
 ### N.1 Yes
 ```
 Great {{first_name}}, here's a link to grab a time with our team to <<FILL: what the call does, from Aaron's delivery_reply in the client's voice>>. {{booking_link}} It takes <<length>>, and <<FILL: the eligibility check his reply states, as "we confirm ...">>.
@@ -142,6 +169,14 @@ Great {{first_name}}, here's a link to grab a time with our team to <<FILL: what
 {{first_name}}, happy to. <<FILL: one or two sentences on what it is and what they get>>. It's free, so you can see it working <<FILL: on their own X>> before paying for anything.
 
 Setup is one <<length>> call with our team. Here's a link to grab a time: {{booking_link}}
+
+{{your_first_name}}
+```
+
+### N.2b "Can I see what it looks like?"
+Paste the example from "What it looks like" into your reply, under this line:
+```
+{{first_name}}, sure. Here's the shape of what <<FILL: the end recipients>> would get. We'd agree the real wording with you on a short setup call. {{booking_link}}
 
 {{your_first_name}}
 ```
@@ -167,6 +202,23 @@ After this, stop. Mark them as not now and check in next quarter.
 ## N. Campaign X: <Offer name>
 
 **What we offered:** <<FILL: the offer in one plain sentence, and what it is built from>>.
+
+### What they get after a yes
+
+**The short version:** a free <<FILL: the draft>>, built from <<FILL: the public source>>, in their inbox by the next business day. Nothing needed from them.
+
+**Step by step**
+1. We reply within 5 minutes to say it's on its way, and call them.
+2. **Someone on our team builds the draft** from <<FILL: the public source>>. <<FILL: roughly how long it takes to build, and the one input to ask for if the source lacks it>>.
+3. We send it by the next business day as a link, with no times and no booking link (the delivery reply).
+4. Three days later we follow up with the one thing the draft can't do on paper, and offer a demo.
+
+**What the draft contains:** <<FILL: its sections in a short list>>.
+
+**What it looks like (an example).** A trimmed sample with {single-brace} placeholders, labelled as a sample:
+<<FILL: the opening of the draft as a blockquote, taken from the worked sample, with the sample organisation's facts swapped for placeholders.>>
+
+**If they don't qualify,** use the not-a-fit reply and don't build the draft.
 
 ### N.1 Yes
 ```
@@ -229,6 +281,12 @@ If <<FILL: seeing the real thing run>> would help at some point, just say so and
 ## N. Campaign X: <Tool name>
 
 **What we offered:** <<FILL: the tool in one plain sentence.>>
+
+### What they get after a yes
+
+**The short version:** a link to <<FILL: the tool>>. They enter <<FILL: the inputs>> and see <<FILL: the output>> in about <<FILL: time>>. <<FILL: what the button at the end does, if there is one>>.
+
+**What it looks like:** <<FILL: the inputs and the result screen in a few lines>>.
 
 ### N.1 Yes
 ```
