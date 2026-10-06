@@ -85,17 +85,18 @@ approved_stack:
   set_by: operator directive 2026-09-22
   tools:
     - tool: GetLeads
-      fills: [lead_data.intent_signals]
+      fills: [lead_data.intent_signals, "lead_data.contact_enrichment (step 1, since 2026-10-06)"]
       also_covers: >
-        Deliberate SECOND source for company and contact discovery (402M
-        contacts, exact counts at 0 credits via count_contacts). The gap-fill to try
-        when an AI Ark universe comes back thin.
+        Company and contact discovery (402M contacts, exact counts at 0 credits
+        via count_contacts). Since 2026-10-06 (operator directive, discovery-flow)
+        it runs the full company export on the refined search and the people
+        search at the exported companies.
       access: hosted MCP (no .env key)
     - tool: AI Ark
-      fills: [lead_data.company_discovery, lead_data.contact_discovery, "lead_data.contact_enrichment (step 1)"]
+      fills: [lead_data.company_discovery, lead_data.contact_discovery, "lead_data.contact_enrichment (step 3, since 2026-10-06)"]
       access: hosted MCP + REST, AI_ARK_API_KEY
     - tool: Prospeo
-      fills: ["lead_data.contact_enrichment (gap-fill, runs only on rows AI Ark left blank)"]
+      fills: ["lead_data.contact_enrichment (gap-fill, step 5, runs only on rows AI Ark left blank or rejected)"]
       also_covers: >
         Search-time person and company filters, usable as a secondary
         discovery source when a filter AI Ark lacks decides the slice.
@@ -455,6 +456,12 @@ lead_data:
       required. Reveal and lookup-by-person calls (for example GetLeads
       lookup_decision_makers, which returns emails and bills per record) are never
       discovery rungs. /tam-build records the route in run_state.discovery_route.
+      DISCOVERY FLOW (operator directive 2026-10-06, house default,
+      standing-rulings.md discovery-flow): AI Ark company_search runs on a 200
+      to 300 company sample whose fit is scored and whose shared keywords and
+      industries become every include and exclude; GetLeads then runs the
+      refined search and exports the whole company list (AI Ark in parallel,
+      deduped by company_domain, only if its export is fast).
       Machine-readable form: provider-routing.yaml layers.company_discovery.
 
   contact_discovery:
@@ -476,35 +483,49 @@ lead_data:
       Same enum pre-step as company_discovery applies.
       GetLeads is the secondary contact source, 402M contacts with 179 fields per
       lead (52 contact, 127 company), reachable through its MCP.
-      ADVANCED PEOPLE SEARCH RUNS IN AI ARK ONLY (operator directive 2026-10-05):
-      one people search per vertical carrying the company filters and the title
-      stack, refined on a 200-row sample before it runs at scale
-      (outbound/reference/ai-ark-people-discovery.md). GetLeads stays in the
-      stack for the 0-credit count_contacts size check and the thin-universe
-      company top-up; it and Prospeo are no longer people-discovery rungs.
+      SUPERSEDED 2026-10-06: the 2026-10-05 "advanced people search runs in AI
+      Ark only" directive. DISCOVERY FLOW (operator directive 2026-10-06, house
+      default, standing-rulings.md discovery-flow): AI Ark runs only the 200 to
+      300 company sample and keyword mining; GetLeads exports the whole company
+      list on the refined search and finds the buyers (the offer's title stack)
+      at the companies that pass company fit. AI Ark may run the same company
+      export and people search in parallel, deduped (company_domain; LinkedIn
+      slug, then email), ONLY if it is fast; if slow it is skipped
+      (outbound/reference/ai-ark-people-discovery.md, provider-routing.yaml
+      layers.company_discovery and layers.people_discovery).
 
   contact_enrichment:
-    tool: AI Ark -> Prospeo (waterfall)
+    tool: GetLeads -> AI Ark -> Prospeo (waterfall)
     status: chosen
     capability: >
       Reveals work email addresses, and optionally phone numbers, for the
       contacts you decided are worth paying for.
     run_state_field: run_state.tam_enrichment_path
-    credentials: [AI_ARK_API_KEY, PROSPEO_API_KEY]
+    credentials: [AI_ARK_API_KEY, PROSPEO_API_KEY]   # GetLeads runs on its hosted MCP connector's own credential (scripts/getleads_email_batch.mjs), no .env key
     vendor_pack: prospeo
     notes: >
-      IN THE APPROVED SIX (AI Ark and Prospeo, operator directive 2026-09-22).
+      IN THE APPROVED SIX (GetLeads, AI Ark and Prospeo, operator directive 2026-09-22).
       WATERFALL ORDER, with verification interleaved per operator directive
-      2026-09-18, verifier updated to MillionVerifier 2026-09-22. Mirror this
-      into /email-waterfall:
+      2026-09-18, verifier updated to MillionVerifier 2026-09-22, re-ordered
+      GetLeads first by operator directive 2026-10-06 (house default,
+      standing-rulings.md discovery-flow; the reason given: it makes the
+      process faster). Mirror this into /email-waterfall:
         STEP 0. VERIFY FIRST any email the row already carries. Never pay a finder to
                 re-discover an address one verification credit can rule on.
-        STEP 1. AI Ark reveal, across the whole survivor set.
+        STEP 1. GetLeads email lookup by LinkedIn URL, across the whole survivor set
+                (scripts/getleads_email_batch.mjs).
         STEP 2. MillionVerifier verify on everything step 1 returned.
-        STEP 3. Prospeo, ONLY on rows AI Ark left blank or MillionVerifier rejected
-                (invalid, unknown, error, disposable). A catch_all verdict is NOT
-                a rejection: it goes to the holdback, not to Prospeo.
+        STEP 3. AI Ark reveal, ONLY on rows GetLeads left blank or MillionVerifier
+                rejected (invalid, unknown, error, disposable)
+                (scripts/aiark_email_single.mjs).
         STEP 4. MillionVerifier verify on everything step 3 returned.
+        STEP 5. Prospeo, ONLY on rows AI Ark left blank or MillionVerifier rejected
+                (scripts/prospeo_email_batch.mjs).
+        STEP 6. MillionVerifier verify on everything step 5 returned.
+      ONLY MillionVerifier ok (valid) and catch_all verdicts are accepted;
+      unknown, invalid, disposable and unverified emails never ship.
+      A catch_all verdict is NOT a rejection: it ends that person's walk and ships, labelled catch_all, never going on to a later finder.
+      Never open AI Ark on a row GetLeads has not already attempted.
       Never open Prospeo on a row AI Ark has not already attempted.
       TOOL-BALANCE GUARD (operator decision 2026-09-28, overriding the 2026-06-19
       "finder down, enricher becomes finder" exception): a tool that is out of
@@ -516,8 +537,9 @@ lead_data:
       reveal time using the same third-party engine (BounceBan), and that is EXPLICITLY
       NOT the send-gate. /email-waterfall's Verification Doctrine states a finding
       tool's own internal verification is never a substitute. Every address they
-      return is re-verified by MillionVerifier regardless.
-      WHY AI ARK IS PRIMARY: it labels CATCH_ALL as a distinct email type alongside
+      return is re-verified by MillionVerifier regardless. GetLeads' VALID label
+      is the same: a provider signal only, never the send gate.
+      WHY AI ARK WAS PRIMARY (until 2026-10-06; it is now the second rung): it labels CATCH_ALL as a distinct email type alongside
       SMTP. Prospeo's status field is binary (VERIFIED / UNAVAILABLE) and therefore
       COLLAPSES catch-all into valid; its verification_method field (SMTP / BOUNCEBAN)
       recovers the signal, so any pipeline reading Prospeo output MUST read
@@ -567,10 +589,12 @@ lead_data:
       OWN result: resultcode 1=ok, 2=catch_all, 3=unknown, 4=error,
       5=disposable, 6=invalid. So one call gives both deliverability and the
       catch-all flag, which is exactly the two-in-one verifier /email-waterfall
-      asks for. Gate mapping: ok goes to `valid` (the send file); catch_all goes
-      to the holdback (leads.catchall-holdback.csv, reintroduced after domain
-      maturity); unknown, error, disposable and invalid go to the review queue
-      or the gap-fill step. NEVER collapse catch_all into ok or into unknown.
+      asks for. Gate mapping: ok goes to `valid` (the send file); catch_all
+      ends the person's walk and ships labelled catch_all (operator directive
+      2026-10-06; the planner writes it to leads.catchall-holdback.csv, it goes
+      through list QA with the rest, and is then merged into the campaign file); unknown, error, disposable
+      and invalid go to the next finder rung or the review queue and never
+      ship. NEVER collapse catch_all into ok or into unknown.
       WHAT IT DOES NOT DO: it labels a catch-all domain, it cannot tell you
       whether that specific mailbox exists. That is the nature of accept-all
       domains, not a MillionVerifier defect. AI Ark's reveal-time CATCH_ALL

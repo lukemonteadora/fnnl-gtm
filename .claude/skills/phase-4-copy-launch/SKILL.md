@@ -65,7 +65,7 @@ Paths resolve under `outbound/`. Client profiles are gitignored, so read them wi
 Write the handoff, then run `python outbound/scripts/phase_state.py checkpoint <slug> 4 --handoff phases/phase-4-launch.md`.
 
 Checkpoint B is the second and last human checkpoint (ruling `checkpoints`): it shows Phase 3's results and holds alongside Phase 4's own, since Phase 3 auto-approved with nothing shown at the time. The summary covers:
-- Phase 3, carried forward: verified contacts per campaign and the total, the QA grade and the reviewer's manual sample findings, the holdbacks (catch-alls, repeated errors), Aaron's launch set and any floor exception with his reason, the capacity request, and the Phase 3 spend against the budget;
+- Phase 3, carried forward: verified contacts per campaign and the total, the QA grade and the reviewer's manual sample findings, the catch-alls shipped labelled `catch_all` (ruling `catch-all`), the holdbacks (repeated errors), Aaron's launch set and any floor exception with his reason, the capacity request, and the Phase 3 spend against the budget;
 - the built drafts (names, ids, lead counts, sender counts);
 - the reply guide: unchanged since Phase 2, or rebuilt (what was added or removed), with the PDF path and any booking-link warning;
 - Gates A to D, each passed or with the exact fix (Gate B states plainly when the PlusVibe placement test did not run, per the `placement-test` ruling);

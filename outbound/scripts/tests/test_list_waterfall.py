@@ -40,7 +40,8 @@ NAME_KEY = ["first_name", "last_name", "company_domain"]
 # rungs (aiark, getleads, prospeo) so the middle-rung behaviours (a skipped rung
 # routing to the next one, a depth cap stopping short of the last rung) can be
 # exercised. That is a test ladder, not FNNL's order: the live file and the
-# stack contract run aiark then prospeo, which LiveRoutingTests checks.
+# stack contract run getleads, then aiark, then prospeo (operator directive
+# 2026-10-06), which LiveRoutingTests checks.
 # The fixture leaves on_catch_all and requires_attempted unset, so the ported
 # tests run on the script defaults (continue, no prerequisite); the tests for
 # those two settings switch them on explicitly.
@@ -1083,11 +1084,13 @@ class LiveRoutingTests(WaterfallTestCase):
     def test_live_yaml_encodes_the_contract_catch_all_and_prospeo_rules(self):
         live, contract = self.live(), self.contract()
         notes = self.flat(contract["lead_data"]["contact_enrichment"]["notes"])
-        self.assertIn("A catch_all verdict is NOT a rejection: it goes to the holdback, not to Prospeo.", notes)
+        self.assertIn("A catch_all verdict is NOT a rejection: it ends that person's walk and ships, labelled "
+                      "catch_all, never going on to a later finder.", notes)
+        self.assertIn("Never open AI Ark on a row GetLeads has not already attempted.", notes)
         self.assertIn("Never open Prospeo on a row AI Ark has not already attempted.", notes)
         email = live["layers"]["email"]
         self.assertEqual("stop", email["on_catch_all"])
-        self.assertEqual({"prospeo": ["aiark"]}, email["requires_attempted"])
+        self.assertEqual({"aiark": ["getleads"], "prospeo": ["aiark"]}, email["requires_attempted"])
 
     def test_live_yaml_names_only_approved_providers(self):
         live, contract = self.live(), self.contract()

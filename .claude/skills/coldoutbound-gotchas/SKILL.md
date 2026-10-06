@@ -131,7 +131,7 @@ tool for it.
 
 ## List building and data providers (vendor-neutral)
 
-- **Count before you pull.** Read the company-discovery tool's count and the widening tool's count on the same
+- **Count before you pull.** Read the sample tool's count and the export tool's exact count on the same refined
   filters before paying for rows (`/tam-build`'s filter-first rule). A count is not a pull, but no paid tool is
   "free": one with plan credits still bills for the records a pull returns.
 - **Guessed filter values fail silently.** Resolve industry, location and technology values through the tool's
@@ -147,7 +147,8 @@ tool for it.
   leak guard on (`list_waterfall.py record` rejects ids that were not in its queue), and run a provider whose
   concurrency is `untested` in `provider-routing.yaml` serially until a real run confirms it.
 - **A finder's own "verified" is a provider signal, never the send gate.** Some finders fold catch-all into
-  valid; every email goes through the email verifier, and a catch-all goes to the holdback.
+  valid; every email goes through the email verifier, and a verifier catch-all ends the walk and ships labelled
+  `catch_all` (ruling `catch-all`, 2026-10-06).
 - **One employer can hide behind several company domains** (brand, regional or acquired sites). The per-company
   cap runs on `company_domain`, so read `list_qa.py`'s one-employer warning before upload.
 - **Fan-outs lose or double rows silently.** Use `/personalization-subagent-pattern`'s batch safety: disjoint

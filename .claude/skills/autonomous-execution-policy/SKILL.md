@@ -107,7 +107,7 @@ These take the recommended default (or the stored ruling), are logged, and are l
 - Launch settings inherited from a past campaign and every departure from them (sender-side values carry over, target-side ones are derived from the new campaign; standing ruling `launch-settings`).
 - The start date (drafts are built paused, the schedule starts the next weekday; standing ruling `start-date`) and the sending-capacity figure (a note, never a trim; standing ruling `capacity`).
 - Reusing an existing profile, segment merges, the Research QA verdict, the TAM GO gate inside the budget, and the launch set and copy exactly as Aaron wrote them.
-- Which verified catch-alls ship and when (the Catch-All Timing rule), and which unverified emails stay out.
+- Shipping verified catch-alls labelled `catch_all` (the `catch-all` ruling; operator directive 2026-10-06, see `standing-rulings.md` `discovery-flow`, which retired the Catch-All Timing hold), and which unverified emails stay out.
 - The opt-out handling (always the house default, standing ruling `opt-out`).
 - Any answer found by the find-it-first order (a ruling, the profile, the sweep), cited in one line.
 

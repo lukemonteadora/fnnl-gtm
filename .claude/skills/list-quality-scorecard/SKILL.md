@@ -237,7 +237,7 @@ Pre-send checklist:
 [x] Drop suppression matches
 [x] Quarantine bad titles, broken names, and domain mismatches
 [x] Move same-wave overflow back to the stagger queue
-[ ] Hold back ALL catch-alls on a young domain (Catch-All Timing gate, /email-waterfall) - reintroduce after ~2-3 weeks of positive sending, not a permanent drop
+[ ] Merge the verified catch-alls from leads.catchall-holdback.csv into the campaign file after QA, labelled catch_all (operator directive 2026-10-06, see standing-rulings.md discovery-flow; the Catch-All Timing hold is superseded), never a wholesale drop
 [ ] If copy later adds a row-level signal line, re-score Dimension 5 before upload
 ```
 
@@ -254,7 +254,7 @@ Pre-send checklist:
 
 ## Script Policy
 
-`scripts/list_qa.py` is the implementation (tests in `scripts/tests/test_list_qa.py`). It rewrites `leads.verified.csv` to the campaign-ready rows after keeping the input as `leads.verified.pre-scorecard.csv`, and writes `leads.rejected.csv`, `leads.review.csv`, `leads.catchall-holdback.csv`, `leads.stagger.csv`, `list-qa-report.md` and `qa-sample.csv`. Re-running needs `--rerun`, which reads the pre-scorecard copy, so a second pass never grades an already-cleaned file. The retired `list_quality_scorecard.mjs` is archived at `outbound/_archive/list-qa-legacy-2026-09-24/` for history only; never run it.
+`scripts/list_qa.py` is the implementation (tests in `scripts/tests/test_list_qa.py`). It rewrites `leads.verified.csv` to the campaign-ready rows after keeping the input as `leads.verified.pre-scorecard.csv`, and writes `leads.rejected.csv`, `leads.review.csv`, `leads.catchall-holdback.csv`, `leads.stagger.csv`, `list-qa-report.md` and `qa-sample.csv`. The catch-alls in `leads.catchall-holdback.csv` are merged into the campaign file, labelled `catch_all`, once QA passes, until the script gains a ship option (operator directive 2026-10-06, see `standing-rulings.md` `discovery-flow`); its report line about the Catch-All Timing wait is out of date. Re-running needs `--rerun`, which reads the pre-scorecard copy, so a second pass never grades an already-cleaned file. The retired `list_quality_scorecard.mjs` is archived at `outbound/_archive/list-qa-legacy-2026-09-24/` for history only; never run it.
 
 ## What to do next
 

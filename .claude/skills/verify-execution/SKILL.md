@@ -40,7 +40,8 @@ Ground truth, by deliverable type in this stack:
 | Outreach/replies sent | Count the actual SENT/REPLY events vs. the intended count - catch the 25% case explicitly |
 | Leads uploaded | Fetch leads from the campaign, count vs. the verified CSV row count |
 | Mailbox settings (tags, 15-min gap, warmup, signature) | `GET` the email accounts and read the field back on every mailbox; report N-missing |
-| Catch-alls removed | Re-query the campaign leads / reconcile against the removal manifest (lossless holdback) |
+| Catch-alls merged (shipped labelled, operator directive 2026-10-06, see `standing-rulings.md` `discovery-flow`) | Count the `catch_all`-labelled rows in the campaign file (and on the platform after upload) against the distinct emails in `leads.catchall-holdback.csv` after list QA (both the planner and `list_qa.py` append to it); report N/N merged, no duplicates |
+| Catch-alls removed (legacy runs built before 2026-10-06) | Re-query the campaign leads / reconcile against the removal manifest (lossless holdback) |
 | DNS / auth correct | `check_dns_alignment`, SPF/DKIM/DMARC GET - not "I created the record" |
 | Copy / doc / brief generated | Open the file, count the items, read it for thin/generic content, run `/spam-word-checker` |
 | Lead list built | Row count, dedup rate, verification coverage via `/list-quality-scorecard` (grade ≥ B) |

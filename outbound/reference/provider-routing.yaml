@@ -22,7 +22,7 @@
 #     It is a working default, not a decision.
 #
 # Status: the email order is the contract's (operator directive 2026-09-18,
-# verifier updated 2026-09-22). It is not benchmarked, and the contract itself
+# verifier updated 2026-09-22, re-ordered GetLeads first 2026-10-06). It is not benchmarked, and the contract itself
 # says cost evidence is asymmetric (Prospeo's pricing is unconfirmed), so it is
 # not yet proven cheapest-first. All four providers are `chosen` in the
 # contract, not `live`: none has made a real call on FNNL's own account.
@@ -44,9 +44,27 @@
 # are no longer people-discovery rungs. The reservoir (profiles/_reservoir/,
 # scripts/reservoir.py) is rung 0 of the email waterfall; the contract's email
 # order is unchanged. Not benchmarked.
+#
+# 2026-10-06 (operator directive in chat, house default, ruling discovery-flow
+# in standing-rulings.md; supersedes the 2026-10-05 AI-Ark-only people search
+# and the 2026-09-28 AI Ark people-first order):
+#   1. AI Ark company search on a 200 to 300 company sample, fit scored, and
+#      EVERY keyword and industry common to the good-fit companies mined as an
+#      include and every one common to the bad-fit companies as an exclude (a
+#      keyword common to both is dropped; no cap, no hand-pruning);
+#   2. GetLeads runs the refined search and exports the whole company list
+#      (AI Ark in parallel, deduped by company_domain, only if its export is fast);
+#   3. GetLeads finds the buyers at those companies (AI Ark in parallel, deduped
+#      by LinkedIn slug then email, only if fast);
+#   4. email: GetLeads -> MillionVerifier -> AI Ark -> MillionVerifier ->
+#      Prospeo -> MillionVerifier. Only MillionVerifier ok and catch_all are
+#      accepted; a catch_all ends the walk and ships labelled catch_all.
+# The stack contract's contact_enrichment slot records the same email order.
+# The reservoir stays rung 0, a free cache in front of the waterfall. Not
+# benchmarked.
 
 schema_version: 1
-routing_version: 2026-10-05-aiark-people-first
+routing_version: 2026-10-06-getleads-first-discovery-flow
 status: contract_order_not_benchmarked
 
 providers:
@@ -61,7 +79,7 @@ providers:
       email_finder: "per shipped person: /v1/people/export/single by person id (1 credit only when an email is found, per AI Ark's CLI source 2026-10-05; UNVERIFIED LIVE, the first run confirms a miss bills 0). /v1/people/email-finder (0 credits on a miss) works on a whole search page's trackId, so it would also pay for people at companies fit dropped"
       email_finder_path_verified: true    # 2026-10-06 (propfuel, outbound/scripts/aiark_email_single.mjs): 25 lookups, 23 found = 23 credits, 2 misses = HTTP 404 "no email found" at 0 credits (balance 47,579.7 to 47,556.7); X-Credit header is negative (-1.0); person emails at body.email.output[], body.company.contact.email is the org inbox
       not_a_finder: "/v1/people/export is never a rung (0.5 credits per profile even on a miss)"
-    email_note: "labels CATCH_ALL as its own email type alongside SMTP, which is why it leads the email waterfall. Keep that label as its own column: it is a second catch-all signal, never the send gate (MillionVerifier's verdict is)"
+    email_note: "labels CATCH_ALL as its own email type alongside SMTP. Keep that label as its own column: it is a second catch-all signal, never the send gate (MillionVerifier's verdict is). Since 2026-10-06 it is the second email rung, after GetLeads (ruling discovery-flow)"
   prospeo:
     name: Prospeo
     access: mcp_or_rest        # MCP connector + REST, PROSPEO_API_KEY (stack contract approved_stack)
@@ -75,7 +93,7 @@ providers:
     concurrency: untested      # unverified
     cost_note: "two separate balances: PLAN CREDITS cover search, export and enrich (search_contacts bills 1 credit per record returned, 0 if none, live MCP schema 2026-09-24); PREPAID WALLET CASH covers only live scrapes. insufficient_wallet_cash is never 'out of credits'. FNNL's GetLeads plan tier is not recorded (unverified)"
     email_note: "GetLeads labels the emails it returns VALID after its own verification pass, but that label does NOT filter out catch-alls. It is a provider signal only: MillionVerifier verifies every one, like any other source"
-    role_note: "the contract's deliberate SECOND source for company discovery (the gap-fill when an AI Ark universe comes back thin) and the secondary contact source (company_discovery.notes, contact_discovery.notes). Not an email rung in the contract's waterfall"
+    role_note: "since 2026-10-06 (ruling discovery-flow): the full company export for the refined search, the people search at the exported companies, and the FIRST email rung (scripts/getleads_email_batch.mjs, lookup by LinkedIn URL through GetLeads' own MCP server). count_contacts stays the 0-credit exact count"
   millionverifier:
     name: MillionVerifier
     access: local_mcp_and_rest # outbound/scripts/mcp/millionverifier_mcp.mjs + REST, MILLIONVERIFIER_API_KEY; the key travels as a URL query parameter (vendor design), so scrub it from any error text
@@ -87,33 +105,43 @@ layers:
   company_discovery:
     # FILTER-FIRST (operator decision 2026-09-28, a standing rule for every
     # client; overrides the 2026-09-22 "lookalike is a MUST"). Count and filter
-    # the company universe first: AI Ark company_search is the source-of-truth
-    # universe, then GetLeads count_contacts (an exact count at 0 credits) sizes
-    # and cross-checks the same filters, and GetLeads is also the top-up when the
-    # AI Ark universe comes back thin (the distinct domains on its contact rows,
-    # one union deduped on company_domain). Not a per-cell waterfall.
+    # the company universe first (since 2026-10-06 in the order below; the
+    # 2026-09-28 AI Ark source-of-truth universe with a GetLeads thin-universe
+    # top-up is superseded). GetLeads count_contacts gives an exact count at 0
+    # credits. Not a per-cell waterfall.
     # Lookalike seeding is an option or an exception, never required. Reveal
     # and lookup-by-person calls stay OUT of discovery: GetLeads
     # lookup_decision_makers always returns VALID emails and bills 1 credit per
     # record, so it is a reveal, not a discovery rung. Record the route used in
     # run_state.discovery_route (filter | lookalike; missing reads as filter).
-    # Aaron flow (2026-10-05): the filter route is people-first. The pull is
-    # the vertical's refined AI Ark people search (layers.people_discovery)
-    # rolled up to companies; company_search totalElements is read as the
-    # count and cross-check, and a company-only company_search pull runs only on
-    # the lookalike route or for a step that needs companies before people.
-    # /tam-build runs this layer.
+    # Discovery flow (operator directive 2026-10-06, ruling discovery-flow;
+    # supersedes the 2026-10-05 people-first route):
+    #   sample: AI Ark company_search (enums resolved first) on 200 to 300
+    #     companies, fit scored by batched Claude sub-agents, then every keyword
+    #     tag and industry common to the good-fit companies becomes an include
+    #     and every one common to the bad-fit companies an exclude; one common to
+    #     both is dropped; no cap, no hand-pruning (ai-ark-people-discovery.md).
+    #   order: GetLeads runs the refined search (filters plus every include and
+    #     exclude, translated to GetLeads' own filter values) and exports the
+    #     whole company list: count_contacts for the exact size at 0 credits,
+    #     then the export rolled up to one row per company_domain.
+    #   parallel_if_fast: AI Ark may run the same export in parallel, deduped
+    #     with GetLeads on company_domain, ONLY if its company export is fast;
+    #     if it is slow it is skipped (a parallel source, never a gap-fill rung).
+    # Company fit is still judged once per company_domain before people spend.
+    # /tam-build runs this layer; the planner does not read it.
     route_default: filter
-    order: [aiark]             # company_search after enum resolution (industry_search, technology_search, location_search); the source-of-truth company universe (company_discovery.notes)
-    widening_topup: [getleads] # count_contacts / export_contacts on the same filters; the top-up when the AI Ark universe comes back thin (company_discovery.notes)
+    sample: [aiark]            # company_search after enum resolution (industry_search, technology_search, location_search); 200 to 300 companies for keyword mining
+    order: [getleads]          # the full company export on the refined search
+    parallel_if_fast: [aiark]  # optional; deduped by company_domain; skipped when slow
     requires:
       aiark: [filters]         # resolved enums, headcount, geography; guessed enum values silently return wrong results
-      getleads: [filters]      # employee_profiles_on_linkedin_min/max, office_countries, job_titles, keyword filters over company About text (provider-capability-matrix.md)
+      getleads: [filters]      # employee_profiles_on_linkedin_min/max, office_countries, keyword filters over company About text (provider-capability-matrix.md); the mined AI Ark tags and industries are resolved to GetLeads' own values (get_available_values), unverified 1:1
     lookalike:
       provider: prospeo        # company_lookalike: in the schema, UNTESTED and not in the contract (provider-capability-matrix.md)
       only_when: "the offer needs a lookalike AND the TAM is small or hard to build by filters (both), and the operator approves the untested tool"
     success: "account passes the fit gate (fit_status good or maybe) AND the account QA in list_qa.py"
-    evidence: "operator decision 2026-09-28 (filter-first); quality and cost unmeasured"
+    evidence: "operator decision 2026-09-28 (filter-first); operator directive 2026-10-06, house default (AI Ark sample and keyword mining, GetLeads full export); quality and cost unmeasured"
 
   headcount_crosscheck:
     # Headcount decides ICP eligibility, so one provider's number is not trusted
@@ -131,59 +159,76 @@ layers:
   contact_new_in_seat:
     # unverified: a candidate Layer-1 contact-discovery signal (people who
     # started their current role recently). Use it only as a discovery filter,
-    # never as a reveal. 2026-10-05: advanced people search runs in AI Ark only
-    # (ruling people-discovery), so this filter rides on the AI Ark people
-    # search as contact.experience.current.duration.currentJob (a max of N
-    # months), documented in AI Ark's CLI filter list, untested on FNNL's
-    # account. The Prospeo (person_time_in_current_role) and GetLeads
-    # (job_start_date_min) filters it used before are no longer people-search
-    # rungs; the signal still only sets send order, never shrinks the list.
-    order: [aiark]
+    # never as a reveal. 2026-10-06 (ruling discovery-flow): people are found
+    # in GetLeads, so this filter rides on the GetLeads people search
+    # (job_start_date_min, or the start date on the returned rows). When the
+    # optional AI Ark parallel people search runs, it carries
+    # contact.experience.current.duration.currentJob (a max of N months),
+    # untested on FNNL's account. The signal only sets send order, never
+    # shrinks the list.
+    order: [getleads]
+    parallel_if_fast: [aiark]
     requires:
-      aiark: [company_domain]       # people search contact.experience.current.duration.currentJob.max.month (or the start date on the returned rows)
-    evidence: "operator decisions 2026-09-28 and 2026-10-05; not benchmarked, not in the contract"
+      getleads: [company_domain]    # people search job_start_date_min (live MCP schema 2026-09-24), or the start date on the returned rows
+      aiark: [company_domain]       # people search contact.experience.current.duration.currentJob.max.month, only on the optional parallel search
+    evidence: "operator decisions 2026-09-28, 2026-10-05 and 2026-10-06; not benchmarked, not in the contract"
 
   people_discovery:
-    # AI ARK ONLY (operator 2026-10-05, ruling people-discovery). Discovery is
-    # one AI Ark people search per vertical that carries the company filters and
-    # the offer's title stack, refined on a 200-row sample (include and exclude
-    # keywords mined from the fit and wrong-fit companies) before it runs at
-    # scale in slices under the 10,000-result cap. The procedure is
-    # outbound/reference/ai-ark-people-discovery.md; the runner is
-    # scripts/aiark_people.mjs (REST, because the MCP has no keyword exclude).
-    # Companies added by the GetLeads widening top-up still get their people
-    # from AI Ark, by company domain. GetLeads and Prospeo are not rungs here.
+    # GETLEADS (operator directive 2026-10-06, ruling discovery-flow; supersedes
+    # the 2026-10-05 AI-Ark-only ruling people-discovery). After the GetLeads
+    # company export and company fit, GetLeads finds the offer's title stack at
+    # the good and maybe companies only (search_contacts / export_contacts,
+    # 1 plan credit per record returned). Every person row must carry
+    # linkedin_url: the first email rung (GetLeads) looks people up by it, and
+    # a person without one never gets past that rung (requires_attempted).
+    # parallel_if_fast: AI Ark may run the same people search in parallel
+    # (scripts/aiark_people.mjs, REST), deduped with GetLeads by LinkedIn slug
+    # then email, ONLY if it is fast; if slow it is skipped. It is a parallel
+    # source, never a gap-fill rung, so it is not in `order`.
     # The standing excludes ride on every call (ruling discovery-exclusions).
-    # The main vertical search runs through aiark_people.mjs, not the planner.
-    # `list_waterfall.py plan --layer people` now plans only the per-company
-    # pass for companies the GetLeads top-up added, on AI Ark alone.
-    order: [aiark]
+    # `list_waterfall.py plan --layer people` plans the per-company pass on
+    # GetLeads alone.
+    order: [getleads]
+    parallel_if_fast: [aiark]
     requires:
-      aiark: [company_domain]       # per-company pass for top-up companies: the vertical search's filters plus account.domain include
+      getleads: [company_domain]    # the title stack plus the company domain
+      aiark: [company_domain]       # only on the optional parallel search: the title stack plus account.domain include
     retry_on_error: 1
-    evidence: "operator directive 2026-10-05 (AI Ark only, 200-row sample loop); quality and cost unmeasured"
+    evidence: "operator directive 2026-10-06, house default (GetLeads people, AI Ark parallel only if fast); quality and cost unmeasured"
 
   email:
-    # The contract's waterfall (lead_data.contact_enrichment.notes):
+    # The contract's waterfall (lead_data.contact_enrichment.notes; operator
+    # directive 2026-10-06, house default, ruling discovery-flow):
     #   STEP 0 verify first any email the row already carries (the planner queues
     #          it for the verifier before any finder rung);
-    #   STEP 1 AI Ark reveal across the whole survivor set;
-    #   STEP 2 MillionVerifier on everything AI Ark returned;
-    #   STEP 3 Prospeo ONLY on rows AI Ark left blank or MillionVerifier rejected
-    #          (invalid, unknown, error, disposable);
-    #   STEP 4 MillionVerifier on everything Prospeo returned.
-    # The planner stops a person at the first MillionVerifier `valid`.
-    # Rung 0 (Aaron flow, 2026-10-05): the reservoir. A person whose email
-    # MillionVerifier rated ok in the last 90 days (profiles/_reservoir/,
-    # scripts/reservoir.py lookup) is verified on that email first, before any
-    # finder rung is paid. It is a lookup, not a provider, so it is not in
-    # `order`; every verdict is written back after verification.
-    order: [aiark, prospeo]
-    # A catch_all verdict is NOT a rejection: it goes to the holdback, never to
-    # Prospeo (contact_enrichment.notes step 3). `stop` ends that person's
-    # waterfall at a catch_all and writes the address to
-    # leads.catchall-holdback.csv. The script default is `continue`.
+    #   STEP 1 GetLeads by LinkedIn URL (scripts/getleads_email_batch.mjs);
+    #   STEP 2 MillionVerifier on everything GetLeads returned;
+    #   STEP 3 AI Ark ONLY on people GetLeads left blank or MillionVerifier
+    #          rejected (scripts/aiark_email_single.mjs, one person at a time);
+    #   STEP 4 MillionVerifier on everything AI Ark returned;
+    #   STEP 5 Prospeo ONLY on people AI Ark left blank or MillionVerifier
+    #          rejected (scripts/prospeo_email_batch.mjs);
+    #   STEP 6 MillionVerifier on everything Prospeo returned
+    #          (scripts/millionverifier_verify.mjs for every verify step).
+    # The planner stops a person at the first MillionVerifier `valid` (ok).
+    # Only ok and catch_all are accepted; unknown, invalid, disposable and
+    # unverified never ship.
+    # Rung 0 (Aaron flow, 2026-10-05, kept 2026-10-06): the reservoir, a free
+    # cache in front of the waterfall. A person whose email MillionVerifier
+    # rated ok in the last 90 days (profiles/_reservoir/, scripts/reservoir.py
+    # lookup) is verified on that email first, before any finder rung is paid.
+    # It is a lookup, not a provider, so it is not in `order`; every verdict is
+    # written back after verification.
+    order: [getleads, aiark, prospeo]
+    # A catch_all verdict is NOT a rejection: it ends that person's walk and
+    # ships, labelled catch_all, never going on to a later finder. `stop` ends
+    # the waterfall at a catch_all; the planner still writes the address to
+    # leads.catchall-holdback.csv, it goes into list QA's input with the rest,
+    # and the catch-alls list QA holds back only for being catch-all are merged
+    # into the campaign file labelled catch_all (operator directive 2026-10-06;
+    # no script has a ship option yet). The script default is `continue`.
     on_catch_all: stop
+    # "Never open AI Ark on a row GetLeads has not already attempted" and
     # "Never open Prospeo on a row AI Ark has not already attempted"
     # (contact_enrichment.notes). TOOL-BALANCE GUARD (operator decision
     # 2026-09-28, /tool-balance-guard): a tool that is out of balance, down or
@@ -193,16 +238,18 @@ layers:
     # --operator-approved-skip`, and recorded as detail.operator_approved; the
     # planner refuses the skip without that flag.
     requires_attempted:
+      aiark: [getleads]
       prospeo: [aiark]
     requires:
-      aiark: [first_name, last_name, company_domain]     # /v1/people/export/single takes the AI Ark person id from discovery (or a LinkedIn URL); unverified live. The planner needs a real name on every finder rung anyway
+      getleads: [linkedin_url]                           # getleads_get_emails_from_linkedin_batch: LinkedIn URL in, email out, 1 plan credit per success (scripts/getleads_email_batch.mjs)
+      aiark: [first_name, last_name, company_domain]     # /v1/people/export/single takes the AI Ark person id (or a LinkedIn URL); path verified live 2026-10-06 (endpoints.email_finder_path_verified). The planner needs a real name on every finder rung anyway
       prospeo: [first_name, last_name, company_domain]   # enrich-person minimum match: name plus a company identifier (contact_enrichment.notes); LinkedIn-URL-alone is unproven
     # Buyer-priority depth: the most rungs a person of each role tier may use.
     # Default is the full waterfall for every tier. Lower a tier only with a
     # cost reason, and log it.
-    max_rungs_by_role_tier: {exact: 2, strong: 2, influencer: 2, adjacent: 2, weak: 2}
+    max_rungs_by_role_tier: {exact: 3, strong: 3, influencer: 3, adjacent: 3, weak: 3}
     retry_on_error: 1
-    evidence: "stack contract lead_data.contact_enrichment.notes (operator directive 2026-09-18, verifier 2026-09-22); not benchmarked, and cheapest-first is not yet proven because Prospeo's pricing is unconfirmed"
+    evidence: "operator directive 2026-10-06, house default (ruling discovery-flow; first run on PropFuel's override profiles/propfuel/provider-routing.propfuel.yaml); stack contract lead_data.contact_enrichment.notes; not benchmarked, and cheapest-first is not yet proven because Prospeo's pricing is unconfirmed"
 
   # phone: deliberately NOT set. The stack contract records no confirmed phone
   # source for AI Ark or Prospeo. (Prospeo's MCP schema, read 2026-09-24, offers
@@ -212,6 +259,8 @@ layers:
   # Add a phone layer here only after the contract records a phone source.
 
   linkedin_backfill:
+    # A person missing linkedin_url cannot use the GetLeads email rung and, under
+    # requires_attempted, stalls before AI Ark; backfill it first.
     # unverified: the contract records no LinkedIn backfill order. This follows
     # /email-waterfall's backfill routing: the contact-discovery source by name
     # first, then the contact-enrichment tools, then the secondary contact
@@ -238,8 +287,8 @@ layers:
     transient_raw_statuses: [error, timeout, rate_limited, ""]
     gate_map:                              # MillionVerifier resultcode (result) -> gate (email_verification.notes)
       1: valid                             # ok: the send file
-      2: catch_all                         # catch_all: the holdback (leads.catchall-holdback.csv), never Prospeo. NEVER collapse into ok or unknown
-      3: unknown                           # unknown: Prospeo gap-fill, then review
+      2: catch_all                         # catch_all: ends the walk, ships labelled catch_all (2026-10-06; via leads.catchall-holdback.csv, through list QA, then merged), never a later finder. NEVER collapse into ok or unknown
+      3: unknown                           # unknown: the next finder rung, then review; never ships
       4: transient                         # error: retried per retry_transient, then unknown
       5: invalid                           # disposable
       6: invalid                           # invalid

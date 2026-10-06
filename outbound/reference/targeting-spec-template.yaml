@@ -61,12 +61,14 @@ account:
     existing_customer_domains: []   # or point to a file below
     existing_customers_file: null   # profiles/<slug>/existing-customers.csv (column company_domain)
     internal_domains: []   # the agency's and client's own domains; emails on these are always suppressed
-  # Aaron flow (see aaron-flow.md). Ruling discovery-exclusions: every AI Ark discovery
-  # search carries these from the first call, so wrong companies never cost a credit.
-  # Filled from the 200-row sample's keyword refinement (ai-ark-people-discovery.md) and
+  # Aaron flow (see aaron-flow.md). Ruling discovery-exclusions: every discovery search
+  # (the AI Ark sample, the GetLeads export and people search, any AI Ark parallel search)
+  # carries these from the first call, so wrong companies never cost a credit.
+  # Filled from the 200 to 300 company sample's keyword mining (ai-ark-people-discovery.md;
+  # operator directive 2026-10-06, see standing-rulings.md discovery-flow) and
   # from icp.supplier_exclusions / icp.competitors. Per client: never copied between clients.
   discovery_exclusions:
-    keywords_exclude: []   # WORD-mode phrases that mark a wrong company (each kept only after the sample audit)
+    keywords_exclude: []   # WORD-mode phrases common to the bad-fit companies (every one used; none common to the good-fit ones)
     keywords_include: []   # phrases the good companies share (added to the include keywords)
     industries_exclude: [] # exact AI Ark catalog values, resolved with the free lookup first
     domains_exclude: []    # supplier, competitor and current-client domains not already listed above
@@ -89,15 +91,15 @@ buyers:
   # No density ceiling under no-contacts-cap. null = no cap. A number is an operator override.
   max_contacts_per_account: null
   # People discovery: an account counts as "target person found" once this many
-  # people pass title fit. Below it, the next people-discovery provider runs for
-  # that account only. Under the Aaron flow this applies only to the companies the
-  # GetLeads top-up adds (their people still come from AI Ark by company domain).
+  # people pass title fit. Below it, the widened net is a broader GetLeads people search
+  # for that account only, never a second tool (operator directive 2026-10-06, see
+  # standing-rulings.md discovery-flow: people come from GetLeads at the fit companies).
   min_target_persons_per_account: 2
 
   work_email_required: true
   personal_email_policy: fail     # fail | review | allow. Applies to gmail.com, outlook.com and the other consumer domains list_qa.py knows.
   phone_required: false           # true only when the campaign calls or the client requires phone
-  catch_all_policy: holdback      # holdback (locked doctrine: verified catch-alls wait for domain maturity) | review
+  catch_all_policy: holdback      # holdback (the scripts write verified catch-alls to leads.catchall-holdback.csv; since 2026-10-06 they ship, merged in labelled catch_all after list QA, ruling catch-all) | review
 
   # Function families: WHAT the person does. A title must match a target family
   # (or an explicit title below) to pass. Seniority alone never passes a title.
