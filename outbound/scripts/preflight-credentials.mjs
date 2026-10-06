@@ -14,7 +14,7 @@
 // Keys are NEVER printed — only present / MISSING / malformed, or a masked last-4 tail.
 //
 // Usage:
-//   node preflight-credentials.mjs [--profile <slug>] [--scope kickoff|infra|launch|full] [--validate] [--stack <id>] [--platform <name>]
+//   node preflight-credentials.mjs [--profile <slug> | --client <slug>] [--scope kickoff|infra|launch|full] [--validate] [--stack <id>] [--platform <name>]
 // Scope (operator decision 2026-09-22: offer work runs without infrastructure). Each infrastructure or
 // sending-platform key is required only at the step that uses it:
 //   kickoff (default): registrar / mailbox / platform slots may be blank or `deferred`; their keys only warn.
@@ -193,7 +193,8 @@ function resolveVar(primary, aliases) {
 // ── main ──────────────────────────────────────────────────────────────────
 (async () => {
   // Resolve which profile to read.
-  let slug = typeof args.profile === 'string' ? args.profile : null;
+  // --client is an alias for --profile; without either, the newest profile is used (named in the header).
+  let slug = typeof args.profile === 'string' ? args.profile : typeof args.client === 'string' ? args.client : null;
   let profilePath;
   if (slug) {
     profilePath = path.join(PROFILES_DIR, slug, 'client-profile.yaml');
@@ -243,14 +244,23 @@ function resolveVar(primary, aliases) {
   const scopeNotes = [];
 
   const triggerFields = p => (p.trigger && (p.trigger.fields || (p.trigger.field ? [p.trigger.field] : []))) || [];
-  const matchesSlot = (p, slot) => !p.slot_optional && triggerFields(p).includes(slot.field) && p.trigger.equals === slot.value;
+  // A slot value matches a provider when it names it by display label (trigger.equals, e.g. "Plusvibe.ai") or by
+  // registry id (e.g. "plusvibe"), ignoring case, punctuation and a trailing .ai/.io/.com. Profiles lock ids while
+  // the registry keeps display labels; an exact-string compare made every id-locked slot a false REGISTRY GAP.
+  const normName = v => String(v ?? '').toLowerCase().trim().replace(/\.(ai|io|com)$/, '').replace(/[^a-z0-9]/g, '');
+  const valueMatches = (id, p, value) => {
+    const v = normName(value);
+    return !!v && (normName(p.trigger.equals) === v || normName(id) === v);
+  };
+  const fieldMatches = (id, p, slot) => triggerFields(p).includes(slot.field) && valueMatches(id, p, slot.value);
+  const matchesSlot = (id, p, slot) => !p.slot_optional && fieldMatches(id, p, slot);
 
   // FAIL-LOUD: a non-"Other" required-slot value with no covering registry entry = registry drift.
   const registryGaps = [];
   for (const slot of slots) {
     if (isDeferred(slot.value)) continue;
     if (slot.name === 'platform' && String(slot.value).toLowerCase() === 'other') continue; // unmanaged escape hatch
-    const covered = Object.values(PROVIDERS).some(p => matchesSlot(p, slot));
+    const covered = Object.entries(PROVIDERS).some(([id, p]) => matchesSlot(id, p, slot));
     if (!covered) {
       if (REQUIRED_SLOTS.includes(slot.field)) registryGaps.push({ slot: slot.name, value: slot.value });
       else scopeNotes.push(`registry has no entry for ${slot.name}="${slot.value}"; not needed at ${SCOPE} scope, fix it before the step that uses it`);
@@ -267,8 +277,7 @@ function resolveVar(primary, aliases) {
     else if (t.source_id) {
       if (locked.lead_source && String(locked.lead_source).toLowerCase() === String(t.source_id).toLowerCase()) { include = true; reasonTag = 'lead source'; }
     } else {
-      const fields = triggerFields(p);
-      for (const slot of slots) if (fields.includes(slot.field) && t.equals === slot.value) { include = true; reasonTag = slot.name; }
+      for (const slot of slots) if (fieldMatches(id, p, slot)) { include = true; reasonTag = slot.name; }
     }
     if (!include) continue;
     let kind = (p.enforcement === 'fail') ? 'required' : 'optional';
