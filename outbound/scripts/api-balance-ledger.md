@@ -35,6 +35,7 @@ The free balance and health calls for each of the six tools are listed in the "L
 | MillionVerifier (retired 2026-10-12) | lead_data.email_verification | MILLIONVERIFIER_API_KEY | 4,401 credits, 2026-10-05 | live: free credits endpoint | not checked | Replaced by Giggal on 2026-10-12; kept as history. Delayed balance updates; batch charged-credit attribution uncertain |
 | Giggal | lead_data.email_verification | GIGGAL_API_KEY | 50,055 credits, 2026-10-12 | live: GET /v1/credits (free) | not checked | After the 2026-10-12 live probes (50,095 after the first 6-credit probe, 45 credits used in all); 1 credit per address, `unknown` refunded; the catch-all check bills every catch-all address in its source job |
 | Prospeo | lead_data.contact_enrichment | PROSPEO_API_KEY | 1,725 credits, 2026-10-05 | live: GET /account-information | not checked | Six-credit delta in October 5 new wave; dated snapshot |
+| Spider Cloud (approved exception 2026-10-12) | company website reads (web.crawl fetch half; slot stays retired) | SPIDER_API_KEY | 252,478 credits, 2026-10-12 | live: GET /data/credits (free) | not checked | 10,000 credits = $1. Planning figure 8 credits per homepage (from A-Sales); the 2026-10-12 live probe measured about 4.4 (5 homepages, 22.1 credits) and every run records its own figure in manifest.json. `spider_fit_fetch.mjs` reads this balance and stops (exit 3) before any spend if it is short |
 
 <!--
 Row format once a provider is live:

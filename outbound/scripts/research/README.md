@@ -6,12 +6,13 @@ This folder holds the research tooling that runs under the no-AI-API rule (opera
 
 The scripts that used to call AI provider APIs from this folder were moved to the workspace archive on 2026-09-22. See `outbound/_archive/no-ai-api-2026-09-22/MANIFEST.md` for what moved and why. Do not restore them as a research, crunch, or copy path.
 
-Zero dependencies, pure Node (native `fs` and JSON). Requires Node 18+. None of these scripts reads an API key, makes a network call, or spends anything.
+Zero dependencies, pure Node (native `fs` and JSON). Requires Node 18+. Two scripts here are offline: `evidence_ledger.mjs` and `research_routing_check.mjs` read no API key, make no network call and spend nothing. The exception is `spider_fit_fetch.mjs` (added 2026-10-12), which reads `SPIDER_API_KEY` and spends Spider credits to fetch company homepages for list building; it calls no AI model.
 
 | Script | What it does | Network or AI? |
 |---|---|---|
 | `evidence_ledger.mjs` | Owns each client's evidence ledger (`profiles/<slug>/_research/evidence.csv`): `ingest` validates rows, skips duplicates, flags syndicated quotes, assigns `E-####` IDs and appends; `stats` counts each cluster honestly and runs the mechanical Research QA checks | Neither |
 | `research_routing_check.mjs` | Audits the ledger in `../api-balance-ledger.md` for research runs with no logged primary pass, or with a third-party AI provider logged | Neither |
+| `spider_fit_fetch.mjs` | List-building company website reads: `fetch` (one Spider homepage per company, cached per domain, thin/parked/redirect check, live-balance check that stops with exit 3 before any spend), `batch` (judge-ready files for Claude sub-agents), `merge` (verdicts joined by id with a count check). Tests: `tests/test_spider_fit_fetch.py` | Spider network calls only, no AI |
 | `_content.mjs`, `_summ.mjs` | Old helpers that read saved result files from disk | Neither |
 
 ## `evidence_ledger.mjs`: the evidence ledger

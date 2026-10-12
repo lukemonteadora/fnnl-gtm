@@ -23,7 +23,7 @@ List builders and scrapers return companies or contacts. They do not know your c
 
 **Two places this runs:**
 
-1. **TAM fit gate (company-level, in `/tam-build` Layer 1a).** Tune the prompt on a ~40-row mixed sample of the cheap TAM layer (firmographics + the homepage crawl), then `/tam-build` scores `fit_status` (`good`/`maybe`/`bad`) across the whole TAM to gate the expensive extension enrichment to good-fit companies only. Inputs are company rows (no contacts), and the output maps to `fit_status` rather than `qualified` true/false.
+1. **TAM fit gate (company-level, in `/tam-build` Layer 1a).** Tune the prompt on a ~40-row mixed sample of the cheap TAM layer (firmographics + the Spider homepage text from `spider_fit_fetch.mjs`), then `/tam-build` scores `fit_status` (`good`/`maybe`/`bad`) across the whole TAM to gate the expensive extension enrichment to good-fit companies only. Inputs are company rows (no contacts), and the output maps to `fit_status` rather than `qualified` true/false.
 2. **Per-campaign source sample (the original use, below).** After a lead source returns a sample for a chosen campaign, tune or reuse the prompt to qualify that slice before enrichment spend.
 
 The loop below is identical for both; only the input sample and the place it runs differ. **The prompt tuned at the TAM gate is saved and reused at the per-campaign step**: don't re-tune from scratch; re-tune only if the campaign signal changes what "fit" means.

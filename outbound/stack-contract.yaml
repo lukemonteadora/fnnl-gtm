@@ -158,6 +158,29 @@ approved_stack:
         when the operator says to start setting up cold-email infrastructure.
         It is never requested or flagged as missing at onboarding, intake,
         kickoff, preflight, stack setup or workspace creation.
+    - tool: Spider Cloud
+      need: "company website reads for company-fit scoring and personalization (web.crawl fetch half only)"
+      approved_on: 2026-10-12
+      approved_by: "operator"
+      note: >
+        A data fetcher, not an AI provider, so it does not touch the
+        no-AI-API rule. Approved to mirror how the A-Sales GTM folder reads
+        company websites: one Spider homepage fetch per company_domain on the
+        COMPANY file, cached per domain, read by batched Claude sub-agents
+        for company fit (/tam-build Layer 1a) and for personalization
+        research. Runs through scripts/research/spider_fit_fetch.mjs, which
+        checks the live Spider balance before any spend and stops (exit 3)
+        if it is short. No per-run credit cap and no substitute fetcher: a
+        short balance means stop and ask (/tool-balance-guard). Spider is
+        NEVER a source of companies, contacts or emails; those stay with the
+        six. Its key is SPIDER_API_KEY in scripts/.env, requested only when a
+        run actually needs it. LIVE 2026-10-12 on the operator's instruction:
+        a real call against FNNL's own account succeeded (5 homepages, 22.1
+        credits, about 4.4 per homepage, balance read live). The slot status
+        stays `retired` for the AI crawl role. The 20-row agreement check
+        runs once on each client's first Spider run, as /tam-build Layer 1a
+        says. HeyReach, Dynadot and ScaledMail stay held; this entry does
+        not reopen them.
   held_outside_the_six: >
     Tools recorded 2026-09-18 that the operator did NOT name on 2026-09-22,
     now at status `held` in their slots, with `tool: null` and the name kept
@@ -1078,8 +1101,12 @@ web:
       mapped here by inference on the same basis as web.search. A parked
       spider MCP connector in _vendor-library/mcp-connectors.json was the
       catalogued alternative for deep multi-page crawls; it is a data
-      scraper, not an AI provider, and stays parked unless the operator
-      approves it under approved_stack rule 2.
+      scraper, not an AI provider. UPDATE 2026-10-12: the operator approved
+      Spider Cloud as an exception (see approved_exceptions) for company
+      website reads in list building, run through
+      scripts/research/spider_fit_fetch.mjs. This slot itself stays retired:
+      the exception covers homepage fetches for fit scoring and
+      personalization only, not AI crawling, search or any new slot.
 
 # =============================================================================
 # 6. OPERATIONS

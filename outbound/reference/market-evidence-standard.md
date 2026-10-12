@@ -250,7 +250,7 @@ Every research read runs on Claude Code's built-in tools. No read route is a pai
 
 **Unread platforms become a paste reading list.** When the ICP lives on a platform only a paste can reach (or one whose route is untested), record it under Q14 and in `research_artifacts.coverage_gaps_stated_honestly`, and give the operator a paste reading list: the exact thread or page URLs where WebSearch surfaced them, otherwise the communities and search terms to read, and which cluster each would test. Pasted text is ingested like any other batch, and the gate re-runs. The list is a request to the operator, never a DEEPEN trigger (section 7).
 
-**Not routes in FNNL.** Their connectors may be visible in a session, but none is approved here (the six-tools rule, CLAUDE.md section 1, and the no-AI-API rule, section 7): Apify, Spider (including its AI and browser tools), Serper, Perplexity, Grok, SocialCrawl, DiscoGen. A tool showing up in a session is not permission to call it.
+**Not routes in FNNL.** Their connectors may be visible in a session, but none is approved here (the six-tools rule, CLAUDE.md section 1, and the no-AI-API rule, section 7): Apify, Spider for market research (including its AI and browser tools; its one approved use is the company-website homepage fetch in list building, `spider_fit_fetch.mjs`, never evidence collection), Serper, Perplexity, Grok, SocialCrawl, DiscoGen. A tool showing up in a session is not permission to call it.
 
 Collected review and forum text is for research and citation only, never redistributed as a dataset. Public pages only; never log in to a platform to read it.
 

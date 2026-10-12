@@ -15,7 +15,7 @@ Every skill in this repo is written against a **capability role** ("the sending 
 FNNL runs on **GetLeads, AI Ark, Prospeo, Giggal, Clay and PlusVibe** (Giggal replaced MillionVerifier on 2026-10-12). The contract's `approved_stack` block maps each one to its slots and holds the rule, which in short is:
 
 - **Six first, always.** Meet every capability need from one of the six before considering anything else, and check each tool's full surface (its MCP tool list and API docs) before declaring a gap.
-- **Nothing outside the six without explicit operator approval,** recorded in `approved_stack.approved_exceptions` before the tool is used. A tool is not approved because a worked example, the credential registry, `_vendor-library/`, or a connected MCP server names it.
+- **Nothing outside the six without explicit operator approval,** recorded in `approved_stack.approved_exceptions` before the tool is used (current exceptions: OpenAI for sender headshots, Spider Cloud for company website reads in list building). A tool is not approved because a worked example, the credential registry, `_vendor-library/`, or a connected MCP server names it.
 - **Label out-of-stack ideas as "OUT OF STACK, needs operator approval",** never as the default path.
 - **Approved is not live.** All six are `chosen` until one real call against FNNL's own account succeeds.
 
@@ -265,6 +265,7 @@ Skills refer to this as the zero-workbench-credit rule and name the role ("the l
 - **Final copy** is written in the native session (a clean-packet sub-agent is fine). There is no API copy path and no fallback branch.
 - **No AI columns in the list workbench, on any key,** including FNNL's own. Reasoning happens in Claude Code and the result is pushed in by webhook.
 - **Live X reads no longer exist.** Use WebSearch where it returns public posts and log the gap. **Reddit is read only by operator paste** (text plus thread URL); if nothing was pasted, Reddit is logged as unread.
+- **Company fit and personalization read the company's homepage through Spider Cloud (operator directive 2026-10-12, an approved exception, not an AI API).** Every company in a list build gets one Spider homepage fetch via `outbound/scripts/research/spider_fit_fetch.mjs`, cached per `company_domain`; batched Claude sub-agents then judge fit and `offer_fit` on the homepage text plus the discovery text and fields (`/tam-build` Layer 1a), and personalization research reads the same cached text. The script checks the live Spider balance first and stops (exit 3) before any spend if it is short: no per-run cap, no substitute fetcher, stop and ask. Spider is never a source of companies, contacts or emails. It makes no AI call: the judging stays with Claude sub-agents.
 - **The one exception is sender headshots:** OpenAI, headshots only, asked for at infrastructure setup (`ai.image_generation`, recorded in `approved_stack.approved_exceptions`). Its key is never requested or flagged as missing at onboarding, intake, kickoff, preflight, stack setup or workspace creation.
 - **No other AI key** belongs in `scripts/.env.example` or the credential registry. Claude Code usage is not metered API spend here, so `/api-cost-governance` previews only data-vendor calls and the headshot call.
 
