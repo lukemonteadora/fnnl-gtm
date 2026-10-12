@@ -28,7 +28,7 @@ from pathlib import Path
 
 # Always forbidden in a client-facing guide, whatever the client.
 BASE_TERMS = ["FNNL", "fnnl", "Aaron", "Eric Nowoslawski", "Taylor Haren", "Nate Herk",
-              "PlusVibe", "Clay", "AI Ark", "GetLeads", "Prospeo", "MillionVerifier",
+              "PlusVibe", "Clay", "AI Ark", "GetLeads", "Prospeo", "MillionVerifier", "Giggal",
               "Claude", "we work with", "on behalf of"]
 BASE_PATTERNS = [
     (r"\.(md|csv|yaml|yml|json|py|mjs)\b", "a file name"),

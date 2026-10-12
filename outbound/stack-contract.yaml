@@ -8,8 +8,8 @@
 # system has no default tech stack and will not guess one.
 #
 # FNNL'S APPROVED STACK (operator directive 2026-09-22)
-# FNNL runs on SIX tools: GetLeads, AI Ark, Prospeo, MillionVerifier, Clay and
-# PlusVibe. The `approved_stack` block directly below is the rule every future
+# FNNL runs on SIX tools: GetLeads, AI Ark, Prospeo, Giggal, Clay and
+# PlusVibe (Giggal replaced MillionVerifier on 2026-10-12, operator directive). The `approved_stack` block directly below is the rule every future
 # tool choice follows. Read it before recommending, activating, credentialing
 # or spending on ANY tool, including ones a skill's worked example names.
 #
@@ -101,9 +101,9 @@ approved_stack:
         Search-time person and company filters, usable as a secondary
         discovery source when a filter AI Ark lacks decides the slice.
       access: MCP connector + REST, PROSPEO_API_KEY
-    - tool: MillionVerifier
+    - tool: Giggal
       fills: [lead_data.email_verification]
-      access: local MCP (outbound/scripts/mcp/millionverifier_mcp.mjs) + REST, MILLIONVERIFIER_API_KEY
+      access: local MCP (outbound/scripts/mcp/giggal_mcp.mjs) + REST, GIGGAL_API_KEY
     - tool: Clay
       fills: [lead_data.list_workbench]
       access: REST + inbound webhook + MCP, CLAY_API_KEY
@@ -166,9 +166,9 @@ approved_stack:
     (linkedin_outreach). They are HELD, not deleted: their slots and notes are
     kept so the research is not lost, but under rule 2 none of them is
     credentialed, built against or spent on until the operator either
-    approves it as an exception or clears the slot. LeadMagic, the previous
-    verifier, is REPLACED by MillionVerifier and kept only as a catalogue
-    alternative in credential-registry.json.
+    approves it as an exception or clears the slot. LeadMagic and then
+    MillionVerifier, the previous verifiers, are REPLACED by Giggal (2026-10-12)
+    and kept only as catalogue alternatives in credential-registry.json.
     Parallel.ai, held the same day for research_provider, web.search and
     web.crawl, is no longer held: it is RETIRED by the no-AI-API rule
     (operator directive 2026-09-22), together with those three slots, whose
@@ -526,7 +526,7 @@ lead_data:
     notes: >
       IN THE APPROVED SIX (GetLeads, AI Ark and Prospeo, operator directive 2026-09-22).
       WATERFALL ORDER, with verification interleaved per operator directive
-      2026-09-18, verifier updated to MillionVerifier 2026-09-22, re-ordered
+      2026-09-18, verifier updated to MillionVerifier 2026-09-22 and to Giggal 2026-10-12, re-ordered
       GetLeads first by operator directive 2026-10-06 (house default,
       standing-rulings.md discovery-flow; the reason given: it makes the
       process faster). Mirror this into /email-waterfall:
@@ -534,16 +534,16 @@ lead_data:
                 re-discover an address one verification credit can rule on.
         STEP 1. GetLeads email lookup by LinkedIn URL, across the whole survivor set
                 (scripts/getleads_email_batch.mjs).
-        STEP 2. MillionVerifier verify on everything step 1 returned.
-        STEP 3. AI Ark reveal, ONLY on rows GetLeads left blank or MillionVerifier
-                rejected (invalid, unknown, error, disposable)
+        STEP 2. Giggal verify on everything step 1 returned.
+        STEP 3. AI Ark reveal, ONLY on rows GetLeads left blank or Giggal
+                rejected (invalid, unknown, error)
                 (scripts/aiark_email_single.mjs).
-        STEP 4. MillionVerifier verify on everything step 3 returned.
-        STEP 5. Prospeo, ONLY on rows AI Ark left blank or MillionVerifier rejected
+        STEP 4. Giggal verify on everything step 3 returned.
+        STEP 5. Prospeo, ONLY on rows AI Ark left blank or Giggal rejected
                 (scripts/prospeo_email_batch.mjs).
-        STEP 6. MillionVerifier verify on everything step 5 returned.
-      ONLY MillionVerifier ok (valid) and catch_all verdicts are accepted;
-      unknown, invalid, disposable and unverified emails never ship.
+        STEP 6. Giggal verify on everything step 5 returned.
+      ONLY Giggal deliverable (valid) and catch_all verdicts are accepted;
+      unknown, invalid and unverified emails never ship.
       A catch_all verdict is NOT a rejection: it ends that person's walk and ships, labelled catch_all, never going on to a later finder.
       Never open AI Ark on a row GetLeads has not already attempted.
       Never open Prospeo on a row AI Ark has not already attempted.
@@ -557,7 +557,7 @@ lead_data:
       reveal time using the same third-party engine (BounceBan), and that is EXPLICITLY
       NOT the send-gate. /email-waterfall's Verification Doctrine states a finding
       tool's own internal verification is never a substitute. Every address they
-      return is re-verified by MillionVerifier regardless. GetLeads' VALID label
+      return is re-verified by Giggal regardless. GetLeads' VALID label
       is the same: a provider signal only, never the send gate.
       WHY AI ARK WAS PRIMARY (until 2026-10-06; it is now the second rung): it labels CATCH_ALL as a distinct email type alongside
       SMTP. Prospeo's status field is binary (VERIFIED / UNAVAILABLE) and therefore
@@ -565,7 +565,7 @@ lead_data:
       recovers the signal, so any pipeline reading Prospeo output MUST read
       verification_method, not status alone.
       KEEP AI ARK'S CATCH_ALL LABEL AS A COLUMN. It is not the send-gate
-      (MillionVerifier's catch_all result is), but it is an independent second
+      (Giggal's catch_all result is), but it is an independent second
       catch-all signal from reveal time, useful when the two disagree.
       USE THE RIGHT AI ARK ENDPOINT: route gap-fill through /v1/people/email-finder,
       which charges 0 credits when no valid email is found. The bulk
@@ -588,60 +588,84 @@ lead_data:
       company identifier, so LinkedIn-URL-alone is UNPROVEN.
 
   email_verification:
-    tool: MillionVerifier
+    tool: Giggal
     status: chosen
     capability: >
       Confirms a revealed address will actually accept mail, and flags
       catch-all domains, before that address ever enters a campaign.
     run_state_field: null
-    credentials: [MILLIONVERIFIER_API_KEY]
+    credentials: [GIGGAL_API_KEY]
     vendor_pack: null
     notes: >
-      IN THE APPROVED SIX. Operator directive 2026-09-22: MillionVerifier is
-      FNNL's verifier of record, REPLACING LeadMagic (chosen 2026-09-18). It runs
-      BETWEEN each stage of the enrichment waterfall, which is already law in
-      /email-waterfall's Verification Doctrine ("the email verifier is the
-      UNIVERSAL VERIFIER OF RECORD; there are NO source exemptions").
-      CATCH-ALL: RESOLVED BY THE SWAP. The previous verifier's current API had no
-      catch-all status (accept-all domains came back as `unknown`), which left
-      /email-waterfall's Catch-All Timing gate without a discriminator and
-      needed a control test to settle. MillionVerifier returns catch-all as its
-      OWN result: resultcode 1=ok, 2=catch_all, 3=unknown, 4=error,
-      5=disposable, 6=invalid. So one call gives both deliverability and the
-      catch-all flag, which is exactly the two-in-one verifier /email-waterfall
-      asks for. Gate mapping: ok goes to `valid` (the send file); catch_all
-      ends the person's walk and ships labelled catch_all (operator directive
-      2026-10-06; the planner writes it to leads.catchall-holdback.csv, it goes
-      through list QA with the rest, and is then merged into the campaign file); unknown, error, disposable
-      and invalid go to the next finder rung or the review queue and never
-      ship. NEVER collapse catch_all into ok or into unknown.
-      WHAT IT DOES NOT DO: it labels a catch-all domain, it cannot tell you
-      whether that specific mailbox exists. That is the nature of accept-all
-      domains, not a MillionVerifier defect. AI Ark's reveal-time CATCH_ALL
-      label stays a preserved second signal; keep it as its own column.
-      ACCESS: MillionVerifier publishes no MCP server, so this workspace wraps
-      its REST API in a local, dependency-free MCP server at
-      outbound/scripts/mcp/millionverifier_mcp.mjs (registered in .mcp.json).
-      It reads MILLIONVERIFIER_API_KEY from outbound/scripts/.env itself, so no
-      key ever lands in a tracked file. Set the key with
-      outbound/scripts/setup-millionverifier-key.ps1. Tools: real-time verify,
-      credits, and bulk upload / status / download / stop. The vendor's API
-      takes the key as a URL query parameter (their design).
-      PROVEN SO FAR (2026-09-22): only the plumbing and a real-time round trip
-      using the vendor's public TEST key. Credits and every bulk call have NOT
-      yet succeeded on a real FNNL account, which is why the status is `chosen`.
-      First live proof: millionverifier_get_credits (free) on FNNL's own key.
-      COST: credits per verification, deducted per real-time call. The bulk
-      per-email rate is NOT confirmed, so /api-cost-governance prices a bulk
-      job before it runs. Paid calls auto-approve only inside the standing $100
-      client budget (spend_ceiling_usd); anything over it is confirmed first.
+      IN THE APPROVED SIX. Operator directive 2026-10-12: Giggal is FNNL's
+      verifier of record, REPLACING MillionVerifier (chosen 2026-09-22), which
+      had replaced LeadMagic (2026-09-18). Ruling verifier-giggal-2026-10-12 in
+      standing-rulings.md. It runs BETWEEN each stage of the enrichment
+      waterfall, which is already law in /email-waterfall's Verification
+      Doctrine ("the email verifier is the UNIVERSAL VERIFIER OF RECORD; there
+      are NO source exemptions").
+      API: https://api.giggal.ai/v1, Authorization Bearer header (never a URL),
+      replies {success, data, meta}. Per address: status deliverable |
+      undeliverable | unknown | accept_all (risky), deliverability_score 0-100,
+      details.attributes {free_email, role_account, catch_all}, details.sub_status.
+      Sync POST /verify for one address; POST /verify-batch (up to 50,000, async
+      job, Idempotency-Key header) plus GET /jobs/:id and /jobs/:id/results for
+      lists; POST /catchall {jobId} for the catch-all check; GET /credits is free.
+      Limits: 300 requests / 15 min, 30 batch creations / 15 min, results kept 48
+      hours (HTTP 410 after). HTTP 402 means out of credits.
+      GATE MAPPING (scripts/giggal_verify.mjs writes the gate to email_status):
+      deliverable -> `valid` (the send file); undeliverable -> `invalid`
+      (dropped); unknown -> `unknown` (the next finder rung, then review; never
+      ships; Giggal refunds it, so it is never cached and a re-run retries it
+      free); accept_all or risky -> `catch_all`, resolved by the catch-all check
+      below. NEVER collapse catch_all into valid or unknown without that check.
+      CATCH-ALL: on a catch-all domain Giggal already scores the mailbox itself
+      in the batch result (live test 2026-10-12: a plausible address came back
+      deliverable at score about 90, a non-existent one undeliverable at about
+      9), and is_catch_all is recorded true whenever Giggal flagged the domain.
+      A deliverable on such a domain ships as `valid`. An accept_all or risky
+      result goes to the gate `catch_all`, then POST /catchall re-checks it
+      (verdict valid ships, invalid is dropped). The catch-all check bills 1
+      credit for EVERY catch-all address in the source job and cannot be
+      restricted to a subset, so the verifier runs it at most once per batch job
+      and only when that job holds an accept_all or risky row. If the check
+      fails or is switched off (--no-catchall-check) the row stays `catch_all`:
+      it ends the person's walk and ships labelled catch_all (operator
+      directive 2026-10-06; the planner writes it to
+      leads.catchall-holdback.csv, it goes through list QA with the rest, and is
+      then merged into the campaign file). It is never silently promoted to
+      valid. accept_all was not observed in the live probe, so that path is
+      proven offline only until the first live waterfall run.
+      ACCESS: the local, dependency-free MCP server
+      outbound/scripts/mcp/giggal_mcp.mjs (registered in .mcp.json as
+      `giggal`) wraps the full REST API, with confirm_spend required on every
+      spending tool. Giggal also publishes a hosted MCP
+      (https://mcp.giggal.ai/mcp, OpenMausBot entry giggal-fnnl-agency) that
+      covers single verify and credits only. GIGGAL_API_KEY lives in
+      outbound/scripts/.env (set it with outbound/scripts/setup-giggal-key.ps1),
+      so no key ever lands in a tracked file. For a whole CSV use
+      scripts/giggal_verify.mjs (batching, cache, gate mapping).
+      PROVEN SO FAR (2026-10-12): live single verify, live batch with the
+      catch-all path, GET /credits (balance 50,095 after a 6-credit probe) on
+      FNNL's own key, and an offline test suite. The status stays `chosen`
+      until the first live waterfall run passes, which is when the old
+      millionverifier-fnnl-agency MCP can be removed.
+      COST: 1 credit per address verified; an unknown result is refunded.
+      /api-cost-governance prices a batch before it runs. Paid calls
+      auto-approve only inside the standing $100 client budget
+      (spend_ceiling_usd); anything over it is confirmed first.
+      CACHE: profiles/_cache/verify-cache.jsonl, append-only, 90 days, entries
+      carry provider `giggal`. Entries written while MillionVerifier was the
+      verifier (provider `millionverifier`) are ignored, not deleted, so those
+      addresses are re-verified once. Reservoir records keep their stored gate
+      and are re-verified before shipping anyway.
       UNVERIFIED, check before building the Clay path: whether Clay offers
-      MillionVerifier as a NATIVE column (with bring-your-own-key) or whether it
-      has to be reached through an HTTP API column or pushed in by webhook. Do
-      not assume either until it is looked up in FNNL's Clay workspace.
-      RETIRED: LeadMagic. Its research (billing, OpenAPI findings, the
-      Clay-layer catch-all theory) stays in credential-registry.json's
-      leadmagic entry and in git history. It is not in the stack.
+      Giggal as a NATIVE column (with bring-your-own-key) or whether it has to
+      be reached through an HTTP API column or pushed in by webhook. Do not
+      assume either until it is looked up in FNNL's Clay workspace.
+      RETIRED: MillionVerifier (2026-10-12) and LeadMagic (2026-09-22). Their
+      research stays in credential-registry.json and in git history. Neither is
+      in the stack.
 
   intent_signals:
     tool: GetLeads
@@ -804,7 +828,7 @@ lead_data:
       below Enterprise can read a Clay table back, the local CSV is the machine
       working copy and Clay is the live view and editing surface (see
       build_protocol and WHAT CANONICAL MEANS HERE). Clay is the frame, not the
-      data vendor: FNNL's own tools (AI Ark, Prospeo, MillionVerifier,
+      data vendor: FNNL's own tools (AI Ark, Prospeo, Giggal,
       GetLeads) do the enrichment through Clay columns or are pushed in by webhook.
       Clay's OWN data enrichments (its credits, its waterfall providers) are
       PROHIBITED OUTRIGHT by credit_policy_rule above. An approved_exceptions entry
@@ -848,7 +872,7 @@ lead_data:
       including the HTTP API column. Webhook import, viewing, manual editing,
       formulas, filters and CSV export DO cost zero Actions.
       NATIVE vs HTTP COLUMN: Prospeo is a NATIVE Clay integration with
-      bring-your-own-key. Whether MillionVerifier is native is UNVERIFIED (see
+      bring-your-own-key. Whether Giggal is native is UNVERIFIED (see
       email_verification.notes). AI ARK IS NOT NATIVE, so reaching it from Clay
       needs an HTTP API column, which requires Clay's GROWTH plan (~446 USD/mo). With
       Clay canonical that cost is now on the critical path, not optional. The

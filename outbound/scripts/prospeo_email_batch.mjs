@@ -8,7 +8,7 @@
  *
  * Every identifier on the row is sent (name, company name and website, LinkedIn URL) with identifier = person_id, so
  * results stitch back by id. Writes the shape `list_waterfall.py record --layer email --provider prospeo` reads.
- * Raw responses go to <out>.raw.jsonl (the key never appears in them). Never verifies: MillionVerifier judges every email.
+ * Raw responses go to <out>.raw.jsonl (the key never appears in them). Never verifies: Giggal judges every email.
  *
  * Usage: node prospeo_email_batch.mjs --queue <queue-email-prospeo.csv> --out <results.csv> [--limit n]
  * Serial, resumable. Exit 3 = out of credits (HTTP 400 INSUFFICIENT_CREDITS / 402) or a persistent outage: the

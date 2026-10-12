@@ -93,7 +93,7 @@ class Lookup(unittest.TestCase):
         self.assertEqual(got["fresh"]["reservoir_hit"], "1")
         self.assertEqual(got["fresh"]["source"], "reservoir")
         self.assertEqual(got["edge"]["reservoir_hit"], "1")
-        # A stored catch-all is NOT a rung-0 hit (aaron-flow.md section 7: only MillionVerifier's "ok" / gate
+        # A stored catch-all is NOT a rung-0 hit (aaron-flow.md section 7: only a stored gate of
         # "valid" is tried first; a catch-all still goes to the holdback under FNNL's unchanged catch-all timing
         # rule). This is the one deliberate divergence from A-Sales' version of this rung, which shipped a
         # stored catch-all straight through.

@@ -32,7 +32,8 @@ The free balance and health calls for each of the six tools are listed in the "L
 | Provider | Capability slot | Env var | Balance (USD) | Source | Last top-up | Notes |
 |---|---|---|---|---|---|---|
 | AI Ark | lead_data.contact_enrichment | AI_ARK_API_KEY | 49,547.2 credits, 2026-10-05 | live: GET /payments/credits | not checked | 54-credit delta in October 5 new wave; dated snapshot |
-| MillionVerifier | lead_data.email_verification | MILLIONVERIFIER_API_KEY | 4,401 credits, 2026-10-05 | live: free credits endpoint | not checked | Delayed balance updates; batch charged-credit attribution uncertain |
+| MillionVerifier (retired 2026-10-12) | lead_data.email_verification | MILLIONVERIFIER_API_KEY | 4,401 credits, 2026-10-05 | live: free credits endpoint | not checked | Replaced by Giggal on 2026-10-12; kept as history. Delayed balance updates; batch charged-credit attribution uncertain |
+| Giggal | lead_data.email_verification | GIGGAL_API_KEY | 50,055 credits, 2026-10-12 | live: GET /v1/credits (free) | not checked | After the 2026-10-12 live probes (50,095 after the first 6-credit probe, 45 credits used in all); 1 credit per address, `unknown` refunded; the catch-all check bills every catch-all address in its source job |
 | Prospeo | lead_data.contact_enrichment | PROSPEO_API_KEY | 1,725 credits, 2026-10-05 | live: GET /account-information | not checked | Six-credit delta in October 5 new wave; dated snapshot |
 
 <!--

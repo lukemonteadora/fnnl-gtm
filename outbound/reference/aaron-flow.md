@@ -8,7 +8,7 @@ All of Aaron's numbers below are his own claims, from his Notion study notes (09
 
 1. **Aaron core plus FNNL's rails.** Aaron's order and methods end to end. Kept: truth, verified-only emails, suppression and the do-not-contact list, compliance and the FNNL opt-out default, the $100 standing budget, the tool-balance stop, the zero-workbench-credit rule, the no-AI-API rule, PAUSED drafts only, the kickoff Step 6 draft-upload stop, and the operator pressing Start. Research shrinks to Aaron's quick demand mining. Human checkpoints drop from four to two. The 500-company floor, the ~1,300 pooled read floor, the Cold-Reader Panel and every word cap become optional or advisory.
 2. **Signals follow Aaron.** A broad, relevant list filtered on the offer. Signals only set the send order inside a campaign. No stacked-signal campaigns. (The A-Sales competitor-follower "switch" campaign is not ported: the operator skipped it.)
-3. **FNNL's six tools only.** No new vendor and nothing from the A-Sales stack. List discovery follows the house order of 2026-10-06: an AI Ark company sample for keyword mining, then the full company export, the people and the first email rung in GetLeads (section 6; operator directive 2026-10-06, see `standing-rulings.md` `discovery-flow`). The lead reservoir is a local file of MillionVerifier verdicts (section 7). The placement test is PlusVibe's own, after its cost is read (section 9). The dialer stays a manual step.
+3. **FNNL's six tools only.** No new vendor and nothing from the A-Sales stack. List discovery follows the house order of 2026-10-06: an AI Ark company sample for keyword mining, then the full company export, the people and the first email rung in GetLeads (section 6; operator directive 2026-10-06, see `standing-rulings.md` `discovery-flow`). The lead reservoir is a local file of Giggal verdicts (section 7). The placement test is PlusVibe's own, after its cost is read (section 9). The dialer stays a manual step.
 4. **Claude does every model job.** Wherever the A-Sales flow called a third-party model (company fit, title judging, copy variables, research, the Cold-Reader Panel), FNNL runs Claude Code sub-agents, batched by the hundred, never one per row (section 12).
 
 ## 2. Aaron's order, and the two human checkpoints
@@ -32,7 +32,7 @@ Find it first (the ask policy in `phase-protocol.md` section 3 is unchanged). Th
 - The do-not-contact list, the speed-to-lead owner and the booking link, and a core sweep source that could not be read. Each is asked only when the find-it-first order has no answer.
 - The GetLeads export OK (once per client, ruling `getleads-export`). Since 2026-10-06 every run uses a GetLeads export (the full company export and the people search), so it is asked unless the client's `rulings.md` already holds it.
 - The PlusVibe placement test OK, only when no ruling answers it, with its cost read first (section 9).
-- A budget raise, only when the estimate (GetLeads plan credits for the export, the people and the email rung, AI Ark credits for the sample, any parallel pull and the email finder, Prospeo, MillionVerifier) crosses the $100 standing budget.
+- A budget raise, only when the estimate (GetLeads plan credits for the export, the people and the email rung, AI Ark credits for the sample, any parallel pull and the email finder, Prospeo, Giggal) crosses the $100 standing budget.
 
 **One exception stays in Phase 1.** A website no route can read, or a `no_website` to confirm, is asked as one line at the end of Phase 1, because the hard rule blocks research until the site is resolved.
 
@@ -72,23 +72,23 @@ The house order (operator directive 2026-10-06, see `standing-rulings.md` `disco
 1. **Company sample and keyword mining in AI Ark, per vertical.** Run the AI Ark company search with every filter on a sample of 200 to 300 companies, score their fit (good, maybe, bad) with batched Claude sub-agents, then mine the keywords and industries: every one common to the good-fit companies becomes an include, every one common to the bad-fit companies an exclude, and one common to both is used on neither side (`outbound/scripts/keyword_mine.py`). All of them are used: there can be tens or hundreds, with no cap and no hand-pruning. The output is the refined search.
 2. **Full company export in GetLeads.** The refined search (filters plus every include and exclude) runs in GetLeads and the whole company list is exported. AI Ark may run the same export in parallel, deduped by company domain, only if its export is fast; if slow it is skipped. Company fit is judged once per company domain before any people spend.
 3. **People in GetLeads.** The offer's title stack at the companies that passed fit. AI Ark may run the same people search in parallel (`outbound/scripts/aiark_people.mjs`, sliced under its 10,000-result cap), deduped by person (LinkedIn slug, then email), only if fast.
-4. **The email waterfall** (section 8): GetLeads, MillionVerifier, AI Ark, MillionVerifier, Prospeo, MillionVerifier.
+4. **The email waterfall** (section 8): GetLeads, Giggal, AI Ark, Giggal, Prospeo, Giggal.
 
 - **Discovery exclusions ride on every search** (ruling `discovery-exclusions`): the keyword exclude stack, the irrelevant industries, the client's own domain, its clients, competitors, `icp.supplier_exclusions` and suppression. Anything a call cannot carry is applied after the pull on the returned company fields.
 - Exhaust-then-gap-fill stays the rule for the email waterfall and enrichment columns. The optional AI Ark parallel searches are parallel sources deduped against GetLeads, never gap-fill rungs.
 
-## 7. The lead reservoir, on MillionVerifier
+## 7. The lead reservoir, on Giggal
 
-- **Store:** `outbound/profiles/_reservoir/contacts.jsonl`, local and gitignored with the rest of `profiles/`. One row per person, keyed by LinkedIn slug (falling back to lowercase email). Fields: identity, title, company, domain, email, MillionVerifier verdict, `verified_at`, source tool, `first_seen` and `last_seen`.
+- **Store:** `outbound/profiles/_reservoir/contacts.jsonl`, local and gitignored with the rest of `profiles/`. One row per person, keyed by LinkedIn slug (falling back to lowercase email). Fields: identity, title, company, domain, email, Giggal verdict, `verified_at`, source tool, `first_seen` and `last_seen`.
 - **What it never holds:** client names, campaign membership, suppression rows, client-supplied lists, or anything a client gave us. Only rows FNNL's own tools returned go in.
-- **Order:** the reservoir is rung 0 of the email waterfall, a free cache in front of it (kept under the 2026-10-06 order). A person with a reservoir match whose email MillionVerifier rated `ok` in the last 90 days is verified on that email first, before any finder rung is paid. MillionVerifier still verifies every email that ships.
-- **Write-back:** every MillionVerifier verdict a person's candidate emails got is written back after verification.
+- **Order:** the reservoir is rung 0 of the email waterfall, a free cache in front of it (kept under the 2026-10-06 order). A person with a reservoir match whose email Giggal rated `valid` in the last 90 days is verified on that email first, before any finder rung is paid. Giggal still verifies every email that ships.
+- **Write-back:** every Giggal verdict a person's candidate emails got is written back after verification.
 - **Script:** `outbound/scripts/reservoir.py` (`lookup`, `writeback`, `stats`).
 
 ## 8. List rules
 
 - **No contacts cap** (ruling `no-contacts-cap`). Every verified buyer at a fit company goes into the campaign. The send order is spread across companies instead: the split stage writes each campaign file round-robin by company inside each priority tier, so one company's buyers are not all sent on the same day.
-- **Every candidate email, in rank order, until the first valid** (ruling `every-email-verified`). Rank: the reservoir's recent `ok`, then an email the row already carries, then GetLeads (by LinkedIn URL), then the AI Ark email finder, then Prospeo (the contract order since 2026-10-06, operator directive, see `standing-rulings.md` `discovery-flow`: AI Ark never opens on a person GetLeads has not tried, and Prospeo never on one AI Ark has not tried). MillionVerifier verifies after each rung and the walk stops at the first `ok`. Only `ok` and `catch_all` are accepted: a catch-all ends the walk and ships labelled `catch_all` (ruling `catch-all`, updated 2026-10-06); unknown, invalid, disposable and unverified emails never ship.
+- **Every candidate email, in rank order, until the first valid** (ruling `every-email-verified`). Rank: the reservoir's recent `valid`, then an email the row already carries, then GetLeads (by LinkedIn URL), then the AI Ark email finder, then Prospeo (the contract order since 2026-10-06, operator directive, see `standing-rulings.md` `discovery-flow`: AI Ark never opens on a person GetLeads has not tried, and Prospeo never on one AI Ark has not tried). Giggal verifies after each rung and the walk stops at the first `valid`. Only `valid` and `catch_all` are accepted: a catch-all ends the walk and ships labelled `catch_all` (ruling `catch-all`, updated 2026-10-06); unknown, invalid, disposable and unverified emails never ship.
 - **Email domain must match the company.** A personal-domain email is dropped. A work email on a different domain ships only when that domain is proven to be the same company: a colleague at the same company already verified on it, or a brand domain the company's own site or AI Ark record names. Anything else is dropped as a wrong-company email.
 - **Fit ship rule** (ruling `fit-ship-rule`). Company fit ships `good` and `maybe`; only `bad` drops. An unsure `bad` that escalation did not settle stays `bad` and drops, labeled `needs_review`; it is never relabeled `maybe`.
 - **Fit runs on companies, never contacts** (ruling `company-level-only`). One row per `company_domain`; contacts get the verdict by a join.
@@ -169,7 +169,7 @@ The house order (operator directive 2026-10-06, see `standing-rulings.md` `disco
 
 - FNNL's six tools and the stack contract; the no-AI-API rule; the zero-workbench-credit rule and its hook.
 - The context sweep, the live website scrape and the folder refresh.
-- MillionVerifier on every email. (The catch-all timing rule changed on 2026-10-06: a catch-all now ships labelled, ruling `catch-all`.)
+- Giggal on every email. (The catch-all timing rule changed on 2026-10-06: a catch-all now ships labelled, ruling `catch-all`.)
 - List QA, suppression, compliance and the FNNL opt-out default.
 - The $100 standing budget, the tool-balance stop, PAUSED drafts only, the Step 6 draft-upload stop and the operator's Start.
 - The ask policy and its mid-run stops.

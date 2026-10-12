@@ -16,7 +16,7 @@ That file shipped empty. When a skill needs a tool and the slot is blank, the sk
 
 This is deliberate. A system that quietly assumes a vendor will happily build a campaign on a tool nobody bought.
 
-**FNNL's approved stack (2026-09-22): GetLeads, AI Ark, Prospeo, MillionVerifier, Clay and PlusVibe.** These six are the only tools the system uses, and they govern every future tool choice. The contract's `approved_stack` block maps each to its job and holds the rule: meet every need from the six first, and bring in anything else only with explicit operator approval recorded in that block.
+**FNNL's approved stack (2026-09-22): GetLeads, AI Ark, Prospeo, Giggal, Clay and PlusVibe.** These six are the only tools the system uses, and they govern every future tool choice. The contract's `approved_stack` block maps each to its job and holds the rule: meet every need from the six first, and bring in anything else only with explicit operator approval recorded in that block.
 
 ## First run, in order
 

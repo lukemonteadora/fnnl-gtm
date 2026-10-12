@@ -9,7 +9,7 @@
  * Writes the results shape `list_waterfall.py record --layer email --provider getleads` reads (person_id, status
  * found|not_found|error, email, provider_email_status, cost_usd, detail) plus GetLeads' view of the person's CURRENT
  * company (detail.current_org_domain, detail.moved=true when it is not the queued company), so people who left are
- * caught before any paid rung. Never verifies: MillionVerifier judges every email afterwards.
+ * caught before any paid rung. Never verifies: Giggal judges every email afterwards.
  *
  * KEY. GETLEADS_MCP_TOKEN (env or outbound/scripts/.env) or, failing that, the Authorization header of the
  * `getleads` server in ~/.claude.json (the connector's own credential). Never printed; every error is scrubbed.

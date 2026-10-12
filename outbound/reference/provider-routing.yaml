@@ -56,9 +56,9 @@
 #      (AI Ark in parallel, deduped by company_domain, only if its export is fast);
 #   3. GetLeads finds the buyers at those companies (AI Ark in parallel, deduped
 #      by LinkedIn slug then email, only if fast);
-#   4. email: GetLeads -> MillionVerifier -> AI Ark -> MillionVerifier ->
-#      Prospeo -> MillionVerifier. Only MillionVerifier ok and catch_all are
-#      accepted; a catch_all ends the walk and ships labelled catch_all.
+#   4. email: GetLeads -> Giggal -> AI Ark -> Giggal -> Prospeo -> Giggal.
+#      Only Giggal valid and catch_all are accepted; a catch_all Giggal could
+#      not resolve ends the walk and ships labelled catch_all.
 # The stack contract's contact_enrichment slot records the same email order.
 # The reservoir stays rung 0, a free cache in front of the waterfall. Not
 # benchmarked.
@@ -79,26 +79,26 @@ providers:
       email_finder: "per shipped person: /v1/people/export/single by person id (1 credit only when an email is found, per AI Ark's CLI source 2026-10-05; UNVERIFIED LIVE, the first run confirms a miss bills 0). /v1/people/email-finder (0 credits on a miss) works on a whole search page's trackId, so it would also pay for people at companies fit dropped"
       email_finder_path_verified: true    # 2026-10-06 (propfuel, outbound/scripts/aiark_email_single.mjs): 25 lookups, 23 found = 23 credits, 2 misses = HTTP 404 "no email found" at 0 credits (balance 47,579.7 to 47,556.7); X-Credit header is negative (-1.0); person emails at body.email.output[], body.company.contact.email is the org inbox
       not_a_finder: "/v1/people/export is never a rung (0.5 credits per profile even on a miss)"
-    email_note: "labels CATCH_ALL as its own email type alongside SMTP. Keep that label as its own column: it is a second catch-all signal, never the send gate (MillionVerifier's verdict is). Since 2026-10-06 it is the second email rung, after GetLeads (ruling discovery-flow)"
+    email_note: "labels CATCH_ALL as its own email type alongside SMTP. Keep that label as its own column: it is a second catch-all signal, never the send gate (Giggal's verdict is). Since 2026-10-06 it is the second email rung, after GetLeads (ruling discovery-flow)"
   prospeo:
     name: Prospeo
     access: mcp_or_rest        # MCP connector + REST, PROSPEO_API_KEY (stack contract approved_stack)
     concurrency: untested      # unverified
     cost_note: "charges nothing when no result is found; free re-enrichment within 90 days (contact_enrichment.notes). Pricing tiers are UNCONFIRMED (third-party only), so this order is not yet proven cheapest-first"
     input_note: "REST bulk limit is 50 persons per request (contact_enrichment.notes); the MCP bulk_enrich_person tool takes 25 per call (live MCP schema read 2026-09-24). Documented minimum match is name plus a company identifier; LinkedIn-URL-alone is UNPROVEN"
-    email_note: "status is binary (VERIFIED / UNAVAILABLE) and collapses catch-all into valid. Read verification_method (SMTP / BOUNCEBAN) instead of status, and re-verify every email with MillionVerifier regardless"
+    email_note: "status is binary (VERIFIED / UNAVAILABLE) and collapses catch-all into valid. Read verification_method (SMTP / BOUNCEBAN) instead of status, and re-verify every email with Giggal regardless"
   getleads:
     name: GetLeads
     access: mcp                # hosted MCP, OAuth, no .env key; the REST API has no public docs (intent_signals.notes)
     concurrency: untested      # unverified
     cost_note: "two separate balances: PLAN CREDITS cover search, export and enrich (search_contacts bills 1 credit per record returned, 0 if none, live MCP schema 2026-09-24); PREPAID WALLET CASH covers only live scrapes. insufficient_wallet_cash is never 'out of credits'. FNNL's GetLeads plan tier is not recorded (unverified)"
-    email_note: "GetLeads labels the emails it returns VALID after its own verification pass, but that label does NOT filter out catch-alls. It is a provider signal only: MillionVerifier verifies every one, like any other source"
+    email_note: "GetLeads labels the emails it returns VALID after its own verification pass, but that label does NOT filter out catch-alls. It is a provider signal only: Giggal verifies every one, like any other source"
     role_note: "since 2026-10-06 (ruling discovery-flow): the full company export for the refined search, the people search at the exported companies, and the FIRST email rung (scripts/getleads_email_batch.mjs, lookup by LinkedIn URL through GetLeads' own MCP server). count_contacts stays the 0-credit exact count"
-  millionverifier:
-    name: MillionVerifier
-    access: local_mcp_and_rest # outbound/scripts/mcp/millionverifier_mcp.mjs + REST, MILLIONVERIFIER_API_KEY; the key travels as a URL query parameter (vendor design), so scrub it from any error text
-    concurrency: untested      # unverified: no rate limit is recorded in the contract
-    cost_note: "credits per verification, deducted per real-time call; the bulk per-email rate is NOT confirmed (email_verification.notes)"
+  giggal:
+    name: Giggal
+    access: local_mcp_and_rest # outbound/scripts/mcp/giggal_mcp.mjs + REST https://api.giggal.ai/v1, GIGGAL_API_KEY; the key travels in the Authorization: Bearer header only, never a URL, and is scrubbed from any error text. A hosted MCP also exists (https://mcp.giggal.ai/mcp, entry giggal-fnnl-agency) but covers only single verify and credits
+    concurrency: "300 requests / 15 min, 30 batch creations / 15 min, 50,000 emails per batch; results kept 48 hours (HTTP 410 after)"
+    cost_note: "1 credit per address verified; an `unknown` result is refunded automatically; the catch-all check (POST /catchall) bills 1 credit per catch-all address in the WHOLE source job, so it runs at most once per job. Balance 50,095 credits on 2026-10-12. GET /credits is free"
 
 layers:
   # --- Company level ---------------------------------------------------------
@@ -202,20 +202,22 @@ layers:
     #   STEP 0 verify first any email the row already carries (the planner queues
     #          it for the verifier before any finder rung);
     #   STEP 1 GetLeads by LinkedIn URL (scripts/getleads_email_batch.mjs);
-    #   STEP 2 MillionVerifier on everything GetLeads returned;
-    #   STEP 3 AI Ark ONLY on people GetLeads left blank or MillionVerifier
+    #   STEP 2 Giggal on everything GetLeads returned;
+    #   STEP 3 AI Ark ONLY on people GetLeads left blank or Giggal
     #          rejected (scripts/aiark_email_single.mjs, one person at a time);
-    #   STEP 4 MillionVerifier on everything AI Ark returned;
-    #   STEP 5 Prospeo ONLY on people AI Ark left blank or MillionVerifier
+    #   STEP 4 Giggal on everything AI Ark returned;
+    #   STEP 5 Prospeo ONLY on people AI Ark left blank or Giggal
     #          rejected (scripts/prospeo_email_batch.mjs);
-    #   STEP 6 MillionVerifier on everything Prospeo returned
-    #          (scripts/millionverifier_verify.mjs for every verify step).
-    # The planner stops a person at the first MillionVerifier `valid` (ok).
-    # Only ok and catch_all are accepted; unknown, invalid, disposable and
-    # unverified never ship.
+    #   STEP 6 Giggal on everything Prospeo returned
+    #          (scripts/giggal_verify.mjs for every verify step).
+    # The planner stops a person at the first Giggal `valid` (deliverable).
+    # Only valid and catch_all are accepted; unknown, invalid and
+    # unverified never ship. Giggal's accept_all or risky result becomes the
+    # catch_all gate, the verifier runs the catch-all check on it once per job,
+    # and it ships only if that check says valid (ruling verifier-giggal-2026-10-12).
     # Rung 0 (Aaron flow, 2026-10-05, kept 2026-10-06): the reservoir, a free
-    # cache in front of the waterfall. A person whose email MillionVerifier
-    # rated ok in the last 90 days (profiles/_reservoir/, scripts/reservoir.py
+    # cache in front of the waterfall. A person whose email Giggal
+    # rated valid in the last 90 days (profiles/_reservoir/, scripts/reservoir.py
     # lookup) is verified on that email first, before any finder rung is paid.
     # It is a lookup, not a provider, so it is not in `order`; every verdict is
     # written back after verification.
@@ -274,22 +276,22 @@ layers:
     evidence: none_yet
 
   verification:
-    provider: millionverifier             # the verifier of record (email_verification.notes); no source is exempt, including AI Ark's and Prospeo's own reveal-time checks
-    cli: scripts/millionverifier_verify.mjs   # under outbound/; the runner whose output list_waterfall.py record --layer verify reads
+    provider: giggal                      # the verifier of record (email_verification.notes); no source is exempt, including AI Ark's and Prospeo's own reveal-time checks
+    cli: scripts/giggal_verify.mjs          # under outbound/; the runner whose output list_waterfall.py record --layer verify reads
     cache:
       path: profiles/_cache/verify-cache.jsonl   # under outbound/, gitignored with profiles/
       max_age_days: 90                     # a verdict older than this is re-verified (/email-waterfall's ~90-day revalidation prior; not a contract rule)
     retry_transient: 1                     # a transient result is retried once, then counts as unknown
     # Raw statuses (the verifier_raw_status column) that count as transient.
-    # MillionVerifier's own `error` result (resultcode 4) is transient here; a
-    # timeout or a rate limit on the call is too. A row whose email_status gate
-    # is `transient` is transient whatever its raw status. Never cached.
+    # A failed call (HTTP 5xx or a network error, a job that ended failed, an
+    # address Giggal did not return), a poll timeout and an HTTP 429 are
+    # transient here. A row whose email_status gate is `transient` is transient
+    # whatever its raw status. Never cached.
     transient_raw_statuses: [error, timeout, rate_limited, ""]
-    gate_map:                              # MillionVerifier resultcode (result) -> gate (email_verification.notes)
-      1: valid                             # ok: the send file
-      2: catch_all                         # catch_all: ends the walk, ships labelled catch_all (2026-10-06; via leads.catchall-holdback.csv, through list QA, then merged), never a later finder. NEVER collapse into ok or unknown
-      3: unknown                           # unknown: the next finder rung, then review; never ships
-      4: transient                         # error: retried per retry_transient, then unknown
-      5: invalid                           # disposable
-      6: invalid                           # invalid
+    gate_map:                              # Giggal `status` (verifier_raw_status) -> gate (email_verification.notes). Informational: giggal_verify.mjs applies it and writes the gate to email_status
+      deliverable: valid                   # the send file. is_catch_all is recorded true when Giggal flagged the domain: on those domains Giggal scores the mailbox itself, so a scored deliverable is a real verdict
+      undeliverable: invalid               # dropped
+      unknown: unknown                     # the next finder rung, then review; never ships; refunded by Giggal, so a re-run retries it free and it is never cached
+      accept_all: catch_all                # resolved by the catch-all check (POST /catchall, 1 credit per catch-all address in the job): verdict valid ships, invalid is dropped, check failed or --no-catchall-check leaves catch_all (holdback, ships labelled catch_all). NEVER collapse into valid or unknown unchecked
+      risky: catch_all                     # same handling as accept_all
     evidence: stack_contract

@@ -2,7 +2,7 @@
 
 The real CLI runs in a node child process with aiark_fetch_stub.mjs preloaded (node --import), so fetch never
 reaches AI Ark and no credit is spent. The fake key is passed through the child's environment, which overrides
-any real key in outbound/scripts/.env (same harness shape as test_millionverifier_verify.py / mv_fetch_stub.mjs).
+any real key in outbound/scripts/.env (same harness shape as test_giggal_verify.py / giggal_fetch_stub.mjs).
 """
 import json
 import os

@@ -43,7 +43,7 @@ Earlier, a finder that was down could be switched off for the run with `--skip-p
 
 | Tool | Capability role | How to read the balance | Notes |
 |---|---|---|---|
-| MillionVerifier | verifier | MCP `millionverifier_get_credits`, or `outbound/scripts/millionverifier_verify.mjs` | Reading credits costs nothing. |
+| Giggal | verifier | MCP `giggal_get_credits`, or `outbound/scripts/giggal_verify.mjs` | Reading credits costs nothing. |
 | GetLeads (plan) | full company export, people search, email finder (rung 1, by LinkedIn URL), enrichment (operator directive 2026-10-06, see `standing-rulings.md` `discovery-flow`) | MCP `get_fair_use` | Plan credits under fair use, reset on the UTC calendar day and month, not a rolling window. A null credit count means no fixed cap, never zero. GetLeads is a paid plan, never describe it as free. |
 | GetLeads (wallet) | paid scrapes only (profile monitoring, company followers, website visitors) | MCP `get_wallet_balance` | A second, separate meter. `insufficient_wallet_cash` means add wallet funds; it does not mean the plan credits are out. |
 | AI Ark | company sample and keyword mining, the optional parallel company and people searches (only if fast), email finder (rung 2) | Treat HTTP 402 or an insufficient-credits response as out of balance. Optional pre-check: `GET /v1/payments/credits`, which costs no credits. | |
@@ -93,7 +93,7 @@ Waiting on the operator. Other work continuing: <what>.
 
 ```
 Balances after <phase> (<client>, <date>)
-🟢 MillionVerifier : <n> credits (used <n> this phase)
+🟢 Giggal : <n> credits (used <n> this phase)
 🟢 GetLeads plan   : <fair-use remaining, day and month>
 ⚪ GetLeads wallet : <cash>, only needed for paid scrapes
 🟡 AI Ark          : <credits if checked, or "no 402 seen">
@@ -107,7 +107,7 @@ Balances after <phase> (<client>, <date>)
 
 | Tool | Warn (🟡) when |
 |---|---|
-| MillionVerifier | fewer credits than the next phase's rows to verify |
+| Giggal | fewer credits than the next phase's rows to verify |
 | GetLeads plan | less than the next phase's pull left in today's or this month's fair use |
 | GetLeads wallet | less than the estimated cost of the next paid scrape (`estimate_scrape_cost`) |
 | AI Ark, Prospeo | under \$10 or under the next phase's estimate, whichever is higher, when a figure is available |

@@ -102,7 +102,7 @@ BAD_GATES = {"invalid", "risky", "unknown"}
 # layers.verification.transient_raw_statuses. A transient result is retried
 # retry_transient times, then counts as unknown. A gate of "transient" written
 # by the verifier CLI is always transient, whatever the raw status says.
-DEFAULT_TRANSIENT_RAW = frozenset({"timeout", "submit_failed", "rate_limited", ""})
+DEFAULT_TRANSIENT_RAW = frozenset({"timeout", "error", "submit_failed", "rate_limited", ""})
 TRANSIENT_GATE = "transient"
 NOT_VERIFIED_RAW = "not_verified"  # the verifier CLI stopped before this email was checked (for example, no credits)
 VERIFY_RAW_COLUMN = "verifier_raw_status"
@@ -692,7 +692,7 @@ class Engine:
             cands.append(cand)
 
         # Aaron flow (see aaron-flow.md sections 7-8). Rung 0: a reservoir match verified `valid` within the
-        # freshness window is tried before the email the row carries or any paid finder. MillionVerifier still
+        # freshness window is tried before the email the row carries or any paid finder. Giggal still
         # verifies it fresh in this campaign's own ledger (the reservoir only ever saves a finder credit).
         if self.reservoir_store:
             rec, _why = reservoir.find_for_person(
@@ -1692,7 +1692,7 @@ def cmd_status(args: argparse.Namespace) -> int:
 # ---------------------------------------------------------------------------
 def reservoir_writeback_candidates(engine: Engine) -> list[dict[str, Any]]:
     """Aaron flow (see aaron-flow.md section 7). Every distinct candidate email an aiark or prospeo rung found
-    for a person, with a real MillionVerifier gate, written back so a later list never re-pays that finder for
+    for a person, with a real verifier gate, written back so a later list never re-pays that finder for
     the same person. row_existing and reservoir-sourced candidates are excluded by reservoir.ALLOWED_SOURCES
     (they may be client-supplied or already came from the reservoir itself)."""
     rows: list[dict[str, Any]] = []

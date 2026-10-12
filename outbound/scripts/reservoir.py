@@ -1,47 +1,47 @@
 #!/usr/bin/env python3
-"""Lead reservoir: a local store of people FNNL's own tools have found, with their last MillionVerifier verdict.
+"""Lead reservoir: a local store of people FNNL's own tools have found, with their last verifier verdict.
 
 Aaron flow (see aaron-flow.md section 7). The reservoir is rung 0 of the email waterfall in list_waterfall.py: a
-person whose candidate email MillionVerifier rated `valid` ("ok") within the last 90 days is tried on that email
-again before AI Ark or Prospeo is paid for them. MillionVerifier still verifies every email before it ships; the
+person whose candidate email the verifier rated `valid` within the last 90 days is tried on that email
+again before AI Ark or Prospeo is paid for them. Giggal still verifies every email before it ships; the
 reservoir only ever saves a finder credit, never a verifier credit (see the split note below).
 
 Store:   outbound/profiles/_reservoir/contacts.jsonl (gitignored with the rest of outbound/profiles/, see
          .gitignore's "**/profiles/" rule). One JSON record per line, one record per person.
 Key:     the normalized LinkedIn slug, else the lowercase email (record_key()).
 Fields:  identity (first_name, last_name, full_name, linkedin_url), title, company (company_name, company_domain),
-         email, verdict (MillionVerifier's gate: valid, catch_all, invalid, unknown), verified_at (ISO date),
+         email, verdict (the verifier's gate: valid, catch_all, invalid, unknown), verified_at (ISO date),
          source (the FNNL tool that found the email: aiark or prospeo), first_seen, last_seen.
 Never:   client names, campaign membership, suppression rows, client-supplied lists, or anything a client gave us.
          Only rows FNNL's own finders returned go in. writeback enforces this with an explicit source allowlist
          (ALLOWED_SOURCES = aiark, prospeo) rather than a blocklist of everything it must not be: under the Aaron
          flow FNNL has exactly two finder tools, so naming them is the more precise translation of the same rule.
          A row sourced "row_existing" (the contacts file's own email column, which may be client-supplied) is
-         always refused, even though its MillionVerifier verdict is also written to the ledger.
+         always refused, even though its Giggal verdict is also written to the ledger.
 
-Reservoir vs. the verification cache (millionverifier_verify.mjs, outbound/profiles/_cache/verify-cache.jsonl):
+Reservoir vs. the verification cache (giggal_verify.mjs, outbound/profiles/_cache/verify-cache.jsonl):
 these are two different, complementary stores, not one duplicated under two names.
   - verify-cache.jsonl is keyed by EMAIL: email -> verdict. It exists so the SAME email is never re-paid for,
     inside a run or across runs.
   - this reservoir is keyed by PERSON (LinkedIn slug, else email): person -> the emails FNNL's finders have found
     for them. It exists so the SAME finder credit is never re-paid for a person AI Ark or Prospeo already
     resolved, on a prior list for this client or another one.
-A person found again still goes through MillionVerifier fresh, inside the new campaign's own ledger: this module
+A person found again still goes through Giggal fresh, inside the new campaign's own ledger: this module
 deliberately does NOT port A-Sales's cache cross-check (load_cache_verdicts / newer_failure), which guarded a
 stored verdict against having gone stale relative to a newer cache entry. That guard is unneeded here because
 every reservoir hit is re-verified before it can ship; re-verification alone already catches an address that went
 bad since it was stored. The cost of this simplification: rung 0 only ever saves a finder credit, never a
-MillionVerifier credit. Acceptable, because finder calls are the rate-limited, discovery-cost rungs the
-no-contacts-cap era most needs to avoid re-paying, and MillionVerifier calls are the cheap, high-volume step by
+Giggal credit. Acceptable, because finder calls are the rate-limited, discovery-cost rungs the
+no-contacts-cap era most needs to avoid re-paying, and Giggal calls are the cheap, high-volume step by
 design.
 
 Commands:
   lookup    --in <candidates.csv> --out <csv> [--max-age-days 90]
             fills an EMPTY email column for a row whose person has a `valid` reservoir record verified within the
             window, at the same company. Adds reservoir_hit (1 or 0), source=reservoir on a hit, and
-            reservoir_verified_at. Every reused email still goes through MillionVerifier before it ships.
+            reservoir_verified_at. Every reused email still goes through Giggal before it ships.
   writeback --in <verified.csv> [--no-source-check]
-            upserts every row with a real MillionVerifier gate (valid, catch_all, invalid, unknown) whose source
+            upserts every row with a real verifier gate (valid, catch_all, invalid, unknown) whose source
             column names an FNNL finder. A row sourced any other way is refused and counted, never stored.
   stats     counts by gate, and how many `valid` records are fresh within the window.
 
@@ -72,10 +72,11 @@ DEFAULT_MAX_AGE_DAYS = 90
 FIELDS = ["key", "first_name", "last_name", "full_name", "title", "company_name", "company_domain",
           "linkedin_url", "email", "verdict", "verified_at", "source", "first_seen", "last_seen"]
 
-# MillionVerifier's own gate vocabulary (list_waterfall.py's RESULT_TO_GATE): valid, catch_all, invalid, unknown.
-# No "risky" gate in this set.
+# The verifier's gate vocabulary (Giggal since 2026-10-12): valid, catch_all, invalid, unknown. No "risky" gate in this set.
+# Records stored while Giggal was the verifier carry the same gate words and are kept as they are: a stored
+# `valid` is only a rung-0 lead, and Giggal re-verifies it fresh before it ships, so no migration is needed.
 GATES = {"valid", "catch_all", "invalid", "unknown"}
-# Ruling (aaron-flow.md section 7): a reservoir hit is tried first only on MillionVerifier's "ok" (gate "valid").
+# Ruling (aaron-flow.md section 7): a reservoir hit is tried first only on a stored gate of "valid".
 # A stored catch_all still goes to the holdback under the catch-all timing rule, so it is not a rung-0 hit either.
 RUNG0_GATES = {"valid"}
 
@@ -262,7 +263,7 @@ def refused_source(row: dict[str, str]) -> str:
 
 def writeback_rows(rows: Iterable[dict[str, str]], store: dict[str, dict[str, str]], today: date,
                     source_check: bool = True) -> Counter:
-    """Upsert every row with a real MillionVerifier gate, sourced from an FNNL finder. Only the reservoir's own
+    """Upsert every row with a real verifier gate, sourced from an FNNL finder. Only the reservoir's own
     fields are kept, so a campaign, offer, client or suppression column in the input never reaches the store."""
     tally: Counter = Counter()
     by_email = {r["email"]: k for k, r in store.items() if r.get("email")}

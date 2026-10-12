@@ -4,7 +4,7 @@
 1. **Company sample and keyword mining in AI Ark.** An AI Ark company search per vertical on a sample of 200 to 300 companies, fit scored, and every keyword and industry the good-fit companies share mined as an include and every one the bad-fit companies share as an exclude. The output is the refined search.
 2. **Full company export in GetLeads** on the refined search. AI Ark may run the same export in parallel, deduped by company domain, only if its export is fast.
 3. **People in GetLeads:** the offer's title stack at the exported companies that pass company fit. AI Ark in parallel, deduped by person, only if fast.
-4. **The email waterfall:** GetLeads, MillionVerifier, AI Ark, MillionVerifier, Prospeo, MillionVerifier.
+4. **The email waterfall:** GetLeads, Giggal, AI Ark, Giggal, Prospeo, Giggal.
 
 It is part of the Aaron flow (`aaron-flow.md` section 6). `/tam-build` runs it; `/list-building-orchestrator` and `/phase-3-list` route to it. The file keeps its old name so every link to it still works.
 
@@ -109,11 +109,11 @@ Anything a call cannot carry is applied after the pull on the returned company f
 ## Step 4: the email waterfall
 
 Rung 0 is the reservoir (`aaron-flow.md` section 7), a free cache in front of the waterfall. Then the contract order (operator directive 2026-10-06, see `standing-rulings.md` `discovery-flow`), each rung only on the people the earlier rungs did not close, planned by `list_waterfall.py`:
-1. **GetLeads** by LinkedIn URL (`outbound/scripts/getleads_email_batch.mjs`), then **MillionVerifier** (`outbound/scripts/millionverifier_verify.mjs`);
-2. **AI Ark** one person at a time by id (`outbound/scripts/aiark_email_single.mjs`, `/v1/people/export/single`, 1 credit only on a found email), then MillionVerifier;
-3. **Prospeo** (`outbound/scripts/prospeo_email_batch.mjs`), then MillionVerifier.
+1. **GetLeads** by LinkedIn URL (`outbound/scripts/getleads_email_batch.mjs`), then **Giggal** (`outbound/scripts/giggal_verify.mjs`);
+2. **AI Ark** one person at a time by id (`outbound/scripts/aiark_email_single.mjs`, `/v1/people/export/single`, 1 credit only on a found email), then Giggal;
+3. **Prospeo** (`outbound/scripts/prospeo_email_batch.mjs`), then Giggal.
 
-Only MillionVerifier `ok` (valid) and `catch_all` are accepted. A `catch_all` ends that person's walk and ships labelled `catch_all`; unknown, invalid, disposable and unverified emails never ship.
+Only Giggal `deliverable` (gate `valid`) and `catch_all` are accepted. A `catch_all` ends that person's walk and ships labelled `catch_all`; unknown, invalid and unverified emails never ship.
 
 ## Guardrails
 

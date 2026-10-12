@@ -30,7 +30,7 @@ list_common = sys.modules["list_common"]
 reservoir = sys.modules["reservoir"]
 
 
-FNNL_PROVIDERS = {"aiark", "prospeo", "getleads", "millionverifier"}
+FNNL_PROVIDERS = {"aiark", "prospeo", "getleads", "giggal"}
 TIERS = ["exact", "strong", "influencer", "adjacent", "weak"]
 NAME_KEY = ["first_name", "last_name", "company_domain"]
 
@@ -61,14 +61,14 @@ VERIFY_RESULT_HEADER = [
     "email", "person_ids", "source_providers", "email_status", "is_catch_all",
     "verifier_raw_status", "verified_by",
 ]
-# (gate written in email_status, MillionVerifier raw result in verifier_raw_status, is_catch_all)
+# (gate written in email_status, Giggal raw status in verifier_raw_status, is_catch_all)
 RAW_FOR_GATE = {
-    "valid": ("valid", "ok", "false"),
-    "catch_all": ("catch_all", "catch_all", "true"),
-    "invalid": ("invalid", "invalid", "false"),
-    "disposable": ("invalid", "disposable", "false"),
+    "valid": ("valid", "deliverable", "false"),
+    "catch_all": ("catch_all", "accept_all", "true"),
+    "invalid": ("invalid", "undeliverable", "false"),
+    "disposable": ("invalid", "undeliverable", "false"),
     "unknown": ("unknown", "unknown", ""),
-    "transient": ("unknown", "error", ""),  # MillionVerifier `error`: transient per the configured raw set
+    "transient": ("unknown", "error", ""),  # Giggal `error`: transient per the configured raw set
     "not_verified": ("unknown", "not_verified", ""),  # the verifier CLI stopped before checking (e.g. no credits)
 }
 COST = {"aiark": "0.00", "getleads": "0.00", "prospeo": "0.01"}
@@ -84,7 +84,7 @@ def fixture_routing():
             "aiark": {"name": "AI Ark", "concurrency": "untested"},
             "getleads": {"name": "GetLeads", "concurrency": "untested"},
             "prospeo": {"name": "Prospeo", "concurrency": "untested"},
-            "millionverifier": {"name": "MillionVerifier", "concurrency": "untested"},
+            "giggal": {"name": "Giggal", "concurrency": "untested"},
         },
         "layers": {
             "people_discovery": {
@@ -105,7 +105,7 @@ def fixture_routing():
                 "requires": {"aiark": ["linkedin_url"], "prospeo": list(NAME_KEY)},
             },
             "verification": {
-                "provider": "millionverifier",
+                "provider": "giggal",
                 "retry_transient": 1,
                 "transient_raw_statuses": ["error", "timeout", "rate_limited", ""],
             },
@@ -195,7 +195,7 @@ class WaterfallTestCase(unittest.TestCase):
         self.contacts_path = self.root / "contacts.scored.csv"
         self.spec_path = self.root / "targeting-spec.yaml"
         self.write_routing(lambda routing: None)
-        self.verifier = "millionverifier"
+        self.verifier = "giggal"
         self.counter = 0
         self.queued = []           # (provider, person_id) for every row ever handed to a finder
         self.verify_requests = []  # every email ever handed to the email verifier
@@ -406,7 +406,7 @@ class ListWaterfallTests(WaterfallTestCase):
         self.assertEqual("valid", a3["email_status"])
         self.assertEqual("false", a3["is_catch_all"])
         self.assertEqual("aiark", a3["email_source"])
-        self.assertEqual("MillionVerifier", a3["verification_provider"])
+        self.assertEqual("Giggal", a3["verification_provider"])
         self.assertEqual("promoted_fallback", a3["wave_slot"])
         self.assertIn("A1 exhausted: EMAIL_MISSING after 3 rungs", a3["wave_slot_reason"])
         self.assertIn("A2 exhausted: EMAIL_INVALID after 3 rungs", a3["wave_slot_reason"])
@@ -591,10 +591,10 @@ class ListWaterfallTests(WaterfallTestCase):
         self.assertIn("Nothing was recorded", err)
         self.assertEqual(before, (self.work / "ledger.jsonl").read_bytes())
 
-        _, err = self.record("verify", "millionverifier", VERIFY_RESULT_HEADER, [
+        _, err = self.record("verify", "giggal", VERIFY_RESULT_HEADER, [
             {"email": "stranger@elsewhere.com", "person_ids": "A1", "source_providers": "aiark",
-             "email_status": "valid", "is_catch_all": "false", "verifier_raw_status": "ok",
-             "verified_by": "millionverifier"},
+             "email_status": "valid", "is_catch_all": "false", "verifier_raw_status": "deliverable",
+             "verified_by": "giggal"},
         ], expect=2)
         self.assertIn("stranger@elsewhere.com", err)
         self.assertEqual(before, (self.work / "ledger.jsonl").read_bytes())
@@ -800,9 +800,9 @@ class ListWaterfallTests(WaterfallTestCase):
         self.plan()
         self.assertEqual(["ada@alpha.com"], [row["email"] for row in self.queue("queue-verify.csv")])
         self.assertNotIn("A1", self.queue_ids("queue-email-getleads.csv"))
-        self.record("verify", "millionverifier", VERIFY_RESULT_HEADER + ["cache_hit", "verified_at"], [
+        self.record("verify", "giggal", VERIFY_RESULT_HEADER + ["cache_hit", "verified_at"], [
             {"email": "ada@alpha.com", "person_ids": "A1", "source_providers": "aiark", "email_status": "valid",
-             "is_catch_all": "false", "verifier_raw_status": "ok", "verified_by": "millionverifier",
+             "is_catch_all": "false", "verifier_raw_status": "deliverable", "verified_by": "giggal",
              "cache_hit": "true", "verified_at": "2026-09-01T00:00:00.000Z"},
         ])
         self.finalize("--allow-pending")
@@ -963,40 +963,40 @@ class VerifyLayerTests(WaterfallTestCase):
         before = (self.work / "ledger.jsonl").read_bytes()
         rows = self.verify_rows({"ada@alpha.com": "valid"})
         _, err = self.record("verify", "prospeo", VERIFY_RESULT_HEADER, rows, expect=2)
-        self.assertIn("MillionVerifier", err)
-        self.assertIn("--provider millionverifier", err)
+        self.assertIn("Giggal", err)
+        self.assertIn("--provider giggal", err)
         self.assertEqual(before, (self.work / "ledger.jsonl").read_bytes())
         # No --provider: the key comes from layers.verification.provider (routing found through status.json).
         self.record("verify", None, VERIFY_RESULT_HEADER, rows)
         providers = {line["provider"] for line in self.ledger() if line["layer"] == "verify"}
-        self.assertEqual({"millionverifier"}, providers)
+        self.assertEqual({"giggal"}, providers)
 
     def test_record_needs_a_routing_file_for_the_verify_layer(self):
         self.queue_one_email()
         (self.work / "status.json").unlink()
         rows = self.verify_rows({})
-        _, err = self.record("verify", "millionverifier", VERIFY_RESULT_HEADER, rows, expect=2)
+        _, err = self.record("verify", "giggal", VERIFY_RESULT_HEADER, rows, expect=2)
         self.assertIn("--routing", err)
-        self.record("verify", "millionverifier", VERIFY_RESULT_HEADER, rows, extra=("--routing", self.routing_path))
+        self.record("verify", "giggal", VERIFY_RESULT_HEADER, rows, extra=("--routing", self.routing_path))
 
     def test_verify_results_need_the_verifier_raw_status_column(self):
         self.queue_one_email()
         rows = self.verify_rows({})
         header = [column for column in VERIFY_RESULT_HEADER if column != "verifier_raw_status"]
-        _, err = self.record("verify", "millionverifier", header, rows, expect=2)
+        _, err = self.record("verify", "giggal", header, rows, expect=2)
         self.assertIn("verifier_raw_status", err)
 
     def test_transient_set_comes_from_routing_and_a_transient_gate_always_counts(self):
         self.write_routing(lambda r: r["layers"]["verification"].update({"transient_raw_statuses": ["timeout"]}))
         self.queue_one_email()
-        self.record("verify", "millionverifier", VERIFY_RESULT_HEADER, [
+        self.record("verify", "giggal", VERIFY_RESULT_HEADER, [
             # raw `error` is NOT in this fixture's transient set, so its unknown gate is final
             {"email": "ada@alpha.com", "person_ids": "A1", "source_providers": "aiark", "email_status": "unknown",
-             "is_catch_all": "", "verifier_raw_status": "error", "verified_by": "millionverifier"},
+             "is_catch_all": "", "verifier_raw_status": "error", "verified_by": "giggal"},
             {"email": "amy@alpha.com", "person_ids": "A2", "source_providers": "aiark", "email_status": "unknown",
-             "is_catch_all": "", "verifier_raw_status": "timeout", "verified_by": "millionverifier"},
+             "is_catch_all": "", "verifier_raw_status": "timeout", "verified_by": "giggal"},
             {"email": "ben@beta.com", "person_ids": "B1", "source_providers": "aiark", "email_status": "transient",
-             "is_catch_all": "", "verifier_raw_status": "busy", "verified_by": "millionverifier"},
+             "is_catch_all": "", "verifier_raw_status": "busy", "verified_by": "giggal"},
         ])
         results = {line["email"]: line["result"] for line in self.ledger() if line["layer"] == "verify"}
         self.assertEqual({"ada@alpha.com": "unknown", "amy@alpha.com": "transient", "ben@beta.com": "transient"},
@@ -1017,7 +1017,7 @@ class VerifyLayerTests(WaterfallTestCase):
         out = self.plan()
         self.assertIn("to verify with Alt Check (fixture) (run it through scripts/altcheck_verify.mjs", out)
         rows = self.verify_rows({"ada@alpha.com": "valid"})
-        _, err = self.record("verify", "millionverifier", VERIFY_RESULT_HEADER, rows, expect=2)
+        _, err = self.record("verify", "giggal", VERIFY_RESULT_HEADER, rows, expect=2)
         self.assertIn("--provider altcheck", err)
         self.verify({"ada@alpha.com": "valid"})
         self.finalize("--allow-pending")
@@ -1103,7 +1103,7 @@ class LiveRoutingTests(WaterfallTestCase):
                 for provider in cfg.get(field) or []:
                     self.assertIn(provider, live["providers"], f"{layer}.{field}")
         verifier = live["layers"]["verification"]["provider"]
-        self.assertEqual("millionverifier", verifier)
+        self.assertEqual("giggal", verifier)
         self.assertEqual(contract["lead_data"]["email_verification"]["tool"], live["providers"][verifier]["name"])
 
     def test_live_yaml_has_no_phone_layer_and_phone_required_fails_loud(self):

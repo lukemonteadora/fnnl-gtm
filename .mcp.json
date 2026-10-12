@@ -1,9 +1,9 @@
 {
   "mcpServers": {
-    "millionverifier": {
+    "giggal": {
       "command": "node",
       "args": [
-        "outbound/scripts/mcp/millionverifier_mcp.mjs"
+        "outbound/scripts/mcp/giggal_mcp.mjs"
       ]
     }
   }
