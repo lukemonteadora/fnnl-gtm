@@ -9,7 +9,7 @@
  *
  * It writes a results CSV in the shape `list_waterfall.py record --layer email --provider aiark` reads
  * (person_id, status found|not_found|error, email, provider_email_status, cost_usd, detail) and never verifies:
- * MillionVerifier judges every email afterwards.
+ * Giggal judges every email afterwards.
  *
  * NEVER CALLS People Export (/v1/people/export) or the MCP email_finder tool: both bill 0.5 credits per person even on
  * a miss. Runs serially (the queue file's own note: one call at a time).
@@ -18,6 +18,8 @@
  *   node aiark_email_single.mjs --queue <queue-email-aiark.csv> --out <results.csv> --max-credits <n> [--limit <n>]
  *
  *   --max-credits  hard stop: no call is made once the credits charged (X-Credit header, else the balance delta) reach it
+ *   --by-url       look up by the row's linkedin_url ({"url": ...}) instead of person_id as an AI Ark id, for people
+ *                  found by another provider (GetLeads). The cross-talk guard then compares the reply's LinkedIn slug.
  *   --limit        process at most n new rows this run (use 5 for the first live billing test)
  *   Resumable: rows already in --out are skipped. Raw responses (key scrubbed) go to <out>.raw.jsonl so the
  *   response shape can be checked on the first run.
@@ -52,6 +54,8 @@ const scrub = (t) => (KEY ? String(t).split(KEY).join('***') : String(t));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 class BalanceOrOutageError extends Error {}
+const BY_URL = process.argv.includes('--by-url');
+const slug = (u) => String(u || '').toLowerCase().split('?')[0].replace(/\/+$/, '').split('/in/').pop();
 
 function flag(name) {
   const i = process.argv.indexOf(name);
@@ -111,14 +115,14 @@ async function credits() {
   return typeof j.total === 'number' ? j.total : null;
 }
 
-async function lookup(personId) {
+async function lookup(reqBody) {
   let backoff = 1000;
   for (let attempt = 0; ; attempt++) {
     let res;
     try {
       res = await fetch(`${BASE}/v1/people/export/single`, {
         method: 'POST', headers: { 'X-TOKEN': KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: personId }), redirect: 'manual',
+        body: JSON.stringify(reqBody), redirect: 'manual',
       });
     } catch (err) {
       if (attempt >= 4) throw new BalanceOrOutageError(scrub(`network error: ${err?.message}`));
@@ -156,14 +160,17 @@ async function main() {
     if (spent >= maxCredits) { stop = `max-credits ${maxCredits} reached`; break; }
     let status = 'error', email = '', pstatus = '', detail = {};
     try {
-      const r = await lookup(row.person_id);
+      const r = await lookup(BY_URL ? { url: row.linkedin_url } : { id: row.person_id });
       const charged = r.credit === '' ? NaN : Math.abs(Number(r.credit)); // AI Ark sends the charge as a negative number
       if (Number.isFinite(charged)) { spent += charged; sawHeader = true; }
       fs.appendFileSync(rawPath, scrub(JSON.stringify({ person_id: row.person_id, http: r.http, credit: r.credit, body: r.body })) + '\n');
       detail = { http: r.http, credits: r.credit };
-      if (r.http >= 200 && r.http < 300 && r.body?.id && String(r.body.id) !== String(row.person_id)) {
+      if (!BY_URL && r.http >= 200 && r.http < 300 && r.body?.id && String(r.body.id) !== String(row.person_id)) {
         // Cross-talk guard (safe to shard): a reply for a different person is never recorded as this person's email.
         status = 'error'; detail.error = `response id ${r.body.id} does not match requested person`;
+      } else if (BY_URL && r.http >= 200 && r.http < 300 && r.body?.link?.linkedin && slug(r.body.link.linkedin) !== slug(row.linkedin_url)) {
+        // URL-mode cross-talk guard (safe to shard): the reply's LinkedIn profile must be the one requested.
+        status = 'error'; detail.error = `response profile ${slug(r.body.link.linkedin)} does not match requested ${slug(row.linkedin_url)}`;
       } else if (r.http >= 200 && r.http < 300) {
         const hits = personEmails(r.body);
         if (hits.length) {

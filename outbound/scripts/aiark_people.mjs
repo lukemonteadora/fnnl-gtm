@@ -27,7 +27,7 @@
  * contract. The first live call must confirm or correct the alias lists below.
  *
  * KEY. AI_ARK_API_KEY from outbound/scripts/.env, with process.env overriding the file (same pattern as
- * millionverifier_verify.mjs's resolveKey/loadEnvFile). The key travels only in the X-TOKEN header, never the URL,
+ * giggal_verify.mjs's .env loading). The key travels only in the X-TOKEN header, never the URL,
  * and every error and log line is scrubbed of it before being printed.
  *
  * EXIT CODES (this script's own contract, not the Go CLI's): 0 success (including a deliberate, instructed stop
@@ -41,7 +41,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// ---- .env loader (same pattern as millionverifier_verify.mjs) ----
+// ---- .env loader (same pattern as giggal_verify.mjs) ----
 function loadEnvFile(envPath) {
   const out = {};
   if (!fs.existsSync(envPath)) return out;
@@ -174,15 +174,20 @@ function asListString(v) {
 }
 
 function extractCompany(person) {
+  // Live shape confirmed 2026-10-06 (first PropFuel sample): person.company.{summary,link,industries,hashtags,
+  // location.headquarter,naics}; the older aliases stay as fallbacks.
   const c = (person && (person.company || person.account)) || person || {};
+  const hq = dig(c, ['location.headquarter']) || {};
+  const hqStr = (hq && typeof hq === 'object') ? [hq.city, hq.state, hq.country].filter(Boolean).join(', ') : '';
   return {
-    domain: String(dig(c, ['domain', 'website', 'domainName', 'companyDomain']) ?? dig(person, ['companyDomain', 'domain']) ?? '').toLowerCase().trim(),
-    name: String(dig(c, ['name', 'companyName']) ?? ''),
-    description: String(dig(c, ['description', 'about', 'summary']) ?? ''),
-    keywords: asListString(dig(c, ['keywords', 'keyword', 'tags'])),
-    industries: asListString(dig(c, ['industries', 'industry'])),
-    headcount: String(dig(c, ['employeeSize', 'headcount', 'size', 'employeeCount']) ?? ''),
-    location: String(dig(c, ['location', 'hqLocation', 'city']) ?? ''),
+    domain: String(dig(c, ['link.domain', 'domain', 'website', 'domainName', 'companyDomain']) ?? dig(person, ['companyDomain', 'domain']) ?? '').toLowerCase().trim(),
+    name: String(dig(c, ['summary.name', 'name', 'companyName']) ?? ''),
+    description: String(dig(c, ['summary.description', 'description', 'about']) ?? ''),
+    keywords: asListString(dig(c, ['hashtags', 'keywords', 'keyword', 'tags'])),
+    industries: asListString(dig(c, ['industries', 'summary.industry', 'industry'])),
+    headcount: String(dig(c, ['summary.staff.total', 'employeeSize', 'headcount', 'size', 'employeeCount']) ?? ''),
+    location: hqStr || String(dig(c, ['hqLocation', 'city']) ?? ''),
+    naics: asListString(dig(c, ['naics'])),
   };
 }
 
@@ -191,11 +196,11 @@ function extractPersonId(person) {
 }
 
 function extractTotal(body) {
-  return Number(dig(body, ['total', 'totalCount', 'meta.total', 'pagination.total', 'count']) ?? 0);
+  return Number(dig(body, ['totalElements', 'total', 'totalCount', 'meta.total', 'pagination.total', 'count']) ?? 0);
 }
 
 function extractResults(body) {
-  const v = dig(body, ['results', 'data', 'people', 'items']);
+  const v = dig(body, ['content', 'results', 'data', 'people', 'items']);
   if (Array.isArray(v)) return v;
   return Array.isArray(body) ? body : [];
 }
@@ -232,7 +237,7 @@ async function countBody(body) {
   return extractTotal(resBody);
 }
 
-// ---- CLI arg parsing (same minimal style as millionverifier_verify.mjs) ----
+// ---- CLI arg parsing (same minimal style as giggal_verify.mjs) ----
 const argv = process.argv.slice(2);
 const CMD = argv[0];
 const rest = argv.slice(1);
@@ -302,15 +307,15 @@ async function cmdSample() {
     if (!byDomain.has(c.domain)) byDomain.set(c.domain, { ...c, person_count: 0 });
     const row = byDomain.get(c.domain);
     row.person_count += 1;
-    for (const field of ['name', 'description', 'keywords', 'industries', 'headcount', 'location']) {
+    for (const field of ['name', 'description', 'keywords', 'industries', 'headcount', 'location', 'naics']) {
       if (!row[field] && c[field]) row[field] = c[field];
     }
   }
-  const header = ['company_domain', 'company_name', 'description', 'keywords', 'industries', 'headcount', 'location', 'person_count'];
+  const header = ['company_domain', 'company_name', 'description', 'keywords', 'industries', 'headcount', 'location', 'naics', 'person_count'];
   const rows = [...byDomain.values()].map((r) => ({
     company_domain: r.domain, company_name: r.name, description: r.description,
     keywords: r.keywords, industries: r.industries, headcount: r.headcount,
-    location: r.location, person_count: r.person_count,
+    location: r.location, naics: r.naics, person_count: r.person_count,
   }));
   writeCsv(companiesOut, header, rows);
 
