@@ -648,8 +648,8 @@ lead_data:
       PROVEN SO FAR (2026-10-12): live single verify, live batch with the
       catch-all path, GET /credits (balance 50,095 after a 6-credit probe) on
       FNNL's own key, and an offline test suite. The status stays `chosen`
-      until the first live waterfall run passes, which is when the old
-      millionverifier-fnnl-agency MCP can be removed.
+      until the first live waterfall run passes. MillionVerifier's script,
+      local MCP and tests were removed on 2026-10-12 (git history keeps them).
       COST: 1 credit per address verified; an unknown result is refunded.
       /api-cost-governance prices a batch before it runs. Paid calls
       auto-approve only inside the standing $100 client budget

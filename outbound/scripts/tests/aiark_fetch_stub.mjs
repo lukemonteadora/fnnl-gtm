@@ -1,12 +1,12 @@
 // aiark_fetch_stub.mjs: offline stand-in for AI Ark, loaded with `node --import` by test_aiark_people.py. It
 // replaces globalThis.fetch before aiark_people.mjs runs, so the real CLI is exercised end to end and no request
-// ever leaves the machine. Mirrors mv_fetch_stub.mjs's shape, adapted for a POST+JSON API addressed by path and
+// ever leaves the machine. Mirrors the old verifier stub's shape (mv_fetch_stub.mjs, removed 2026-10-12), adapted for a POST+JSON API addressed by path and
 // page number instead of a GET API addressed by query string.
 //
 // AIARK_STUB_SCENARIO: path to a JSON file:
 //   {"people": {"<page>": step | [step, ...], ...}, "lists": step | [step, ...], "default": step}
 // A page key is the "page" field of the posted body, as a string (page 0 -> "0"). Each key's steps are used in
-// order and the last one repeats, exactly like mv_fetch_stub.mjs's per-email steps. A step is
+// order and the last one repeats, exactly like that stub's per-email steps. A step is
 // {"status": 200, "body": {...}, "credit": "-50"} or {"throw": "message, optionally with {url}"}.
 // AIARK_STUB_LOG: path of a file that gets one JSON line per request: {"path", "page", "size"}.
 import fs from 'node:fs';

@@ -138,7 +138,7 @@ Split into three tables for width. Rows are always the six tools. Clay and PlusV
 - [GG-mcp] `outbound/scripts/mcp/giggal_mcp.mjs` (endpoints, response fields, limits).
 - [GG-live] `lead_data.email_verification.notes` in the contract (gate mapping, cost, live findings, proof status).
 - `outbound/scripts/giggal_verify.mjs` and its offline test `outbound/scripts/tests/test_giggal_verify.py`.
-- Retired: MillionVerifier (2026-10-12). Its script, MCP and test stay on disk until a live Giggal waterfall run passes.
+- Retired: MillionVerifier (2026-10-12). Its script, MCP, test and stub were removed the same day; git history keeps them.
 
 ### Clay
 

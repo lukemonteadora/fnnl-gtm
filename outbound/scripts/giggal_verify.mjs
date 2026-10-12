@@ -2,7 +2,7 @@
 /**
  * giggal_verify.mjs: verify every email in a CSV through Giggal (FNNL's email verifier of record, stack-contract.yaml
  * lead_data.email_verification), with a verdict cache so no address is paid for twice. It replaces
- * millionverifier_verify.mjs (kept in the repo, unused) and keeps the same CLI and the same output columns.
+ * millionverifier_verify.mjs (removed 2026-10-12, in git history) and keeps the same CLI and the same output columns.
  *
  * WHAT IT IS FOR. The verify layer of the list-production flow. It writes the columns
  * `list_waterfall.py record --layer verify` reads, and it works on any one-off CSV too. Node built-ins only.
