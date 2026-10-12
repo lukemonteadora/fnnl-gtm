@@ -82,3 +82,13 @@ Separate new wave under the standing $100 allowance; bounded stage allocation $1
 | Total | | | $1.1154, about $1.12 |
 
 These are published-reference estimates, not actual invoices. Prospeo's conservative $0.06 unit estimate covers conflicting own-site published references. Verifier requests are not asserted to equal observed charged credits. Price sources, saved provider summaries and final 109-person disposition: [verification report](../../client-assets/2026-10-05-milan-handoff/agency-verification-results.md).
+
+## 2026-10-12 FNNL expansion (k8 top-up, agency staged)
+
+| Tool | Balance | Usage | USD estimate |
+|---|---|---|---|
+| Giggal | 49,680 → 45,409 | 4,271 credits (verifies plus catch-all checks) | unpriced: no Giggal unit price on file |
+| AI Ark | 43,046.3 → 41,392.3 | 1,654 credits (email finder) | $6.62 to $16.21 at $0.004 to $0.0098 |
+| Prospeo | 853 → 291 (STARTER, renews 2026-10-13) | 562 credits | $33.72 at $0.06 |
+| GetLeads | unlimited plan | fair use today 48,963 of 500,000 | plan, no per-call charge |
+| Total priced | | | about $40 to $50 plus Giggal |
