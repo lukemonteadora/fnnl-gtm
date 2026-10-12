@@ -56,6 +56,8 @@
 
 **Use when:** the deliverable is built for them, or shaped to them, and consuming it takes a few minutes.
 
+**Live confirmation (2026-10-10, added 2026-10-11).** His X post 2108920658574864556 (image 4, "The #1 email, line by line", read from the image itself) shows this email verbatim: "If we could build you a no-cost list of 100 companies that look like {case study}, same shape, same buying signals, would that be useful? PS, 24-hour turnaround, takes you 2 minutes to skim." His PS has a comma after the effort signal; the P2 check accepts it with or without. Same image, his variable rule: "{case study}: Use it. Their best case study is the hook. {company name}: Every single person uses it, and often it's not that good." His summary line: "Lead with the value, put the effort in the PS, and swap company name for the case study variable." In that test this email's offer (the look-alike list) drew 29 interested against 11 for a Loom offer to US B2B agency leaders (his self-reported figures, about 47,000 sends).
+
 ### F3. Direct to offer, optional proof PS (examples 2.1, 2.2, 2.3 direct-to-offer versions)
 
 > **if we could** [concrete deliverable or outcome, with the free or no-cost term], **would that be worth sharing more? PS tested this for** [a twin] **recently.** [one plain, named result].
@@ -163,6 +165,28 @@ From the Sep 21 Notion capture; confirmed live against his raw captions. **Use w
 
 A second line into F11's pay-per-result idea, built as a question opener instead of a statement. **Use when** F11 also applies and the campaign is testing the two openers against each other (see T5 below). Its CTA ("we could sort out [partnership term] if you're open to that kind of thing") is F11-v2's own and does not swap with the shared CTA set.
 
+### F12. The short-video offer on a system we built, with an own-use PS (live, 2026-10-10)
+
+> **{{first_name}}, if we could send you a** [length]**-minute** [video format] **on the** [system] **we built that** [what it does] **instead of** [how they run it now]**, would that be useful? PS, same setup we use to run our own.**
+
+Source: his X post 2108920658574864556 (2026-10-10), image 3, "What actually ran", the Claude Code Loom email, read from the image itself on 2026-10-11: "{first name}, if we could send you a 2-minute loom on the system we built that gets email, LinkedIn, and ads to compound on each other instead of running as three separate channels, would that be useful? PS, same setup we use to run our own."
+
+| Slot | What goes there | Fill rule |
+| --- | --- | --- |
+| length + video format | "2-minute loom" | an honest length; the recording is made before Start |
+| system | "the system we built" | a system the sender really built and runs |
+| what it does + "instead of" | the mechanism against how they run it now | his reprompt for this arm: "Focus on a unique mechanism and the end result. Low friction. Don't try to predict their pain points." |
+| CTA | "would that be useful?" | fixed (F2's CTA) |
+| PS | "PS, same setup we use to run our own." | P6; true only if the sender runs the same setup for itself |
+
+**This arm lost.** The Loom offer drew 11 interested against 29 for the look-alike list (F2) on the same list of US B2B agency leaders (his self-reported figures). His own reading puts the loss on the offer, not the sentence: "With the Loom, they know there's going to be something on the back end that needs them to bring us on"; "People get Loom pitches all the time"; "Agencies are solution aware. Saying 'we run email, LinkedIn and ads as one motion' isn't enough to make the mechanism feel new." **Use when** the offer is a short recorded walkthrough of a mechanism that is genuinely new to the reader. Not for solution-aware buyers of a familiar mechanism.
+
+### F12-v2. "I could show you", the ask, then the format line (live, 2026-10-10)
+
+> **I could show you the** [system] **we built to** [move a metric from X to Y]**. Would that be interesting? Put the process in a** [length]**-minute** [format] **for you.**
+
+Source: the same image, the Gemini Loom email, verbatim: "I could show you the multi-channel system we built to push from 10 to 15 to 30 to 40 monthly calls consistently. Would that be interesting? Put the process in a 2-minute loom for you." Three sentences, no first name, the CTA in the middle and the format line last. The X-to-Y slot is a result claim, so it needs a real before-and-after on file. "Put the process in" says the recording exists, so this is an existence frame: hold the campaign until the recording is made. It is from the same losing Loom arm (Gemini: 8 interested on the list offer, 2 on the Loom).
+
 ## Follow-up frames (examples 7.1, doctrine 11)
 
 Every follow-up stands alone, as if it were the first email read. It never names the non-reply and never assumes they read Email 1, so no "easier option", "instead", "as I mentioned" or "did you see". Same spec as Email 1: "short, to the point, conversational, but exist on its own, clear CTA, same idea." Gap: 2 to 3 days.
@@ -204,6 +228,7 @@ Use his words, and **one CTA across every Email 1 variant in a campaign that car
 - **would that be worth a quick test?** (F11 only; its pay-per-result CTA)
 - **and we could sort out** [a real partnership term] **if you're open to that kind of thing.** (F11-v2 only; does not swap with the shared CTA set)
 - **if it's easier, I can send over a quick video** (FU5 only; its follow-up CTA)
+- **Would that be interesting?** (F12-v2 only; live 2026-10-10, from his losing Loom arm)
 
 Never a meeting ask in a cold email.
 
@@ -217,6 +242,7 @@ One PS at most, one proof point at most, never in line one or two.
 - **P3c. A named client's plain result:** [client] **saw a** [N]% **lift in** [plain metric]. His acronym-rule fix ("Nani Swimwear saw a 942% lift in ads to cart.", examples 6). This is the honest form for a customer's result on the same mechanism when we didn't do the work for them.
 - **P4. Risk reduction:** **PS, obviously this is free, no call required. I'll just send it over to you and then you can decide if it's worth** [running].
 - **P5. Small batch:** **PS, we're doing a small batch of complimentary** [deliverables]. True only if the batch is really limited.
+- **P6. Own use (live, 2026-10-10):** **PS, same setup we use to run our own.** From his Claude Code Loom email (F12). It says the sender runs the same thing for itself; it is not a client result. True only when that is so.
 
 ## The delivery reply (examples 7.3)
 
@@ -250,6 +276,6 @@ For every email, before `copy.md` is written:
 8. **The context slot.** Where a campaign's awareness note gives a `context_budget`, the copy may use up to that many plain sentences saying who the sender is or why they're reaching out, on top of the frame's own slots; it is not part of any frame's sentence count. The Cold-Reader Panel (`cold-reader-panel.md`) is optional and checks this only when the operator asks for it on a run.
 9. **The subject.** One subject per campaign, built on a subject frame (S1 to S6), two or three lowercase words, never A/B tested (Aaron flow, see aaron-flow.md section 9).
 
-**Change log.** 2026-09-24: built from the corpus as of 2026-09-18; the same day, Aaron's first frame rebuild flagged eleven places the first draft misread his examples (F6 and F6-v2 slots, P3c, F7 as structure-only, FU3 and FU4, the Sep 21 subject, opener and Email 1, DR-input, the CTA rule), and each was fixed here. 2026-09-28: ported into this workspace. Frame ids, fixed words and the check are unchanged; paths point at this workspace's `outbound/profiles/<slug>/`. 2026-10-05: frame refresh (Aaron flow, see aaron-flow.md section 9): F11 confirmed live with its slot table; F11-v2 added (the question opener with the soft partnership close) and paired with F11 as T5; FU5 added (the "if it's easier" video one-liner); P3 gained a third, more specific form that runs only as an A/B arm; S6 added ("quick idea"); the subject rule tightened from 2-to-4 words to two or three lowercase words, one per campaign, never A/B tested; the personalization rule (`sells_to_vertical`, `service_offered`) and the context-slot and subject conformance items were added. 2026-10-06: frame refresh before the PropFuel Call 2: no new model email, subject or CTA after 2026-10-05 (two Aaron notes created later on 2026-10-05, a funnel-math video and a testimonial post, carry no email wording); no frame added. Frames are only added here, never deleted.
+**Change log.** 2026-09-24: built from the corpus as of 2026-09-18; the same day, Aaron's first frame rebuild flagged eleven places the first draft misread his examples (F6 and F6-v2 slots, P3c, F7 as structure-only, FU3 and FU4, the Sep 21 subject, opener and Email 1, DR-input, the CTA rule), and each was fixed here. 2026-09-28: ported into this workspace. Frame ids, fixed words and the check are unchanged; paths point at this workspace's `outbound/profiles/<slug>/`. 2026-10-05: frame refresh (Aaron flow, see aaron-flow.md section 9): F11 confirmed live with its slot table; F11-v2 added (the question opener with the soft partnership close) and paired with F11 as T5; FU5 added (the "if it's easier" video one-liner); P3 gained a third, more specific form that runs only as an A/B arm; S6 added ("quick idea"); the subject rule tightened from 2-to-4 words to two or three lowercase words, one per campaign, never A/B tested; the personalization rule (`sells_to_vertical`, `service_offered`) and the context-slot and subject conformance items were added. 2026-10-06: frame refresh before the PropFuel Call 2: no new model email, subject or CTA after 2026-10-05 (two Aaron notes created later on 2026-10-05, a funnel-math video and a testimonial post, carry no email wording); no frame added. 2026-10-09: frame refresh before the PropFuel wave 2 Call 2: no new model email, subject or CTA after 2026-10-06. Nine Aaron notes published 2026-10-06 to 2026-10-09 were checked live; none quotes an email. The 2026-10-07 audit thread names Framework A (front-end offer, 25 to 35 words, no greeting), B (hypothetical positive outcome) and C (observation plus a one-line offer) as recipes without wording; A matches F1 to F5, C matches F7, and B has no model email, so no frame was built from it. The 2026-10-07 follow-up swipe file and the 2026-10-09 FRAMEWORKS post are gated and their templates were not received; their stated rule (each follow-up changes the ask or brings the buried benefit back to the top) restates FU1 to FU5. No frame added. 2026-10-11: frame refresh before the FNNL wave 2026-10-12 Call 2. Cutoff 2026-10-09. Six Aaron notes published or captured after it were read live: the 2026-10-09 X Article (GetLeads list scoring) and the 2026-10-09 six front-end offers, both captured 2026-10-10, and four 2026-10-10 posts (the four-AI-tools copy test, the 96,000-send WEEK playbook, the ONE prompt teaser, the capital-raising case). Only the copy test quotes email wording; its four images were read directly. Added F12 (the Claude Code Loom email) and F12-v2 (the Gemini Loom email), both from the losing Loom arm, plus P6 ("PS, same setup we use to run our own.") and F12-v2's CTA "Would that be interesting?". Added a live confirmation of F2 (the winning look-alike email, verbatim) with his {case study} over {company name} rule. The capital-raising case says the CTA changed but not to what; the 96,000-send post names the "your trial" subject and the "quick video" email 2 (S5 and FU5, already here) and gates the copy. The topic synthesis was last edited 2026-09-14 and the newest Partial transcript is 2026-06-29, so neither is new. Checker gap: `aaron_frame_check.py` does not know F12, F12-v2 or P6 yet, so the recorder confirms them by hand until it is updated. Nothing deleted. Frames are only added here, never deleted.
 
 A failure goes back to a fresh Aaron sub-agent for one fix round, like any rail failure. If it still fails, that email is held and shown at the launch review.
