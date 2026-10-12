@@ -341,6 +341,26 @@ class GiggalVerifyTest(unittest.TestCase):
         self.assertEqual({line["email"] for line in self.cache_lines()}, {"ok@acme.com", "ca-ok@acme.com"})
         self.assert_key_never_leaks(proc)
 
+    def test_too_few_credits_stops_before_any_address_is_sent(self):
+        self.scenario_with(credits=3)                                         # 8 addresses to verify, 3 credits
+        proc = self.run_cli(str(self.input), "--out", str(self.out), "--no-cache", *self.fast())
+        self.assertEqual(proc.returncode, 3, proc.stderr)
+        self.assertIn("STOP: Giggal has 3 credits", proc.stderr)
+        self.assertEqual(self.calls(), [])
+        self.assertFalse(self.out.exists())
+        self.assert_key_never_leaks(proc)
+
+    def test_max_needs_an_approved_cap_reason(self):
+        proc = self.run_cli(str(self.input), "--out", str(self.out), "--no-cache", "--max", "2", *self.fast())
+        self.assertEqual(proc.returncode, 2)
+        self.assertIn("--cap-approved", proc.stderr)
+        self.assertEqual(self.log_lines(), [])
+        proc = self.run_cli(str(self.input), "--out", str(self.out), "--no-cache", "--max", "2",
+                            "--cap-approved", "test only", *self.fast())
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("CAP: verifying the first 2", proc.stderr)
+        self.assertEqual(len(self.out_rows()), 2)
+
     def test_missing_key_sends_nothing(self):
         proc = self.run_cli(str(self.input), "--out", str(self.out), key="")
         self.assertEqual(proc.returncode, 1)

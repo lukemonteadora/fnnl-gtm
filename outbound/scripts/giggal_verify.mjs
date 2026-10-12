@@ -57,6 +57,11 @@
  *     are reused: MillionVerifier-era verdicts in the same files are ignored, not deleted.
  *   - Idempotency: each batch is submitted with a key derived from its exact email list and the UTC date, so a re-run
  *     of a crashed or interrupted run replays the same job instead of paying twice.
+ *   - CAPACITY CHECK (ruling verifier-capacity, operator 2026-10-12): before the first batch the script reads the free
+ *     credit balance. When it is below the addresses to verify, nothing is sent and the script exits 3 (stop and ask
+ *     the operator to top up, /tool-balance-guard). A run is never silently capped: --max needs --cap-approved
+ *     "<reason>" naming the operator's approval, and the cap is printed. The 2026-10-12 fnnl-agency wave lost most
+ *     of its found emails to a quiet 485-credit cap on the previous verifier.
  *   - On a fatal error (HTTP 401, 402, 403, 410 or another non-retryable 4xx) the script stops taking new work, still
  *     writes the output with the unchecked rows marked `not_verified`, and exits 1. Paid verdicts are never lost.
  * SPEND: 1 credit per address verified, 1 more per catch-all address when the catch-all check runs, unknown refunded.
@@ -81,7 +86,8 @@
  *   --retries <n>           retries for a transient outcome (default 3), exponential backoff
  *   --backoff-ms <n>        first backoff delay (default 2000; doubles on each retry)
  *   --no-catchall-check     do not resolve accept_all / risky rows through the catch-all check (they stay catch_all)
- *   --max <n>               verify only the first n data rows (safety cap)
+ *   --max <n>               verify only the first n data rows. Needs --cap-approved "<reason>" (ruling verifier-capacity)
+ *   --cap-approved <text>   the operator's approval for --max, quoted (for example "Luke 2026-10-12, test 50 rows")
  *   --usd-per-credit <x>    fill `cost_usd` with this estimate for each freshly paid verdict (blank otherwise)
  *
  * Output: the input columns plus email_status (the gate), is_catch_all, verifier_raw_status, verified_by, cache_hit,
@@ -397,7 +403,7 @@ const flag = (n, d) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] 
 const has = (n) => argv.includes(n);
 function usageExit(msg) {
   if (msg) console.error(msg);
-  console.error('Usage: node giggal_verify.mjs <input.csv> [--email-col x] [--out y] [--cache p | --no-cache] [--max-age-days 90] [--batch-size 5000] [--concurrency 2] [--poll-ms 5000] [--job-timeout-s 1800] [--retries 3] [--backoff-ms 2000] [--no-catchall-check] [--max n] [--usd-per-credit x] [--dry-run] | --verify <email> | --credits');
+  console.error('Usage: node giggal_verify.mjs <input.csv> [--email-col x] [--out y] [--cache p | --no-cache] [--max-age-days 90] [--batch-size 5000] [--concurrency 2] [--poll-ms 5000] [--job-timeout-s 1800] [--retries 3] [--backoff-ms 2000] [--no-catchall-check] [--max n --cap-approved "<reason>"] [--usd-per-credit x] [--dry-run] | --verify <email> | --credits');
   process.exit(2);
 }
 function intFlag(name, def, min, max) {
@@ -451,7 +457,7 @@ async function main() {
     return;
   }
 
-  const valueFlags = ['--email-col', '--out', '--cache', '--max-age-days', '--batch-size', '--concurrency', '--poll-ms', '--job-timeout-s', '--retries', '--backoff-ms', '--max', '--usd-per-credit'];
+  const valueFlags = ['--email-col', '--out', '--cache', '--max-age-days', '--batch-size', '--concurrency', '--poll-ms', '--job-timeout-s', '--retries', '--backoff-ms', '--max', '--cap-approved', '--usd-per-credit'];
   const flagValueIdx = new Set(valueFlags.map((f) => argv.indexOf(f)).filter((i) => i >= 0).map((i) => i + 1));
   const input = argv.find((a, i) => !a.startsWith('--') && !flagValueIdx.has(i));
   if (!input) usageExit();
@@ -472,7 +478,12 @@ async function main() {
   const emailIdx = detectEmailCol(header, flag('--email-col'));
   let body = rows.slice(1);
   const max = flag('--max') === undefined ? null : intFlag('--max', null, 1);
-  if (max) body = body.slice(0, max);
+  if (max) {
+    const why = (flag('--cap-approved') || '').trim();
+    if (!why || why.startsWith('--')) usageExit('--max caps the run, so it needs --cap-approved "<who approved it and why>" (ruling verifier-capacity). Nothing was sent.');
+    if (body.length > max) console.error(`[giggal] CAP: verifying the first ${max} of ${body.length} rows only (approved: ${why}). The other ${body.length - max} rows are not in the output.`);
+    body = body.slice(0, max);
+  }
   const emails = body.map((r) => normEmail(r[emailIdx]));
   const out = flag('--out') || input.replace(/\.csv$/i, '') + '.giggal.csv';
 
@@ -513,6 +524,12 @@ async function main() {
 
   const stats = { calls: 0 };
   const before = toVerify.length ? await creditBalance(key, opts, stats) : null;
+  if (before !== null && before < toVerify.length) {
+    console.error(`STOP: Giggal has ${before} credits and this file needs at least ${toVerify.length} (plus 1 per catch-all checked). Nothing was sent.`);
+    console.error('  Ask the operator to top up Giggal, then re-run the same file (ruling verifier-capacity, /tool-balance-guard). Never split, cap or switch verifier to get round it.');
+    process.exit(3);
+  }
+  if (toVerify.length && before === null) console.error('[giggal] WARNING: the credit balance could not be read, so the capacity check did not run. An HTTP 402 still stops the run safely.');
   const chunks = [];
   for (let i = 0; i < toVerify.length; i += batchSize) chunks.push(toVerify.slice(i, i + batchSize));
   let next = 0, done = 0, fatal = null;

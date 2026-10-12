@@ -38,7 +38,12 @@ THRESHOLDS (ai-ark-people-discovery.md step 5, defaults match it exactly):
   rg = (good companies carrying the phrase) / (total good companies), rb = same for bad; weight_good_pct is
   rg / (rg + rb) as a percentage.
 
-OUTPUT --out columns: phrase,source,good_n,bad_n,weight_good_pct,side (side is include or exclude; only
+EXCLUDE GUARD (ruling exclude-guard, 2026-10-12): an exclude candidate carried by more than --exclude-max-good good
+  companies, or by more than --exclude-max-good-share of them, gets side=flagged and is never used as an exclude.
+  The 2026-10-12 fnnl-agency wave lost most of its good companies to mined excludes the good side also carried.
+  Every surviving exclude is then costed by exclude_cost.py before the export.
+
+OUTPUT --out columns: phrase,source,good_n,bad_n,weight_good_pct,side (side is include, exclude or flagged; only
   qualifying phrases are written, same as A-Sales's `mine`, which only appends qualifying rows).
 
 Exit codes: 0 success, 2 usage/input error (bad or missing CSV, bad flag value).
@@ -126,7 +131,8 @@ def write_csv_lf(path, fieldnames, rows):
         fh.write(buf.getvalue().encode("utf-8"))
 
 
-def mine(companies, verdicts, min_good, min_bad, min_bad_share, weight_bar):
+def mine(companies, verdicts, min_good, min_bad, min_bad_share, weight_bar,
+         exclude_max_good=1, exclude_max_good_share=0.02):
     verdict_by_domain = {}
     for row in verdicts:
         domain = (row.get("company_domain") or "").strip().lower()
@@ -192,6 +198,10 @@ def mine(companies, verdicts, min_good, min_bad, min_bad_share, weight_bar):
             side = "exclude"
         if side is None:
             continue
+        # Exclude guard (ruling exclude-guard, 2026-10-12): an exclude also carried by real good-fit companies
+        # would cut buyers from the export. It is written as `flagged`, never used, and shown at checkpoint A.
+        if side == "exclude" and (ng > exclude_max_good or rg > exclude_max_good_share):
+            side = "flagged"
 
         out_rows.append({
             "phrase": phrase,
@@ -211,6 +221,7 @@ def mine(companies, verdicts, min_good, min_bad, min_bad_share, weight_bar):
         "unscored_skipped": unscored_skipped,
         "include_candidates": sum(1 for r in out_rows if r["side"] == "include"),
         "exclude_candidates": sum(1 for r in out_rows if r["side"] == "exclude"),
+        "flagged_excludes": sum(1 for r in out_rows if r["side"] == "flagged"),
         "min_bad_needed": min_bad_needed,
     }
     return out_rows, summary
@@ -232,6 +243,11 @@ def main(argv=None):
                      help="or this share of all bad companies, whichever is larger (default 0.01)")
     ap.add_argument("--weight-bar", type=float, default=0.90,
                      help="minimum class-balanced weight share on the winning side (default 0.90)")
+    ap.add_argument("--exclude-max-good", type=int, default=1,
+                     help="an exclude carried by more good companies than this is flagged, not used (default 1; "
+                          "ruling exclude-guard)")
+    ap.add_argument("--exclude-max-good-share", type=float, default=0.02,
+                     help="or by more than this share of all good companies (default 0.02; ruling exclude-guard)")
     args = ap.parse_args(argv)
 
     try:
@@ -241,6 +257,7 @@ def main(argv=None):
             companies, verdicts,
             min_good=args.min_good, min_bad=args.min_bad,
             min_bad_share=args.min_bad_share, weight_bar=args.weight_bar,
+            exclude_max_good=args.exclude_max_good, exclude_max_good_share=args.exclude_max_good_share,
         )
         write_csv_lf(args.out, ["phrase", "source", "good_n", "bad_n", "weight_good_pct", "side"], out_rows)
     except UsageError as err:
@@ -250,7 +267,9 @@ def main(argv=None):
     print(f"keyword_mine: {summary['good_companies']} good, {summary['bad_companies']} bad companies scored "
           f"({summary['maybe_skipped']} maybe and {summary['unscored_skipped']} unscored skipped, counted on "
           f"neither side); {summary['include_candidates']} include and {summary['exclude_candidates']} exclude "
-          f"candidate(s) written to {args.out} (exclude bar: >= {summary['min_bad_needed']} bad companies).")
+          f"candidate(s) written to {args.out} (exclude bar: >= {summary['min_bad_needed']} bad companies); "
+          f"{summary['flagged_excludes']} exclude(s) flagged because good-fit companies carry them too (not used; "
+          f"run exclude_cost.py next).")
     return 0
 
 

@@ -102,6 +102,29 @@ class MineTest(unittest.TestCase):
         # the two phrases are independent (the test only requires debt collection's own row).
         self.assertIsNone(find(rows, "construction", "keyword"))  # it's an industry, not a keyword
 
+    # ---- exclude guard (ruling exclude-guard, 2026-10-12) ----
+    def test_exclude_carried_by_good_companies_is_flagged_not_used(self):
+        # 2 of 50 good companies carry "agency": its balanced weight sits on the bad side (house flags,
+        # weight bar 0.5), but it is over the guard (max 1 good), so it is flagged, never used as an exclude.
+        companies = [company(f"co{i}.com", keywords="Marketing") for i in range(1, 51)]
+        companies[0]["keywords"] = "Marketing|Agency"
+        companies[1]["keywords"] = "Marketing|Agency"
+        companies += [company(f"cb{i}.com", keywords="Agency") for i in range(1, 6)]
+        companies += [company("cb9.com", keywords="Staffing"), company("cb8.com", keywords="Staffing")]
+        verdicts = [verdict(f"co{i}.com", "good") for i in range(1, 51)] +                    [verdict(f"cb{i}.com", "bad") for i in (1, 2, 3, 4, 5, 8, 9)]
+        rows, summary = self.mine(companies, verdicts, min_good=2, min_bad=2, min_bad_share=0, weight_bar=0.5)
+        self.assertEqual(find(rows, "agency", "keyword")["side"], "flagged")
+        self.assertEqual(find(rows, "staffing", "keyword")["side"], "exclude")
+        self.assertEqual(summary["flagged_excludes"], 1)
+
+    def test_exclude_guard_can_be_loosened(self):
+        companies = [company(f"co{i}.com", keywords="Marketing") for i in range(1, 51)]
+        companies[0]["keywords"] = "Marketing|Agency"
+        companies += [company(f"cb{i}.com", keywords="Agency") for i in range(1, 6)]
+        verdicts = [verdict(f"co{i}.com", "good") for i in range(1, 51)] +                    [verdict(f"cb{i}.com", "bad") for i in range(1, 6)]
+        rows, _ = self.mine(companies, verdicts, min_good=2, min_bad=2, min_bad_share=0, weight_bar=0.5)
+        self.assertEqual(find(rows, "agency", "keyword")["side"], "exclude")  # 1 good is inside the default guard
+
     # ---- below min-support: not output even at 100% weight ----
     def test_phrase_below_min_good_support_is_excluded(self):
         companies = [

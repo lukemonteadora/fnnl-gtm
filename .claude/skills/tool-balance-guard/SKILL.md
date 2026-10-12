@@ -43,7 +43,7 @@ Earlier, a finder that was down could be switched off for the run with `--skip-p
 
 | Tool | Capability role | How to read the balance | Notes |
 |---|---|---|---|
-| Giggal | verifier | MCP `giggal_get_credits`, or `outbound/scripts/giggal_verify.mjs` | Reading credits costs nothing. |
+| Giggal | verifier | MCP `giggal_get_credits`, or `outbound/scripts/giggal_verify.mjs` | Reading credits costs nothing. The script checks capacity itself: fewer credits than rows to verify prints STOP, sends nothing and exits 3 (a stop, ruling `verifier-capacity`). `--max` needs `--cap-approved "<reason>"`; a verifier never caps a run silently. |
 | GetLeads (plan) | full company export, people search, email finder (rung 1, by LinkedIn URL), enrichment (operator directive 2026-10-06, see `standing-rulings.md` `discovery-flow`) | MCP `get_fair_use` | Plan credits under fair use, reset on the UTC calendar day and month, not a rolling window. A null credit count means no fixed cap, never zero. GetLeads is a paid plan, never describe it as free. |
 | GetLeads (wallet) | paid scrapes only (profile monitoring, company followers, website visitors) | MCP `get_wallet_balance` | A second, separate meter. `insufficient_wallet_cash` means add wallet funds; it does not mean the plan credits are out. |
 | AI Ark | company sample and keyword mining, the optional parallel company and people searches (only if fast), email finder (rung 2) | Treat HTTP 402 or an insufficient-credits response as out of balance. Optional pre-check: `GET /v1/payments/credits`, which costs no credits. | |

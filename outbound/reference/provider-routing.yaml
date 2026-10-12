@@ -51,7 +51,10 @@
 #   1. AI Ark company search on a 200 to 300 company sample, fit scored, and
 #      EVERY keyword and industry common to the good-fit companies mined as an
 #      include and every one common to the bad-fit companies as an exclude (a
-#      keyword common to both is dropped; no cap, no hand-pruning);
+#      keyword common to both is dropped; no count cap, no hand-pruning). Every
+#      exclude is guarded and costed first (ruling exclude-guard, 2026-10-12):
+#      keyword_mine.py flags one good-fit companies carry, exclude_cost.py drops
+#      one over 5% of good-fit volume and holds the stack over 10%;
 #   2. GetLeads runs the refined search and exports the whole company list
 #      (AI Ark in parallel, deduped by company_domain, only if its export is fast);
 #   3. GetLeads finds the buyers at those companies (AI Ark in parallel, deduped
@@ -120,7 +123,8 @@ layers:
     #     companies, fit scored by batched Claude sub-agents, then every keyword
     #     tag and industry common to the good-fit companies becomes an include
     #     and every one common to the bad-fit companies an exclude; one common to
-    #     both is dropped; no cap, no hand-pruning (ai-ark-people-discovery.md).
+    #     both is dropped; no count cap, no hand-pruning; every exclude passes
+    #     exclude_cost.py first (ruling exclude-guard; ai-ark-people-discovery.md).
     #   order: GetLeads runs the refined search (filters plus every include and
     #     exclude, translated to GetLeads' own filter values) and exports the
     #     whole company list: count_contacts for the exact size at 0 credits,
