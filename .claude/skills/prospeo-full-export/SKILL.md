@@ -93,7 +93,7 @@ Just describe what you filtered for. Examples:
 ### Step 3: Claude Runs the Export
 
 Claude will:
-1. Show the filters and estimated credit cost (inside the client's standing \$100 run budget it proceeds; an export that would push the run over it waits for your OK)
+1. Show the filters and estimated credit cost (Prospeo runs on the plan credits FNNL already pays for, with no dollar cap, so it proceeds; the tool-balance stop is the real check, and only a new cash charge waits for your OK, ruling `volume-first`)
 2. Create a TypeScript script
 3. Run it to paginate through all results
 4. Export everything to a CSV file in your current directory
@@ -489,7 +489,7 @@ Before running, Claude will estimate the credit cost:
 | 25,000 | 1,000 | 1,000 | ~\$50 |
 | 100,000 (state split) | ~4,000 | ~4,000 | ~\$200 |
 
-Claude will always tell you the estimated cost before running the full export. Inside the client's standing \$100 run budget (`run_state.spend_ceiling_usd`) it runs without asking; an export that would push the run over the budget, like the 100,000-row state split above, waits for your confirmation.
+Claude will always tell you the estimated cost before running the full export. Prospeo's credits are plan credits FNNL already pays for, so an export like the 100,000-row state split above runs without asking, with no dollar cap; the tool-balance stop (a balance that cannot cover it) is what waits for your attention, and only a new cash charge checks against the standing \$100 run budget (`run_state.spend_ceiling_usd`, ruling `volume-first`).
 
 ---
 

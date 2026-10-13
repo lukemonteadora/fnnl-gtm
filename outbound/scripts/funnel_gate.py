@@ -4,8 +4,8 @@ misses its target or any stage leaks more than its threshold (ruling volume-gate
 
 On the 2026-10-12 fnnl-agency wave the list shrank at four stages (excludes, agency attribute drops, 1 to 3 people
 per company, a quiet verifier cap) and nothing counted the stages, so nobody saw it until the send file was small.
-This runs in /phase-3-list step 7, before the upload. A failure becomes a held item at checkpoint B with the stage
-named, never a silent small list.
+This runs in /phase-3-list step 7, before the upload. A failure becomes a note at checkpoint B with the stage
+named, never a silent small list and never a hold on the upload (ruling volume-first).
 
 INPUT  --counts  JSON with the stage counts for ONE campaign (or pass --set key=value, repeatable; --set wins):
          target                 leads the campaign plan asked for (from the wave plan / run_state)
@@ -26,7 +26,7 @@ THRESHOLDS (defaults; each has a flag):
   excludes cut over 10%  |  fit under 40% of exported  |  under 1.5 people per company
   emails found under 50% of people  |  verified under 60% of found  |  dedupe drops over 30%  |  QA drops over 25%
 
-Exit codes: 0 pass, 2 usage or input error, 5 target missed or a stage leaked (hold at checkpoint B).
+Exit codes: 0 pass, 2 usage or input error, 5 target missed or a stage leaked (note at checkpoint B, never a hold).
 Plain counts in, Markdown out: no network, no spend.
 """
 import argparse
@@ -77,7 +77,8 @@ def evaluate(c, th):
 def render(name, c, checks, leaks, target_miss):
     lines = [f"# Funnel: {name}", "",
              "What this is: every stage of the list build counted, so a shrinking list is caught before upload "
-             "(ruling volume-gate). A FAIL is a held item at checkpoint B.", "",
+             "(ruling volume-gate). A FAIL is a note at checkpoint B, never a hold on the upload "
+             "(ruling volume-first).", "",
              f"**Verdict: {'FAIL' if (leaks or target_miss) else 'PASS'}.** "
              f"{c['after_qa']} leads ship against a target of {c['target']}"
              f" ({c['after_qa'] / c['target']:.0%}).", "",

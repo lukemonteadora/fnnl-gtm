@@ -12,7 +12,7 @@ A stop rule for every phase that calls a paid tool: list building, email finding
 It sits beside the other gates, it does not replace them:
 
 - `/preflight-credentials` checks that each key is present and well formed. It never checks balance.
-- `/api-cost-governance` prices a run, holds it inside the run budget and keeps the ledger (`scripts/api-balance-ledger.md`, created on first use).
+- `/api-cost-governance` prices a run, holds a new cash charge or list-workbench Actions charge inside the run budget, and keeps the ledger (`scripts/api-balance-ledger.md`, created on first use). Credit spend on a plan FNNL already pays for (GetLeads, Giggal, AI Ark, Prospeo, Spider Cloud) has no dollar cap there (Volume first, ruling `volume-first`); this skill's balance check is what still stops it.
 - This skill checks that each tool in the order still has balance to do its job, and says what happens when it does not.
 
 ## Supersedes the old outage exception (2026-09-28)

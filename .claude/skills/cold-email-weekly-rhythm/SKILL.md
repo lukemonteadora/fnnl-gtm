@@ -69,7 +69,7 @@ It does **not** replace the manual cadence below. That stays the system of recor
 
 1. **Read-and-propose only: never sends.** Every launch and every scale-up ends at a **human-approved paused draft**. Pressing Start stays the one hard stop (per `/autonomous-execution-policy`).
 2. **Fail loud.** A missed run, an errored run, or an empty proposal must alert (Slack/email). A dead routine must never masquerade as "all clear."
-3. **Spend-gated.** Any TAM refresh or list enrichment it triggers routes through `/api-cost-governance` and respects `run_state.spend_ceiling_usd`. Within the ceiling it proceeds; over it, it stops and flags.
+3. **Spend-gated.** Any TAM refresh or list enrichment it triggers routes through `/api-cost-governance` and respects `run_state.spend_ceiling_usd`, which since 2026-10-13 (ruling `volume-first`) covers only new cash charges: plan credits on GetLeads, Giggal, AI Ark, Prospeo and Spider Cloud run with no dollar cap, and the tool-balance stop applies when a balance runs short. Within the ceiling (or on no-cap plan credits) it proceeds; over a cash ceiling, it stops and flags.
 4. **Never re-asks recorded decisions.** It reads `run_state`, the activity-log, and memory before proposing, so it doesn't re-surface a settled choice (per `/autonomous-execution-policy`).
 5. **Never picks a tool.** Every provider it routes to comes from the locked `run_state` and `<outbound>/stack-contract.yaml`. If a capability slot the run needs is empty, it fails loud and routes to `/stack-setup` instead of choosing a vendor. It never substitutes one tool for another either: a tool that is out of balance, down or switched off stops that client's spend step and asks the operator (`/tool-balance-guard`; a skip is valid only with `--operator-approved-skip` recorded, operator decision 2026-09-28). A scheduled run has no operator watching, so an invented provider is exactly the silent failure these rules exist to prevent.
 
@@ -79,7 +79,7 @@ It does **not** replace the manual cadence below. That stays the system of recor
 - It builds the **active-client set** from `profiles/*`: every client whose `client-profile.yaml` `run_state` shows launched/live campaigns (cross-checked against the locked sending platform's live campaign list via MCP).
 - It opens with `python outbound/scripts/phase_state.py board` (`phase-protocol.md`). A client still inside one of the four phases (1 Onboarding, 2 Research and Offer, 3 List, 4 Copy and Launch) is not in the active set: its phase tracker, not this loop, owns its next step, and the digest lists it with its phase and next step in one line. The weekly loop takes a client over once the operator has pressed Start.
 - For each active client it runs the seven-step weekly run below, then emits that client's section of the Slack digest and writes `profiles/<client>/portfolio-review.md`.
-- Read-only platform analytics are free; the only spend is a TAM refresh or per-slice enrichment, which runs inside the client's standing \$100 run budget without asking. Anything that would go over the budget is proposed for your approval instead.
+- Read-only platform analytics are free; the only spend is a TAM refresh or per-slice enrichment, which runs on no-cap plan credits (GetLeads, Giggal, AI Ark, Prospeo, Spider Cloud) without asking, inside the client's standing \$100 run budget for any new cash charge (ruling `volume-first`). Anything that would push a cash charge over the budget is proposed for your approval instead.
 
 ### The weekly run (per client)
 

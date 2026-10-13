@@ -420,7 +420,7 @@ run_state:
   review_protocol: <phase_checkpoints | none>     # default phase_checkpoints
   speed_to_lead_owner: <value or FNNL Agency>   # FNNL default when blank (operator 2026-09-24); not asked; read at Gate D
   booking_link: <value or null>          # null is filled from the context sweep; asked at checkpoint A only if the sweep finds none (Aaron flow, see `aaron-flow.md`); read by /lifecycle-copy for Gate D
-  spend_ceiling_usd: 100   # the standing budget per client run, never asked (operator directive 2026-09-22)
+  spend_ceiling_usd: 100   # the standing budget per client run, never asked (operator directive 2026-09-22). Volume first (ruling `volume-first`, 2026-10-13): covers only new cash charges and list-workbench Actions; credit spend on GetLeads, Giggal, AI Ark, Prospeo and Spider Cloud has no dollar cap
   campaign_approval_brief_needed: <yes | no>
   offer_slate_approval: <optional | required>   # read by /offer-test-slate; default optional
   infrastructure_stack: <value>
@@ -447,7 +447,7 @@ run_state:
     upload_stage: not_started
 ```
 
-`spend_ceiling_usd` is always the standing `100` (operator directive 2026-09-22). The form never asks about spend. Paid data steps inside that budget run without a confirmation, and a purchase that would push the run over it stops to ask (`/autonomous-execution-policy` section 2). Mailbox infrastructure is outside the budget and keeps its own purchase approval at setup. A different figure is written only when the operator names one for this client.
+`spend_ceiling_usd` is always the standing `100` (operator directive 2026-09-22). The form never asks about spend. **Volume first (ruling `volume-first`, 2026-10-13) narrowed what it covers:** credit spend on a plan FNNL already pays for (GetLeads, Giggal, AI Ark, Prospeo, Spider Cloud) has no dollar cap and is never checked against this figure, only against the tool's own balance (`/tool-balance-guard`). The \$100 now covers only a new cash charge and list-workbench Actions, which run without a confirmation inside it, and a new cash charge or Actions charge that would push the run over it stops to ask (`/autonomous-execution-policy` section 2). Mailbox infrastructure is outside the budget and keeps its own purchase approval at setup. A different figure is written only when the operator names one for this client.
 
 Derive `registrar` and `mailbox_provider` from `infrastructure_stack` by splitting the composite on its underscore: the first half is the registrar, the second is the mailbox provider, and a provider that bundles its own domain registration appears as both. Both halves must match the pairing the stack contract declares. If they do not, stop rather than writing a stack the contract never declared.
 
@@ -473,7 +473,7 @@ Intake form saved to: profiles/<business-slug>/intake-form.md
 Client profile saved to: profiles/<business-slug>/client-profile.yaml
 
 Execution mode: <auto_execute | review_gates>, <phase_checkpoints | none>
-Spend budget: \$100 per client run (standing, never asked)
+Spend budget: \$100 per client run for new cash charges and list-workbench Actions (standing, never asked). Credit spend on GetLeads, Giggal, AI Ark, Prospeo and Spider Cloud has no dollar cap (Volume first, ruling `volume-first`)
 Context sweep: <N of M sources read (account or workspace per source), K constraints, B blocklist rows written to suppression, notes in context-sweep.md | BLOCKED: <source>, <one-line fix>, retry at next resume>
 Slack: <N channels read in <workspace>, notes in slack-context.md | none found in <workspace> | NOT READ: <reason>, retry at next resume>
 

@@ -90,7 +90,7 @@ lead_sourcing:
   preferred_sources: []
   blocked_sources: []
   approved_custom_scraping: false
-  approval_required_for_paid_sources: false   # default (operator directive 2026-09-22): paid data sources run inside the standing \$100 run budget without an approval
+  approval_required_for_paid_sources: false   # default (operator directive 2026-09-22; amended by ruling volume-first 2026-10-13): a paid source on plan credits (GetLeads, Giggal, AI Ark, Prospeo, Spider) runs with no dollar cap and no approval; a new cash charge still checks against the standing \$100 run budget
 ```
 
 ## Core Rule
@@ -354,7 +354,7 @@ If a source cannot preserve evidence, mark `source_confidence=low` unless there 
 
 Ask before scaling when:
 
-- paid API or database credits would push the run past its budget (`run_state.spend_ceiling_usd`, the standing \$100 per client run). Paid credits inside the budget need no approval.
+- a new cash charge would push the run past its budget (`run_state.spend_ceiling_usd`, the standing \$100 per client run, amended by ruling `volume-first` to cover only new cash charges). Plan credits on GetLeads, Giggal, AI Ark, Prospeo or Spider run with no dollar cap and need no approval; the tool-balance stop applies instead.
 - custom scraping is needed and `approved_custom_scraping` is not true
 - the source is social, platform-sensitive, or likely to trigger account risk
 - the source includes personal data beyond normal B2B contact data

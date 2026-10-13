@@ -41,7 +41,7 @@ Outside a frozen phase, artifacts carry no version stamp, so there is nothing to
 
 ## Interaction Policy
 
-Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at checkpoint A (Phase 2) and checkpoint B (Phase 4); Phases 1 and 3 auto-approve with no stop of their own, `phase-protocol.md`; `review_gates` is opt-in), proceed without pausing: run the audit, apply the delegated fixes, and re-verify. Never re-ask a decision already in `run_state`, `client-profile.yaml`, the activity log, memory, or the operator's latest message. Spend runs against the standing budget in `run_state.spend_ceiling_usd` (\$100 per client run, never asked, in either execution mode): auto-approve within it. Stop only for the hard stops below. On a long async wait (an enrichment or copy regen), background-poll and interleave other productive work. Never idle.
+Defers to `/autonomous-execution-policy`. Under `run_state.execution_mode = auto_execute` (the new-client default since 2026-09-24, paired with `review_protocol: phase_checkpoints` so a run stops only at checkpoint A (Phase 2) and checkpoint B (Phase 4); Phases 1 and 3 auto-approve with no stop of their own, `phase-protocol.md`; `review_gates` is opt-in), proceed without pausing: run the audit, apply the delegated fixes, and re-verify. Never re-ask a decision already in `run_state`, `client-profile.yaml`, the activity log, memory, or the operator's latest message. Spend runs against the standing budget in `run_state.spend_ceiling_usd` (\$100 per client run, never asked, in either execution mode): auto-approve within it. **Volume first (ruling `volume-first`):** that budget covers only a new cash charge or list-workbench Actions; credit spend on a plan FNNL already pays for (GetLeads, Giggal, AI Ark, Prospeo, Spider Cloud) has no dollar cap and auto-approves regardless of the ceiling. Stop only for the hard stops below. On a long async wait (an enrichment or copy regen), background-poll and interleave other productive work. Never idle.
 
 ## Material Decision Rule
 
@@ -96,7 +96,7 @@ The chain mixes files with live infrastructure; they are checked differently:
 
 ## Read-only and free to audit
 
-Conformance is judged from artifacts already on disk plus cheap live reads. The audit **never** re-runs paid enrichment, re-verifies emails, or re-crawls a TAM just to check. That would make a QA pass cost like a build. Spending happens only inside delegated remediation, and only through the owning skill, gated by `/api-cost-governance` and the spend ceiling.
+Conformance is judged from artifacts already on disk plus cheap live reads. The audit **never** re-runs paid enrichment, re-verifies emails, or re-crawls a TAM just to check. That would make a QA pass cost like a build. Spending happens only inside delegated remediation, and only through the owning skill, gated by `/api-cost-governance` and (for a new cash charge or list-workbench Actions) the spend ceiling; a credit spend on a plan FNNL already pays for is gated only by that tool's balance (Volume first, ruling `volume-first`).
 
 ---
 
@@ -149,7 +149,7 @@ Walk the stages in order. Each row names the **governing source(s) to re-read** 
 | I. Lead source plan | `campaigns/<slug>/lead-source-plan.md` | `/lead-source-strategy` (Lead Source Plan Mode), `/lead-list-tech-stack-research` |
 | J. List build + verify | `campaigns/<slug>/leads.scored.csv`, `leads.verified.csv` | `/icp-prompt-builder`, `/lead-scoring` for external lists, `/email-waterfall`, `verified-list-gate.md` |
 | J2. Tool balances (no substitution) | `campaigns/<slug>/_waterfall/ledger.jsonl`, the activity log's `BLOCKED` / `NOTE` tool lines, `scripts/api-balance-ledger.md` | `/tool-balance-guard` and `list_waterfall.py` (HARD RULE, operator decision 2026-09-28, overriding the 2026-06-19 finder-down exception). The checks as of writing: every skip line in the ledger carries `detail.operator_approved`; no rung's rows were opened by another tool while that tool was out of balance or down (an enricher acting as a down finder is the classic case); every `BLOCKED <tool>` line has a matching resume on that same tool or a recorded operator override; each phase that spent left its balance figures in `api-balance-ledger.md`. A skip or substitution with no recorded approval is `DRIFT` on the rows it touched: surface it, and route any re-run through the owning list skill on the named tool. Read from disk only; the audit never calls a paid balance endpoint to check |
-| K. List QA | scorecard grade | `/list-quality-scorecard` (grade ≥ B gate) |
+| K. List QA | scorecard grade | `/list-quality-scorecard`. **Amended 2026-10-13 by Volume first (ruling `volume-first`):** the grade is a note the scorecard reports, never a hold on the upload; a `good`/`maybe` row ships and only a clear `bad` drops |
 | L. Copy | `campaigns/<slug>/variants.yaml`, `copy.md` | `/campaign-copywriting`, `cold-email-copy-best-practices.md`, `spam-word-checker`, the copy/signature/personalization-rung/capability-truth memories, and `aaron-lane.md` with `aaron-copy-frames.md` (Aaron's sequences recorded word for word; every subject, email and reply names one frame and keeps its structure). The frame check as of writing is one free local run, `python outbound/scripts/aaron_frame_check.py --client <slug>`. Aaron copy with no `frame` on its emails is flagged for a frame rebuild (a fresh copy-only call), never rewritten here |
 | M. Spintax | rendered spintax | locked platform's spintax skill |
 | N. Draft (stored sequence) | the built sequence/leads/senders/schedule | locked platform's upload skill |
@@ -242,7 +242,7 @@ The Markdown report is the deliverable ("Generated files are plain text", projec
 ## Hard stops (never auto-do, from `/autonomous-execution-policy` §3)
 
 - **Starting / sending a live campaign.** The audit certifies; the operator presses Start.
-- **Spend above the approved ceiling**, entering financial credentials, or enabling auto-recharge.
+- **A new cash charge or list-workbench Actions charge above the approved ceiling**, entering financial credentials, or enabling auto-recharge. A credit spend on a plan FNNL already pays for (GetLeads, Giggal, AI Ark, Prospeo, Spider Cloud) has no dollar ceiling (Volume first, ruling `volume-first`); only its own balance running short is a stop.
 - **Changing a locked provider stack / sending platform**, or any source-of-truth change, without surfacing it.
 - **Overwriting an operator-directive memory** to match a skill. Surface it and flag the skill instead.
 - **Deleting** anything: the audit archives (reversible move) only; deletion is manual.

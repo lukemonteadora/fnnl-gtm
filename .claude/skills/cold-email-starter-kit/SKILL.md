@@ -74,11 +74,11 @@ For the real sequence with all prerequisites and gates, start Phase 1 for the cl
 - Do not let a campaign idea into strategy unless its source path has a plausible target-geography fit.
 - Do not build a list before `/lead-source-strategy` Lead Source Plan Mode decides what signal the list must prove.
 - Do not treat onboarding form offers as locked. Store them under `offer.client_suggested_*`, then run discovery and ranked brainstorm.
-- Do not ask about spend at startup. Paid data steps run inside the standing \$100 budget per client run (`run_state.spend_ceiling_usd`); confirm only a purchase that would push the run over it, plus the setup total once before any mailbox infrastructure purchase.
+- Do not ask about spend at startup. **Volume first (ruling `volume-first`):** credit spend on a plan FNNL already pays for (GetLeads, Giggal, AI Ark, Prospeo, Spider Cloud) has no dollar cap at all. The standing \$100 budget per client run (`run_state.spend_ceiling_usd`) now covers only a new cash charge or list-workbench Actions; confirm only a new cash charge or Actions charge that would push the run over it, plus the setup total once before any mailbox infrastructure purchase.
 - A tool that is out of balance or down stops its step and asks the operator (`/tool-balance-guard`); never switch to another tool or skip a rung without the operator's recorded approval.
 - Generated client files are plain text (Markdown, or CSV, YAML and JSON for scripts); a DOCX, deck, PDF or Google Doc is built only when the operator asks for that file.
 - Wait at least 2 weeks after warmup starts before real sending.
-- Never upload a campaign from unverified copy or a list below B grade.
+- Never upload a campaign from unverified copy, or from an email that isn't Giggal `valid` or `catch_all`. **A list-quality grade below B is a note, never a hold on the upload** (Volume first, ruling `volume-first`): list QA, the 25-account QA and the funnel gate report what they find, they don't hold a campaign's upload or a draft's leads.
 - Upload skills create draft or paused campaigns only. The user starts the campaign manually.
 
 ## Local Environment

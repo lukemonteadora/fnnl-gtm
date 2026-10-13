@@ -37,7 +37,7 @@ Paths resolve under `outbound/` (project `CLAUDE.md` path rule). Client profiles
    - Existing profile: keep it and note that in the handoff. Never start fresh unless the operator says so.
 5. **Run state.** Write `client-profile.yaml` `run_state` per `/cold-email-kickoff` "Provider Lock Rule" (read only that section):
    - The capability slots (`registrar`, `mailbox_provider`, `sending_platform`, `list_workbench`, `infrastructure_stack`) are inherited from `outbound/stack-contract.yaml`, never from a default vendor. A slot the contract holds as deferred is written `deferred`; that never stops onboarding.
-   - Defaults for a new client, written without asking: `execution_mode: auto_execute`, `review_protocol: phase_checkpoints`, `spend_ceiling_usd: 100` (the standing \$100 budget), `research_routing: claude_deep_research`.
+   - Defaults for a new client, written without asking: `execution_mode: auto_execute`, `review_protocol: phase_checkpoints`, `spend_ceiling_usd: 100` (the standing \$100 budget, covering only new cash charges and list-workbench Actions since Volume first, ruling `volume-first`; credit spend on GetLeads, Giggal, AI Ark, Prospeo and Spider Cloud has no dollar cap), `research_routing: claude_deep_research`.
    - Never overwrite a mode, protocol or budget an existing profile carries. A profile slot that conflicts with the contract is a provider change: raise it, never apply it.
    - No infrastructure is ever sized, bought or provisioned in this phase (HARD RULE).
 6. **Segments.** Group the ICP into distinct buyer segments: a different vertical, or a different title cluster with a different pain. Merge the closest segments when there are more than five, and drop none. The segments go on the checkpoint screen.

@@ -337,7 +337,7 @@ run_state:
   review_protocol: phase_checkpoints   # new-client default: hands-free inside a phase, one stop at the end of each of the four phases (phase-protocol.md; the tracker outbound/scripts/phase_state.py holds phase state)
   speed_to_lead_owner: FNNL Agency   # FNNL default (operator 2026-09-24): FNNL runs replies + booking, client excluded; not asked. Read at Gate D
   booking_link: null             # taken from the context sweep (the client's scheduler link); asked only if the sweep finds none; read by /lifecycle-copy for Gate D. Never invented
-  spend_ceiling_usd: 100         # the standing budget per client run (operator directive 2026-09-22); written automatically, never asked. Paid data steps inside it auto-approve.
+  spend_ceiling_usd: 100         # the standing budget per client run (operator directive 2026-09-22); written automatically, never asked. Volume first (ruling `volume-first`, 2026-10-13): covers only new cash charges and list-workbench Actions, auto-approved inside it; credit spend on GetLeads, Giggal, AI Ark, Prospeo and Spider Cloud has no dollar cap and is not checked against this field.
   infrastructure_stack: <from stack contract|null>   # the contract's registrar + mailbox provider, lowercase, joined with an underscore
   registrar: <from stack contract|null>              # no default; declared by /stack-setup
   mailbox_provider: <from stack contract|null>       # no default; declared by /stack-setup
@@ -371,7 +371,7 @@ lead_sourcing:
   preferred_sources: []
   blocked_sources: []
   approved_custom_scraping: false
-  approval_required_for_paid_sources: false   # default (operator directive 2026-09-22): paid data sources run inside the standing \$100 run budget without an approval
+  approval_required_for_paid_sources: false   # default (operator directive 2026-09-22): paid data sources run without an approval. Volume first (ruling `volume-first`, 2026-10-13): credit spend on GetLeads, Giggal, AI Ark, Prospeo and Spider Cloud has no dollar cap at all; the standing \$100 run budget now covers only a new cash charge or list-workbench Actions
 
 capability_boundary:
   deliverable_strengths: []
