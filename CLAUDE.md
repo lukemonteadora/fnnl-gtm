@@ -232,7 +232,7 @@ FNNL list building is a volume game: thousands of relevant contacts per campaign
 - **Relevant or maybe-relevant ships.** `good` and `maybe` ship; only a clear `bad` drops. Unsure or unreadable is `maybe`.
 - **Gates are notes.** The funnel gate, list QA, the 25-account QA and `qa-loops` report; they never hold an upload or a draft's leads.
 - **Drafts are filled now.** A paused draft gets its full list right away; only Start waits on the client's yes.
-- **Kept, because they protect volume:** verified emails only (Giggal `valid` and `catch_all`), suppression and do-not-contact lists, no person in two active sequences at once (PlusVibe uploads send `skip_if_in_workspace: false`, `skip_lead_in_active_pause_camp: false`, `skip_lead_for_active_only_camp: true`, so contacts already in inactive, paused or draft campaigns still import; ruling `plusvibe-import-all`), zero Clay credits, the tool-balance stop, and the operator's Start.
+- **Kept, because they protect volume:** verified emails only (Giggal `valid` and `catch_all`), suppression and do-not-contact lists, no person in two active sequences at once (PlusVibe uploads send `skip_if_in_workspace: false`, `skip_lead_in_active_pause_camp: true`, `skip_lead_for_active_only_camp: false`, and drop contacts already in other DRAFT campaigns first; contacts only in completed or stopped campaigns still import; ruling `plusvibe-import-all`), zero Clay credits, the tool-balance stop, and the operator's Start.
 
 ### Spend
 
