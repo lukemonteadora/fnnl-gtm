@@ -160,6 +160,8 @@ This governs *how* things are explained and formatted. It does not change any sk
 
 **Lead with the point.** Say what matters first in plain words, then add the detail. Do not bury the takeaway under setup or tool chatter.
 
+**Founder-level clarity is the bar (HARD RULE, Luke 2026-10-13).** The full rule lives in the global `~/.claude/CLAUDE.md`. It applies to everything a person reads here: chat explanations, Slack and email drafts for colleagues, guides and docs, Project Board task names and notes, reports and briefs. The test: a busy founder with no background on the matter reads it cold, on their phone, and knows what happened, why it matters and what, if anything, they need to do. Open with what you need from the reader. Name things by what they are, never by skill names, file paths, ruling ids or script names (put those in parentheses if they help someone find the thing). Give every number its meaning and say the consequence. Keep the real facts and terms, never pad, and never drop the fact the reader needs to act.
+
 **Write for a sharp outsider.** Assume the reader is intelligent but new to cold outbound. Keep the real industry terms so the content stays credible, but the first time a term appears, add a short plain gloss right after it. For example: "warmup (the gradual ramp-up that builds a mailbox's reputation before real sending)."
 
 **Keep buzzwords honest.** Use jargon when it is the precise word, not to sound technical. If a plain word does the same job, use the plain word.

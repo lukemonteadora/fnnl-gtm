@@ -14,6 +14,19 @@ Do not write a spaced em dash (an em dash or en dash with a space around it, use
 
 ---
 
+## The founder test (HARD RULE, Luke 2026-10-13)
+
+The full rule is "Founder-level clarity" in the global `~/.claude/CLAUDE.md`. It is the bar for everything a person reads, not only client documents: chat explanations, Slack and email drafts for Orestas and the team, guides, Project Board task names, notes and questions, reports and briefs.
+
+Before it leaves, ask: could a sharp founder who was not in this session read it cold, on their phone, and know what happened, why it matters and what, if anything, they need to do? If not, rewrite it.
+
+- Open with what you need from the reader (a decision, an action, or FYI) and any deadline.
+- Name things by what they are. Workflow codes, campaign ids, ruling ids, skill and file names never carry the meaning; they go in parentheses after the plain words, only when they help someone find the thing.
+- Give every number its meaning, and say the consequence (money, time, the client, risk).
+- Don't dumb it down and don't pad it. Keep the real facts and terms. Shorter and clearer is the goal, not longer.
+
+---
+
 ## The principles, expanded
 
 **Lead with the point.** People skim. Put the conclusion or the ask in the first sentence, then support it. If a status line could be read as "here's what happened and here's what I'm doing next," that's the right shape. Don't open with the tool name, the API, or the internal step number.
@@ -33,6 +46,9 @@ Do not write a spaced em dash (an em dash or en dash with a space around it, use
 ---
 
 ## By channel
+
+### Messages for colleagues (Slack, email, the Project Board)
+Orestas, Mike and the team read these between other work, often on a phone, and they were not in the session. Each message or board note stands on its own: what this is about, what happened, why it matters, what you need from them. Never write a note that only makes sense if the reader has the file or the session open.
 
 ### Chat replies
 Open with the answer or the recommendation. Keep the reasoning underneath it, not in front of it. If you're about to use three acronyms, gloss the first appearance of each.
